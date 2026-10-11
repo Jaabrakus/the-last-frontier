@@ -88,6 +88,14 @@ const STILL_MPS := Vector2(0.35, 1.2)
 ## on the same frame it always did. The floor and wall presses (their clap and press moments) are held as before.
 const HOLD_CREEP_S := 0.12
 const CATCH_S := 0.05
+## THE PISTOL'S AIM (the owner, 2026-10-11: "use our musket and pistol tech that we built in frontiers over", Lightning "not
+## like the pistol stand aim we have"): a pose whose pick says "aim": "pistol" (frontier-pistol-lightning, BendPoses'
+## Frontier tech) is shown as the pistol's own aims are: standing still the whole clip (the twisted stance, the straight arm,
+## the other arm hanging), moving its right arm alone over the locomotion's body (PlayerAnim's jog aim: the torso and the
+## other arm the jog's), no spine lean; then BendAimArm (the pistol's JogAimArm on the two fingers) turns the arm onto the
+## crosshair and the head toward it, weighted by the cast's weight and the clip's aim (in over its aim_in_s, out from back_s
+## to the end), the clip's kick put back after the turn (its kick metas: BendAimArm.kick_deg).
+const BEND_AIM_ARM := preload("res://scripts/bending/bend_aim_arm.gd")
 
 var caster: SwayCaster
 ## The clip playing: "" none, "press" (the clap and press, or the wind-up: held), "release" (the push, or the push down and
@@ -112,9 +120,14 @@ var _lib: AnimationLibrary
 var _pose: ToolPose
 var _anim: Animation
 var _hold := 0.0
-## The release's catch-up (s): how far the moving hold's pose was short of hold_s as the lock let go, made up over CATCH_S.
+## The release's catch-up (s): how far the moving hold's pose was short of hold_s as the lock let go, made up over _catch_s
+## (CATCH_S, or less: done by the strike).
 var _catch := 0.0
+var _catch_s := CATCH_S
 var _from_t := 0.0
+## Where the release goes on from once the catch-up is made: the held moment itself (_from_t with no catch-up), so the strike's
+## and the end's frames are exactly those of a hold that stood still (no rounding of the creep's shortfall added back).
+var _from_held := 0.0
 var _w0 := 0.0
 var _floor := false
 var _palm_ids := Vector2i(-2, -2)
@@ -187,6 +200,10 @@ var _clock := 0.0
 var _last_key := ""
 var _last_alt := false
 var _last_at := -INF
+## The pistol's aim (see THE PISTOL'S AIM): its modifier (null until a pistol-aim pose first shows), its weight and kick now.
+var _aim_arm: Node
+var _aim_w := 0.0
+var _aim_kick := 0.0
 
 
 func _ready() -> void:
@@ -377,11 +394,15 @@ func _on_cast(m: String, _t: Node3D) -> void:
 	if nxt != StringName(anim_name):
 		_begin(nxt, "release", 0.0)                    # (the floor cast: the palms push down and the body stands)
 	else:
-		# (the moving hold's pose short of hold_s: the release goes on from it and makes it up over CATCH_S)
-		var short := maxf(_held_t() - clip_time(), 0.0) if phase == "press" else 0.0
+		# (the moving hold's pose short of hold_s: the release goes on from it and makes it up over CATCH_S, or by the strike
+		# when that comes sooner: a strike less than CATCH_S after the hold still lands on its own frame)
+		var held := _held_t() if phase == "press" else clip_time()
+		var short := maxf(held - clip_time(), 0.0) if phase == "press" else 0.0
 		_begin(nxt, "release", clip_time())            # (the wall's shove, the push: on from the held moment, or from
 		                                               # where the wind-up is when the lock let go before it was drawn)
 		_catch = short
+		_catch_s = clampf(_strike - held - 0.002, 0.001, CATCH_S) if _strike >= 0.0 else CATCH_S   # (made up a little before)
+		_from_held = held if short > 0.0 else _from_t
 	if phase != "release" or _strike < 0.0:
 		_strike_now()                                  # (no clip, or no strike time: the strike is now)
 
@@ -440,7 +461,9 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 	phase = p_phase
 	clip_t = 0.0
 	_from_t = from_t
+	_from_held = from_t
 	_catch = 0.0
+	_catch_s = CATCH_S
 	_w0 = weight
 	if p_phase == "press":
 		_hold = float(pick.get("hold_s", _anim.get_meta(&"hold_s", _anim.length)))
@@ -485,8 +508,16 @@ func clip_time() -> float:
 		"press":
 			return _creep(clip_t) if _creeps() else minf(clip_t, _hold)
 		"release", "up":
-			return minf(_from_t + clip_t + _catch * smoothstep(0.0, CATCH_S, clip_t), _end())
+			return minf(_run(), _end())
 	return 0.0
+
+
+## The release's (or the stand's) own time on its clip, not yet capped at its end: on from where it began, the moving hold's
+## shortfall made up over _catch_s, then exactly the held moment plus the time since (_from_held).
+func _run() -> float:
+	if _catch > 0.0 and clip_t < _catch_s:
+		return _from_t + clip_t + _catch * smoothstep(0.0, _catch_s, clip_t)
+	return _from_held + clip_t
 
 
 ## The wind-up's time held at hold_s, as the lock has it (the strike's wait counts from here, as it always did).
@@ -515,6 +546,8 @@ func _process(dt: float) -> void:
 	dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
 	_cast_layers = []
+	_aim_w = 0.0
+	_aim_kick = 0.0
 	_tick(dt)
 	var rm := caster.player.ring_moves
 	if rm != null:
@@ -524,6 +557,7 @@ func _process(dt: float) -> void:
 	_tick_stance(dt)
 	_tick_struck(dt)
 	_apply()
+	_tick_aim()
 	_aim_follow(dt)
 
 
@@ -537,12 +571,56 @@ func _aim_follow(dt: float) -> void:
 	var want := 0.0
 	var cam: Camera3D = caster.player.camera if caster.player != null else null
 	if phase == "press" and caster.elem() and caster.state in [SwayCaster.State.LOCKING, SwayCaster.State.FULL] \
-			and cam != null and cam.is_inside_tree():
+			and cam != null and cam.is_inside_tree() and not _pistol_aim():      # (the pistol's aim: the arm and head aim it)
 		var pitch := asin(clampf(-cam.global_basis.z.y, -1.0, 1.0))
 		want = clampf(-pitch * AIM_LEAN, -AIM_LEAN_MAX, AIM_LEAN_MAX)
 	aim_lean = move_toward(aim_lean, want, dt * 2.5)
 	if _pose != null and is_instance_valid(_pose):
 		_pose.lean = aim_lean
+
+
+## The pose on the body is shown as the pistol's aim (its pick's "aim": "pistol"; see THE PISTOL'S AIM).
+func _pistol_aim() -> bool:
+	return _anim != null and phase != "" and not pick.is_empty() and String(pick.get("aim", "")) == "pistol"
+
+
+## How far the clip's arm is on the aim at its time `t` (0..1): raised over its aim_in_s, lowered from back_s to its end.
+func _aim_in(t: float) -> float:
+	var a_in := maxf(float(_anim.get_meta(&"aim_in_s", 0.2)), 0.01)
+	var back := float(pick.get("back_s", _anim.get_meta(&"back_s", _anim.length)))
+	return smoothstep(0.0, a_in, t) * (1.0 - smoothstep(back, maxf(_anim.length, back + 0.01), t))
+
+
+## The pistol's aim after the cast's pose (BendAimArm): right after the cast's ToolPose (before the body's helpers), its
+## weight and kick this frame's, its target the crosshair's point (the camera's ray, FrontierPlayer.get_aim_point; with no
+## camera 10 m ahead of the chest); off (weight 0) with no pistol-aim pose showing.
+func _tick_aim() -> void:
+	if _aim_w <= 0.0:
+		if _aim_arm != null and is_instance_valid(_aim_arm):
+			_aim_arm.set(&"weight", 0.0)
+			_aim_arm.set(&"kick_deg", 0.0)
+		return
+	var p := caster.player
+	var sk := p.skeleton
+	if sk == null or _pose == null or not is_instance_valid(_pose) or _pose.get_parent() != sk:
+		return
+	if _aim_arm == null or not is_instance_valid(_aim_arm):
+		_aim_arm = BEND_AIM_ARM.new()
+		_aim_arm.name = "BendAimArm"
+	if _aim_arm.get_parent() != sk:
+		if _aim_arm.get_parent() != null:
+			_aim_arm.get_parent().remove_child(_aim_arm)
+		sk.add_child(_aim_arm)
+	var at := _pose.get_index()
+	var now := _aim_arm.get_index()
+	if now != at + 1:
+		sk.move_child(_aim_arm, at if now < at else at + 1)
+	var cam: Camera3D = p.camera
+	var aim := p.get_aim_point() if cam != null and cam.is_inside_tree() \
+			else p.global_position + Vector3.UP * 1.4 - p.global_basis.z * 10.0
+	_aim_arm.set(&"weight", _aim_w)
+	_aim_arm.set(&"kick_deg", _aim_kick)
+	_aim_arm.set(&"target", sk.global_transform.affine_inverse() * aim)
 
 
 ## The stance's layer, the cast's over it, then the knock's over them, onto the ToolPose (off when there are none).
@@ -602,7 +680,7 @@ func _tick(dt: float) -> void:
 				pressed = true                                          # (the wind-up drawn: the palms ready)
 		"release", "up":
 			var end := _end()
-			var run := _from_t + clip_t + _catch * smoothstep(0.0, CATCH_S, clip_t)
+			var run := _run()
 			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((end - run) / BLEND_OUT_S, 0.0, 1.0))
 			if phase == "release" and not _struck and (t >= _strike or run >= end):
 				_strike_now()                                       # (the strike's moment: the move leaves the hand)
@@ -616,7 +694,15 @@ func _tick(dt: float) -> void:
 	if mask == "full" and _freed():
 		mask = "upper"                  # (a kick freed at its strike: its legs give way to the walk's as he moves off, below)
 	var st := _sample_t(t)                                          # (a fighting style's clip is shown on the element's timeline)
-	if mask != "upper":
+	if _pistol_aim():
+		# (the pistol's aim: the whole clip standing, its right arm alone over the locomotion's body moving; BendAimArm after it)
+		var still_a := 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": "arm_r"},
+				{"anim": _anim, "time": st, "weight": w * still_a, "mask": "full"}]
+		_aim_w = w * _aim_in(st)
+		_aim_kick = BEND_AIM_ARM.kick_curve(st, float(_anim.get_meta(&"strike_s", -1.0)), float(_anim.get_meta(&"kick_deg", 0.0)),
+				float(_anim.get_meta(&"kick_in_s", 0.04)), float(_anim.get_meta(&"kick_back_s", 0.2))) * _aim_w
+	elif mask != "upper":
 		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": mask}]
 	else:
 		var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
@@ -752,6 +838,9 @@ func _tick_stance(dt: float) -> void:
 func _exit_tree() -> void:
 	knock = ""
 	_stop()
+	if _aim_arm != null and is_instance_valid(_aim_arm):
+		_aim_arm.queue_free()
+	_aim_arm = null
 
 
 # ---------------------------------------------------------------- the % ring's body state (round 3)

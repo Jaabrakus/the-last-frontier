@@ -2,7 +2,7 @@ extends SceneTree
 ## The Character Advancement window's data and logic (scripts/ui/advancement/: AdvancementData, AdvancementLoadout,
 ## AdvancementStore, AdvancementLayout; data/ui/advancement.json, advancement_layout.json, data/bending/fighting_styles.json;
 ## artifacts/ui_audit/advancement/plan.md sections 2-5), headless, no level:
-##   data       every node of data/sway/skill_tree.json loads (133 in the draft of 2026-10-09; 135 since the Fissure's Deep Fissure and Fault Line, 2026-10-10); excludes are symmetric;
+##   data       every node of data/sway/skill_tree.json loads (133 in the draft of 2026-10-09; 135 since the Fissure's Deep Fissure and Fault Line, 2026-10-10; 136 with fire's Lightning Pistol, 2026-10-11); excludes are symmetric;
 ##              20 classes (each element's four styles and Jeet Kune Do), one canon each, Boxing animated and pickable,
 ##              Capoeira parked, the rest coming; each style's rail (stance, jab string, signature, guard) and levers
 ##              (two up, two down); the trees' titles; search
@@ -97,7 +97,7 @@ func _data() -> void:
 	for el: String in AdvancementData.ELEMENTS:
 		total += AdvancementData.nodes(el).size()
 	check(total == _raw_count() and total > 0, "every node of skill_tree.json loads (%d)" % total)
-	check(total == 135, "the tree's 135 nodes (%d)" % total)
+	check(total == 136, "the tree's 136 nodes (%d)" % total)
 	var asym: Array = []
 	for el: String in AdvancementData.ELEMENTS:
 		for n: Dictionary in AdvancementData.nodes(el):

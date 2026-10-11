@@ -5512,7 +5512,8 @@
         ]
        },
        "excludes": [
-        "fire.lightning.long"
+        "fire.lightning.long",
+        "fire.lightning.pistol"
        ],
        "identity": "pass: numbers only"
       },
@@ -5525,7 +5526,8 @@
        "mode": "lightning",
        "requires": [],
        "excludes": [
-        "fire.lightning.short_fuse"
+        "fire.lightning.short_fuse",
+        "fire.lightning.pistol"
        ],
        "ring_cost": 1,
        "ring_legal": false,
@@ -5564,6 +5566,52 @@
        },
        "ring_note": "open world only: a range-for-charge swap",
        "identity": "pass: numbers only (open world only: a range-for-charge swap)"
+      },
+      {
+       "id": "fire.lightning.pistol",
+       "name": "Lightning Pistol",
+       "kind": "variation",
+       "chip": "1",
+       "extends_move": "fire_arc",
+       "mode": "lightning",
+       "requires": [],
+       "excludes": [
+        "fire.lightning.short_fuse",
+        "fire.lightning.long"
+       ],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "practised:fire_arc"
+       ],
+       "effect": "Lightning is drawn like the pistol: side-on, one arm out straight, two fingers on the crosshair (the game's own standing pistol aim; your head follows the aim). It charges in 1.5 s (from 2.2), but the flash on your fingers comes 0.4 s before it strikes (from 0.25), so a foe who sees it has longer to step off the line. Without it, Lightning is the original two-handed charge: slower, and harder to step out of.",
+       "plus": "charge 1.5 s",
+       "minus": "flash 0.4 s before the strike (from 0.25)",
+       "help": "Lightning from the pistol stance: quicker to charge, easier to see coming.",
+       "answer": "Same answer: only a perfect Parry sends it back; step off its line when you see the flash, with more time to do it.",
+       "owner_words": "2026-10-11: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"; \"dont forget the lightning pistol has the head look at cross hair\"",
+       "changes": [
+        {
+         "path": "pose:fire_arc/lightning",
+         "from": "own-bend-fire-lightning",
+         "to": "frontier-pistol-lightning"
+        },
+        {
+         "path": "move:fire_arc.mode_lock_s.lightning",
+         "from": 2.2,
+         "to": 1.5
+        },
+        {
+         "path": "spec:fire_arc/lightning.flash_s",
+         "from": 0.25,
+         "to": 0.4
+        }
+       ],
+       "visual": {
+        "kind": "hands",
+        "look": "the pistol's standing aim: the arm out straight on the crosshair, the head on it, the charge on two fingers"
+       },
+       "identity": "pass: the same bolt, % and Parry along the aim; it is cast from the pistol's stance, quicker to charge and with a longer tell"
       },
       {
        "id": "fire.lightning.forked",

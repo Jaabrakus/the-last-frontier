@@ -84,11 +84,16 @@ func _provenance() -> void:
 		var a := BendPoses.animation(nm)
 		var lib := BendPoses.library_of(nm)
 		var why := ""
+		# (the owner's one pick of Frontier tech, 2026-10-11: the Lightning Pistol's clip, built from the game's own pistol aim; not
+		# ours, so held to its own rule: its own library, named frontier-, listed by name in poses.json, its lineage in its metas)
+		var frontier := BendPoses.frontier_tech(nm)
 		if a == null:
 			why = "in no library"
-		elif not lib in BendPoses.LIBRARIES:
+		elif frontier and (lib != BendPoses.FRONTIER_LIBRARY or not String(a.get_meta(&"lineage", "")).contains("base library")):
+			why = "Frontier tech outside its own library or without its lineage (%s)" % lib
+		elif not frontier and not lib in BendPoses.LIBRARIES:
 			why = "not one of our own libraries (%s)" % lib
-		elif not nm.begins_with("own-"):
+		elif not frontier and not nm.begins_with("own-"):
 			why = "not named own-"
 		elif BendPoses.excluded(nm) or nm.begins_with("own-axe-d") or nm.begins_with("own-axe-w") or nm.begins_with("own-axe-a"):
 			why = "excluded"
@@ -102,8 +107,12 @@ func _provenance() -> void:
 			why = "no row in animations/SOURCE.md"
 		if why != "":
 			bad.append("%s: %s" % [nm, why])
-	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md%s"
+	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md (or the owner's listed Frontier tech, in its own library with its lineage)%s"
 			% [names.size(), "" if bad.is_empty() else " -- " + "; ".join(bad)])
+	var ft: Array = BendPoses.data().get("frontier_tech", [])
+	_expect(ft == ["frontier-pistol-lightning"] and BendPoses.usable("frontier-pistol-lightning") and not BendPoses.usable("frontier-unlisted")
+			and String(BendPoses.pick("fire_arc", "lightning", "fire").get("clip", "")) == "own-bend-fire-lightning",
+			"Frontier tech: only the listed clip may be a pose (%s), and Classic's Lightning is still the original" % [ft])
 	var ex: Array = BendPoses.data().get("exclude", [])
 	_expect("own-axe-d" in ex and "own-axe-w" in ex and "own-axe-a" in ex, "exclude names own-axe-d, -w and -a")
 	# the timing of each pose within its clip

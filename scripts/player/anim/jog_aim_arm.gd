@@ -45,9 +45,9 @@ func _process_modification() -> void:
 		if _head >= 0:
 			_face_local = (sk.get_bone_global_rest(_head).basis.orthonormalized().inverse() * Vector3(0, 0, 1)).normalized()
 	for i in PASSES:
-		var model := sk.get_bone_global_pose(_prop) * offset
-		var muzzle := model * MUZZLE
-		var d := (-model.basis.z).normalized()
+		var p := _pointer(sk)
+		var muzzle := p.origin
+		var d := (-p.basis.z).normalized()
 		var want := target - muzzle
 		if want.length_squared() < 0.04:
 			break
@@ -60,6 +60,13 @@ func _process_modification() -> void:
 		var turn := Basis(axis.normalized(), ang)
 		sk.set_bone_global_pose(_shoulder, Transform3D(turn * s.basis, s.origin))
 	_look(sk)
+
+
+## What the arm points (skeleton space): its origin the muzzle, its -Z the barrel's way. The pistol model's on the right hand's
+## prop bone (BendAimArm, Lightning's: the two fingers).
+func _pointer(sk: Skeleton3D) -> Transform3D:
+	var model := sk.get_bone_global_pose(_prop) * offset
+	return Transform3D(model.basis, model * MUZZLE)
 
 
 ## The head turned toward the aim point (the neck and the head sharing the turn).

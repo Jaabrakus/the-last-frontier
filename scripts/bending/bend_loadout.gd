@@ -13,6 +13,10 @@ extends RefCounted
 ##         lock   {"move/mode": seconds}             the mode's lock (SwayCaster._lock_time; NpcBending.lock_for for a bot)
 ##         wall   {hits, width_m, rise_s, ...}       Earth Wall's numbers (FormEffects.earth_wall, tree_wall; a bot's wall)
 ##         ice    {hits, rise_s, materials{snow}}    Ice Wall's numbers (BendEffects.ice_wall)
+##         pose   {"move/mode": clip}                a twist's own cast pose (a change pose:<move>/<mode>, from the element's
+##                                                   clip to the twist's: the Lightning Pistol, the owner 2026-10-11 "have this
+##                                                   or that and each has it perks and cons"); BendPoses.pick reads it for the
+##                                                   wearer (pose_of) before his fighting style
 ##       A node whose change touches a number nothing reads per wearer is refused whole (never half applied), and so is one whose
 ##       data drifted from its `from` (the move was retuned after the tree was written).
 ## Classic (nothing worn) is no meta at all: every reader asks `overlay_of(body)` first and gets {} (the same dictionaries it
@@ -39,6 +43,8 @@ const OVERLAY_META := &"loadout_overlay"
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
+## The overlay's parts (a number or a pose a node changes per wearer).
+const PARTS := ["spec", "lock", "wall", "ice", "pose"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -218,7 +224,7 @@ static func _resolve(id: String) -> Dictionary:
 	if not (changes is Array) or (changes as Array).is_empty():
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
-	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}}
+	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
@@ -235,6 +241,19 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 	var rest := path.substr(kind.length() + 1)
 	var to: Variant = c.get("to")
 	var from: Variant = c.get("from")
+	if kind == "pose":
+		# pose:<move>/<mode>: the twist's own clip in place of the element's (`from`: the element's pick now; `to` a clip a pose
+		# may play, BendPoses.usable)
+		var mv0 := rest.get_slice("/", 0)
+		var md0 := rest.substr(mv0.length() + 1)
+		if mv0 == "" or md0 == "" or not (to is String) or not (from is String):
+			return "%s: malformed" % path
+		var ep := BendPoses.pick(mv0, md0, String(out.el))
+		if String(ep.get("clip", "")) != String(from):
+			return "%s: the element casts it with %s, the node says from %s" % [path, String(ep.get("clip", "-")), String(from)]
+		if not BendPoses.usable(String(to)):
+			return "%s: %s is no clip a pose may play" % [path, String(to)]
+		return _put(out.pose as Dictionary, [rest], String(to))
 	if not (to is float or to is int) or not (from is float or from is int):
 		return "%s: not a number" % path
 	if kind == "spec":
@@ -331,7 +350,7 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 ## The overlay of `picks` for a body that casts as `element` (""): {spec, lock, wall, ice, ids (applied), refused {id: why}}. A pick
 ## that is not live, of another element, or that sets a number another already set, applies nothing.
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "ids": [], "refused": {}}
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "ids": [], "refused": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -344,16 +363,17 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 			(out.refused as Dictionary)[id] = why
 			continue
 		var trial := {"spec": (out.spec as Dictionary).duplicate(true), "lock": (out.lock as Dictionary).duplicate(true),
-				"wall": (out.wall as Dictionary).duplicate(true), "ice": (out.ice as Dictionary).duplicate(true)}
+				"wall": (out.wall as Dictionary).duplicate(true), "ice": (out.ice as Dictionary).duplicate(true),
+				"pose": (out.pose as Dictionary).duplicate(true)}
 		var clash := ""
-		for part: String in ["spec", "lock", "wall", "ice"]:
-			clash = _fold(trial[part] as Dictionary, r[part] as Dictionary)
+		for part: String in PARTS:
+			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary)
 			if clash != "":
 				break
 		if clash != "":
 			(out.refused as Dictionary)[id] = clash
 			continue
-		for part: String in ["spec", "lock", "wall", "ice"]:
+		for part: String in PARTS:
 			out[part] = trial[part]
 		(out.ids as Array).append(id)
 	return out
@@ -499,6 +519,17 @@ static func _merged(base: Dictionary, over: Dictionary) -> Dictionary:
 		else:
 			out[k] = over[k]
 	return out
+
+
+## The clip a worn twist casts move `m` at `mode` with ("" none: the element's own pick, or the style's): the overlay's pose
+## (BendPoses.pick asks it first for the wearer).
+static func pose_of(body: Object, m: String, mode: String) -> String:
+	if not _wears(body):
+		return ""
+	var ov := overlay_of(body)
+	if ov.is_empty():
+		return ""
+	return String((ov.get("pose", {}) as Dictionary).get("%s/%s" % [m, mode], ""))
 
 
 ## Move `m`'s lock at `mode` for `body`: `base` (the data's, before the stretch, the tier and lock_mult) or the wearer's own.

@@ -6,6 +6,8 @@ extends RefCounted
 ## from a video or a game, nothing measured off a reference clip (tools/anim_author/fit_ref.gd). So a pose names only clips
 ## of our own libraries (LIBRARIES: the Form casts, the own key-posed swings, the forage grab, and Frontier_Bend.res once
 ## the own bending clips are installed), never an excluded one (the file's "exclude", and NEVER whatever the file says).
+## The one exception is the owner's own pick (2026-10-11): Frontier tech, the game's own pistol aim for Lightning
+## (FRONTIER_LIBRARY, named frontier-, listed by name in the file's "frontier_tech"; frontier_tech()).
 ##
 ##   pick(move, mode, element)   {clip, mask, hand, root, alt, hold_s, strike_s, back_s, legs_always, then, press_s, from};
 ##                               (round 3: a pose may name a stand_in pose, played while its own clip is in no library yet; the
@@ -46,6 +48,12 @@ const LIBRARIES := [
 	"res://animations_extra/Frontier_Bend.res",
 ]
 const OWN_PREFIX := "own-"
+## Frontier tech the owner picked for the ring's casts (2026-10-11: "use our musket and pistol tech that we built in frontiers
+## over"; tools/anim_author/bake_bend_aim.gd: Lightning on the pistol's standing aim): built from the game's own aims, so not
+## our key-posed clips (the base library's lineage: animations/SOURCE.md). In a library of its own, named frontier-, and a pose
+## only as the file's "frontier_tech" lists it by name.
+const FRONTIER_LIBRARY := "res://animations_extra/Frontier_Bend_Aim.res"
+const FRONTIER_PREFIX := "frontier-"
 ## The fighting styles' poses (a style's library, stance, held guard and the modes it re-poses), and their clips' name prefix.
 const STYLES_PATH := "res://data/bending/style_poses.json"
 const STYLE_PREFIX := "own-style-"
@@ -119,6 +127,10 @@ static func animation(name: String) -> Animation:
 		var sl := _library(sp)
 		if sl != null and sl.has_animation(name):
 			return sl.get_animation(name)
+	if name.begins_with(FRONTIER_PREFIX):
+		var fl := _library(FRONTIER_LIBRARY)
+		if fl != null and fl.has_animation(name):
+			return fl.get_animation(name)
 	return null
 
 
@@ -135,6 +147,10 @@ static func library_of(name: String) -> String:
 		var sl := _library(sp)
 		if sl != null and sl.has_animation(name):
 			return sp
+	if name.begins_with(FRONTIER_PREFIX):
+		var fl := _library(FRONTIER_LIBRARY)
+		if fl != null and fl.has_animation(name):
+			return FRONTIER_LIBRARY
 	return ""
 
 
@@ -152,9 +168,14 @@ static func excluded(name: String) -> bool:
 	return false
 
 
-## A clip a pose may play: ours (own-), in a library, not excluded.
+## A clip a pose may play: ours (own-) or Frontier tech the owner picked (frontier_tech), in a library, not excluded.
 static func usable(name: String) -> bool:
-	return name.begins_with(OWN_PREFIX) and not excluded(name) and clip_exists(name)
+	return (name.begins_with(OWN_PREFIX) or frontier_tech(name)) and not excluded(name) and clip_exists(name)
+
+
+## Whether clip `name` is Frontier tech the owner picked for a pose (FRONTIER_PREFIX, listed in the file's "frontier_tech").
+static func frontier_tech(name: String) -> bool:
+	return name.begins_with(FRONTIER_PREFIX) and name in (data().get("frontier_tech", []) as Array)
 
 
 ## Every clip the file names (the poses and their alts, the element defaults and stances, the clips table's own and a
@@ -277,6 +298,18 @@ static func _style_pick(st: String, m: String, mode: String, element: String) ->
 	return out
 
 
+## A worn twist's own pose for move `m` at `mode` (BendLoadout.pose_of: a node's pose change, the Lightning Pistol's
+## frontier-pistol-lightning), filled as any pick; {} when the body wears none for it or its clip is not usable. Before the
+## fighting style's: the twist is the move's own choice, the style its look.
+static func _node_pick(body: Node, m: String, mode: String) -> Dictionary:
+	var nm := BendLoadout.pose_of(body, m, mode)
+	if nm == "" or not usable(nm):
+		return {}
+	var p := _filled({"clip": nm}, data())
+	p["from"] = "node"
+	return p
+
+
 ## Style pose `b` (a filled pose dictionary) timed as the element's pose `e`: e's hold_s, strike_s, back_s and root, end_s its
 ## clip's length, and a warp ([[time on e's timeline, time on b's clip], ...]) that puts b's own hold, strike, back and end on
 ## those, so SwayPose shows b's clip with its strike where e's is. {} when e is timed by a release clip of its own (then,
@@ -296,7 +329,9 @@ static func _timed_as(b: Dictionary, e: Dictionary) -> Dictionary:
 		bt.append(float(b[k]))
 		et.append(float(e[k]))
 	bt.append(ba.length)
-	et.append(ea.length)
+	# (an element pick timed as another clip itself, the gun-style Embers: its end is that clip's, end_s)
+	var e_end := float(e.get("end_s", ea.length))
+	et.append(e_end)
 	var warp: Array = [[0.0, 0.0]]
 	for i in et.size():
 		var last: Array = warp[warp.size() - 1]
@@ -306,7 +341,7 @@ static func _timed_as(b: Dictionary, e: Dictionary) -> Dictionary:
 	out["hold_s"] = et[0]
 	out["strike_s"] = et[1]
 	out["back_s"] = et[2]
-	out["end_s"] = ea.length
+	out["end_s"] = e_end
 	var root: Variant = e.get("root", false)
 	out["root"] = root if root is String else bool(root)    # ("strike": held up to the strike only, SwayPose.rooting)
 	out["warp"] = warp
@@ -333,6 +368,9 @@ static func has_spec(m: String, mode: String) -> bool:
 ## body, for its fighting style (null: the element's own).
 static func pick(m: String, mode: String, element: String, body: Node = null) -> Dictionary:
 	if body != null:
+		var np := _node_pick(body, m, mode)
+		if not np.is_empty():
+			return np
 		var st := style_of(body, element)
 		if st != "":
 			var sp := _style_pick(st, m, mode, element)
@@ -382,6 +420,15 @@ static func _filled(p: Dictionary, d: Dictionary) -> Dictionary:
 			p[k] = v
 	if p.has("hand"):
 		p["hand"] = HANDS.get(String(p.hand), String(p.hand))
+	if p.has("timed_as"):
+		# (a new look on the move's own timing: the gun-style Embers and Ice Spear on the sweep's and the overhand throw's)
+		var e := _as_pose(p.timed_as)
+		e.erase("timed_as")
+		var ta := _timed_as(p, _filled(e, d)) if not e.is_empty() and clip_exists(String(e.clip)) else {}
+		if not ta.is_empty():
+			ta.erase("timed_as")
+			return ta
+		p.erase("timed_as")
 	return p
 
 
@@ -402,6 +449,11 @@ static func body_strike_s(p: Dictionary) -> float:
 	if String(p.get("then", "")) != "":
 		var a := animation(String(p.clip))
 		return float(p.get("press_s", a.get_meta(&"press_s", -1.0) if a != null else -1.0))
+	if p.has("warp"):
+		# (a pose timed as another's: played straight through, its strike is its own clip's, not the warped timeline's)
+		var aw := animation(String(p.clip))
+		if aw != null and aw.has_meta(&"strike_s"):
+			return float(aw.get_meta(&"strike_s"))
 	if p.has("strike_s"):
 		return float(p.strike_s)
 	var a2 := animation(String(p.clip))

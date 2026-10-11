@@ -1368,6 +1368,18 @@ static func charge(body: Node3D, sway: Node = null) -> Charge:
 	return ch
 
 
+## The Ice Spear's water spear in the rifle hold (the owner, 2026-10-11: "the rifle will be a rifle stance and then water
+## conjures in to take the rifles spot like a spear but in water form and then fires it ... turning into a ice lance"): a
+## HeldSpear under `body`, the lock's look on the hands (SwayCaster._lock_looks, a pose whose clips row says "held":
+## "water_spear"), fed the lock's fill as its `level`.
+static func held_spear(body: Node3D, sway: Node = null) -> HeldSpear:
+	var hs := HeldSpear.new()
+	hs.name = "BendHeldSpear"
+	hs.sway = sway
+	body.add_child(hs)
+	return hs
+
+
 ## Grow's second click (▲) at the caster's hands (`sway`: the player's SwayCaster): a bright ring snapping out and a deeper
 ## click (BendSounds lock_grow).
 static func grow_click(sway: Node) -> void:
@@ -1615,6 +1627,205 @@ class Charge:
 		if _sparks != null:
 			_sparks.emitting = false
 		queue_free()
+
+
+## The Ice Spear's water spear (BendLooks.held_spear): a shaft of flowing water with a pointed head, laid along the rifle hold
+## from behind the right hand (at the cheek, on the stock) through the left (under the barrel) and on past it, drawn out of
+## the hands as the lock fills (`level`), drips falling off it, a glint at its point once full. end() (the lock over:
+## SwayCaster._end_charge): cast, it stays in the hands to the strike (the pose's struck), then freezes as it leaves (a frost
+## flash at its head, BendSounds ice_freeze: the Ice Spear's own bolt, the ice lance, flies from there); broken, it falls
+## as water.
+class HeldSpear:
+	extends Node3D
+
+	var sway: Node
+	var level := 0.0
+	## Behind the stock hand and past the barrel hand (m), the shaft's radius and the head's length at full.
+	const BACK_M := 0.1
+	const AHEAD_M := 0.34
+	const SHAFT_R := 0.034
+	const HEAD_M := 0.24
+	## The fill over which it is drawn out of the hands.
+	const GROW := Vector2(0.08, 0.55)
+	## Cast: how long it may wait for the strike before it goes anyway (s).
+	const STRIKE_WAIT_S := 0.6
+	static var _cone: Mesh
+	var _shaft: MeshInstance3D
+	var _head: MeshInstance3D
+	var _drips: GPUParticles3D
+	var _glint: MeshInstance3D
+	var _bones := Vector2i(-2, -2)       ## r_palm, l_palm
+	## The caster's skeleton, and the two hands (world) as its last update left them: after every modifier, the cast's pose
+	## included (read in its skeleton_updated, as SwayPose reads the palms; outside it the bones are the tree's own pose).
+	var _sk: Skeleton3D
+	var _rp := Vector3.INF
+	var _lp := Vector3.INF
+	var _t := 0.0
+	var _ending := false
+	var _end_t := 0.0
+	var _gone := false
+	## Listening for the pose's strike once the lock is cast (end()); let go when it leaves the tree.
+	var _struck_cb := Callable()
+
+	func _ready() -> void:
+		top_level = true
+		visible = false
+		var b := get_parent()
+		_sk = b.get(&"skeleton") as Skeleton3D if b != null and &"skeleton" in b else null
+		if _sk != null:
+			_sk.skeleton_updated.connect(_on_skeleton_updated)
+		if BendLooks.live():
+			_build()
+		_place()
+		BendSounds.play(&"water_slosh", global_position, -6.0)
+
+	func _exit_tree() -> void:
+		if _sk != null and is_instance_valid(_sk) and _sk.skeleton_updated.is_connected(_on_skeleton_updated):
+			_sk.skeleton_updated.disconnect(_on_skeleton_updated)
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		if _struck_cb.is_valid() and p != null and is_instance_valid(p) and p.is_connected(&"struck", _struck_cb):
+			p.disconnect(&"struck", _struck_cb)
+
+	func _on_skeleton_updated() -> void:
+		if _bones.x == -2:
+			_bones = Vector2i(_sk.find_bone("r_palm"), _sk.find_bone("l_palm"))
+		if _bones.x < 0 or _bones.y < 0:
+			return
+		_rp = _sk.global_transform * _sk.get_bone_global_pose(_bones.x).origin
+		_lp = _sk.global_transform * _sk.get_bone_global_pose(_bones.y).origin
+		if not _gone:
+			_place()
+
+	func _build() -> void:
+		_shaft = BendLooks._mesh(self, ToonFx.sphere(16), ToonFx.mat("water"))
+		_shaft.rotation.x = -PI / 2.0                 # (the sphere's poles, its flow's way, along the spear)
+		_shaft.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+		# (the head a cone of the same water, its point ahead: it is water until it leaves the hands)
+		if _cone == null:
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.0
+			cm.bottom_radius = 1.0
+			cm.height = 1.0
+			cm.radial_segments = 12
+			cm.rings = 2
+			_cone = cm
+		_head = BendLooks._mesh(self, _cone, ToonFx.mat("water"))
+		_head.rotation.x = -PI / 2.0                  # (its point, the cone's top, ahead)
+		_head.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+		_drips = BendLooks.emitter(self, "water", Vector3(0.025, 0.025, 0.3), 7, 0.4, -0.3, 0.045)
+		_glint = BendLooks._mesh(self, ToonFx.quad(), ToonFx.mat("star_still"))
+		_glint.visible = false
+
+	## The stock hand and the barrel hand (world; INF before the skeleton's first update).
+	func _hands() -> Array:
+		return [_rp, _lp]
+
+	func _place() -> void:
+		var h := _hands()
+		var rear: Vector3 = h[0]
+		var front: Vector3 = h[1]
+		var b := get_parent() as Node3D
+		if not rear.is_finite() or not front.is_finite():
+			if b == null:
+				return
+			front = b.global_position + Vector3.UP * 1.35 - b.global_basis.z * 0.45
+			rear = front + b.global_basis.z * 0.45
+		var way := front - rear
+		# (the hands close together, through the scoop: the body's own way ahead)
+		var fwd := -b.global_basis.z if b != null else Vector3.FORWARD
+		way = fwd.lerp(way.normalized(), smoothstep(0.12, 0.3, way.length())) if way.length() > 1e-4 else fwd
+		way = way.normalized()
+		var grow := smoothstep(GROW.x, GROW.y, level)
+		var a := rear - way * BACK_M
+		var z := front + way * AHEAD_M
+		var mid := (a + z) * 0.5
+		var full := a.distance_to(z)
+		var up := Vector3.UP if absf(way.dot(Vector3.UP)) < 0.98 else Vector3.BACK
+		global_transform = Transform3D(Basis.looking_at(way, up), mid)
+		visible = grow > 0.01 and not _gone
+		var pulse := 1.0 + (0.06 * sin(_t * 14.0) if level >= 1.0 else 0.0)
+		var len_now := full * grow
+		if _shaft != null:
+			_shaft.scale = Vector3(SHAFT_R * (0.45 + 0.55 * grow) * pulse, maxf(len_now * 0.5, 0.01), SHAFT_R * (0.45 + 0.55 * grow) * pulse)
+		if _head != null:
+			# (the cone: twice the shaft's girth at its base, HEAD_M long, its base just inside the shaft's end)
+			var hs := HEAD_M * grow
+			_head.scale = Vector3(SHAFT_R * 2.0 * grow * pulse, maxf(hs, 0.005), SHAFT_R * 2.0 * grow * pulse)
+			_head.position = Vector3(0.0, 0.0, -len_now * 0.5 - hs * 0.4)
+		if _drips != null:
+			_drips.amount_ratio = lerpf(0.3, 1.0, grow)
+		if _glint != null:
+			_glint.visible = level >= 1.0
+			_glint.position = Vector3(0.0, 0.0, -len_now * 0.5 - HEAD_M * 0.9)
+			_glint.scale = Vector3.ONE * (0.18 + 0.05 * sin(_t * 20.0))
+
+	## The head's point (world).
+	func tip() -> Vector3:
+		return global_transform * Vector3(0.0, 0.0, -(_shaft.scale.y if _shaft != null else 0.4) - HEAD_M * 0.8)
+
+	func _process(dt: float) -> void:
+		_t += dt
+		if _gone:
+			return
+		if _ending:
+			_end_t += dt
+			var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+			var phase := String(p.get(&"phase")) if p != null and is_instance_valid(p) else ""
+			if phase != "release":
+				_fall()                                  # (broken, or the pose gone: it falls as water)
+				return
+			if _end_t >= STRIKE_WAIT_S:
+				_freeze()
+				return
+		_place()
+
+	## The lock over (SwayCaster._end_charge): cast, it waits in the hands for the strike; else it falls.
+	func end() -> void:
+		if _ending or _gone or is_queued_for_deletion():
+			return
+		_ending = true
+		_end_t = 0.0
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		if p != null and is_instance_valid(p) and p.has_signal(&"struck"):
+			_struck_cb = func(_m: String) -> void: _freeze()
+			p.connect(&"struck", _struck_cb, CONNECT_ONE_SHOT)
+
+	## Thrown: it freezes into the lance as it leaves (the Ice Spear's bolt flies from the hand).
+	func _freeze() -> void:
+		if _gone:
+			return
+		_place()
+		_gone = true
+		var at := tip() if visible else global_position
+		BendSounds.play(&"ice_freeze", at, -4.0)
+		var pool := BendLooks._pool() if BendLooks.live() else null
+		if pool != null and visible:
+			pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.14, 0.25, 0.9, BendLooks.ICE, Color(0.92, 0.99, 1.0))
+			pool.shoot("puff_frost", global_position, 8, -global_basis.z, 40.0, Vector2(0.3, 1.0), Vector2(0.12, 0.22), 0.45,
+					Vector3.ZERO, 3.0, {"box": Vector3(0.04, 0.04, 0.4), "basis": global_basis})
+			pool.shoot("star", at, 6, -global_basis.z, 50.0, Vector2(0.8, 2.0), Vector2(0.06, 0.12), 0.35, Vector3.ZERO, 2.0)
+		_finish()
+
+	## Broken: it falls from the hands as water.
+	func _fall() -> void:
+		if _gone:
+			return
+		_gone = true
+		var pool := BendLooks._pool() if BendLooks.live() else null
+		if pool != null and visible:
+			pool.shoot("drop", global_position, 14, Vector3.DOWN, 50.0, Vector2(0.4, 1.4), Vector2(0.04, 0.1), 0.6,
+					Vector3(0, -9.0, 0), 0.6, {"box": Vector3(0.04, 0.04, 0.35), "basis": global_basis})
+		_finish()
+
+	func _finish() -> void:
+		visible = false
+		if _drips != null:
+			_drips.emitting = false
+		var tree := get_tree()
+		if tree != null:
+			tree.create_timer(0.6).timeout.connect(queue_free)
+		else:
+			queue_free()
 
 
 ## Every effect played once 3 m before `cam`, a few mm big (each shader, particle program and pipeline compiled while the

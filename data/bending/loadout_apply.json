@@ -10,7 +10,8 @@
     "air.gust.full_sail is switched OFF (2026-10-10): the Gust held long became the Air Lance (a spear throw), so Full Sail now widens the plain Gust (2.4 m from 2, lock 0.5 s from 0.45) instead of the grown one; the soak measured the old numbers, and unverified is not live. Flip it to true once tools/ring/loadout_soak.gd element=air nodes=air.gust.full_sail is in the gate.",
     "earth.wall.thick and water.wall.thick_ice are switched OFF (2026-10-10 soak, tools/ring/loadout_soak.gd): the numbers apply and are tested, but the soak's bots never raise an Earth Wall or an Ice Wall (0 casts in 60 mirror games each; they only answer a held stone with one), so the fairness gate cannot see these two nodes. Their rates (Thick Wall 17/30 = 0.567, Thick Ice 23/60 = 0.383) are the mirror's own noise: with nothing worn the same seeds gave 18/30 for earth and, for water, exactly the games the node run played (9/30). Unverified is not live; flip each to true here once a duel or a bot that walls has measured it.",
     "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing only; Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
-    "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn."
+    "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn.",
+    "fire.lightning.pistol (Lightning Pistol, 2026-10-11, the owner: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"): fire's Storm twist. Worn, Lightning is cast from the game's standing pistol aim (its change pose:fire_arc/lightning, BendLoadout's pose overlay) and charges in 1.5 s (from 2.2), its flash 0.4 s before the strike (from 0.25); not worn, the original two-handed Lightning plays as before. Live on the owner's word for him to try; its numbers are starting values and have not been through the soak yet."
   ],
   "enabled": true,
   "classic_style": false,
@@ -22,7 +23,8 @@
     "water.skate.wet_trail": false,
     "fire.step.quick": true,
     "earth.wall.thick": false,
-    "water.wall.thick_ice": false
+    "water.wall.thick_ice": false,
+    "fire.lightning.pistol": true
   },
   "live": [
     "air.ball.dense",
@@ -31,7 +33,8 @@
     "earth.burrow.lie_low",
     "fire.step.quick",
     "earth.wall.thick",
-    "water.wall.thick_ice"
+    "water.wall.thick_ice",
+    "fire.lightning.pistol"
   ],
   "styles_live": ["boxing"]
 }

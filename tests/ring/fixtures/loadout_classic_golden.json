@@ -2731,7 +2731,7 @@
 		"air:fire_breath/smoke": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"air:fire_jab/air_hit": "{\"alt\":\"own-bend-air-hit-fire-l\",\"back_s\":0.333333333333333,\"clip\":\"own-bend-air-hit-fire\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.0666666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.133333333333333}",
 		"air:fire_jab/double_jab": "{\"back_s\":0.6,\"clip\":\"own-bend-fire-double\",\"from\":\"mode\",\"hand\":\"l_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"air:fire_jab/embers": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
+		"air:fire_jab/embers": "{\"alt\":{\"clip\":\"own-bend-fire-embers-gun-l\",\"timed_as\":\"own-bend-fire-sweep-l\"},\"back_s\":0.6,\"clip\":\"own-bend-fire-embers-gun\",\"end_s\":1.0,\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.3,\"warp\":[[0.0,0.0],[0.2,0.166666666666667],[0.3,0.233333333333333],[0.6,0.433333333333333],[1.0,0.733333333333333]]}",
 		"air:fire_jab/jab": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"air:fire_jab/pop": "{\"alt\":\"own-bend-jab-rise-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-jab-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.0666666666666667,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.166666666666667}",
 		"air:fire_jets/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -2763,7 +2763,7 @@
 		"air:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"air:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"air:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"air:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
+		"air:ice/spear": "{\"back_s\":0.7,\"clip\":\"own-bend-water-ice-rifle\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"l_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
 		"air:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"air:patch/patch": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-palm\",\"from\":\"cast\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"air:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -2852,7 +2852,7 @@
 		"earth:fire_breath/smoke": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"earth:fire_jab/air_hit": "{\"alt\":\"own-bend-air-hit-fire-l\",\"back_s\":0.333333333333333,\"clip\":\"own-bend-air-hit-fire\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.0666666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.133333333333333}",
 		"earth:fire_jab/double_jab": "{\"back_s\":0.6,\"clip\":\"own-bend-fire-double\",\"from\":\"mode\",\"hand\":\"l_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"earth:fire_jab/embers": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
+		"earth:fire_jab/embers": "{\"alt\":{\"clip\":\"own-bend-fire-embers-gun-l\",\"timed_as\":\"own-bend-fire-sweep-l\"},\"back_s\":0.6,\"clip\":\"own-bend-fire-embers-gun\",\"end_s\":1.0,\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.3,\"warp\":[[0.0,0.0],[0.2,0.166666666666667],[0.3,0.233333333333333],[0.6,0.433333333333333],[1.0,0.733333333333333]]}",
 		"earth:fire_jab/jab": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"earth:fire_jab/pop": "{\"alt\":\"own-bend-jab-rise-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-jab-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.0666666666666667,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.166666666666667}",
 		"earth:fire_jets/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -2884,7 +2884,7 @@
 		"earth:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"earth:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"earth:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"earth:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
+		"earth:ice/spear": "{\"back_s\":0.7,\"clip\":\"own-bend-water-ice-rifle\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"l_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
 		"earth:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"earth:patch/patch": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"cast\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"earth:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -2973,7 +2973,7 @@
 		"fire:fire_breath/smoke": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"fire:fire_jab/air_hit": "{\"alt\":\"own-bend-air-hit-fire-l\",\"back_s\":0.333333333333333,\"clip\":\"own-bend-air-hit-fire\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.0666666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.133333333333333}",
 		"fire:fire_jab/double_jab": "{\"back_s\":0.6,\"clip\":\"own-bend-fire-double\",\"from\":\"mode\",\"hand\":\"l_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"fire:fire_jab/embers": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
+		"fire:fire_jab/embers": "{\"alt\":{\"clip\":\"own-bend-fire-embers-gun-l\",\"timed_as\":\"own-bend-fire-sweep-l\"},\"back_s\":0.6,\"clip\":\"own-bend-fire-embers-gun\",\"end_s\":1.0,\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.3,\"warp\":[[0.0,0.0],[0.2,0.166666666666667],[0.3,0.233333333333333],[0.6,0.433333333333333],[1.0,0.733333333333333]]}",
 		"fire:fire_jab/jab": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"fire:fire_jab/pop": "{\"alt\":\"own-bend-jab-rise-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-jab-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.0666666666666667,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.166666666666667}",
 		"fire:fire_jets/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -3005,7 +3005,7 @@
 		"fire:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"fire:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"fire:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"fire:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
+		"fire:ice/spear": "{\"back_s\":0.7,\"clip\":\"own-bend-water-ice-rifle\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"l_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
 		"fire:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"fire:patch/patch": "{\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"cast\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"fire:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -3094,7 +3094,7 @@
 		"water:fire_breath/smoke": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"water:fire_jab/air_hit": "{\"alt\":\"own-bend-air-hit-fire-l\",\"back_s\":0.333333333333333,\"clip\":\"own-bend-air-hit-fire\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.0666666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.133333333333333}",
 		"water:fire_jab/double_jab": "{\"back_s\":0.6,\"clip\":\"own-bend-fire-double\",\"from\":\"mode\",\"hand\":\"l_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"water:fire_jab/embers": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
+		"water:fire_jab/embers": "{\"alt\":{\"clip\":\"own-bend-fire-embers-gun-l\",\"timed_as\":\"own-bend-fire-sweep-l\"},\"back_s\":0.6,\"clip\":\"own-bend-fire-embers-gun\",\"end_s\":1.0,\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.3,\"warp\":[[0.0,0.0],[0.2,0.166666666666667],[0.3,0.233333333333333],[0.6,0.433333333333333],[1.0,0.733333333333333]]}",
 		"water:fire_jab/jab": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"water:fire_jab/pop": "{\"alt\":\"own-bend-jab-rise-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-jab-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.0666666666666667,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-sweep-l\",\"clip\":\"own-bend-fire-sweep\"},\"strike_s\":0.166666666666667}",
 		"water:fire_jets/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -3126,7 +3126,7 @@
 		"water:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"water:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"water:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"water:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
+		"water:ice/spear": "{\"back_s\":0.7,\"clip\":\"own-bend-water-ice-rifle\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"l_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
 		"water:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"water:patch/patch": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-water-wave\",\"from\":\"cast\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"water:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -3179,7 +3179,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "eb7bdeacc17cf624",
 			"wait": 0.1333
 		},
 		"air:air_blast/ball@0.933": {
@@ -3187,7 +3187,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "31ad72984eaa37da",
 			"wait": 0.1333
 		},
 		"air:air_blast/slice@0.030": {
@@ -3203,7 +3203,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_blast/slice@0.867": {
@@ -3211,7 +3211,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"air:air_blast/slice@alt": {
@@ -3219,7 +3219,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_blast/vacuum@0.030": {
@@ -3235,7 +3235,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "eb7bdeacc17cf624",
 			"wait": 0.1333
 		},
 		"air:air_blast/vacuum@0.933": {
@@ -3243,7 +3243,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "31ad72984eaa37da",
 			"wait": 0.1333
 		},
 		"air:air_gust/gust@0.030": {
@@ -3259,7 +3259,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "eb7bdeacc17cf624",
 			"wait": 0.1333
 		},
 		"air:air_gust/gust@0.933": {
@@ -3267,7 +3267,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "31ad72984eaa37da",
 			"wait": 0.1333
 		},
 		"air:air_gust/pull@0.030": {
@@ -3283,7 +3283,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 10,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1667
 		},
 		"air:air_gust/pull@0.900": {
@@ -3291,7 +3291,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 10,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1667
 		},
 		"air:air_gust/slam@0.030": {
@@ -3299,7 +3299,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 11,
-			"trace": "a468047e5f1af509",
+			"trace": "7450752a94900e7f",
 			"wait": 0.1667
 		},
 		"air:air_gust/slam@0.250": {
@@ -3307,7 +3307,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "f4b1109479c72bc5",
 			"wait": 0.1
 		},
 		"air:air_gust/slam@0.800": {
@@ -3315,7 +3315,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "6d90c1de0f3afe75",
 			"wait": 0.1
 		},
 		"air:air_jump/dash@0.030": {
@@ -3331,7 +3331,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"air:air_jump/dash@0.900": {
@@ -3339,7 +3339,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"air:air_jump/glide@0.030": {
@@ -3355,7 +3355,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_jump/glide@0.867": {
@@ -3363,7 +3363,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"air:air_jump/leap@0.030": {
@@ -3379,7 +3379,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"air:air_jump/leap@0.900": {
@@ -3387,7 +3387,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"air:air_palm/air_hit@0.030": {
@@ -3395,7 +3395,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "6ac672053b41c6d2",
+			"trace": "59794cc7682f6b62",
 			"wait": 0.1
 		},
 		"air:air_palm/air_hit@0.217": {
@@ -3403,7 +3403,7 @@
 			"end": 36,
 			"root": 0,
 			"struck": 4,
-			"trace": "e6997e60cff17059",
+			"trace": "0b923036531335f4",
 			"wait": 0.0667
 		},
 		"air:air_palm/air_hit@0.767": {
@@ -3419,7 +3419,7 @@
 			"end": 36,
 			"root": 0,
 			"struck": 4,
-			"trace": "e6997e60cff17059",
+			"trace": "0b923036531335f4",
 			"wait": 0.0667
 		},
 		"air:air_palm/cushion@0.030": {
@@ -3435,7 +3435,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "e36d9f7844f1f368",
+			"trace": "9fa35cb786ca8249",
 			"wait": 0.1333
 		},
 		"air:air_palm/cushion@1.000": {
@@ -3443,7 +3443,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "e36d9f7844f1f368",
+			"trace": "12f4486e021a1d74",
 			"wait": 0.1333
 		},
 		"air:air_palm/palm@0.030": {
@@ -3459,7 +3459,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_palm/palm@0.867": {
@@ -3467,7 +3467,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"air:air_palm/palm@alt": {
@@ -3475,7 +3475,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_palm/pop@0.030": {
@@ -3483,7 +3483,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 8,
-			"trace": "4cb2196bf4edc863",
+			"trace": "44191e86d99ea779",
 			"wait": 0.1333
 		},
 		"air:air_palm/pop@0.217": {
@@ -3491,7 +3491,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"air:air_palm/pop@0.767": {
@@ -3507,7 +3507,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"air:air_palm/trip@0.030": {
@@ -3523,7 +3523,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "eb7bdeacc17cf624",
 			"wait": 0.1333
 		},
 		"air:air_palm/trip@0.933": {
@@ -3531,7 +3531,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "31ad72984eaa37da",
 			"wait": 0.1333
 		},
 		"air:air_redirect/dust@0.030": {
@@ -3547,7 +3547,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "eb7bdeacc17cf624",
 			"wait": 0.1333
 		},
 		"air:air_redirect/dust@0.933": {
@@ -3555,7 +3555,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 8,
-			"trace": "c83e36e98dec263f",
+			"trace": "31ad72984eaa37da",
 			"wait": 0.1333
 		},
 		"air:air_redirect/gust_step@0.030": {
@@ -3571,7 +3571,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"air:air_redirect/gust_step@0.900": {
@@ -3579,7 +3579,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"air:air_redirect/redirect@0.030": {
@@ -3595,7 +3595,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_redirect/redirect@0.867": {
@@ -3603,7 +3603,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"air:air_redirect/redirect@alt": {
@@ -3611,7 +3611,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:air_shield/cyclone@0.030": {
@@ -3627,7 +3627,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "d15e4715afc16ede",
 			"wait": 0.1
 		},
 		"air:air_shield/cyclone@0.867": {
@@ -3635,7 +3635,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "565aab575fefaeb9",
 			"wait": 0.1
 		},
 		"air:air_shield/shield@0.030": {
@@ -3651,7 +3651,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 10,
-			"trace": "654b3a818654c924",
+			"trace": "2568d8af04e48281",
 			"wait": 0.1667
 		},
 		"air:air_shield/shield@0.867": {
@@ -3659,7 +3659,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 10,
-			"trace": "654b3a818654c924",
+			"trace": "658c5874ab9c3478",
 			"wait": 0.1667
 		},
 		"air:air_shield/tornado@0.030": {
@@ -3675,7 +3675,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "d15e4715afc16ede",
 			"wait": 0.1
 		},
 		"air:air_shield/tornado@0.867": {
@@ -3683,7 +3683,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "565aab575fefaeb9",
 			"wait": 0.1
 		},
 		"air:air_wall/wall@0.030": {
@@ -3699,7 +3699,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "926943e90bfcd187",
+			"trace": "073c273b67d25787",
 			"wait": 0.1333
 		},
 		"air:air_wall/wall@0.933": {
@@ -3707,7 +3707,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "926943e90bfcd187",
+			"trace": "0b0a2ee17ae64111",
 			"wait": 0.1333
 		},
 		"air:evade/backstep@0.030": {
@@ -3723,7 +3723,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"air:evade/backstep@0.900": {
@@ -3731,7 +3731,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"air:evade/sidestep@0.030": {
@@ -3747,7 +3747,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1
 		},
 		"air:evade/sidestep@0.900": {
@@ -3755,7 +3755,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1
 		},
 		"air:evade/slip@0.030": {
@@ -3763,7 +3763,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 14,
-			"trace": "e0687747ee7aac3c",
+			"trace": "cd6fc8b18e575c5b",
 			"wait": 0.2333
 		},
 		"air:evade/slip@0.250": {
@@ -3771,7 +3771,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 10,
-			"trace": "5b60c44615122cd7",
+			"trace": "8caf1bf6b3585c73",
 			"wait": 0.1667
 		},
 		"air:evade/slip@0.800": {
@@ -3779,7 +3779,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 10,
-			"trace": "5b60c44615122cd7",
+			"trace": "13a39f623bb2bea3",
 			"wait": 0.1667
 		},
 		"air:evade/slip@alt": {
@@ -3787,7 +3787,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 10,
-			"trace": "5b60c44615122cd7",
+			"trace": "8caf1bf6b3585c73",
 			"wait": 0.1667
 		},
 		"air:evade/spin@0.030": {
@@ -3803,7 +3803,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "d15e4715afc16ede",
 			"wait": 0.1
 		},
 		"air:evade/spin@0.867": {
@@ -3811,7 +3811,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "565aab575fefaeb9",
 			"wait": 0.1
 		},
 		"air:gust/pull@0.030": {
@@ -3827,7 +3827,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 7,
-			"trace": "5be5b160adba2e5c",
+			"trace": "dfcc9b83c1bed169",
 			"wait": 0.1
 		},
 		"air:gust/pull@1.000": {
@@ -3835,7 +3835,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 7,
-			"trace": "5be5b160adba2e5c",
+			"trace": "107a846c5646ce80",
 			"wait": 0.1
 		},
 		"air:wind_run/air_scooter@0.030": {
@@ -3851,7 +3851,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:wind_run/air_scooter@0.867": {
@@ -3859,7 +3859,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"air:wind_run/updraft@0.030": {
@@ -3875,7 +3875,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"air:wind_run/updraft@0.900": {
@@ -3883,7 +3883,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"air:wind_run/wind_run@0.030": {
@@ -3899,7 +3899,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "b52f60fc71709731",
 			"wait": 0.1
 		},
 		"air:wind_run/wind_run@0.867": {
@@ -3907,7 +3907,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 6,
-			"trace": "ff5465119bdec47b",
+			"trace": "8dacf7445a1bdede",
 			"wait": 0.1
 		},
 		"earth:earth_grip/anchor@0.030": {
@@ -3923,7 +3923,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:earth_grip/anchor@1.033": {
@@ -3931,7 +3931,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:earth_grip/sink@0.030": {
@@ -3947,7 +3947,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:earth_grip/sink@1.033": {
@@ -3955,7 +3955,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:earth_grip/trap@0.030": {
@@ -3971,7 +3971,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:earth_grip/trap@1.033": {
@@ -3979,7 +3979,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/column@0.030": {
@@ -3995,7 +3995,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/column@1.033": {
@@ -4003,7 +4003,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/pull@0.030": {
@@ -4019,7 +4019,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "926943e90bfcd187",
+			"trace": "073c273b67d25787",
 			"wait": 0.1
 		},
 		"earth:earth_shove/pull@0.933": {
@@ -4027,7 +4027,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "926943e90bfcd187",
+			"trace": "0b0a2ee17ae64111",
 			"wait": 0.1
 		},
 		"earth:earth_shove/push@0.030": {
@@ -4043,7 +4043,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "031e4afe7f5a11bb",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/push@0.933": {
@@ -4051,7 +4051,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "2414b58619c320c7",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/push@alt": {
@@ -4059,7 +4059,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "031e4afe7f5a11bb",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/shove@0.030": {
@@ -4075,7 +4075,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/shove@1.033": {
@@ -4083,7 +4083,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/slam@0.030": {
@@ -4091,7 +4091,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 11,
-			"trace": "a468047e5f1af509",
+			"trace": "7450752a94900e7f",
 			"wait": 0.1667
 		},
 		"earth:earth_shove/slam@0.250": {
@@ -4099,7 +4099,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "f4b1109479c72bc5",
 			"wait": 0.1
 		},
 		"earth:earth_shove/slam@0.800": {
@@ -4107,7 +4107,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "6d90c1de0f3afe75",
 			"wait": 0.1
 		},
 		"earth:earth_shove/split@0.030": {
@@ -4123,7 +4123,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "d0b0bd48a3fb4d43",
+			"trace": "1c30b0994cc86e6f",
 			"wait": 0.1333
 		},
 		"earth:earth_shove/split@1.000": {
@@ -4131,7 +4131,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "d0b0bd48a3fb4d43",
+			"trace": "4121e19f5cb9f37e",
 			"wait": 0.1333
 		},
 		"earth:earth_skate/burrow@0.030": {
@@ -4147,7 +4147,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1
 		},
 		"earth:earth_skate/burrow@0.900": {
@@ -4155,7 +4155,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1
 		},
 		"earth:earth_skate/skate@0.030": {
@@ -4171,7 +4171,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1
 		},
 		"earth:earth_skate/skate@0.900": {
@@ -4179,7 +4179,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1
 		},
 		"earth:earth_skate/slide@0.030": {
@@ -4195,7 +4195,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1
 		},
 		"earth:earth_skate/slide@0.900": {
@@ -4203,7 +4203,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1
 		},
 		"earth:earth_wall/column@0.030": {
@@ -4219,7 +4219,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:earth_wall/column@1.033": {
@@ -4227,7 +4227,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:earth_wall/shell@0.030": {
@@ -4243,7 +4243,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:earth_wall/shell@1.033": {
@@ -4251,7 +4251,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:earth_wall/wall@0.030": {
@@ -4267,7 +4267,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:earth_wall/wall@1.033": {
@@ -4275,7 +4275,7 @@
 			"end": 60,
 			"root": 59,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:pillar/ramp@0.030": {
@@ -4291,7 +4291,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:pillar/ramp@1.033": {
@@ -4299,7 +4299,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:pillar/self@0.030": {
@@ -4315,7 +4315,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:pillar/self@1.033": {
@@ -4323,7 +4323,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:rock_jab/air_hit@0.030": {
@@ -4331,7 +4331,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 6,
-			"trace": "a55f08346ed4fe4c",
+			"trace": "cd9d4650ebdb3f54",
 			"wait": 0.1
 		},
 		"earth:rock_jab/air_hit@0.217": {
@@ -4339,7 +4339,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"earth:rock_jab/air_hit@0.767": {
@@ -4355,7 +4355,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"earth:rock_jab/kick_up@0.030": {
@@ -4371,7 +4371,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1333
 		},
 		"earth:rock_jab/kick_up@1.033": {
@@ -4379,7 +4379,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1333
 		},
 		"earth:rock_jab/pebbles@0.030": {
@@ -4395,7 +4395,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "aaa851b1f3b188f7",
 			"wait": 0.1
 		},
 		"earth:rock_jab/pebbles@0.900": {
@@ -4403,7 +4403,7 @@
 			"end": 56,
 			"root": 0,
 			"struck": 6,
-			"trace": "b92d826eb6142fab",
+			"trace": "f6a8d22dc70bd214",
 			"wait": 0.1
 		},
 		"earth:rock_jab/pop@0.030": {
@@ -4411,7 +4411,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 8,
-			"trace": "4cb2196bf4edc863",
+			"trace": "44191e86d99ea779",
 			"wait": 0.1333
 		},
 		"earth:rock_jab/pop@0.217": {
@@ -4419,7 +4419,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"earth:rock_jab/pop@0.767": {
@@ -4435,7 +4435,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"earth:rock_jab/stomp@0.030": {
@@ -4451,7 +4451,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "763d8fd36848d91e",
 			"wait": 0.1333
 		},
 		"earth:rock_jab/stomp@1.033": {
@@ -4459,7 +4459,7 @@
 			"end": 64,
 			"root": 63,
 			"struck": 8,
-			"trace": "6513dd71163ed6da",
+			"trace": "d2c5d0314904a061",
 			"wait": 0.1333
 		},
 		"earth:stone_catch/brace@0.030": {
@@ -4499,7 +4499,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "926943e90bfcd187",
+			"trace": "073c273b67d25787",
 			"wait": 0.1
 		},
 		"earth:stone_catch/catch@0.933": {
@@ -4507,7 +4507,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "926943e90bfcd187",
+			"trace": "0b0a2ee17ae64111",
 			"wait": 0.1
 		},
 		"earth:stone_catch/deflect@0.030": {
@@ -4523,7 +4523,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "031e4afe7f5a11bb",
 			"wait": 0.1333
 		},
 		"earth:stone_catch/deflect@0.933": {
@@ -4531,7 +4531,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "2414b58619c320c7",
 			"wait": 0.1333
 		},
 		"earth:stone_catch/deflect@alt": {
@@ -4539,7 +4539,7 @@
 			"end": 54,
 			"root": 0,
 			"struck": 8,
-			"trace": "46d116d8b0d0422e",
+			"trace": "031e4afe7f5a11bb",
 			"wait": 0.1333
 		},
 		"earth:stone_form/cannonball@0.030": {
@@ -4555,7 +4555,7 @@
 			"end": 62,
 			"root": 61,
 			"struck": 9,
-			"trace": "e37381e53e69ca10",
+			"trace": "35d1775a6761755c",
 			"wait": 0.1333
 		},
 		"earth:stone_form/cannonball@1.333": {
@@ -4563,7 +4563,7 @@
 			"end": 62,
 			"root": 61,
 			"struck": 9,
-			"trace": "e37381e53e69ca10",
+			"trace": "1c5ff4e6170e8004",
 			"wait": 0.1333
 		},
 		"earth:stone_form/disc@0.030": {
@@ -4579,7 +4579,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "d0b0bd48a3fb4d43",
+			"trace": "1c30b0994cc86e6f",
 			"wait": 0.1333
 		},
 		"earth:stone_form/disc@1.000": {
@@ -4587,7 +4587,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "d0b0bd48a3fb4d43",
+			"trace": "4121e19f5cb9f37e",
 			"wait": 0.1333
 		},
 		"earth:stone_form/spike@0.030": {
@@ -4603,7 +4603,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"earth:stone_form/spike@0.900": {
@@ -4611,7 +4611,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1333
 		},
 		"earth:stone_form/spike@alt": {
@@ -4619,7 +4619,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"fire:fire_arc/kick@0.030": {
@@ -4635,7 +4635,7 @@
 			"end": 60,
 			"root": 5,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1
 		},
 		"fire:fire_arc/kick@0.900": {
@@ -4643,7 +4643,7 @@
 			"end": 60,
 			"root": 5,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1
 		},
 		"fire:fire_arc/lightning@0.030": {
@@ -4659,7 +4659,7 @@
 			"end": 64,
 			"root": 0,
 			"struck": 8,
-			"trace": "f1a03ad6db5fa8ad",
+			"trace": "87928685898333d2",
 			"wait": 0.1333
 		},
 		"fire:fire_arc/lightning@1.767": {
@@ -4667,7 +4667,7 @@
 			"end": 64,
 			"root": 0,
 			"struck": 8,
-			"trace": "f1a03ad6db5fa8ad",
+			"trace": "0340a4c1df60e01b",
 			"wait": 0.1333
 		},
 		"fire:fire_arc/sweep@0.030": {
@@ -4683,7 +4683,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:fire_arc/sweep@0.900": {
@@ -4691,7 +4691,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "72f018b6e67ada51",
 			"wait": 0.1
 		},
 		"fire:fire_arc/sweep@alt": {
@@ -4699,7 +4699,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:fire_blast/fireball@0.030": {
@@ -4715,7 +4715,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_blast/fireball@0.867": {
@@ -4723,7 +4723,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "f8b58b51476c2680",
 			"wait": 0.1
 		},
 		"fire:fire_blast/fireball@alt": {
@@ -4731,7 +4731,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_blast/punch@0.030": {
@@ -4747,7 +4747,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_blast/punch@0.867": {
@@ -4755,7 +4755,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "f8b58b51476c2680",
 			"wait": 0.1
 		},
 		"fire:fire_blast/punch@alt": {
@@ -4763,7 +4763,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_blast/stream@0.030": {
@@ -4779,7 +4779,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 6,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "62129b5791bd1672",
 			"wait": 0.1
 		},
 		"fire:fire_blast/stream@0.867": {
@@ -4787,7 +4787,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 6,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "c67b9ebeffaea042",
 			"wait": 0.1
 		},
 		"fire:fire_breath/breath@0.030": {
@@ -4803,7 +4803,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1
 		},
 		"fire:fire_breath/breath@1.033": {
@@ -4811,7 +4811,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1
 		},
 		"fire:fire_breath/heat@0.030": {
@@ -4827,7 +4827,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1
 		},
 		"fire:fire_breath/heat@1.033": {
@@ -4835,7 +4835,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1
 		},
 		"fire:fire_breath/smoke@0.030": {
@@ -4851,7 +4851,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1
 		},
 		"fire:fire_breath/smoke@1.033": {
@@ -4859,7 +4859,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1
 		},
 		"fire:fire_jab/air_hit@0.030": {
@@ -4867,7 +4867,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 6,
-			"trace": "a55f08346ed4fe4c",
+			"trace": "cd9d4650ebdb3f54",
 			"wait": 0.1
 		},
 		"fire:fire_jab/air_hit@0.217": {
@@ -4875,7 +4875,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"fire:fire_jab/air_hit@0.767": {
@@ -4891,7 +4891,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"fire:fire_jab/double_jab@0.030": {
@@ -4907,7 +4907,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 6,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "62129b5791bd1672",
 			"wait": 0.1
 		},
 		"fire:fire_jab/double_jab@0.867": {
@@ -4915,39 +4915,39 @@
 			"end": 50,
 			"root": 0,
 			"struck": 6,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "c67b9ebeffaea042",
 			"wait": 0.1
 		},
 		"fire:fire_jab/embers@0.030": {
-			"clip": "own-bend-fire-sweep",
+			"clip": "own-bend-fire-embers-gun",
 			"end": 58,
 			"root": 0,
 			"struck": 16,
-			"trace": "a42c0b0eaaf77545",
+			"trace": "7465485b3ed75757",
 			"wait": 0.2667
 		},
 		"fire:fire_jab/embers@0.350": {
-			"clip": "own-bend-fire-sweep",
+			"clip": "own-bend-fire-embers-gun",
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "32087c529147c49a",
 			"wait": 0.1
 		},
 		"fire:fire_jab/embers@0.900": {
-			"clip": "own-bend-fire-sweep",
+			"clip": "own-bend-fire-embers-gun",
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "9afdda1c11f3561a",
 			"wait": 0.1
 		},
 		"fire:fire_jab/embers@alt": {
-			"clip": "own-bend-fire-sweep-l",
+			"clip": "own-bend-fire-embers-gun-l",
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "32087c529147c49a",
 			"wait": 0.1
 		},
 		"fire:fire_jab/jab@0.030": {
@@ -4963,7 +4963,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_jab/jab@0.867": {
@@ -4971,7 +4971,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "f8b58b51476c2680",
 			"wait": 0.1
 		},
 		"fire:fire_jab/jab@alt": {
@@ -4979,7 +4979,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_jab/pop@0.030": {
@@ -4987,7 +4987,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 8,
-			"trace": "4cb2196bf4edc863",
+			"trace": "44191e86d99ea779",
 			"wait": 0.1333
 		},
 		"fire:fire_jab/pop@0.217": {
@@ -4995,7 +4995,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"fire:fire_jab/pop@0.767": {
@@ -5011,7 +5011,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"fire:fire_jets/dash@0.030": {
@@ -5027,7 +5027,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:fire_jets/dash@0.900": {
@@ -5035,7 +5035,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:fire_jets/hover@0.030": {
@@ -5051,7 +5051,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "6aa29cee5e848851",
 			"wait": 0.1
 		},
 		"fire:fire_jets/hover@0.867": {
@@ -5059,7 +5059,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "c7f32e860f874237",
+			"trace": "f8b58b51476c2680",
 			"wait": 0.1
 		},
 		"fire:fire_jets/jets@0.030": {
@@ -5075,7 +5075,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:fire_jets/jets@0.900": {
@@ -5083,7 +5083,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:fire_jets/jump@0.030": {
@@ -5099,7 +5099,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:fire_jets/jump@0.900": {
@@ -5107,7 +5107,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:fire_kick/air_kick@0.030": {
@@ -5115,7 +5115,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 11,
-			"trace": "4cb2196bf4edc863",
+			"trace": "831a0ca59b148644",
 			"wait": 0.1667
 		},
 		"fire:fire_kick/air_kick@0.250": {
@@ -5123,7 +5123,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "62db7e639c2e6119",
+			"trace": "381529ff6cf91e52",
 			"wait": 0.1
 		},
 		"fire:fire_kick/air_kick@0.800": {
@@ -5131,7 +5131,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "62db7e639c2e6119",
+			"trace": "0b6b63d0fb3056c4",
 			"wait": 0.1
 		},
 		"fire:fire_kick/air_kick@alt": {
@@ -5139,7 +5139,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "62db7e639c2e6119",
+			"trace": "381529ff6cf91e52",
 			"wait": 0.1
 		},
 		"fire:fire_kick/high_kick@0.030": {
@@ -5155,7 +5155,7 @@
 			"end": 60,
 			"root": 5,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1
 		},
 		"fire:fire_kick/high_kick@0.900": {
@@ -5163,7 +5163,7 @@
 			"end": 60,
 			"root": 5,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1
 		},
 		"fire:fire_kick/high_kick@alt": {
@@ -5171,7 +5171,7 @@
 			"end": 60,
 			"root": 5,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1
 		},
 		"fire:fire_kick/kick@0.030": {
@@ -5187,7 +5187,7 @@
 			"end": 52,
 			"root": 5,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:fire_kick/kick@0.900": {
@@ -5195,7 +5195,7 @@
 			"end": 52,
 			"root": 5,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:fire_kick/kick@alt": {
@@ -5203,7 +5203,7 @@
 			"end": 52,
 			"root": 5,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:fire_kick/slam@0.030": {
@@ -5211,7 +5211,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 11,
-			"trace": "a468047e5f1af509",
+			"trace": "7450752a94900e7f",
 			"wait": 0.1667
 		},
 		"fire:fire_kick/slam@0.250": {
@@ -5219,7 +5219,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "f4b1109479c72bc5",
 			"wait": 0.1
 		},
 		"fire:fire_kick/slam@0.800": {
@@ -5227,7 +5227,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "6d90c1de0f3afe75",
 			"wait": 0.1
 		},
 		"fire:fire_kick/slam@alt": {
@@ -5235,7 +5235,7 @@
 			"end": 38,
 			"root": 0,
 			"struck": 6,
-			"trace": "8da3ac43d26c4066",
+			"trace": "f4b1109479c72bc5",
 			"wait": 0.1
 		},
 		"fire:fire_parry/flare@0.030": {
@@ -5251,7 +5251,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1
 		},
 		"fire:fire_parry/flare@1.033": {
@@ -5259,7 +5259,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1
 		},
 		"fire:fire_parry/parry@0.030": {
@@ -5267,7 +5267,7 @@
 			"end": 58,
 			"root": 0,
 			"struck": 14,
-			"trace": "a42c0b0eaaf77545",
+			"trace": "dcb8ddf36e07db25",
 			"wait": 0.2333
 		},
 		"fire:fire_parry/parry@0.283": {
@@ -5275,7 +5275,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "9d4d35729e45f5aa",
+			"trace": "4c3ef9017d22c246",
 			"wait": 0.1333
 		},
 		"fire:fire_parry/parry@0.833": {
@@ -5283,7 +5283,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "9d4d35729e45f5aa",
+			"trace": "44bee452698109e8",
 			"wait": 0.1333
 		},
 		"fire:fire_parry/redirect_lightning@0.030": {
@@ -5299,7 +5299,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:fire_parry/redirect_lightning@0.900": {
@@ -5307,7 +5307,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "72f018b6e67ada51",
 			"wait": 0.1
 		},
 		"fire:fire_parry/redirect_lightning@alt": {
@@ -5315,7 +5315,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:fire_wall/inferno@0.030": {
@@ -5331,7 +5331,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "48c50ead0744b280",
 			"wait": 0.1
 		},
 		"fire:fire_wall/inferno@1.033": {
@@ -5339,7 +5339,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 7,
-			"trace": "f903e3cc755f8cf3",
+			"trace": "f0ecdaeb925336e2",
 			"wait": 0.1
 		},
 		"fire:fire_wall/ring@0.030": {
@@ -5355,7 +5355,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "d15e4715afc16ede",
 			"wait": 0.1
 		},
 		"fire:fire_wall/ring@0.867": {
@@ -5363,7 +5363,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 6,
-			"trace": "450b1521ca33247e",
+			"trace": "565aab575fefaeb9",
 			"wait": 0.1
 		},
 		"fire:fire_wall/wall@0.030": {
@@ -5379,7 +5379,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:fire_wall/wall@0.900": {
@@ -5387,7 +5387,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "72f018b6e67ada51",
 			"wait": 0.1
 		},
 		"fire:fire_wall/wall@alt": {
@@ -5395,7 +5395,7 @@
 			"end": 48,
 			"root": 0,
 			"struck": 6,
-			"trace": "d134edb2e17d0948",
+			"trace": "a21a722b7053b5b9",
 			"wait": 0.1
 		},
 		"fire:footwork/back_flip@0.030": {
@@ -5411,7 +5411,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:footwork/back_flip@0.900": {
@@ -5419,7 +5419,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:footwork/hop@0.030": {
@@ -5435,7 +5435,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:footwork/hop@0.900": {
@@ -5443,7 +5443,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:footwork/ignite_step@0.030": {
@@ -5459,7 +5459,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:footwork/ignite_step@0.900": {
@@ -5467,7 +5467,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"fire:footwork/step@0.030": {
@@ -5483,7 +5483,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"fire:footwork/step@0.900": {
@@ -5491,7 +5491,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"water:flow/draw@0.030": {
@@ -5507,7 +5507,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:flow/draw@1.067": {
@@ -5515,7 +5515,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:flow/geyser@0.030": {
@@ -5531,7 +5531,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:flow/geyser@1.067": {
@@ -5539,7 +5539,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:flow/skate@0.030": {
@@ -5555,7 +5555,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 8,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "62129b5791bd1672",
 			"wait": 0.1333
 		},
 		"water:flow/skate@0.867": {
@@ -5563,7 +5563,7 @@
 			"end": 50,
 			"root": 0,
 			"struck": 8,
-			"trace": "c535d55ae9da1eb1",
+			"trace": "c67b9ebeffaea042",
 			"wait": 0.1333
 		},
 		"water:flow/surf@0.030": {
@@ -5603,7 +5603,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1
 		},
 		"water:flow/water_skate@0.900": {
@@ -5611,7 +5611,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 6,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1
 		},
 		"water:frost/freeze_water@0.030": {
@@ -5627,7 +5627,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"water:frost/freeze_water@0.900": {
@@ -5635,7 +5635,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1333
 		},
 		"water:frost/ice_patch@0.030": {
@@ -5651,7 +5651,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:frost/ice_patch@1.067": {
@@ -5659,7 +5659,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:frost/thaw@0.030": {
@@ -5675,7 +5675,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:frost/thaw@1.067": {
@@ -5683,7 +5683,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:ice/freeze@0.030": {
@@ -5699,7 +5699,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:ice/freeze@1.067": {
@@ -5707,7 +5707,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:ice/shards@0.030": {
@@ -5723,7 +5723,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1
 		},
 		"water:ice/shards@0.900": {
@@ -5731,7 +5731,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1
 		},
 		"water:ice/shards@alt": {
@@ -5739,39 +5739,31 @@
 			"end": 60,
 			"root": 0,
 			"struck": 6,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1
 		},
 		"water:ice/spear@0.030": {
-			"clip": "own-bend-throw-overhand",
+			"clip": "own-bend-water-ice-rifle",
 			"end": 70,
 			"root": 0,
 			"struck": 18,
-			"trace": "98dbf152ad652fee",
+			"trace": "826b4a3395fa1a7f",
 			"wait": 0.3
 		},
 		"water:ice/spear@0.350": {
-			"clip": "own-bend-throw-overhand",
+			"clip": "own-bend-water-ice-rifle",
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8864915a04224d12",
 			"wait": 0.1333
 		},
 		"water:ice/spear@0.900": {
-			"clip": "own-bend-throw-overhand",
+			"clip": "own-bend-water-ice-rifle",
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
-			"wait": 0.1333
-		},
-		"water:ice/spear@alt": {
-			"clip": "own-bend-throw-overhand-l",
-			"end": 60,
-			"root": 0,
-			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "50543f4c0d348b06",
 			"wait": 0.1333
 		},
 		"water:water_jet/air_hit@0.030": {
@@ -5779,7 +5771,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 6,
-			"trace": "a55f08346ed4fe4c",
+			"trace": "cd9d4650ebdb3f54",
 			"wait": 0.1
 		},
 		"water:water_jet/air_hit@0.217": {
@@ -5787,7 +5779,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"water:water_jet/air_hit@0.767": {
@@ -5803,7 +5795,7 @@
 			"end": 32,
 			"root": 0,
 			"struck": 4,
-			"trace": "45d2da0d95d84326",
+			"trace": "729a54b3b0b09ee8",
 			"wait": 0.0667
 		},
 		"water:water_jet/jet@0.030": {
@@ -5819,7 +5811,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_jet/jet@0.900": {
@@ -5827,7 +5819,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1333
 		},
 		"water:water_jet/jet@alt": {
@@ -5835,7 +5827,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_jet/pop@0.030": {
@@ -5843,7 +5835,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 8,
-			"trace": "4cb2196bf4edc863",
+			"trace": "44191e86d99ea779",
 			"wait": 0.1333
 		},
 		"water:water_jet/pop@0.217": {
@@ -5851,7 +5843,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"water:water_jet/pop@0.767": {
@@ -5867,7 +5859,7 @@
 			"end": 44,
 			"root": 0,
 			"struck": 6,
-			"trace": "99617637b6836569",
+			"trace": "7bb34c366f6b6ca9",
 			"wait": 0.1
 		},
 		"water:water_jet/splash@0.030": {
@@ -5883,7 +5875,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_jet/splash@0.900": {
@@ -5891,7 +5883,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1333
 		},
 		"water:water_jet/splash@alt": {
@@ -5899,7 +5891,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_jet/spray@0.030": {
@@ -5915,7 +5907,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "ce41cc6d016b351c",
 			"wait": 0.1333
 		},
 		"water:water_jet/spray@1.067": {
@@ -5923,7 +5915,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "e3726a6d0501b963",
 			"wait": 0.1333
 		},
 		"water:water_redirect/absorb@0.030": {
@@ -5939,7 +5931,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:water_redirect/absorb@1.067": {
@@ -5947,7 +5939,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:water_redirect/cleanse@0.030": {
@@ -5963,7 +5955,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:water_redirect/cleanse@1.067": {
@@ -5971,7 +5963,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:water_redirect/redirect@0.030": {
@@ -5987,7 +5979,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 18,
-			"trace": "450b1521ca33247e",
+			"trace": "d15e4715afc16ede",
 			"wait": 0.3
 		},
 		"water:water_redirect/redirect@0.867": {
@@ -5995,7 +5987,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 18,
-			"trace": "450b1521ca33247e",
+			"trace": "565aab575fefaeb9",
 			"wait": 0.3
 		},
 		"water:water_shield/bubble@0.030": {
@@ -6011,7 +6003,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"water:water_shield/bubble@0.900": {
@@ -6019,7 +6011,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1333
 		},
 		"water:water_shield/heal@0.030": {
@@ -6035,7 +6027,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:water_shield/heal@1.067": {
@@ -6043,7 +6035,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:water_shield/ice_wall@0.030": {
@@ -6059,7 +6051,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"water:water_shield/ice_wall@0.900": {
@@ -6067,7 +6059,7 @@
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "e48f02fbd79a3c07",
+			"trace": "8561f2f2d6a98ca3",
 			"wait": 0.1333
 		},
 		"water:water_whip/grab@0.030": {
@@ -6083,7 +6075,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 7,
-			"trace": "5be5b160adba2e5c",
+			"trace": "dfcc9b83c1bed169",
 			"wait": 0.1
 		},
 		"water:water_whip/grab@1.000": {
@@ -6091,7 +6083,7 @@
 			"end": 34,
 			"root": 0,
 			"struck": 7,
-			"trace": "5be5b160adba2e5c",
+			"trace": "107a846c5646ce80",
 			"wait": 0.1
 		},
 		"water:water_whip/lash@0.030": {
@@ -6107,7 +6099,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_whip/lash@0.900": {
@@ -6115,7 +6107,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1333
 		},
 		"water:water_whip/lash@alt": {
@@ -6123,7 +6115,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_whip/whip@0.030": {
@@ -6139,7 +6131,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:water_whip/whip@0.900": {
@@ -6147,7 +6139,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "738185ca5ba28754",
 			"wait": 0.1333
 		},
 		"water:water_whip/whip@alt": {
@@ -6155,7 +6147,7 @@
 			"end": 52,
 			"root": 0,
 			"struck": 8,
-			"trace": "03411576bd460bff",
+			"trace": "4dc050275110cb23",
 			"wait": 0.1333
 		},
 		"water:wave/push@0.030": {
@@ -6171,7 +6163,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "ce41cc6d016b351c",
 			"wait": 0.1333
 		},
 		"water:wave/push@1.067": {
@@ -6179,7 +6171,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "e3726a6d0501b963",
 			"wait": 0.1333
 		},
 		"water:wave/slam@0.030": {
@@ -6187,7 +6179,7 @@
 			"end": 46,
 			"root": 0,
 			"struck": 11,
-			"trace": "4cb2196bf4edc863",
+			"trace": "831a0ca59b148644",
 			"wait": 0.1667
 		},
 		"water:wave/slam@0.250": {
@@ -6195,7 +6187,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "62db7e639c2e6119",
+			"trace": "381529ff6cf91e52",
 			"wait": 0.1
 		},
 		"water:wave/slam@0.800": {
@@ -6203,7 +6195,7 @@
 			"end": 42,
 			"root": 0,
 			"struck": 6,
-			"trace": "62db7e639c2e6119",
+			"trace": "0b6b63d0fb3056c4",
 			"wait": 0.1
 		},
 		"water:wave/spout@0.030": {
@@ -6219,7 +6211,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "81049a4412ef1799",
 			"wait": 0.1333
 		},
 		"water:wave/spout@1.067": {
@@ -6227,7 +6219,7 @@
 			"end": 66,
 			"root": 0,
 			"struck": 8,
-			"trace": "63f2bcded6ccd8e6",
+			"trace": "191a58fd6cb5b9f4",
 			"wait": 0.1333
 		},
 		"water:wave/surf@0.030": {
@@ -6243,7 +6235,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "ce41cc6d016b351c",
 			"wait": 0.1333
 		},
 		"water:wave/surf@1.067": {
@@ -6251,7 +6243,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "e3726a6d0501b963",
 			"wait": 0.1333
 		},
 		"water:wave/tide@0.030": {
@@ -6267,7 +6259,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "ce41cc6d016b351c",
 			"wait": 0.1333
 		},
 		"water:wave/tide@1.067": {
@@ -6275,7 +6267,7 @@
 			"end": 62,
 			"root": 0,
 			"struck": 8,
-			"trace": "2ae781192023d460",
+			"trace": "e3726a6d0501b963",
 			"wait": 0.1333
 		}
 	}

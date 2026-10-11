@@ -387,7 +387,8 @@ var _sputtered := false
 var raised: Node = null
 ## Q held since (s; -1 not held): quick_reset_s puts the jab back.
 var _q_held_t := -1.0
-## Lightning's charge on the hands while it locks (BendLooks.Charge; null none).
+## Lightning's charge on the hands while it locks (BendLooks.Charge), or the Ice Spear's water spear in the rifle hold
+## (BendLooks.HeldSpear); null none. Fed the lock's fill (level) and ended with the lock (end()).
 var charge: Node = null
 ## Round 3 (AIR; see the header). Tests only: not null stands for the seconds of hitstun left and for BendKnock.tumble.
 var stun_override: Variant = null
@@ -2381,10 +2382,21 @@ func _began() -> void:
 func _lock_looks(m: String) -> void:
 	if elem() and String(spec_of(m).get("do", "")) == "lightning":
 		charge = BendLooks.charge(player, self)
+	elif elem() and _held_look(m) == "water_spear":
+		charge = BendLooks.held_spear(player, self)          # (the Ice Spear's rifle hold: the water spear in the hands)
 	elif elem():
 		SbFx.start(self, "charge", player, "%s/%s" % [m, mode_of(m)], "charge", {})
 	if elem() and BendPoses.element_of(player) == "water":
 		SbFx.start(self, "flowing", player, "flowing", "idle", {"el": "water"})
+
+
+## What the pose move `m` locks with holds in the hands (its pick's "held", poses.json: "water_spear" the Ice Spear's rifle
+## hold; "" none).
+func _held_look(m: String) -> String:
+	var el := BendPoses.element_of(player)
+	if el == "":
+		return ""
+	return String(BendPoses.pick(m, mode_of(m), el, player).get("held", ""))
 
 
 func _end_charge() -> void:

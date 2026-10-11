@@ -3822,8 +3822,14 @@ def pose(clip, f):
         # the fingers: closed about the knuckles' line toward the palm by the grip (a share of a fist's), each joint after its
         # parent (the thumb about its own line)
         g = max(-0.6, min(1.0, num(clip, "grip_" + s, f)))
+        # (a pointing hand, the gun-style casts (2026-10-11): point_<s> 0..1 straightens the index and the thumb out of the
+        # grip (a finger gun), point2_<s> the middle finger as well (lightning's two fingers); only the clips that key them)
+        pt = max(0.0, min(1.0, num(clip, "point_" + s, f))) if ("point_" + s) in clip else 0.0
+        p2 = max(0.0, min(1.0, num(clip, "point2_" + s, f))) if ("point2_" + s) in clip else 0.0
+        open_by = {"index": max(pt, p2), "thumb": pt, "middle": p2}
         k, n = finger_axes(rots, s)
         for dg, joints in CURL.items():
+            gd = g * (1.0 - open_by.get(dg, 0.0))
             for j, deg in joints.items():
                 nm = "%s_%s%s" % (s, dg, j)
                 if nm not in rots:
@@ -3834,9 +3840,9 @@ def pose(clip, f):
                     axis = tdir.cross(n)
                     if axis.length < 1e-4:
                         continue
-                    turn(rots, nm, q_axis(axis.normalized(), deg * g))
+                    turn(rots, nm, q_axis(axis.normalized(), deg * gd))
                 else:
-                    turn(rots, nm, q_axis(k, deg * g))
+                    turn(rots, nm, q_axis(k, deg * gd))
     # the ground contact of a roll (only the clips that key it): the whole figure lifted or lowered by the ground channel's
     # share of the gap between the deck (the clip's floor, 0 but for the edge's deck top) and its lowest surface (SURF), so a
     # tucked ball rolls on the deck instead of sinking into it or floating; a uniform shift, so the joints' rotations (and the
@@ -3873,7 +3879,7 @@ def keyed():
 
 
 # ---------------------------------------------------------------- the mirrored twin
-SIDED = ["clav", "hand", "face", "pole", "grip", "foot", "fyaw", "heel", "knee"]
+SIDED = ["clav", "hand", "face", "pole", "grip", "foot", "fyaw", "heel", "knee", "point", "point2"]
 
 
 def mirror_clip(clip):
@@ -6482,6 +6488,124 @@ SET9 = {
 SET9["hit_impact_right"] = mirror_clip(SET9["hit_impact_left"])
 SET9["hit_impact_right"]["meta"]["from"] = "right"
 CLIPS.update(SET9)
+
+
+## ---------------------------------------------------------------- the tenth set (2026-10-11, the owner: "the pistol set
+## would be for embers right? ... the side one hand pistol will be lightning? and then the rifle will be a rifle stance and
+## then water conjures in to take the rifles spot like a spear but in water form and then fires it ... turning into a ice
+## lance"): the gun-style casts, keyed by hand like every clip here, in the look of a pistol's and a rifle's stances (the
+## owner likes the game's pistol aim; nothing of those clips is read or measured, they are a look to key toward):
+##   fire_embers_gun     Embers: a quick draw to a finger gun pointed at the mark from a bladed stand, the shot's kick (the
+##                       hand tipped up and back, the shoulder and the chest rocked back a frame), settled on the aim, home;
+##                       the left hand up in a loose guard; its twin for the other hand (the jab's left-right)
+##   fire_lightning_duel Lightning: the duellist: turned side-on, the right foot at the mark and the left turned out behind,
+##                       the left fist on the hip, the gun hand raised high, two fingers up, crackling through the charge;
+##                       dropped level and straight at the mark at the strike, the kick, held, home
+##   water_ice_rifle     Ice Spear: the rifleman: both hands scoop water up from low in front, then shoulder it side-on, the
+##                       left foot forward, the right hand at the cheek on the stock, the left out under the barrel, the head
+##                       down to the sights (held: the lock, the water forming a spear between the hands: SwayCaster's
+##                       held spear); the shot pushed out along the barrel with the recoil into the shoulder, held, lowered
+FACING.update({
+    "gun_point": ((-0.03, 0.06, 1.0), (1.0, 0.0, 0.05)),      # a finger gun at the mark: the fingers' way forward, the palm in
+    "gun_kick": ((-0.03, 0.6, 0.8), (1.0, 0.0, 0.05)),        # its kick: tipped up and back
+    "gun_up": ((0.0, 1.0, 0.12), (1.0, 0.0, 0.0)),            # the duellist's raised hand: the fingers up, the palm in
+    "stock": ((0.0, -0.4, 0.92), (1.0, 0.0, 0.0)),            # the rifle's grip at the cheek: the fingers forward and down
+    "under_barrel": ((0.05, 0.1, 1.0), (0.0, 1.0, -0.1)),     # the support hand under the barrel: the fingers forward, the palm up
+})
+SET10 = {
+    "fire_embers_gun": {
+        "length": 22, "mirror": True,
+        "meta": {"hold_s": 5 / FPS, "strike_s": 7 / FPS, "back_s": 13 / FPS, "hand": "r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (5, (0.0, -0.05, 0.0)), (7, (0.0, -0.055, -0.005)), (8, (0.0, -0.055, -0.02)),
+                 (10, (0.0, -0.05, -0.01)), (13, (0.0, -0.05, -0.01)), (22, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, 12), (7, 12), (8, 8), (10, 11), (13, 11), (22, 0)],
+        "twist": [(0, 0), (5, 6), (7, 6), (8, 3), (10, 5), (13, 5), (22, 0)],
+        "chest": [(0, 0), (5, 2), (7, 2), (8, -3), (10, 0), (13, 1), (22, 0)],
+        "head": [(0, 0), (5, 2), (7, 2), (8, -2), (11, 1), (22, 0)],
+        "clav_r": [(0, (0, 0)), (5, (10, -3)), (7, (10, -3)), (8, (3, 3)), (10, (9, -2)), (13, (10, -3)), (22, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.17, 1.12, 0.22)), (5, (-0.071, 1.345, 0.536)), (7, (-0.073, 1.341, 0.53)),
+                   (8, (-0.077, 1.395, 0.44)), (10, (-0.073, 1.359, 0.505)), (13, (-0.073, 1.341, 0.517)), (18, (-0.18, 1.05, 0.22)),
+                   (22, HR)],
+        "face_r": [(0, "stand"), (3, "gun_point"), (7, "gun_point"), (8, "gun_kick"), (10, "gun_point"), (16, "gun_point"),
+                   (22, "stand")],
+        "grip_r": [(0, 0.4), (3, 1.0), (16, 1.0), (22, 0.4)],
+        "point_r": [(0, 0.0), (3, 1.0), (16, 1.0), (21, 0.0)],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (4, (-0.5, -1.0, -0.2)), (16, (-0.5, -1.0, -0.2)), (22, (-0.35, -0.1, -1.0))],
+        "hand_l": [(0, HL), (4, (0.12, 1.12, 0.24)), (16, (0.12, 1.12, 0.24)), (22, HL)],
+        "face_l": [(0, "stand"), (4, "guard"), (16, "guard"), (22, "stand")],
+        "grip_l": [(0, 0.4), (4, 0.8), (16, 0.8), (22, 0.4)],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (4, (0.6, -0.8, -0.3)), (16, (0.6, -0.8, -0.3)), (22, (0.35, -0.1, -1.0))],
+        "foot_r": [(0, FR), (4, (-0.15, 0.077, -0.07)), (16, (-0.15, 0.077, -0.07)), (21, FR)],
+    },
+    "fire_lightning_duel": {
+        "length": 60,
+        "meta": {"hold_s": 26 / FPS, "strike_s": 30 / FPS, "back_s": 42 / FPS, "hand": "r", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (7, (0.0, -0.06, 0.02)), (26, (0.0, -0.065, 0.02)), (30, (0.0, -0.07, 0.04)),
+                 (31, (0.0, -0.07, 0.015)), (34, (0.0, -0.068, 0.03)), (42, (0.0, -0.065, 0.03)), (52, (0.0, -0.06, 0.02)),
+                 (60, (0, -0.015, 0))],
+        "yaw": [(0, 0), (7, 72), (30, 72), (31, 68), (34, 72), (52, 72), (60, 0)],
+        "twist": [(0, 0), (7, 6), (52, 6), (60, 0)],
+        "look": [(0, 0), (7, -16), (52, -16), (60, 0)],
+        "chest": [(0, 0), (7, -3), (26, -4), (30, 2), (31, -2), (34, 1), (42, 1), (60, 0)],
+        "head": [(0, 0), (26, -2), (30, 2), (31, -2), (34, 0), (60, 0)],
+        "clav_r": [(0, (0, 0)), (8, (-4, 6)), (26, (-4, 8)), (30, (10, -2)), (31, (4, 2)), (34, (9, -1)), (42, (9, -1)),
+                   (60, (0, 0))],
+        "hand_r": [(0, HR), (4, (-0.16, 1.12, 0.12)), (8, (-0.08, 1.5, 0.16)), (14, (-0.06, 1.64, 0.19)), (26, (-0.05, 1.68, 0.18)),
+                   (28, (-0.04, 1.55, 0.45)), (30, (-0.041, 1.362, 0.67)), (31, (-0.045, 1.421, 0.605)), (33, (-0.043, 1.367, 0.65)),
+                   (42, (-0.046, 1.356, 0.66)), (50, (-0.15, 1.05, 0.25)), (60, HR)],
+        "face_r": [(0, "stand"), (6, "gun_up"), (26, "gun_up"), (29, "gun_point"), (30, "gun_point"), (31, "gun_kick"),
+                   (33, "gun_point"), (44, "gun_point"), (60, "stand")],
+        "grip_r": [(0, 0.4), (5, 1.0), (48, 1.0), (60, 0.4)],
+        "point2_r": [(0, 0.0), (5, 1.0), (48, 1.0), (56, 0.0)],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (6, (-0.4, -0.7, 0.6)), (26, (-0.4, -0.7, 0.6)), (30, (-0.3, -1.0, -0.1)),
+                   (44, (-0.3, -1.0, -0.1)), (60, (-0.35, -0.1, -1.0))],
+        "hand_l": [(0, HL), (4, (0.12, 0.95, 0.0)), (8, (0.08, 0.98, -0.14)), (50, (0.08, 0.98, -0.14)), (56, (0.15, 0.85, 0.02)),
+                   (60, HL)],
+        "grip_l": [(0, 0.4), (8, 0.9), (50, 0.9), (60, 0.4)],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (8, (0.3, 0.0, -1.0)), (50, (0.3, 0.0, -1.0)), (60, (0.35, -0.1, -1.0))],
+        "foot_r": [(0, FR), (4, (-0.1, 0.12, 0.1)), (7, (-0.05, 0.077, 0.24)), (52, (-0.05, 0.077, 0.24)), (56, (-0.1, 0.12, 0.1)),
+                   (60, FR)],
+        "fyaw_r": [(0, 7), (7, 0), (52, 0), (60, 7)],
+        "foot_l": [(0, FL), (3, (0.13, 0.12, 0.0)), (6, (0.1, 0.077, -0.2)), (52, (0.1, 0.077, -0.2)), (56, (0.13, 0.12, -0.05)),
+                   (60, FL)],
+        "fyaw_l": [(0, 7), (6, 80), (52, 80), (60, 7)],
+    },
+    "water_ice_rifle": {
+        "length": 40,
+        "meta": {"hold_s": 12 / FPS, "strike_s": 15 / FPS, "back_s": 24 / FPS, "hand": "l", "mask": "full", "root": "place"},
+        "root": [(0, (0, -0.015, 0)), (3, (0.0, -0.09, 0.03)), (5, (0.0, -0.07, 0.03)), (10, (0.02, -0.05, 0.02)),
+                 (12, (0.02, -0.05, 0.02)), (15, (0.02, -0.05, 0.03)), (16, (0.02, -0.045, 0.0)), (19, (0.02, -0.05, 0.015)),
+                 (24, (0.02, -0.05, 0.02)), (34, (0.0, -0.03, 0.01)), (40, (0, -0.015, 0))],
+        "yaw": [(0, 0), (5, -10), (10, -38), (15, -36), (16, -40), (24, -38), (32, -12), (40, 0)],
+        "twist": [(0, 0), (10, -8), (24, -8), (40, 0)],
+        "look": [(0, 0), (10, 9), (24, 9), (40, 0)],
+        "chest": [(0, 0), (3, 8), (5, 6), (10, 3), (12, 3), (15, 4), (16, -2), (19, 2), (24, 2), (40, 0)],
+        "head": [(0, 0), (3, 8), (10, 6), (12, 7), (15, 7), (16, 2), (19, 6), (24, 6), (32, 2), (40, 0)],
+        "clav_r": [(0, (0, 0)), (10, (-2, 6)), (12, (-2, 6)), (15, (4, 4)), (16, (-6, 8)), (19, (-2, 6)), (24, (-2, 6)),
+                   (40, (0, 0))],
+        "clav_l": [(0, (0, 0)), (10, (6, 0)), (24, (6, 0)), (40, (0, 0))],
+        "hand_r": [(0, HR), (3, (-0.24, 0.82, 0.2)), (5, (-0.08, 0.92, 0.32)), (8, (-0.07, 1.2, 0.2)), (10, (-0.06, 1.34, 0.12)),
+                   (12, (-0.06, 1.34, 0.12)), (15, (-0.06, 1.35, 0.16)), (16, (-0.07, 1.37, 0.08)), (19, (-0.06, 1.35, 0.11)),
+                   (24, (-0.06, 1.34, 0.12)), (31, (-0.14, 1.05, 0.2)), (40, HR)],
+        "hand_l": [(0, HL), (3, (0.24, 0.82, 0.2)), (5, (0.08, 0.92, 0.32)), (8, (0.03, 1.2, 0.42)), (10, (-0.02, 1.33, 0.52)),
+                   (12, (-0.02, 1.33, 0.52)), (15, (-0.028, 1.346, 0.581)), (16, (-0.02, 1.39, 0.5)), (19, (-0.02, 1.34, 0.52)),
+                   (24, (-0.02, 1.33, 0.52)), (31, (0.12, 1.02, 0.3)), (40, HL)],
+        "face_r": [(0, "stand"), (3, "chamber"), (5, "chamber"), (9, "stock"), (31, "stock"), (40, "stand")],
+        "face_l": [(0, "stand"), (3, "chamber"), (5, "chamber"), (9, "under_barrel"), (31, "under_barrel"), (40, "stand")],
+        "grip_r": [(0, 0.4), (3, 0.1), (6, 0.2), (10, 0.8), (30, 0.8), (40, 0.4)],
+        "grip_l": [(0, 0.4), (3, 0.1), (6, 0.2), (10, 0.35), (30, 0.35), (40, 0.4)],
+        "pole_r": [(0, (-0.35, -0.1, -1.0)), (4, (-0.5, -1.0, -0.2)), (9, (-1.0, -0.3, -0.2)), (30, (-1.0, -0.3, -0.2)),
+                   (40, (-0.35, -0.1, -1.0))],
+        "pole_l": [(0, (0.35, -0.1, -1.0)), (4, (0.5, -1.0, -0.2)), (9, (0.2, -1.0, 0.0)), (30, (0.2, -1.0, 0.0)),
+                   (40, (0.35, -0.1, -1.0))],
+        "foot_l": [(0, FL), (6, (0.14, 0.12, 0.08)), (9, (0.12, 0.077, 0.2)), (30, (0.12, 0.077, 0.2)), (34, (0.14, 0.12, 0.07)),
+                   (37, FL), (40, FL)],
+        "fyaw_l": [(0, 7), (9, -15), (30, -15), (37, 7)],
+        "foot_r": [(0, FR), (8, (-0.17, 0.077, -0.1)), (30, (-0.17, 0.077, -0.1)), (36, FR)],
+        "fyaw_r": [(0, 7), (8, 45), (30, 45), (36, 7)],
+    },
+}
+CLIPS.update(SET10)
 
 
 ## The slack an arm or a leg keeps short of straight at its keys (m): less is flagged by --fit (a limb locked straight by the IK

@@ -21,6 +21,17 @@ Built 10 October 2026 for the Character Advancement window's phases B1 and B2 (`
 
 The numbers are read from `data/sway/skill_tree.json` `changes[]` (the one place they live). A node applies only when every change in it can be applied per wearer and the move's data still holds the change's `from` (so a retuned move refuses the node instead of silently applying a stale absolute). Taking the node out of `live` or flipping its switch gives the move's own numbers back.
 
+**Added 11 October 2026: the Lightning Pistol** (`fire.lightning.pistol`, fire's Storm twist; the owner: "we want both moves
+the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons").
+Live, not yet soaked. Its changes: `pose:fire_arc/lightning` from `own-bend-fire-lightning` to `frontier-pistol-lightning`
+(a new change kind: `BendLoadout`'s `pose` overlay, read by `BendPoses.pick` for the wearer before his fighting style), the
+charge 2.2 s to 1.5 s (`move:fire_arc.mode_lock_s.lightning`), the flash before the strike 0.25 s to 0.4 s
+(`spec:fire_arc/lightning.flash_s`). It excludes Short Fuse and Long Lightning (the same charge) and is the other choice of
+the twist slot with Forked Lightning. Not worn, Lightning is the original. Details: `docs/tidebreak/gun_casts_2026-10-11.md`.
+The same day Classic's fingerprint (`tests/ring/fixtures/loadout_classic_golden.json`) was re-taken on purpose (the gun-style
+Embers and Ice Spear clips, and the moving hold's visual traces); every lock, real cast and strike, end, root and wait frame is
+as before (that document has the diff).
+
 ## How a loadout becomes live
 
 1. The player wears a slot in the Advancement window; `AdvancementStore` saves `user://advancement.json` (the window does the saving, the match never does).

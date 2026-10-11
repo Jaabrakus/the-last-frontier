@@ -211,6 +211,10 @@ they had lain along the limb (`docs/tidebreak/animation_retouch_2026-10-11.md`).
 | `own-bend-hit-impact-back` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_back`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
 | `own-bend-hit-impact-left` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `_struck`, `_arc`) | the rig's rest pose; keys in `CLIPS` (`SET9`) | (for the owner to fill) |
 | `own-bend-hit-impact-right` | 2026-10-07 (ninth set) | `bend_clips.py` (`hit_impact_left`, `mirror_clip`) | `hit_impact_left`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-embers-gun` | 2026-10-11 (tenth set) | `bend_clips.py` (`fire_embers_gun`, `point_r`) | the rig's rest pose; keys in `CLIPS` (`SET10`) | (for the owner to fill) |
+| `own-bend-fire-embers-gun-l` | 2026-10-11 (tenth set) | `bend_clips.py` (`fire_embers_gun`, `mirror_clip`) | `fire_embers_gun`'s keys mirrored left for right | (as its original) |
+| `own-bend-fire-lightning-duel` | 2026-10-11 (tenth set) | `bend_clips.py` (`fire_lightning_duel`, `point2_r`) | the rig's rest pose; keys in `CLIPS` (`SET10`) | (for the owner to fill) |
+| `own-bend-water-ice-rifle` | 2026-10-11 (tenth set) | `bend_clips.py` (`water_ice_rifle`) | the rig's rest pose; keys in `CLIPS` (`SET10`) | (for the owner to fill) |
 
 - Second set and polish (2026-10-05, after the owner approved the first ten: "looks good but you can always perfect them"):
   the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET2` part); no clip,
@@ -428,6 +432,16 @@ they had lain along the limb (`docs/tidebreak/animation_retouch_2026-10-11.md`).
   giving a frame, and the trunk recoils first. The metas
   (6 frames, `strike_s` 0, `hold_s` 0.1, `back_s` 4/30 s, mask full, `from`) are unchanged; only these four clips were
   re-baked.
+- Tenth set (2026-10-11, the owner: "the pistol set would be for embers right? ... the side one hand pistol will be
+  lightning? and then the rifle will be a rifle stance and then water conjures in to take the rifles spot like a spear"):
+  the same generator and the same inputs (the rig's rest pose and keys typed into the table, now its `SET10` part, with two
+  new finger channels, `point_<side>` and `point2_<side>`, that straighten the index and thumb, or the index and middle
+  finger, out of the grip); no clip, dump or reference motion read. The gun stances are a look the keys were typed toward
+  (the owner likes the game's pistol aim); nothing of the game's gun clips was read or measured for them. In the game
+  Embers plays `own-bend-fire-embers-gun` (and its twin) and the Ice Spear `own-bend-water-ice-rifle`, each timed as the
+  clip it replaced (`timed_as` in `data/bending/poses.json`: the sweep's and the overhand throw's hold, strike, back and
+  end). `own-bend-fire-lightning-duel` is installed but cast by no move: its right hand at its strike is the two-finger
+  hand of `frontier-pistol-lightning` (below).
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
   palm places and facings, elbow poles, finger closing, and per foot the ankle's place, toe-out, heel lift and knee pole.
@@ -461,6 +475,28 @@ they had lain along the limb (`docs/tidebreak/animation_retouch_2026-10-11.md`).
 - These rows record inputs that bear on wiring the clips into the ring sport. They do not establish any clip's origin.
   The `axe_d` fit and the `Actor_B_from_A.res` carry read are the specific inputs to trace for the parry, high-block and stab
   clips before they are counted as fully own.
+
+## Frontier tech for the ring sport: the Lightning Pistol (`animations_extra/Frontier_Bend_Aim.res`)
+
+| Clip | Made | Generator | Inputs | Lineage |
+| --- | --- | --- | --- | --- |
+| `frontier-pistol-lightning` | 2026-10-11 | `tools/anim_author/bake_bend_aim.gd` | the body: `actor_b-p-pistol-aim-idle` from `animations_extra/Frontier_Downgraded.res` (the twisted stance, `mocap_downgrade_all.gd`'s `_twisted_stance`: the bow's aim mirrored under the pistol aim's own arm); the right arm: `own-pistol-bow-arm` from the same library (the bow's aim mirrored, at its start); the left arm: `actor_b-p-relax-idle` from `animations/Actor_B.res` (at phase 0); the right hand's fingers: `own-bend-fire-lightning-duel` at its strike (ours, above), the hand turned at the wrist so they go on along the forearm; the start and end pose: `own-bend-stance-fire` (ours); the timing: `own-bend-fire-lightning`'s length, `hold_s`, `strike_s`, `back_s` (ours) | the body and both arms are built from the base library (`animations/Actor_B.res`, whose lineage is listed as not yet verified in `docs/animation_provenance.md`); the hand, the timing and the kick are ours |
+
+- The owner asked for it (2026-10-11): "im saying use our musket and pistol tech that we built in frontiers over", then
+  "the lighting seems not like the pistol stand aim we have", then "we want both moves the orignal one and the lightning
+  pistol it will be a skill tree thing have this or that and each has it perks and cons". It is the game's own standing
+  pistol aim (the pieces `PlayerAnim` puts together for a pistol aimed standing: the twisted stance, `STAND_AIM_ARM`, the
+  hanging left arm) baked onto Lightning's timeline, with a raise from fire's stance over 0.3 s, a kick at the strike and a
+  lowering from `back_s`. In the game `BendAimArm` (the pistol's `JogAimArm`, aiming the two fingers) turns the arm onto the
+  crosshair and the head toward it after the clip.
+- It is NOT one of our own key-posed clips and is not named `own-`: it lives in its own library, and `BendPoses` lets a pose
+  play it only because `data/bending/poses.json` lists it by name in `frontier_tech` (`BendPoses.frontier_tech`). It is cast
+  only by fire's Storm twist Lightning Pistol (`fire.lightning.pistol` in `data/sway/skill_tree.json`); Classic's Lightning
+  is still `own-bend-fire-lightning`. Its `authored` and `lineage` metas name the inputs above; it carries no
+  `native_asset_id`, `source_attribution` or `original_name`.
+- Tracing it: the inputs that bear on its origin are the two `Frontier_Downgraded.res` clips (built by
+  `tools/anim_author/mocap_downgrade_all.gd` from `actor_b-p-bow-aim-idle` and `actor_b-p-pistol-aim-idle` in
+  `animations/Actor_B.res`) and `actor_b-p-relax-idle`; the rest is ours.
 
 ## Fighting style clips: Boxing for fire (`animations_extra/Frontier_Style_Boxing.res`)
 

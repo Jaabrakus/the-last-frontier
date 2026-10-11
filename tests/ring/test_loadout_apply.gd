@@ -26,9 +26,11 @@ const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## The nodes whose numbers can be applied (resolve ok: the plan's eight less Skate's Wet Trail) and, of them, those the soak left
 ## live in loadout_apply.json (the two walls are switched off: the soak's bots never raise a wall; Full Sail since 2026-10-10: it
 ## widens the plain Gust now that the grown one is the Air Lance, not yet soaked; flip them in the json, not here).
+## Since 2026-10-11 also fire's Storm twist Lightning Pistol (the owner's "have this or that": its own pose, a quicker charge and
+## a longer flash), live on the owner's word for him to try.
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
-		"earth.wall.thick", "water.wall.thick_ice"]
-const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick"]
+		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"]
+const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -123,7 +125,7 @@ func _run() -> void:
 	var only_known := true
 	for id0: String in live:
 		only_known = only_known and id0 in LIVE
-	_expect(every_on and only_known, "the nodes live now are the five the soak passed, within the seven resolvable ones of the plan's eight (%s)" % [live])
+	_expect(every_on and only_known, "the nodes live now are the four the soak passed and the Lightning Pistol, within the eight resolvable ones (%s)" % [live])
 	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
 			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
@@ -154,7 +156,7 @@ func _run() -> void:
 	BendLoadout.config_override = {"styles_live": []}
 	_expect(BendLoadout.live_styles().is_empty() and not BendLoadout.style_ok("boxing", "fire"), "styles_live empty: no style plays")
 	BendLoadout.config_override = {"nodes": all_on}
-	_expect(BendLoadout.live_ids() == LIVE, "every node's switch on: the seven resolvable ones")
+	_expect(BendLoadout.live_ids() == LIVE, "every node's switch on: the eight resolvable ones")
 
 	# ---------------------------------------------------------------- each live node's numbers, wearer and bot
 	for id: String in LIVE:
@@ -166,9 +168,18 @@ func _run() -> void:
 		_expect((ov.ids as Array) == [id] and BendLoadout.picks_of(w) == [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
+			var rest := path.get_slice(":", 1)
+			if path.begins_with("pose:"):
+				# (a twist's own cast pose: the wearer's pick, the other's the element's own)
+				var mvp := rest.get_slice("/", 0)
+				var mdp := rest.substr(mvp.length() + 1)
+				var wp := BendPoses.pick(mvp, mdp, el, w)
+				_expect(String(wp.get("clip", "")) == String(c.to) and String(wp.get("from", "")) == "node"
+						and String(BendPoses.pick(mvp, mdp, el, bot).get("clip", "")) == String(c.from),
+						"%s: the wearer casts %s with %s, the other with %s" % [id, rest, c.to, c.from])
+				continue
 			var to := float(c.to)
 			var from := float(c.from)
-			var rest := path.get_slice(":", 1)
 			if path.begins_with("spec:"):
 				var mv := rest.get_slice("/", 0)
 				var keys: Array = Array(rest.substr(mv.length() + 1).split("."))
@@ -306,11 +317,13 @@ func _run() -> void:
 			_expect(String(sp.get("clip", "")) == String(want.clip) and String(sp.get("from", "")) == "style", "%s: Boxing's %s for the wearer" % [tag, want.clip])
 			_expect(bp == e and String(bp.clip).begins_with("own-bend-") and String(e.clip) != String(sp.clip), "%s: the element's own %s for a bot" % [tag, e.clip])
 			var ea := BendPoses.animation(String(e.clip))
+			# (the element's end: its pick's own end_s when it is itself timed as another clip, the gun-style Embers)
+			var e_end := float(e.get("end_s", ea.length))
 			var ok_t := true
 			for k: String in ["hold_s", "strike_s", "back_s"]:
 				ok_t = ok_t and _near(sp.get(k), e.get(k))
 			# (a root is true, false or "strike": held up to the strike only, fire's kicks since 2026-10-10)
-			ok_t = ok_t and str(sp.get("root", false)) == str(e.get("root", false)) and _near(sp.get("end_s"), ea.length)
+			ok_t = ok_t and str(sp.get("root", false)) == str(e.get("root", false)) and _near(sp.get("end_s"), e_end)
 			if not ok_t:
 				timing_bad.append(tag)
 			var wp: Array = sp.get("warp", [])
@@ -323,15 +336,15 @@ func _run() -> void:
 			for pr: Array in wp:
 				if _near(pr[0], e.hold_s) and _near(pr[1], own_h):
 					has_pair = true
-			_expect(mono and has_pair and _near((wp[wp.size() - 1] as Array)[0], ea.length) and _near((wp[wp.size() - 1] as Array)[1], sa.length),
-					"%s: the clip's own hold %.3f s is on the element's %.3f s and its end on the element's end (%.3f s)" % [tag, own_h, float(e.hold_s), ea.length])
+			_expect(mono and has_pair and _near((wp[wp.size() - 1] as Array)[0], e_end) and _near((wp[wp.size() - 1] as Array)[1], sa.length),
+					"%s: the clip's own hold %.3f s is on the element's %.3f s and its end on the element's end (%.3f s)" % [tag, own_h, float(e.hold_s), e_end])
 			if e.has("alt") and sp.has("alt"):
 				var ealt := BendPoses._filled(BendPoses._as_pose(e.alt), BendPoses.data())
 				var salt := BendPoses._as_pose(sp.alt)
 				var ok_a := not salt.is_empty() and String(salt.clip) != String(ealt.clip)
 				for k: String in ["hold_s", "strike_s", "back_s"]:
 					ok_a = ok_a and _near(salt.get(k), ealt.get(k))
-				ok_a = ok_a and _near(salt.get("end_s"), BendPoses.animation(String(ealt.clip)).length)
+				ok_a = ok_a and _near(salt.get("end_s"), float(ealt.get("end_s", BendPoses.animation(String(ealt.clip)).length)))
 				_expect(ok_a, "%s: the other hand (%s) is timed as the element's %s" % [tag, salt.get("clip", "-"), ealt.clip])
 				alts += 1
 			elif sp.has("alt"):
@@ -356,11 +369,22 @@ func _run() -> void:
 	var ej := BendPoses.pick("fire_jab", "embers", "fire")
 	_expect(_near(sw._sample_t(0.0), 0.0) and _near(sw._sample_t(float(ej.hold_s)), float(sw._anim.get_meta(&"hold_s")))
 			and _near(sw._sample_t(float(ej.strike_s)), float(sw._anim.get_meta(&"strike_s"))) and _near(sw._sample_t(float(ej.back_s)), float(sw._anim.get_meta(&"back_s")))
-			and _near(sw._sample_t(float(jp.end_s)), sw._anim.length) and _near(sw._end(), BendPoses.animation(String(ej.clip)).length),
+			and _near(sw._sample_t(float(jp.end_s)), sw._anim.length) and _near(sw._end(), float(ej.get("end_s", BendPoses.animation(String(ej.clip)).length))),
 			"SwayPose: the Boxing jab's own wind-up, strike and recovery fall on the element's hold %.2f, strike %.2f and back %.2f s" % [float(ej.hold_s), float(ej.strike_s), float(ej.back_s)])
+	# (an element pick of its own clip's timing: the jab's punch; Embers' gun clip is itself timed as the sweep it replaced, below)
+	var ejab := BendPoses.pick("fire_jab", "jab", "fire")
+	sw.pick = ejab
+	sw._anim = BendPoses.animation(String(ejab.clip))
+	_expect(not ejab.has("warp") and _near(sw._sample_t(0.37), 0.37) and _near(sw._end(), sw._anim.length), "SwayPose: an element's pick is sampled as it always was")
+	# Embers' gun clip on the sweep's timeline (poses.json timed_as): the sweep's hold, strike, back and end; the gun's own
+	# moments on them
+	var sweep := BendPoses._filled({"clip": "own-bend-fire-sweep"}, BendPoses.data())
 	sw.pick = ej
 	sw._anim = BendPoses.animation(String(ej.clip))
-	_expect(_near(sw._sample_t(0.37), 0.37) and _near(sw._end(), sw._anim.length), "SwayPose: an element's pick is sampled as it always was")
+	_expect(String(ej.clip) == "own-bend-fire-embers-gun" and _near(ej.hold_s, sweep.hold_s) and _near(ej.strike_s, sweep.strike_s)
+			and _near(ej.back_s, sweep.back_s) and _near(ej.get("end_s"), BendPoses.animation("own-bend-fire-sweep").length)
+			and _near(sw._sample_t(float(ej.strike_s)), float(sw._anim.get_meta(&"strike_s"))) and _near(sw._end(), BendPoses.animation("own-bend-fire-sweep").length),
+			"SwayPose: Embers' gun clip strikes on the sweep's strike %.2f s and ends with it" % float(ej.get("strike_s", -1.0)))
 	sw.free()
 
 	# ---------------------------------------------------------------- the match: the ring scene
@@ -398,7 +422,7 @@ func _run() -> void:
 	_expect(BendLoadout.overlay_of(mode.foe).is_empty() and BendLoadout.style_meta(mode.foe) == "" and BendPoses.style_of(mode.foe, "fire") == "",
 			"the bot wears nothing and plays no style")
 	_expect(String(BendPoses.pick("fire_jab", "embers", "fire", player).clip) == "own-style-boxing-jab"
-			and String(BendPoses.pick("fire_jab", "embers", "fire", mode.foe).clip) == "own-bend-fire-sweep",
+			and String(BendPoses.pick("fire_jab", "embers", "fire", mode.foe).clip) == "own-bend-fire-embers-gun",
 			"Boxing gives the player boxing clips and the fire bot the element's own")
 	var sc := SwayCaster.of(player)
 	await _ticks(150)
