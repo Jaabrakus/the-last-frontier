@@ -5,9 +5,9 @@ extends Node
 ##   THE GATE      it records and replays only while RingRules.stock_on() (a stock-rules ring match); install() puts it, and
 ##                 the round's other VIRAL parts (RingHighlights, Callouts, PhotoMode, BendClash), under RingMode
 ##   the buffer    the last buffer_s, written every physics tick (after the bodies, the rules and the mode: priority 30):
-##                 each competitor's skeleton's global transform, its skeleton's pose (every bone's rotation, the root bones'
-##                 positions), the clip its AnimationPlayer plays and its time, his %, and his state (shown, tumbling,
-##                 guarding, hanging); the effects in flight as PROPS (bolts, guards, stones, walls: each one's look copied
+##                 each competitor's skeleton's global transform, its skeleton's pose (every bone's rotation and position:
+##                 the body's driven twist helpers too), the clip its AnimationPlayer plays and its time, his %, and his
+##                 state (shown, tumbling, guarding, hanging); the effects in flight as PROPS (bolts, guards, stones, walls: each one's look copied
 ##                 once as a template of its meshes and particles, then its transform every tick); EVENTS (hits, launches,
 ##                 guards, catches, splashes, clashes: kind, tick, place, way, element, who). Every array is allocated when
 ##                 its slot is first used and never grows (bytes() is the metric: fixed after warm-up)
@@ -1013,7 +1013,7 @@ func _pose(t: float) -> void:
 		g.global_transform = get_xf(p.xf, j0 * 12).interpolate_with(get_xf(p.xf, j1 * 12), f)
 
 
-## A ghost's skeleton at clip tick `t`: between the two pose samples around it (rotations slerped, the root bones' places
+## A ghost's skeleton at clip tick `t`: between the two pose samples around it (rotations slerped, the bones' places
 ## lerped); before the first, the first.
 func _pose_bones(gsk: Skeleton3D, d: Dictionary, t: float) -> void:
 	var pt := d.pticks as PackedInt32Array
@@ -1315,7 +1315,7 @@ class Clip extends RefCounted:
 
 
 ## A competitor's place in the buffer: its arrays (a tick each: its skeleton's transform, %, state, clip; its pose: every
-## bone's rotation and the root bones' positions, with the tick each pose was read at) and its ghost's template. Written in
+## bone's rotation and position, with the tick each pose was read at) and its ghost's template. Written in
 ## place (its own methods), never grown.
 class Slot extends RefCounted:
 	var body_id := 0
@@ -1336,7 +1336,7 @@ class Slot extends RefCounted:
 	var clip := PackedInt32Array()
 	var clip_t := PackedFloat32Array()
 	## The pose ring: a sample every pose_every ticks (the newest of its ticks): each bone's rotation as two int32s (x|y,
-	## z|w at 16 bits each), the root bones' positions, the tick it was read at (-1 none).
+	## z|w at 16 bits each), every bone's position (pos_idx: all of them), the tick it was read at (-1 none).
 	var pose_every := 2
 	var pcap := 0
 	var prot := PackedInt32Array()
@@ -1348,9 +1348,11 @@ class Slot extends RefCounted:
 		pose_every = p_every
 		bones = p_sk.get_bone_count()
 		for k in bones:
-			var par := p_sk.get_bone_parent(k)
-			if par < 0 or p_sk.get_bone_parent(par) < 0:
-				pos_idx.append(k)          # (the root bones and their children: the hips' travel, the rig's free bones)
+			# (every bone's place, not only the roots' and their children's: the body's twist and skirt helpers
+			# (CharacterBodyMesh) are driven to new places every frame several bones deep, and a ghost holding their rest
+			# places drew the arms as rubber bands, up to 0.87 m off; the owner 2026-10-11: "the replay element it shoulds
+			# body parts like rubberbands")
+			pos_idx.append(k)
 		xf.resize(cap * 12)
 		pct.resize(cap)
 		flags.resize(cap)

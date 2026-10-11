@@ -6,7 +6,8 @@ extends SceneTree
 ##   a fall       the foe launched off the deck by the player (a scripted launch): the fall queues a replay (RingReplay.force
 ##                "on": a script run asks for it), it starts after its wait and pauses the tree, hides the live bodies and
 ##                the screens' layers, makes the replay camera current; its ghosts at sampled ticks stand where the live
-##                skeletons stood at those ticks (their transforms, and a hand bone's place: within 1 cm)
+##                skeletons stood at those ticks (their transforms, a hand bone's place, and every bone's place, the body's
+##                driven twist helpers too: within 1 cm)
 ##   resumes      when it ends, every competitor's transform, %, lives, and the player's lock (state, fill, lock time) and
 ##                camera (current, transform) are exactly as when it started; the tree goes on
 ##   skip         a second fall's replay ends at a key press (after the grace)
@@ -198,6 +199,11 @@ func _log_live() -> void:
 			var r := rec.get(key, {}) as Dictionary
 			if not r.has("hand"):
 				r["hand"] = sk.get_bone_global_pose(_hand).origin
+				var all := PackedVector3Array()
+				all.resize(sk.get_bone_count())
+				for b in sk.get_bone_count():
+					all[b] = sk.get_bone_global_pose(b).origin
+				r["bones"] = all                     # (every bone, the body's driven twist helpers too)
 			r["xf"] = sk.global_transform
 			rec[key] = r
 			live[t] = rec)
@@ -237,6 +243,8 @@ func _fall_and_replay() -> void:
 	# ghosts at sampled ticks against the live log
 	var worst := 0.0
 	var worst_hand := 0.0
+	var worst_bone := 0.0
+	var worst_name := ""
 	var n := 0
 	var fi := c.faller
 	var pi := rp.slot_index(player)
@@ -244,7 +252,8 @@ func _fall_and_replay() -> void:
 	var pts := (c.bodies[fi] as Dictionary).pticks as PackedInt32Array
 	var picks: Array = []
 	for k in pts:
-		if live.has(c.t0 + k) and k <= c.splash_t and ((live[c.t0 + k] as Dictionary).get("foe", {}) as Dictionary).has("hand"):
+		# (k >= 0: the sample just before the clip's first tick is in it, but a seek there is held at 0)
+		if k >= 0 and live.has(c.t0 + k) and k <= c.splash_t and ((live[c.t0 + k] as Dictionary).get("foe", {}) as Dictionary).has("hand"):
 			picks.append(k)
 	var step := maxi(picks.size() / 10, 1)
 	for ii in range(0, picks.size(), step):
@@ -260,9 +269,19 @@ func _fall_and_replay() -> void:
 			var gsk := g.get_child(0) as Skeleton3D
 			worst = maxf(worst, g.global_transform.origin.distance_to((rec.xf as Transform3D).origin))
 			worst_hand = maxf(worst_hand, gsk.get_bone_global_pose(_hand).origin.distance_to(rec.hand as Vector3))
+			var all := rec.get("bones", PackedVector3Array()) as PackedVector3Array
+			for b in mini(all.size(), gsk.get_bone_count()):
+				var e := gsk.get_bone_global_pose(b).origin.distance_to(all[b])
+				if e > worst_bone:
+					worst_bone = e
+					worst_name = gsk.get_bone_name(b)
 			n += 1
 	_expect(n >= 8 and worst <= 0.01 and worst_hand <= 0.01,
 			"the ghosts stand where the live skeletons stood at %d sampled ticks: worst %.4f m (the skeleton's place), %.4f m (a hand bone in the skeleton)" % [n, worst, worst_hand])
+	# (2026-10-11, the owner: "the replay element it shoulds body parts like rubberbands": the body's twist helpers, driven to
+	# new places every frame several bones deep, were replayed at their rest places, up to 0.87 m off: every bone's place now)
+	_expect(n >= 8 and worst_bone <= 0.01,
+			"...every bone of them too, the body's driven twist helpers with them: worst %.4f m (%s)" % [worst_bone, worst_name])
 	rp.seek(0.0)
 	rp.held = false
 	await _until(func() -> bool: return not rp.is_playing(), 12.0)
