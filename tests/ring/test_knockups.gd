@@ -9,6 +9,10 @@ extends SceneTree
 ##   the data       the Column, the Geyser and the tapped Fissure and Kick float (their held ones throw as before); the High Kick
 ##                  straight and fast; fire's air jab a fireball (its pose the drop kick, from the foot); Wind Prison and
 ##                  Drenching Wave live
+##   as cast        the player casts each knock-up at the foe held still, the crosshair on his chest (BendEffects.apply, as the
+##                  game does): each adds its % and floats him; the Column's pillar carries him onto its top and its throw finds
+##                  him there (the owner: "i dont think the knock column knocks someone up right?": it had looked for him within
+##                  3 m of the deck only, the pillar 3 m tall)
 ##   the float      a Column hit on the foe: he floats, no escape, held near the top sinking 0.5 m/s, then falls; again within
 ##                  6 s 0.48, 0.29, then none
 ##   the rescue     the mate floated by the foe: the player's bolt through him frees him (his hitstun ends); a wall raised before
@@ -27,6 +31,9 @@ var fails: Array[String] = []
 var lvl: RingLevel
 var player: FrontierPlayer
 var mode: RingMode
+## The crosshair held on this one's chest every physics frame while set (_aim).
+var aim_on: Node3D
+var pitch_sign := 1.0
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -85,6 +92,74 @@ func _clear(n: Node) -> void:
 			n.remove_meta(k)
 
 
+## The player's crosshair on aim_on's chest (his camera's yaw and pitch), as FxStage.aim.
+func _aim() -> void:
+	if aim_on == null or not is_instance_valid(aim_on) or player == null or player.camera == null:
+		return
+	var d := (NpcSenses.chest_of(aim_on) - player.camera.global_position).normalized()
+	player.yaw = atan2(-d.x, -d.z)
+	player.pitch = asin(clampf(d.y, -1.0, 1.0)) * pitch_sign
+
+
+## Waits (3 s at most) till `n` may be hit: not in a moment no one reaches him (his fall broken, standing up).
+func _tangible(n: Node, by: Node = null) -> void:
+	for i in ceili(3.0 * Engine.physics_ticks_per_second):
+		if BendStatus.can_take(n, by if by != null else player):
+			return
+		await physics_frame
+
+
+## Every bot held still (`on`: no thinking, so none casts) or let go.
+func _hold_bots(on: bool) -> void:
+	for e: Dictionary in mode.extras:
+		if e.get("bot") is NpcFighter:
+			(e.bot as NpcFighter).held = on
+	if mode.foe != null and is_instance_valid(mode.foe):
+		mode.foe.held = on
+
+
+## The player, as `el`, casts `m`'s `md` at `foe` from 6 m (the foe still at `home`, his % 0, no float memory, the deck cleared;
+## the other bots, held by the caller, put off the line between them) with the crosshair on his chest: {top: the highest he goes
+## over the deck (m), float_s: how long he floats, pct: the % it adds} over 3 s.
+func _cast_at(foe: NpcFighter, home: Vector3, el: String, m: String, md: String) -> Dictionary:
+	mode.ring.clear_dropped()
+	_clear(foe)
+	var way := player.global_position - home
+	way.y = 0.0
+	way = way.normalized()
+	player.global_position = home + way * 6.0
+	player.velocity = Vector3.ZERO
+	var side := Vector3.UP.cross(way).normalized()
+	var k := 0
+	for e: Dictionary in mode.extras:
+		if e.get("bot") is NpcFighter and e.bot != foe:
+			(e.bot as NpcFighter).global_position = home + way * 3.0 + side * (4.0 if k == 0 else -4.0)
+			(e.bot as NpcFighter).velocity = Vector3.ZERO
+			k += 1
+	foe.global_position = home
+	foe.velocity = Vector3.ZERO
+	var kn := BendKnock.peek(foe)
+	if kn != null:
+		kn.reset()
+		kn.stun_t = 0.0
+	RingRules.current().reset_pct(foe, 0.0)
+	Bending.of(player).element = el
+	aim_on = foe
+	await _secs(1.5)
+	var deck := FormEffects.ground_at(foe, foe.global_position).y
+	var pct0 := RingRules.current().pct_of(foe)
+	BendEffects.apply(BendCaster.of(player), m, md, SwayMoves.move(m).bend[md])
+	var top := 0.0
+	var fl := 0
+	for i in ceili(3.0 * Engine.physics_ticks_per_second):
+		await physics_frame
+		top = maxf(top, foe.global_position.y - deck)
+		if BendStatus.floating(foe):
+			fl += 1
+	aim_on = null
+	return {"top": top, "float_s": float(fl) / Engine.physics_ticks_per_second, "pct": RingRules.current().pct_of(foe) - pct0}
+
+
 func _run() -> void:
 	# ---------------------------------------------------------------- the data
 	var cls: Dictionary = RingRules.stock_block("classes") if RingRules.data().has("stock") else {}
@@ -138,9 +213,65 @@ func _run() -> void:
 	_expect(BendCaster.same_team(mate, player) and not BendCaster.same_team(foe, player), "the mate is on the player's side")
 	await _secs(4.5)                                 # (past the countdown and the start's safety)
 
+	# as cast: each knock-up by the player at the foe, every bot held still (none of them casts meanwhile), the crosshair on his
+	# chest
+	_hold_bots(true)
+	player.pitch = 0.3
+	await _ticks(3)
+	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
+	player.pitch = 0.0
+	physics_frame.connect(_aim)
+	var home := foe.global_position
+	for c: Array in [["earth", "earth_shove", "column", 4.5], ["water", "wave", "spout", 2.0], ["earth", "earth_shove", "push", 1.8],
+			["fire", "fire_kick", "kick", 1.8]]:
+		var got: Dictionary = await _cast_at(foe, home, String(c[0]), String(c[1]), String(c[2]))
+		_expect(float(got.pct) > 0.0 and float(got.float_s) > 1.0 and float(got.top) > float(c[3]),
+				"%s/%s as cast: it hits (+%.1f%%), knocks him up %.1f m over the deck and floats him %.2f s" % [c[1], c[2], got.pct,
+				got.top, got.float_s])
+	physics_frame.disconnect(_aim)
+	Bending.of(player).element = "fire"
+	mode.ring.clear_dropped()
+	rules.reset_pct(foe, 0.0)
+	await _secs(1.0)                                 # (the bots stay held to the end: no one's own fight in the checks below)
+
+	# the High Kick's blast to the crosshair: aimed 4 degrees over the foe's chest under the strong aim help (whose 6-degree cone
+	# takes him), it goes where the crosshair points, never bent onto his chest
+	var help0 := MatchSetup._aim_help
+	MatchSetup._aim_help = "strong"
+	var pc := BendCaster.of(player)
+	var dc := (NpcSenses.chest_of(foe) - player.camera.global_position).normalized()
+	player.yaw = atan2(-dc.x, -dc.z)
+	player.pitch = (asin(clampf(dc.y, -1.0, 1.0)) + deg_to_rad(4.0)) * pitch_sign
+	await _ticks(4)
+	var cross := pc.aim_point()
+	var helped := pc.aim_target()
+	var known := {}
+	for n in get_nodes_in_group(BendBolt.GROUP):
+		known[n.get_instance_id()] = true
+	BendEffects.apply(pc, "fire_kick", "high_kick", SwayMoves.move("fire_kick").bend.high_kick)
+	var blast: BendBolt = null
+	for n in get_nodes_in_group(BendBolt.GROUP):
+		if n is BendBolt and not known.has(n.get_instance_id()) and (n as BendBolt).caster == player:
+			blast = n
+	MatchSetup._aim_help = help0
+	var to_cross := Vector3.ZERO
+	var to_chest := Vector3.ZERO
+	var bdir := Vector3.ZERO
+	if blast != null:
+		var b0 := blast.global_position - blast.velocity.normalized() * blast.travelled
+		bdir = blast.velocity.normalized()
+		to_cross = (cross - b0).normalized()
+		to_chest = (NpcSenses.chest_of(foe) - b0).normalized()
+	_expect(helped == foe and blast != null and rad_to_deg(bdir.angle_to(to_cross)) < 1.5 and rad_to_deg(bdir.angle_to(to_chest)) > 2.0,
+			"the High Kick's blast goes to the crosshair 4 degrees over the foe the aim help takes (%.1f deg off the crosshair, %.1f off his chest)"
+			% [rad_to_deg(bdir.angle_to(to_cross)), rad_to_deg(bdir.angle_to(to_chest))])
+	mode.ring.clear_dropped()
+	await _secs(0.5)
+
 	# the float
 	_clear(foe)
 	var col := {"tag": "earth_shove/column", "move": "earth_shove", "mode": "column", "from": foe.global_position}
+	await _tangible(foe)
 	BendR3.deliver(foe, 10.0, foe.global_position + Vector3.UP, Vector3.UP, player, 0.5, Vector3.UP * 11.0, col)
 	var kn := BendKnock.peek(foe)
 	_expect(BendStatus.floating(foe) and kn != null and not kn.can_escape() and _near(_held_s(foe), 0.8),
@@ -169,6 +300,7 @@ func _run() -> void:
 	_clear(mate)
 	var col2 := col.duplicate()
 	col2["from"] = mate.global_position
+	await _tangible(mate, foe)
 	BendR3.deliver(mate, 10.0, mate.global_position + Vector3.UP, Vector3.UP, foe, 0.5, Vector3.UP * 11.0, col2)
 	_expect(BendStatus.floating(mate), "the foe's Column floats the mate")
 	await _secs(0.3)
@@ -195,6 +327,7 @@ func _run() -> void:
 	_expect(_near(float(ws.get("prison_s", 0.0)), 1.0) and _near(float(ws.get("height_m", 0.0)), 4.5),
 			"Wind Prison worn: its wall holds 1 s and stands 4.5 m (%s, %s)" % [ws.get("prison_s"), ws.get("height_m")])
 	_clear(foe)
+	await _tangible(foe)
 	BendR3.deliver(foe, 10.0, foe.global_position + Vector3.UP, Vector3.UP, player, 0.5, Vector3.UP * 11.0, col)
 	var top := float((foe.get_meta(BendStatus.FLOAT_META, {}) as Dictionary).get("from", 0.0)) - BendStatus.now()
 	await _secs(top + 0.1)
@@ -220,6 +353,7 @@ func _run() -> void:
 	# the soaking
 	_clear(foe)
 	var wave := {"tag": "wave/push", "move": "wave", "mode": "push", "from": player.global_position, "drench_s": 1.5}
+	await _tangible(foe)
 	var r0 := rules.on_hit(foe, player, wave)
 	_expect(_near(float(r0.get("drench_s", -1.0)), 1.5) and _near(BendStatus.drench_mult(foe), 0.7) and BendStatus.drench_left(foe) > 1.3,
 			"Drenching Wave's hit: he runs at 0.7 for 1.5 s")

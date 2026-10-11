@@ -1230,7 +1230,7 @@
       "modes": ["kick", "high_kick"],
       "mode_labels": {"kick": "Kick", "high_kick": "High Kick"},
       "mode_lock_s": {"high_kick": 0.85, "air_kick": 0.85, "slam": 0.3},
-      "_high_kick_blast": "2026-10-11, the owner: \"the high kick we have to make it not like a arch bomb throw but make it a speedy blast\": straight along the aim (as the air kick always flew), 40 m/s (from 22, with 9 m/s2 of drop).",
+      "_high_kick_blast": "2026-10-11, the owner: \"the high kick we have to make it not like a arch bomb throw but make it a speedy blast\": straight along the aim (as the air kick always flew), 40 m/s (from 22, with 9 m/s2 of drop). Then \"it needs to shoot higher or flyup to the cursor\", his pick \"exactly to the crosshair\": to_crosshair, the player's blast goes to his crosshair's point, the aim's help never bending it onto a body (BendEffects.aim; a bot's aim is its own).",
       "bend": {
         "kick": {
           "do": "floor_wave",
@@ -1254,6 +1254,7 @@
           "shape": "crescent",
           "flight": "point_first",
           "straight": true,
+          "to_crosshair": true,
           "width_m": 1.6,
           "radius_m": 0.4,
           "mps": 40.0,

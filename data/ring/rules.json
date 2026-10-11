@@ -72,6 +72,8 @@
 		"float": {"decay": 0.6, "memory_s": 6.0, "floor_s": 0.2, "fall_mps": 0.5},
 		"_drench": "Drenched (BendStatus.drench; a skill tree twist's hit, its drench_s: Drenching Wave; the owner 2026-10-11: \"water should be able slowdown maybe implement slows\", as a twist): his run and his drift in the air at k of their speed for the hit's drench_s; his dashes, aim, casts and guard as ever. Each soaking within memory_s of the last on him lasts decay times the last, none under floor_s; a late guard halves it, a perfect one stops it.",
 		"drench": {"k": 0.7, "decay": 0.6, "memory_s": 6.0, "floor_s": 0.3},
+		"_parry": "A perfect guard's cast reward (BendStatus.parry_reward, from BendZone._result; the owner 2026-10-11: \"if the user E a spell the it has to have that perfect thing they get one faster move cast buff\", \"the person that got parried ... has a slightly slower cast time\", his pick 15% for 3 s): the guarder's next cast locks in 1 - k of its time, the caster he parried in 1 + k; one cast each, within window_s, spent by the cast that used it. A guard's own lock never takes it.",
+		"parry": {"k": 0.15, "window_s": 3.0},
 		"_weights": "W = 2 / (1 + weight) on the whole launch: earth 1.0, water 1.0256, fire 0.9524, air 1.0526 with the current raw weights below. Earth's Rooted (standing still) multiplies the base only by rooted_base; the attacker's Carried wind (BendZone.carry_wind) multiplies the whole launch by carried_mult.",
 		"weights": {"earth": 1.0, "water": 0.95, "fire": 1.1, "air": 0.9},
 		"rooted_base": 0.85,

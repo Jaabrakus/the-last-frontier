@@ -5,7 +5,8 @@ extends SceneTree
 ## RingMoves on him (the gate per body) and keyboard-free controls.
 ##   jumps     taps of 0.08 and 0.10 s and a 0.5 s hold all reach 2.0 +- 0.05 m; Space 0.03 s after a cast's release and a
 ##             release 0.03 s after Space both 0.8 +- 0.05 m; the double jump 1.6 m (earth 1.4, air 1.9) halving the launch's
-##             carry; a third Space over the deck nothing; off it (0.2 s on) the Rise; walking off, the first Space the double
+##             carry; a third Space over the deck the in-ring Rise (straight up, the way back's Rise kept, then 6 s of cooldown:
+##             nothing; earth's Pillar straight up too); off it (0.2 s on) the Rise; walking off, the first Space the double
 ##   masher    Space every 60 ms against nothing at all, 12 launches off the deck at 120% (the Lash's speed x the weight, 25
 ##             and 40 degrees, 1-5 m inside two lips), each element: it comes back at least as often (RingMoves.simulate)
 ##   sim       the simulation and the engine trace the same jump, double jump and Rise within 2 cm
@@ -241,8 +242,31 @@ func _jumps() -> void:
 	_expect(absf(keep - 0.5) < 0.02 and rm.jumps_left == 0, "the double jump keeps half the launch's carry (%.2f -> %.2f: x%.3f)" % [k0, k1, keep])
 	kn.kv = Vector3.ZERO
 	await rig.until(func() -> bool: return p.is_on_floor(), 2.0)
-	# a third Space over the deck: nothing; off it, 0.2 s after the double jump: the Rise
+	# a third Space over the deck: the in-ring Rise (2026-10-11, the owner: "the tripple jump should allow the arena jump back
+	# button ... with its own cooldown", 6 s, the way back's Rise kept), straight up where he is; again within its cooldown
+	# nothing; the earth Pillar's too straight up (no lip to lean to); its cooldown over after 6 s. Off the deck, 0.2 s after the
+	# double jump: the Rise
 	await _ground()
+	rm._ring_rise_at = -INF
+	moves_seen.clear()
+	var x0 := p.global_position
+	rig.tap(&"jump")
+	await rig.secs(0.3)
+	rig.tap(&"jump")
+	await rig.secs(0.3)
+	rig.tap(&"jump")
+	await rig.secs(0.1)
+	var kept := rm.rise_ready
+	var top_r := 0.0
+	for i in 90:
+		await physics_frame
+		top_r = maxf(top_r, p.global_position.y - x0.y)
+	_expect(moves_seen == ["jump", "double_jump", "rise"] and kept and not rm.ring_rise_ready() and not rm.helpless(),
+			"over the deck a third Space is the in-ring Rise, the way back's Rise kept (%s, kept %s)" % [str(moves_seen), kept])
+	_expect(_flat(p.global_position, x0) < 0.6 and top_r > 5.0,
+			"...straight up where he is (%.2f m off, %.1f m up)" % [_flat(p.global_position, x0), top_r])
+	await rig.until(func() -> bool: return p.is_on_floor(), 3.0)
+	await rig.secs(0.5)
 	moves_seen.clear()
 	rig.tap(&"jump")
 	await rig.secs(0.3)
@@ -250,9 +274,27 @@ func _jumps() -> void:
 	await rig.secs(0.3)
 	rig.tap(&"jump")
 	await rig.secs(0.1)
-	_expect(moves_seen == ["jump", "double_jump"] and rm.rise_ready and rm.mode == "" and not rm.helpless(),
-			"over the deck a third Space does nothing (%s)" % str(moves_seen))
+	_expect(moves_seen == ["jump", "double_jump"] and rm.mode == "",
+			"...again within its 6 s cooldown a third Space does nothing (%s)" % str(moves_seen))
 	await rig.until(func() -> bool: return p.is_on_floor(), 3.0)
+	await _el("earth")
+	await _ground()
+	await rig.secs(0.5)
+	rm._ring_rise_at = -INF
+	moves_seen.clear()
+	rig.tap(&"jump")
+	await rig.secs(0.3)
+	rig.tap(&"jump")
+	await rig.secs(0.3)
+	rig.tap(&"jump")
+	await rig.until(func() -> bool: return rm.mode == "rise" and rm._m.has("way"), 0.6)
+	var way: Vector3 = rm._m.get("way", Vector3.ZERO)
+	_expect(moves_seen.has("rise") and way.is_equal_approx(Vector3.UP), "the earth Pillar's in-ring Rise goes straight up (%s)" % way)
+	await rig.until(func() -> bool: return p.is_on_floor(), 3.0)
+	await rig.secs(6.0)
+	_expect(rm.ring_rise_ready(), "...its cooldown over after 6 s")
+	await _el("water")
+	await _ground()
 	await _air_at(2.0, 0.0, false)
 	moves_seen.clear()
 	rig.tap(&"jump")

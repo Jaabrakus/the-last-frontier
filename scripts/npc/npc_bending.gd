@@ -155,6 +155,8 @@ var grown := false
 var fill := 0.0
 var lock_s := 0.0
 var lock_t := 0.0
+## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
+var _cm_used := 1.0
 var circle: FormCircle
 ## The ring's: where it may stand (pos -> pos), and metres to the open end (pos, dir -> m); invalid: no ring.
 var bounds_fn: Callable
@@ -1352,6 +1354,10 @@ func begin(id: String, md: String) -> void:
 		var rr := RingRules.current()
 		if rr != null:
 			rr.note_lock_started(me)               # (round 3: a lock of its own ends its spawn safety, as the player's does)
+	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; never a guard's own lock; spent by
+	# this lock's cast, _release)
+	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
+	lock_s *= _cm_used
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1407,6 +1413,9 @@ func _release() -> void:
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
 	var ok := _cast(id, md, t)
+	if not is_equal_approx(_cm_used, 1.0):
+		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
+		_cm_used = 1.0
 	caster.grown = false
 	caster.dash_dir = Vector2.ZERO
 	if returning:
@@ -1715,7 +1724,8 @@ func _landed_form() -> void:
 	var spent := lock_t
 	mode = String(jb[1])
 	var t := brain.target
-	lock_s = _stock_lock(_option(casting + "/" + mode), lock_for(casting, mode, _preset_name(), _cast_dist(casting, mode, t), me))
+	lock_s = _stock_lock(_option(casting + "/" + mode), lock_for(casting, mode, _preset_name(), _cast_dist(casting, mode, t), me)) \
+			* _cm_used
 	lock_t = minf(spent, lock_s)
 	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 	if me.body != null:

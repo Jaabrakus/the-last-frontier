@@ -29,9 +29,11 @@ extends Node
 ## is always the full jump (2.0 m) and the short hop (0.8 m) is Space within 0.05 s of a cast's release (either order);
 ## Space in the air the double jump (it keeps half the launch's carry: BendKnock.scale_carry); once it is spent, off the deck
 ## and a fresh press 0.2 s after it, the Rise (once per airtime, free air control after); refreshed by landing, a grab and a tumbling
-## launch only (BendKnock.launched with refresh). C: fast fall after the apex, crouch held on the deck, no grab while held,
-## let go on the edge; the guard's Roll and Duck; the air dodge (3, AIR routes it here); the teeter at every lip; the edge
-## (the grab box, the snap, 0.6 s first-grab safety, 4 s, deck-relative options, occupancy, three grabs then the deck); each
+## launch only (BendKnock.launched with refresh). Over the deck the same third press is the in-ring Rise (the owner 2026-10-11:
+## "the tripple jump should allow the arena jump back button ... with its own cooldown"): straight up from where he is, once
+## every rise.ring_cooldown_s (6 s), never spending the airtime's Rise for the way back (ring_rise_ready()). C: fast fall
+## after the apex, crouch held on the deck, no grab while held, let go on the edge; the guard's Roll and Duck; the air dodge
+## (3, AIR routes it here); the teeter at every lip; the edge (the grab box, the snap, 0.6 s first-grab safety, 4 s, deck-relative options, occupancy, three grabs then the deck); each
 ## element's Rise (the Pillar's lean, the Jet's +20 floor, the scramble); hitstun (no steering, one buffered press, the 0.6 s
 ## escape by a fresh press, the steer read at 0.1 s), breaking the fall's motion and the getups (PERCENT judges, this
 ## moves); the spout ride; the camera's framing and the recovery turn. Intangible windows are one BendStatus.take_filter, and
@@ -106,6 +108,8 @@ var _regrab_until := -INF
 var _int_from := INF
 var _int_until := -INF
 var _rise_end_at := -INF
+## The last in-ring Rise's start (_t): its own cooldown (ring_rise_ready).
+var _ring_rise_at := -INF
 var _ledge_jump_at := -INF
 var _tech_at := -INF
 var _getup_at := -INF
@@ -590,15 +594,26 @@ func _ground_jump(short: bool) -> void:
 	moved.emit("jump")
 
 
-## The double jump, else the Rise (off the deck, rise_after_s after the double jump); true when one went.
+## The double jump, else the Rise (off the deck, rise_after_s after the double jump), else over the deck the in-ring Rise
+## (its own cooldown: the airtime's Rise is kept for the way back); true when one went.
 func _air_jump() -> bool:
 	if jumps_left > 0:
 		_double_jump()
 		return true
-	if rise_ready and off_deck() and _t - _dj_at >= num("double_jump", "rise_after_s", 0.2) - 1e-4:
+	if not rise_ready or _t - _dj_at < num("double_jump", "rise_after_s", 0.2) - 1e-4:
+		return false
+	if off_deck():
 		_start_rise()
 		return true
+	if ring_rise_ready():
+		_start_rise(true)
+		return true
 	return false
+
+
+## Whether the in-ring Rise's cooldown (rise.ring_cooldown_s) has run out.
+func ring_rise_ready() -> bool:
+	return _t - _ring_rise_at >= num("rise", "ring_cooldown_s", 6.0) - 1e-4
 
 
 func _double_jump() -> void:
@@ -1482,19 +1497,24 @@ func _edge_attack_hit() -> void:
 
 
 # ---------------------------------------------------------------- the Rise
-func _start_rise() -> void:
+## The Rise: off the deck the airtime's one (the way back); `in_ring` the in-ring one over the deck (its own cooldown, the
+## airtime's kept; straight up, its tell where he is).
+func _start_rise(in_ring := false) -> void:
 	var el := _el()
 	var r := rise_of(el)
-	rise_ready = false
+	if in_ring:
+		_ring_rise_at = _t
+	else:
+		rise_ready = false
 	_rise_landing = true
 	_ff = false
 	_glide = false
 	var spec := {"el": el, "kind": String(r.get("kind", "up")), "startup": float(r.get("startup_s", 0.1)),
 			"dur": float(r.get("s", 0.5)), "m": float(r.get("m", 4.0)), "drift": float(r.get("drift", 1.0)),
-			"start": _pos(), "hit": {}, "dir": Vector3.UP, "r": r}
+			"start": _pos(), "hit": {}, "dir": Vector3.UP, "r": r, "ring": in_ring}
 	_set_mode("rise", spec)
 	if looks != null:
-		looks.rise_tell(el, _pos(), _tell_point())
+		looks.rise_tell(el, _pos(), _pos() if in_ring else _tell_point(), not in_ring)
 	moved.emit("rise")
 	_check_exhale()
 
@@ -1515,6 +1535,8 @@ func _rise_dir() -> Vector3:
 	var r: Dictionary = _m.r
 	var g := _geo()
 	if kind == "pillar":
+		if bool(_m.get("ring", false)):
+			return Vector3.UP                    # (the in-ring Rise: straight up, no lip to lean to)
 		var lean := deg_to_rad(float(r.get("lean_deg", 20.0)))
 		var to := Vector3.ZERO
 		if not g.is_empty():

@@ -208,12 +208,13 @@ func _fall_cfg(key: String, def: float) -> float:
 
 
 # ---------------------------------------------------------------- the player's own pips
-## [jump, dodge, Rise] for the player now (his own RingMoves; all lit without one).
+## [jump, dodge, Rise] for the player now (his own RingMoves; all lit without one). The Rise's is the one a press would give:
+## off the deck the way back's, over it the in-ring Rise's (dim while its cooldown runs, the soft tick as it is back).
 func pips() -> Array:
 	var rm := RingMoves.of(player) if player != null else null
 	if rm == null:
 		return [true, true, true]
-	return [rm.jumps_left > 0, rm.dodge_ready, rm.rise_ready]
+	return [rm.jumps_left > 0, rm.dodge_ready, rm.rise_ready and (rm.off_deck() or rm.ring_rise_ready())]
 
 
 func _tick_pips() -> void:

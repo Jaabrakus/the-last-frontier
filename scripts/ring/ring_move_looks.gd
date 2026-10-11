@@ -30,6 +30,8 @@ var _shadow: MeshInstance3D
 var _column: MeshInstance3D
 var _column_el := ""
 var _column_sink := -1.0
+## The earth column leans back from the lip (the way back's Rise); the in-ring Rise's stands straight.
+var _column_lean := true
 var _trail: GPUParticles3D
 
 
@@ -118,8 +120,10 @@ func dash(el: String) -> void:
 	BendLooks.burst(_feet() + Vector3.UP * 0.8, _kind(el), 10, Vector3.UP, 120.0, 1.6, 0.18)
 
 
-## The Rise's tell (from `at`, the body; `lip`, the nearest lip point): shown above the lip and loud, for everyone.
-func rise_tell(el: String, at: Vector3, lip: Vector3) -> void:
+## The Rise's tell (from `at`, the body; `lip`, the nearest lip point): shown above the lip and loud, for everyone. The in-ring
+## Rise (`lean` false) shows it where he is, its column straight up.
+func rise_tell(el: String, at: Vector3, lip: Vector3, lean := true) -> void:
+	_column_lean = lean
 	var r := RingMoves.rise_of(el)
 	var tell := Vector3(lip.x, lip.y + 1.2, lip.z)
 	BendSounds.play(StringName(String(r.get("sound", "air_swirl"))), Vector3(lip.x, lip.y, lip.z),
@@ -192,7 +196,7 @@ func _column_to(top: Vector3) -> void:
 		if not gg.is_empty():
 			wy = float(gg.water_y)
 	var base := Vector3(top.x, wy, top.z)
-	if not g.is_empty() and _column_el == "earth":
+	if not g.is_empty() and _column_el == "earth" and _column_lean:
 		# (the leaning column: its foot back along the lean, away from the lip)
 		var n: Vector3 = g.normal
 		base += n * (top.y - wy) * tan(deg_to_rad(float(RingMoves.rise_of("earth").get("lean_deg", 20.0))))

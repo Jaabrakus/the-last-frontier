@@ -14,6 +14,8 @@ extends SceneTree
 ##   the player  E's guard stands when its lock fills (E still held); held it stays up to 2.5 s; a tap keeps its window
 ##               (earth 1.0 s); a guard that took nothing makes the next guard's lock 0.5 s; E mid-lock drops the lock; a
 ##               cast key drops the guard; in the classic ring round 2's stand-at-release, unchanged
+##   the reward  (2026-10-11) a perfect guard: the guarder's next cast's lock 0.85 of its time, the shooter's (a bot's) 1.15;
+##               one cast, spent by it (a dropped lock keeps it); a late guard nothing; unused, gone after 3 s
 ## METRIC lines (guard_stand_at_fill_ok, shield_all_ok). Last line "R3 GUARD PASSED" or "R3 GUARD FAILED"; exit 0 only on a
 ## pass; a watchdog quits with 2.
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_r3_guard.gd
@@ -139,6 +141,7 @@ func _run() -> void:
 	await _lightning()
 	await _earth_window()
 	await _player_guard()
+	await _parry_reward()
 	await _classic()
 	_end()
 
@@ -488,6 +491,63 @@ func _player_guard() -> void:
 	c.held_override = false
 	await _ticks(3)
 	_expect(dt <= 0.15 and lock_on, "a cast key drops the guard in 0.1 s (%.2f) and starts its lock (%s)" % [dt, lock_on])
+
+
+# ---------------------------------------------------------------- the perfect guard's cast reward (2026-10-11)
+## The lock time key 1's move takes the player now: its lock begun by the aim held, read, then dropped (no cast).
+func _key1_lock() -> float:
+	p.hotbar.select(0)
+	await _ticks(2)
+	c.held_override = true
+	await _until(func() -> bool: return c.state != SwayCaster.State.IDLE and c.lock_src == SwayCaster.SRC_AIM, 1.0)
+	var ls := c.lock_s
+	c.held_override = false
+	c.drop_all()
+	await _ticks(3)
+	return ls
+
+
+## The owner: "if the user E a spell the it has to have that perfect thing they get one faster move cast buff", "the person
+## that got parried ... has a slightly slower cast time" (15% for 3 s; rules.json stock.parry): a perfect guard makes the
+## guarder's next cast's lock 0.85 of its time and the shooter's 1.15, one cast each, spent by it; late, nothing; unused, gone
+## after 3 s; a bot's lock the same.
+func _parry_reward() -> void:
+	await _calm("fire")
+	await _secs(1.6)
+	var base_lock := await _key1_lock()
+	var fb := foe.brain.bending as NpcBending
+	var bot_move := "fire_blast"
+	fb.begin(bot_move, "punch")
+	var bot_base := fb.lock_s
+	fb._cancel()
+	await _met("fire", "fire", 0.2)                  # (fire's Parry on the beat: the shot sent back)
+	var got := BendStatus.cast_mult(p)
+	var owed := BendStatus.cast_mult(foe)
+	_expect(absf(got - 0.85) < 0.001 and absf(owed - 1.15) < 0.001,
+			"a perfect guard: the guarder's next cast 15%% quicker (x%.2f), the shooter's 15%% slower (x%.2f)" % [got, owed])
+	await _secs(0.3)
+	var quick := await _key1_lock()
+	_expect(absf(quick - base_lock * 0.85) < 0.02 and absf(BendStatus.cast_mult(p) - 0.85) < 0.001,
+			"...his next lock 0.85 of its time (%.2f s from %.2f), not spent by a lock dropped" % [quick, base_lock])
+	fb.begin(bot_move, "punch")
+	var slow := fb.lock_s
+	fb._cancel()
+	_expect(absf(slow - bot_base * 1.15) < 0.02, "...the shooter bot's next lock 1.15 of its time (%.2f s from %.2f)" % [slow, bot_base])
+	p.hotbar.select(0)
+	await _ticks(2)
+	c.held_override = true
+	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 2.0)
+	c.held_override = false
+	await _secs(0.5)
+	_expect(not p.has_meta(BendStatus.CAST_MULT_META) and foe.has_meta(BendStatus.CAST_MULT_META),
+			"...one cast: his cast spends it (the shooter's still owed)")
+	await _met("fire", "fire", 0.6)
+	_expect(is_equal_approx(BendStatus.cast_mult(p), 1.0) and is_equal_approx(BendStatus.cast_mult(foe), 1.0),
+			"a late guard: no reward, no penalty")
+	await _met("fire", "fire", 0.2)
+	await _secs(3.1)
+	_expect(is_equal_approx(BendStatus.cast_mult(p), 1.0) and is_equal_approx(BendStatus.cast_mult(foe), 1.0),
+			"unused, both are gone after 3 s")
 
 
 # ---------------------------------------------------------------- the classic ring (round 2's guard kept)

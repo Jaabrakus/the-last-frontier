@@ -414,6 +414,8 @@ var _out := {}
 var last_land_lag := 0.0
 ## This lock is a jab the step shortened (it leaves the hand at once: air_rules.jab_strike_max_s).
 var _step_lock := false
+## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
+var _cm_used := 1.0
 ## The last lock's start (BendStatus.now()) and its source, for the tests.
 var lock_began_at := -INF
 var _rooted_t := 0.0
@@ -2409,6 +2411,7 @@ func _end_charge() -> void:
 ## A lock's time (s) of `m` on `t` at `dist` of its reach `r`: the move's (a stone's, a variation's own), stretched toward the
 ## end of its range, times the tier's and lock_mult.
 func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
+	_cm_used = 1.0
 	var d := SwayMoves.move(m)
 	var stretch := lerpf(1.0, float(d.get("far_stretch", 1.0)), smoothstep(r * 0.5, r, dist)) if not _self_cast(m) else 1.0
 	var base := float((d.get("stone", {}) as Dictionary).get("lock_s", d.get("lock_s", 1.0))) if holds_stone(m, t) else float(d.get("lock_s", 1.0))
@@ -2425,13 +2428,16 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
 		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
+	var cm := BendStatus.cast_mult(player) if elem() else 1.0
+	_cm_used = cm
 	if r3() and lock_src == SRC_QUICK and BendR3.is_jab(m, mode_of(m)):
 		var bc := BendCaster.of(player)
 		if bc != null and bc.jab_step_until > -INF:
 			# (round 3, spec §6.4: the jab step, the one lock a hit shortens: ready jab_step_s after the last left the hand)
 			_step_lock = true
-			return maxf(minf(bc.jab_step_until - BendStatus.now(), base * stretch * lock_mult * tier_mult(m)), MIN_LOCK_S)
-	return maxf(base * stretch * lock_mult * tier_mult(m), 0.05)
+			return maxf(minf(bc.jab_step_until - BendStatus.now(), base * stretch * lock_mult * tier_mult(m) * cm), MIN_LOCK_S)
+	return maxf(base * stretch * lock_mult * tier_mult(m) * cm, 0.05)
 
 
 ## Move `m`'s bend spec at its mode now ({} none: an old mode, a scripted lock).
@@ -3055,6 +3061,9 @@ func _cast() -> void:
 	if _cast_wait():
 		_queued = true                            # (every release path shares the stun/movement/ground gate)
 		return
+	if not is_equal_approx(_cm_used, 1.0):
+		BendStatus.spend_cast_mult(player)        # (the parry's cast reward or penalty this lock took: spent by its cast)
+		_cm_used = 1.0
 	var m := move
 	var t := target
 	var at := locked_point()

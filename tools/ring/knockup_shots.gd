@@ -1,7 +1,7 @@
 extends SceneTree
 ## Stills of the knock-ups and today's twists (2026-10-11): a Practice ring, the player 8 m from a standing dummy, the crosshair on
 ## its chest, each take as the game plays it (BendEffects.apply for the casts, the wearer's spec), from beside the deck:
-##   column   the Column on the dummy: the launch, the float near the top, its end
+##   column   the Column cast at the dummy: its pillar lifts him, its throw sends him up off its top, the float near the top
 ##   kick     the tapped Kick's floor wave: the same float
 ##   prison   the dummy floating after a Column hit, the Wind Prison twist's own wall (worn: 4.5 m) raised under him: caught,
 ##            held
@@ -20,7 +20,7 @@ const LABELS := {"column": "Column: knock-up + float", "kick": "Kick (tapped): k
 		"prison": "Wind Prison (twist)", "soak": "Drenching Wave (twist)", "blast": "High Kick: speedy blast",
 		"fireball": "Flare Kick: fireball from the kick"}
 ## Seconds after the cast for each take's three moments.
-const AT := {"column": [0.45, 0.85, 1.35], "kick": [0.6, 1.0, 1.5], "prison": [0.3, 0.6, 1.0], "soak": [0.3, 0.7, 1.2],
+const AT := {"column": [0.3, 0.75, 1.3], "kick": [0.6, 1.0, 1.5], "prison": [0.3, 0.6, 1.0], "soak": [0.3, 0.7, 1.2],
 		"blast": [0.08, 0.16, 0.24], "fireball": [0.06, 0.14, 0.24]}
 const CELL := Vector2i(400, 225)
 
@@ -29,6 +29,9 @@ var st: FxStage
 var cam: Camera3D
 ## The player's height held while finite (the fireball take: in the air).
 var hover_y := INF
+## The camera's look height over the deck and its distance (the Column's take higher and wider: its man goes 5.5 m up).
+var look_up := 1.6
+var cam_m := 9.0
 
 
 func _initialize() -> void:
@@ -58,8 +61,8 @@ func _keep() -> void:
 		cam.far = 1500.0
 		current_scene.add_child(cam)
 	var side := Vector3.UP.cross(st.axis).normalized()
-	var look := st.mid + Vector3.UP * 1.6 + st.axis * 1.5
-	var eye := look + side * 9.0 + Vector3.UP * 1.2
+	var look := st.mid + Vector3.UP * look_up + st.axis * 1.5
+	var eye := look + side * cam_m + Vector3.UP * 1.2
 	cam.global_transform = Transform3D(Basis.looking_at(look - eye, Vector3.UP), eye)
 	if root.get_camera_3d() != cam:
 		cam.make_current()
@@ -91,11 +94,13 @@ func _take(t: String) -> Array:
 		if d.has_meta(k):
 			d.remove_meta(k)
 	BendLoadout.clear(st.p)
+	look_up = 3.4 if t == "column" else 1.6
+	cam_m = 12.0 if t == "column" else 9.0
 	await st.frames(15)
 	match t:
 		"column":
 			Bending.of(st.p).element = "earth"
-			BendEffects.column(st.bc, d.global_position, SwayMoves.move("earth_shove").bend.column)
+			BendEffects.apply(st.bc, "earth_shove", "column", SwayMoves.move("earth_shove").bend.column)
 		"kick":
 			Bending.of(st.p).element = "fire"
 			BendEffects.apply(st.bc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)

@@ -45,7 +45,9 @@ const STOCK_HIT_META := &"bend_stock_hit"
 const ROUND_METAS: Array[StringName] = [&"bend_root", &"bend_slow", &"bend_anchor", &"bend_redirect_lightning",
 		&"bend_brace", &"bend_dazzle_until", &"bend_whiff_until", &"bend_carry_until", &"bend_under_until",
 		&"bend_last_guard", &"bend_hit_lock_s", &"bend_dash_end", &"bend_slip_until", &"bend_bind_memo", &"bend_float",
-		&"bend_float_memo", &"bend_drench", &"bend_drench_memo"]
+		&"bend_float_memo", &"bend_drench", &"bend_drench_memo", &"bend_cast_mult"]
+## A perfect guard's cast reward or penalty on a body: {mult (of his next cast's lock time), until} (parry_reward).
+const CAST_MULT_META := &"bend_cast_mult"
 ## A bind's memory on the bound body: {at: the game time of the last bind tried on him, k: what that one held, as a share}.
 const BIND_MEMO_META := &"bend_bind_memo"
 ## A knock-up's float on the floating body: {from, until (game s: the hold near the top), fall (m/s while held)}; and its
@@ -469,6 +471,35 @@ static func float_cover(by: Node, at: Vector3, r := 3.0) -> float:
 		if Vector2(q.x - at.x, q.z - at.z).length() <= r:
 			h = maxf(h, q.y - at.y + 2.0)
 	return h
+
+
+## A perfect guard of a spell (BendZone._result, the % ring; the owner 2026-10-11: "if the user E a spell the it has to have that
+## perfect thing they get one faster move cast buff", and "the person that got parried ... has a slightly slower cast time",
+## 15% for 3 s): `n`'s next cast locks in 1 - rules.json stock.parry.k of its time, `by`'s (the caster he parried) in 1 + k;
+## each for one cast within window_s, spent by it (spend_cast_mult; SwayCaster._lock_time, NpcBending.begin). A guard's own
+## lock never takes it.
+static func parry_reward(n: Node, by: Node) -> void:
+	var b := RingRules.stock_block("parry")
+	var k := float(b.get("k", 0.15))
+	var until := now() + float(b.get("window_s", 3.0))
+	if n != null and is_instance_valid(n):
+		n.set_meta(CAST_MULT_META, {"mult": 1.0 - k, "until": until})
+	if by != null and is_instance_valid(by) and by != n and not BendCaster.same_team(n, by):
+		by.set_meta(CAST_MULT_META, {"mult": 1.0 + k, "until": until})
+
+
+## The share of its lock time `n`'s next cast takes now (1: none; parry_reward).
+static func cast_mult(n: Node) -> float:
+	if n == null or not is_instance_valid(n) or not n.has_meta(CAST_MULT_META):
+		return 1.0
+	var c: Dictionary = n.get_meta(CAST_MULT_META)
+	return float(c.get("mult", 1.0)) if now() < float(c.get("until", -INF)) else 1.0
+
+
+## `n`'s cast reward or penalty spent (a cast went with it).
+static func spend_cast_mult(n: Node) -> void:
+	if n != null and is_instance_valid(n) and n.has_meta(CAST_MULT_META):
+		n.remove_meta(CAST_MULT_META)
 
 
 ## Every teammate of `by` within `r` of `at` freed (rescue): an area cast's reach.

@@ -292,7 +292,11 @@ static func aim(c: Variant, spec := {}) -> Dictionary:
 	var p := bc.body
 	var chest := bc.chest()
 	var point := bc.aim_point()
-	var target := bc.aim_target()
+	var target: Node3D = null
+	# (to_crosshair: the player's cast goes where his crosshair is, the aim's help never bending it to a body: the High Kick's
+	# blast, the owner 2026-10-11: "exactly to the crosshair". A bot aims with its own pick, lead and scatter as ever)
+	if not (bool(spec.get("to_crosshair", false)) and bc is PlayerBendCaster):
+		target = bc.aim_target()
 	if target != null:
 		point = bc.target_point(target, float(spec.get("mps", 0.0)))
 	if point == Vector3.INF:
@@ -421,7 +425,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 			gm = float(g.mult)
 			inf = g.info
 		else:
-			gm = BendZone.cone_mult(n, kind)
+			gm = BendZone.cone_mult(n, kind, p)
 			if gm <= 0.0:
 				continue                          # (parted round him on the beat)
 		var away := to.normalized() if to.length_squared() > 1e-4 else flat
@@ -619,10 +623,13 @@ static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
 static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 	var r := float(spec.get("radius_m", 1.5))
 	var kind := String(spec.get("kind", "stone"))
-	BendStatus.rescue_near(p, at, r)                 # (a held teammate in its reach freed: the Column's, the Geyser's)
+	# (lift_m: the Column's pillar has carried whom it rose under up onto its top, lift_m over the deck: its reach is looked
+	# for from the pillar's middle, so the man on its top is in it as well as those on the deck beside it)
+	var mid := at + Vector3.UP * float(spec.get("lift_m", 0.0)) * 0.5
+	BendStatus.rescue_near(p, mid, r)                # (a held teammate in its reach freed: the Column's, the Geyser's)
 	var info: Dictionary = spec.get("_info", {})
 	var n_hit := 0
-	for e in BendCaster.near(p, at, r):
+	for e in BendCaster.near(p, mid, r):
 		var n: Node3D = e[0]
 		var k := 1.0
 		var inf := info
@@ -754,7 +761,7 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 			late_k = float(lg.mult)
 			info = lg.info
 	else:
-		back = BendZone.lightning_back(who)
+		back = BendZone.lightning_back(who, p)
 	if back != null:
 		# (a Parry on the beat: back along the parrier's aim, his now)
 		var bfrom := NpcSenses.chest_of(who)
@@ -846,9 +853,11 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	else:
 		r = FormRaised.raise(p.get_tree().current_scene, "pillar", Transform3D(Basis.IDENTITY, at), wn, absi(hash(at)) % 97)
 		r.set_meta(&"bend_by", p.get_instance_id())
+	# (lift_m: the pillar carries whom it rises under up onto its top, where its throw must find him; the owner 2026-10-11, "i
+	# dont think the knock column knocks someone up right?": it was looked for within 3 m of the deck, the pillar 3 m tall)
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
 			"damage": float(spec.get("damage", 10.0)), "kind": "stone", "_lock_s": float(spec.get("_lock_s", -1.0)),
-			"_info": spec.get("_info", {})}
+			"_info": spec.get("_info", {}), "lift_m": float(wn.get("height_m", 3.0)) if r != null else 0.0}
 	if rise <= 0.0:
 		status_at(p, at, sa)
 		return r

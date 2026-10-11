@@ -663,6 +663,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 	var what := b.kind
 	var perfect := t <= perfect_s
 	var stock := BendR3.stock()
+	var shooter := b._by()                       # (before a send-back makes it the guarder's: the cast reward's other side)
 	if stock and bool(b.info.get("jab", false)):
 		BendR3.jab_guarded(b.caster)
 	match kind:
@@ -676,7 +677,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 				_result("late", what)
 				return true
 			_take_bolt(b, perfect)
-			_result("perfect" if perfect else "late", what)
+			_result("perfect" if perfect else "late", what, shooter)
 			return true
 		"redirect":
 			# (the Air Lance, the only air spear: the Turn takes it as water and ice, and it leaves as ice)
@@ -730,7 +731,7 @@ func _guard_bolt(b: BendBolt) -> bool:
 		_:
 			return false
 	took += 1
-	_result("perfect" if perfect else "late", what)
+	_result("perfect" if perfect else "late", what, shooter)
 	return true
 
 
@@ -739,13 +740,14 @@ func _guard_bolt(b: BendBolt) -> bool:
 func _shield_bolt(b: BendBolt, perfect: bool, what: String) -> bool:
 	if not BendR3.stock():
 		return false
+	var shooter := b._by()
 	if perfect:
 		BendLooks.burst(b.global_position, b.kind, 12)
 		b.end("blocked")
 	else:
 		_late(b)
 	took += 1
-	_result("perfect" if perfect else "late", what)
+	_result("perfect" if perfect else "late", what, shooter)
 	return true
 
 
@@ -825,11 +827,14 @@ static func guard_aim(owner: Node3D, from: Vector3) -> Vector3:
 	return from + owner.global_basis.z * -20.0
 
 
-## This guard's result (perfect, late, whiff) told: report().
-func _result(result: String, what: String) -> void:
+## This guard's result (perfect, late, whiff) told: report(). A perfect one on a spell in the % ring (`by` its caster): the
+## cast reward (BendStatus.parry_reward: his next cast quicker, the caster's slower).
+func _result(result: String, what: String, by: Node = null) -> void:
 	if result != "whiff":
 		results.append(result)
 	report(owner_node, result, what, element)
+	if result == "perfect" and what != "" and BendR3.stock():
+		BendStatus.parry_reward(owner_node, by)
 
 
 ## A guard's result told (see the header): the owner's meta bend_last_guard {result, what, at}, his caster's guarded
@@ -985,8 +990,8 @@ static func return_mult(s: Node) -> float:
 
 ## What a guard of `body`'s does to a cone of `cone_kind` reaching him (BendEffects.cone): the share of its damage and knock
 ## that gets through. A round-2 guard that handles it: perfect 0 (a Turn parts a Wave round him, a Parry eats a fire cone,
-## a Wind Guard an air one: charging his Carried wind), late late_mult; else 1.
-static func cone_mult(body: Node, cone_kind: String) -> float:
+## a Wind Guard an air one: charging his Carried wind), late late_mult; else 1. `by`: the cone's caster.
+static func cone_mult(body: Node, cone_kind: String, by: Node = null) -> float:
 	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
 		return 1.0
 	for z in body.get_tree().get_nodes_in_group(GROUP):
@@ -999,7 +1004,7 @@ static func cone_mult(body: Node, cone_kind: String) -> float:
 			continue
 		var perfect := bz.t <= bz.perfect_s
 		bz.took += 1
-		bz._result("perfect" if perfect else "late", cone_kind)
+		bz._result("perfect" if perfect else "late", cone_kind, by)
 		if perfect and cone_kind == "air":
 			carry_wind(body)
 		return 0.0 if perfect else bz.late_mult
@@ -1007,8 +1012,8 @@ static func cone_mult(body: Node, cone_kind: String) -> float:
 
 
 ## Lightning striking `body`: his Parry within its first perfect_s sends it back (the only answer to lightning; spec §2.5).
-## The parry zone that does, or null (it hits).
-static func lightning_back(body: Node) -> BendZone:
+## The parry zone that does, or null (it hits). `by`: the lightning's caster.
+static func lightning_back(body: Node, by: Node = null) -> BendZone:
 	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
 		return null
 	for z in body.get_tree().get_nodes_in_group(GROUP):
@@ -1017,7 +1022,7 @@ static func lightning_back(body: Node) -> BendZone:
 			continue
 		if bz.t <= bz.perfect_s:
 			bz.took += 1
-			bz._result("perfect", "lightning")
+			bz._result("perfect", "lightning", by)
 			return bz
 		return null                              # (late on lightning: it hits; the parry ends a whiff)
 	return null
@@ -1109,6 +1114,7 @@ func _stones() -> void:
 		if r2 and BendR3.stock() and kind in ["redirect", "parry"]:
 			# (round 3, every guard a shield: a stone met on the beat drops where it is, nothing through, no reward; late,
 			# half as a slide)
+			var thrower0 := _body_of(lift.caster)
 			if perfect:
 				var st0 := lift.stone as Node3D
 				var by0 := _body_of(lift.caster)
@@ -1117,10 +1123,11 @@ func _stones() -> void:
 			else:
 				_late_lift(lift)
 			took += 1
-			_result("perfect" if perfect else "late", "stone")
+			_result("perfect" if perfect else "late", "stone", thrower0)
 			continue
 		if r2 and kind in ["air_shield", "wind_guard"]:
 			# (the Wind Guard on a flying stone: on the beat cushioned and dropped at his feet, a loose stone; late, half)
+			var thrower1 := _body_of(lift.caster)
 			if perfect:
 				var st := lift.stone as Node3D
 				var by := _body_of(lift.caster)
@@ -1135,7 +1142,7 @@ func _stones() -> void:
 			else:
 				_late_lift(lift)
 			took += 1
-			_result("perfect" if perfect else "late", "stone")
+			_result("perfect" if perfect else "late", "stone", thrower1)
 			continue
 		var s := lift.stone as Node3D
 		var v := lift.velocity
@@ -1159,10 +1166,11 @@ func _stones() -> void:
 			s.set_meta(&"bend_stone_d", {"mps": v.length(), "damage": lift.damage_now(), "kind": lift.kind,
 					"knock_mps": float(hd.get("knock_mps", GustLift.KNOCK_MPS)), "gravity": float(hd.get("gravity", 6.0)),
 					"pierce": bool(hd.get("pierce", false))})
+		var thrower2 := _body_of(lift.caster)
 		lift.drop(false)
 		_take_stone(s, v, perfect)
 		if r2 and kind == "catch":
-			_result("perfect" if perfect else "late", "stone")
+			_result("perfect" if perfect else "late", "stone", thrower2)
 	for f in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
 		var fl := f as NpcBending.Flight
 		if fl == null or fl.stone == null or not is_instance_valid(fl.stone) or fl.shooter == owner_node:
@@ -1172,10 +1180,11 @@ func _stones() -> void:
 		if fl.stone.global_position.distance_to(me) <= radius:
 			var s := fl.stone as Node3D
 			var v := fl.velocity
+			var shooter := fl.shooter as Node
 			fl.queue_free()
 			_take_stone(s, v, perfect)
 			if r2:
-				_result("perfect" if perfect else "late", "stone")
+				_result("perfect" if perfect else "late", "stone", shooter)
 
 
 ## A flying stone met late by a guard that halves (the Wind Guard): late_mult of its damage and its knock go on (its hurl's
@@ -1276,7 +1285,7 @@ static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> 
 			continue
 		var perfect := bz.t <= bz.perfect_s and (what != "lightning" or bz.kind == "parry")
 		bz.took += 1
-		bz._result("perfect" if perfect else "late", what)
+		bz._result("perfect" if perfect else "late", what, by)
 		if bool(info.get("jab", false)):
 			BendR3.jab_guarded(by)
 		if perfect:
