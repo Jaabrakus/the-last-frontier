@@ -3,7 +3,8 @@ extends SceneTree
 ## the foe held where he stands and used as the one who shoots). The % rules stood in by FakeRules (a RingRules with
 ## rule_set "stock", made the current one: the gate on). What gets through is read from BendR3's delivered hits (the info the
 ## % rules take): none is 0%, one with slide_only is the late half.
-##   the shield  the four guards (Catch, Turn, Parry, Wind Guard) each met by a stone, a water, a fire and an air shot timed
+##   the shield  the four guards (Catch, Turn, Parry, Wind Guard) each met by a stone, a water, a fire, an air shot and the Air
+##               Lance (an air spear: water's Turn swings it back as ice, the owner's 2026-10-11; the Wind Guard bounces it) timed
 ##               to arrive 0.2 s after it stands (perfect: nothing through; the reward only in the guard's own matrix cell, a
 ##               cell round 2 let pass stopped with none) and 0.6 s (late: half the knock through as a slide; earth's catch
 ##               of stone a full catch within its window); a cone (the Wave), a Column and a flying Spike the same
@@ -27,10 +28,12 @@ const GUARDS := {"earth": ["catch", "stone_catch", "catch"], "water": ["redirect
 const SHOTS := {"earth": {"kind": "stone", "mps": 40.0, "damage": 20.0, "knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.25, "range_m": 30.0},
 		"water": {"kind": "water", "mps": 40.0, "damage": 20.0, "knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.2, "range_m": 30.0},
 		"fire": {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.2, "range_m": 30.0},
-		"air": {"kind": "air", "mps": 40.0, "damage": 20.0, "knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.2, "range_m": 30.0}}
+		"air": {"kind": "air", "mps": 40.0, "damage": 20.0, "knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.2, "range_m": 30.0},
+		"air_lance": {"kind": "air", "shape": "spear", "flight": "point_first", "mps": 40.0, "gravity": 0.0, "damage": 20.0,
+				"knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.18, "range_m": 30.0, "long": true}}
 ## The reward each guard gives in its own cells (round 2's matrix): the shot's element -> what becomes of the shot.
-const REWARD := {"earth": {"earth": "caught"}, "water": {"water": "swing", "fire": "steam"}, "fire": {"fire": "back"},
-		"air": {"air": "back", "earth": "cushioned"}}
+const REWARD := {"earth": {"earth": "caught"}, "water": {"water": "swing", "fire": "steam", "air_lance": "swing"},
+		"fire": {"fire": "back"}, "air": {"air": "back", "earth": "cushioned", "air_lance": "back"}}
 
 
 class FakeRules:
@@ -222,6 +225,10 @@ func _hits_on(who: Node) -> Array:
 
 
 ## A shot of `spec` from the foe arriving at the player's chest from `d` m off, its info tagged `tag`; its end reason is kept.
+## The last shot's bolt (_shoot), for a check of what a guard made of it.
+var _last_bolt: BendBolt
+
+
 func _shoot(spec: Dictionary, d: float, tag := "test/shot") -> BendBolt:
 	var s := spec.duplicate()
 	s["_info"] = {"tag": tag, "from": NpcSenses.chest_of(foe), "air": false}
@@ -229,6 +236,7 @@ func _shoot(spec: Dictionary, d: float, tag := "test/shot") -> BendBolt:
 	var b := BendBolt.launch(foe, _chest() - dir * d, dir, s)
 	var id := b.get_instance_id()
 	b.ended.connect(func(why: String) -> void: _ends[id] = why)
+	_last_bolt = b
 	return b
 
 
@@ -279,6 +287,9 @@ func _shield() -> void:
 					rok = end == "cushioned"
 				_:
 					rok = end == "blocked"                                  # (a cell round 2 let pass: stopped, no reward)
+			if el == "water" and se == "air_lance":
+				# (the Turn's Lance leaves as an ice lance, the turner's)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "ice" and _last_bolt.caster == p
 			var ok_p := through.is_empty() and (pf[1] as Array).has("perfect") and rok
 			_expect(ok_p, "%s's guard, a %s shot on the beat: nothing through, %s (%s, %s)" % [el, se, reward if reward != "" else "no reward", pf[1], end])
 			var lt := await _met(el, se, 0.6)

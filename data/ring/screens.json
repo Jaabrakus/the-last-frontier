@@ -180,7 +180,7 @@
 		},
 		"guards": {
 			"earth": "{guard} catches stones; {guard} again throws them back.",
-			"water": "{guard} on the beat swings their water round you and sends it back.",
+			"water": "{guard} on the beat swings their water round you and sends it back; their Air Lance comes back as ice.",
 			"fire": "{guard} on the beat sends fire straight back: the only answer to lightning.",
 			"air": "{guard} on the beat bounces their wind back and drops a stone at your feet."
 		},

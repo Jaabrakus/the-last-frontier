@@ -26,7 +26,12 @@ extends Node3D
 ##                heavier goes on and equal ones both break; a GustLift's flying stone too (its stone's weight: weight_of)
 ##   steer        a water bolt of a water fighter (Flowing: Bending.passive("water")) bends toward its caster's aim (no aim
 ##                help) at steer_dps for steer_s after it leaves, steer_max_deg in all
-##   swing        a Turn on the beat (BendZone): it swings once round the guard's waist and leaves along his aim, his
+##   swing        a Turn on the beat (BendZone): it swings once round the guard's waist and leaves along his aim, his now
+##                (x the Turn's perfect_mult): it glides from where it was caught onto the swing's circle (SWING_IN of the
+##                swing), never a jump. The Air Lance turned (become "ice"): ice from the catch, its body drawn short on the
+##                circle (WRAP_Z, it wraps round him) and grown back to its length as it leaves with a burst and a cast's voice
+##   become       a kind made anew in flight (become: a Turn's catch of the Air Lance leaves as an ice lance): its body, trail
+##                and voice of the new kind, a fire it carried put out; its numbers kept (a Turn sends back what it took)
 ##   under        a burrower (meta bend_under_until) is passed over by stone
 ##   near miss    a bolt passing within near_m of an air fighter in a Slip (meta bend_slip_until) charges his Carried wind
 ##   pull         a Pull wave: whom it strikes is knocked toward its caster
@@ -97,6 +102,15 @@ var floor_wave := false
 var width_m := 2.2
 var height_m := 0.9
 var miss_above_m := 0.6
+## A Turn's swing (begin_swing): the part of it (0..1) over which a caught bolt glides onto the circle, and the circle's height
+## over the guard's feet (m).
+const SWING_IN := 0.25
+const SWING_WAIST_M := 1.0
+## A bolt turned in a Turn's swing (become): its body drawn this long on the circle (of its length) while it wraps round the
+## guard, coming in over WRAP_IN_S and grown back over WRAP_OUT_S as it leaves.
+const WRAP_Z := 0.4
+const WRAP_IN_S := 0.06
+const WRAP_OUT_S := 0.12
 var deck_y := 0.0
 var _wave_look: Node3D
 ## The pull (a Pull wave): whom it strikes is knocked toward its caster.
@@ -117,6 +131,17 @@ var _swing_r := 1.0
 var _swing_k := 1.0
 var _swing_t := -1.0
 var _swing_a0 := 0.0
+## Where it was caught, from the guard: its flat distance and its height (the swing glides from there onto its circle).
+var _swing_r0 := 1.0
+var _swing_h0 := 1.0
+## Its own look (BendLooks.bolt_body; not a floor wave's, not the Spellbreak effects'): the size it was drawn at and the parts
+## it is drawn with, which become() makes again for a new kind (only those: nothing else hung on it is touched).
+var look_r := 0.0
+var _body_parts: Array[Node] = []
+## A body made anew by become() (under this node, so it is drawn shorter as a whole on a Turn's circle).
+var _look: Node3D
+## The swing turned it (become): it is drawn wrapped round the guard and leaves with a burst and a cast's voice.
+var _swing_became := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -191,7 +216,12 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 			else:
 				b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
 	elif not sb:
-		BendLooks.bolt_body(holder, b.kind, float(spec.get("look_r", b.radius)), b.long, b.shape)
+		b.look_r = float(spec.get("look_r", b.radius))
+		var before := holder.get_children()
+		BendLooks.bolt_body(holder, b.kind, b.look_r, b.long, b.shape)
+		for c in holder.get_children():
+			if not c in before:
+				b._body_parts.append(c)              # (its own look: what become() makes anew)
 		b._trail = BendLooks.trail(b, b.kind, b.radius)
 	elif b.kind == "air":
 		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
@@ -232,8 +262,9 @@ func swinging() -> bool:
 
 
 ## A Turn on the beat (BendZone): once round `by`'s waist over `s` s at `r` m, then away along his aim at `k` times its
-## speed, damage and knock, his; a water fighter's Flowing steers it as it leaves.
-func begin_swing(by: Node3D, s: float, r: float, k: float) -> void:
+## speed, damage and knock, his; a water fighter's Flowing steers it as it leaves. `to_kind`: it turns into that kind as it
+## is caught (become: the Air Lance turned to ice), drawn short on the circle (WRAP_Z) while it wraps round him.
+func begin_swing(by: Node3D, s: float, r: float, k: float, to_kind := "") -> void:
 	_swing_by = by
 	_swing_s = maxf(s, 0.05)
 	_swing_r = r
@@ -241,10 +272,52 @@ func begin_swing(by: Node3D, s: float, r: float, k: float) -> void:
 	_swing_t = 0.0
 	var off := global_position - by.global_position
 	_swing_a0 = atan2(off.x, off.z)
+	_swing_r0 = clampf(Vector2(off.x, off.z).length(), 0.2, 3.0)
+	_swing_h0 = off.y
 	info = BendZone.return_info(info, by, global_position, k)
 	caster = by
-	if not SbFx.fire(by, "water_redirect/redirect", "swing", {"at": global_position, "dir": velocity, "el": "water"}):
+	if to_kind != "" and to_kind != kind:
+		become(to_kind)
+		_swing_became = true
+		if _look != null:
+			create_tween().tween_property(_look, ^"scale", Vector3(1.0, 1.0, WRAP_Z), WRAP_IN_S)
+		# (our own freeze: a big burst of the new kind where it was caught, ice's freezing voice)
+		BendLooks.burst(global_position, to_kind, 24, Vector3.UP, 180.0, 4.0, 0.25, false)
+		BendSounds.event("ice_rise" if to_kind == "ice" else "", global_position, -3.0)
+	elif not SbFx.fire(by, "water_redirect/redirect", "swing", {"at": global_position, "dir": velocity, "el": "water"}):
 		BendLooks.burst(global_position, kind, 10)
+
+
+## It is made a bolt of kind `k` now, in flight (a water Turn's catch of the Air Lance leaves as ice: begin_swing): its kind,
+## and its own look and voice of that kind made anew (its body under a "Look" node, its trail, its flight's voice); a fire
+## it carried (an air bolt through fire: burning) put out. Its numbers stay as they are: speed, damage, knock, up, size,
+## gravity, range, weight and the lock a hit costs (a Turn sends back what it took, x its own mult). A look that is not its
+## own (the Spellbreak effects' flight) is left as it is.
+func become(k: String) -> void:
+	if spent or k == "" or k == kind:
+		return
+	kind = k
+	burning = false
+	if _fire_trail != null:
+		BendLooks.stop_trail(_fire_trail)
+		_fire_trail = null
+	if not _body_parts.is_empty():
+		var holder: Node3D = spin if spin != null else self
+		for c: Node in _body_parts:
+			if is_instance_valid(c):
+				if c.get_parent() != null:
+					c.get_parent().remove_child(c)   # (out of the tree at once: a replay copying its look sees the new body only)
+				c.queue_free()
+		_body_parts.clear()
+		_look = Node3D.new()
+		_look.name = "Look"
+		holder.add_child(_look)
+		BendLooks.bolt_body(_look, kind, look_r, long, shape)
+		_body_parts.append(_look)
+		BendLooks.stop_trail(_trail)
+		_trail = BendLooks.trail(self, kind, radius)
+	BendSounds.flight_end(self)
+	BendSounds.flight(BendSounds.flight_kind(self), self)
 
 
 func _swing(dt: float) -> void:
@@ -253,9 +326,13 @@ func _swing(dt: float) -> void:
 		end("swing")
 		return
 	_swing_t += dt / _swing_s
-	var a := _swing_a0 - TAU * minf(_swing_t, 1.0)
-	var waist := _swing_by.global_position + Vector3.UP * 1.0
-	var at := waist + Vector3(sin(a), 0.0, cos(a)) * _swing_r
+	var u := minf(_swing_t, 1.0)
+	var a := _swing_a0 - TAU * u
+	# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
+	var e := smoothstep(0.0, SWING_IN, u)
+	var rr := lerpf(_swing_r0, _swing_r, e)
+	var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
+	var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
 	var was := global_position
 	global_position = at
 	if (at - was).length_squared() > 1e-6:
@@ -279,6 +356,14 @@ func _swing(dt: float) -> void:
 		age = 0.0
 		_steered = 0.0
 	_face()
+	if _swing_became:
+		_swing_became = false
+		if _look != null and is_instance_valid(_look):
+			create_tween().tween_property(_look, ^"scale", Vector3.ONE, WRAP_OUT_S)
+		# (it leaves as what it became: a burst along its way and the cast's voice of its kind)
+		BendLooks.burst(global_position, kind, 16, velocity.normalized(), 50.0)
+		if kind == "ice":
+			BendSounds.play(&"ice_cast", global_position)
 
 
 func _face() -> void:

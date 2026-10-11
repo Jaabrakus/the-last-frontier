@@ -873,7 +873,7 @@ func _reaction() -> Dictionary:
 		for o: Dictionary in options:
 			var h: Dictionary = o.hint
 			var answers: Array = h.get("answers", [])
-			var ok := is_guard(h) and kind in answers
+			var ok := is_guard(h) and (kind in answers or String(th.get("as", "")) in answers)
 			if not ok and bool(o.guard) and stock() and kind in guard_kinds:
 				ok = true                            # (round 5: the % ring's guard stops every attack, its own kinds or not)
 			if not ok and kind == "lightning" and String(o.do) == "dash" and bool(pr.get("lightning_dash", false)):
@@ -934,7 +934,8 @@ func _shield_pick(threats: Array, pr: Dictionary, now: float, react_g: float) ->
 		if now - float(seen[0]) < react_g:
 			continue
 		var kind := String(th.kind)
-		if bool(seen[1]) and bool(seen[2]) and kind in answers and (kind != "lightning" or element == "fire"):
+		if bool(seen[1]) and bool(seen[2]) and (kind in answers or String(th.get("as", "")) in answers) \
+				and (kind != "lightning" or element == "fire"):
 			continue                               # (on the beat its own guard's round-2 timing is the better answer)
 		if not m.shield_roll(int(th.id)):
 			continue
@@ -1098,7 +1099,7 @@ func _threats() -> Array:
 		var tti := _closing(bb.global_position, bb.velocity, c)
 		if tti >= 0.0:
 			out.append({"id": bb.get_instance_id(), "kind": bb.kind, "tti": tti, "knock": bb.knock_mps,
-					"src": _src(bb.caster) if bb.kind != "stone" else 0})
+					"src": _src(bb.caster) if bb.kind != "stone" else 0, "as": _as_of(bb.kind, bb.shape)})
 	for s in tree.get_nodes_in_group(FormStone.GROUP):
 		# (a boulder rolling along the deck at it: kind "floor", jumped)
 		var rb := s as RigidBody3D
@@ -1152,10 +1153,11 @@ func _threats() -> Array:
 		elif sc != null and sc.state != SwayCaster.State.IDLE and sc.move != "":
 			# (his wind-up read: a throw or a bolt he is locking, its stone or its element on its way when he lets go)
 			var md := sc.mode_of(sc.move)
-			var shot := shot_of(sc.move, md)
+			var shot := shot_of(sc.move, md, sc.grown)
 			if not shot.is_empty() and _in_reach(shot, t):
 				var left := maxf((1.0 - sc.fill) * sc.lock_s, 0.0)
-				var began := int((_now() - sc.fill * sc.lock_s) * 10.0)
+				# (one read a lock: a grown lock held full keeps its id, so a bot can watch it long enough to answer it)
+				var began := int(sc.lock_began_at * 10.0) if sc.grown else int((_now() - sc.fill * sc.lock_s) * 10.0)
 				out.append(_read(shot, hash([sc.get_instance_id(), sc.move, md, began]), left + READ_STRIKE_S, c, t))
 		elif t is NpcFighter and (t as NpcFighter).brain != null and (t as NpcFighter).brain.bending != null:
 			var ob := (t as NpcFighter).brain.bending
@@ -1164,7 +1166,7 @@ func _threats() -> Array:
 				out.append({"id": lid2, "kind": "lightning", "tti": maxf(ob.lock_s - ob.lock_t, 0.0) + flash_s(),
 						"knock": 6.0})
 			elif ob.casting != "":
-				var shot2 := shot_of(ob.casting, ob.mode)
+				var shot2 := shot_of(ob.casting, ob.mode, ob.grown)
 				if not shot2.is_empty() and _in_reach(shot2, t):
 					out.append(_read(shot2, hash([ob.get_instance_id(), ob.casting, ob.mode, int(ob._lock_at * 100.0)]),
 							maxf(ob.lock_s - ob.lock_t, 0.0), c, t))
@@ -1188,7 +1190,7 @@ static func flash_s() -> float:
 ## for a wave along the deck its time to its feet ("read": the jump waits for the wave), "under" (kind) for what rises under
 ## it (its rise_s on).
 func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dictionary:
-	var th := {"id": id, "kind": shot.kind, "knock": shot.knock}
+	var th := {"id": id, "kind": shot.kind, "knock": shot.knock, "as": _as_of(String(shot.kind), String(shot.get("shape", "")))}
 	if String(shot.kind) == "under":
 		th["tti"] = left + float(shot.get("rise_s", 0.35))
 		th["rise"] = float(shot.get("rise_s", 0.35))
@@ -1200,14 +1202,27 @@ func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dic
 	return th
 
 
-## What (id, md) sends flying at whom it is cast at: {kind, mps, knock} (a bolt's or a throw's spec; Stone Form's spike and
-## boulder and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
-static func shot_of(id: String, md: String) -> Dictionary:
+## A threat's "as" (its own name past its kind; "" none): an air bolt of shape spear is the Air Lance ("air_spear"), which
+## water's Turn answers (bend_ai.json zones.redirect answers); its kind stays "air" for every other reader.
+static func _as_of(kind: String, shape: String) -> String:
+	return "air_spear" if kind == "air" and shape == "spear" else ""
+
+
+## What (id, md) sends flying at whom it is cast at: {kind, mps, knock, shape} (a bolt's or a throw's spec; Stone Form's spike
+## and boulder and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
+## `grown`: the lock grows (held past its second click); only the Air Lance's grow is read (the Gust held long is a spear of
+## air, another thing to answer), every other grow read as the move itself as before.
+static func shot_of(id: String, md: String, grown := false) -> Dictionary:
 	var spec := spec_of(id, md)
+	if grown:
+		var g: Variant = spec.get("grow")
+		if g is Dictionary and _as_of(String((g as Dictionary).get("kind", "")), String((g as Dictionary).get("shape", ""))) != "":
+			spec = spec.duplicate()
+			spec.merge(g as Dictionary, true)
 	var dn := String(spec.get("do", ""))
 	if dn in ["bolt", "throw", "wind_wave"]:
 		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0),
-				"knock": float(spec.get("knock_mps", 0.0))}
+				"knock": float(spec.get("knock_mps", 0.0)), "shape": String(spec.get("shape", ""))}
 	if dn == "floor_wave":
 		return {"kind": String(spec.get("kind", "fire")), "mps": maxf(float(spec.get("mps", 18.0)), 5.0),
 				"knock": float(spec.get("knock_mps", 0.0)), "floor": true}

@@ -74,7 +74,7 @@ buttons, one job each, and cut the "two skills x three variations" layer. The ki
 | 2 ▲ | **Wave** · tap twice **Geyser** | today's cone (it cannot be jumped; ▲ 12 m, 65°); Geyser rises where you aim, twice as wide from a grate or your own puddle |
 | 3 | **Skate** · tap twice **Surf** | a slide the way you hold, leaving puddles; Surf rides a wave where you look |
 | 4 | **Ice Wall** | 2-6 m where you aim |
-| E | **Turn** | on the beat a water or ice bolt swings once round you and leaves along your aim (x1.2); fire on the beat is doused; a Wave on the beat parts round you |
+| E | **Turn** | on the beat a water or ice bolt swings once round you and leaves along your aim (x1.2); an Air Lance on the beat wraps round you and leaves as an ice lance along your aim (x1.2); fire on the beat is doused; a Wave on the beat parts round you |
 | 5 | **Patch** · tap twice **Mend** | |
 
 The water meter's spending is retired (lock time is the only limit; the pools feed Geyser and Skate); the HUD shows no meter
@@ -114,7 +114,7 @@ The one line every player learns: *"E: on the beat it's yours. Late, half gets t
 | Arrives -> / Guard | Stone | Fire | Water / ice | Air | Lightning |
 |---|---|---|---|---|---|
 | **Earth Catch** (1.0 s, 3.5 m) | always caught and held; perfect = a clean catch (the faster return) | passes | passes | passes | passes |
-| **Water Turn** (0.8 s, 2.2 m) | passes | perfect: doused to steam; late: half | perfect: swings round you and back along your aim; a Wave parts; late: half | passes | passes |
+| **Water Turn** (0.8 s, 2.2 m) | passes | perfect: doused to steam; late: half | perfect: swings round you and back along your aim; a Wave parts; late: half | the Air Lance: perfect, wraps round you and leaves as ice along your aim; late: half; other air passes | passes |
 | **Fire Parry** (0.8 s, 2.5 m) | passes | perfect: straight back along your aim; late: half | ice, perfect: melted; water passes | passes | perfect only: sent back |
 | **Air Wind Guard** (0.8 s, 2.2 m) | perfect: dropped at your feet; late: half | passes | passes | perfect: bounced back, Carried wind; late: half | passes |
 

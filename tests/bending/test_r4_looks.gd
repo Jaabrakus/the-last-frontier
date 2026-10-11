@@ -12,7 +12,9 @@ extends SceneTree
 ##   Wind Guard  your own guard's bands drawn 0.6 as wide; the bot's own guard's 1.0 (everyone else's read unchanged)
 ##   your walls  one between the camera and your head dithers (to 0.35) and still stops a stone bolt and a bot's sight ray;
 ##               one in front of you stays whole
-##   shadows     every bolt kind but air and lightning has a shadow-only core; air has its dust line (AirDust)
+##   shadows     every bolt kind but air and lightning has a shadow-only core; air has its dust line (AirDust); an Air Lance
+##               made ice in flight (BendBolt.become: a water Turn's catch) is an ice spear only: its air body and dust gone,
+##               one shadow-only core under its new Look, a trail of its own
 ##   at range    the core's drawn scale at 25 m is 2x or more its scale at 8 m, the bolt's collision radius unchanged
 ##   puffs       a hit's burst on a body stays within 0.6 of the body's height (at the bolts' hit sizes); the puffs drawn at
 ##               half before the struck body
@@ -122,7 +124,7 @@ func _run() -> void:
 	_near()
 	await _guard()
 	await _walls()
-	_shadows()
+	await _shadows()
 	_range()
 	_puffs()
 	await _warm()
@@ -366,6 +368,32 @@ func _shadows() -> void:
 	BendLooks.bolt_body(lt, "lightning", 0.12)
 	var air_ok := _child(air, "AirDust") != null and _child(air, "Shadow") == null
 	var lt_ok := _child(lt, "Shadow") == null
+	# an Air Lance made ice in flight (a Turn's catch, BendBolt.become): the ice spear's body alone, a trail of its own
+	var lg: Dictionary = ((SwayMoves.move("air_gust").bend as Dictionary).gust as Dictionary).duplicate(true)
+	var grow: Dictionary = lg.get("grow", {})
+	lg.erase("grow")
+	lg.merge(grow, true)
+	var lb := BendBolt.launch(foe, at, Vector3.FORWARD, lg)
+	lb.velocity = Vector3.ZERO
+	lb.gravity = 0.0
+	var had_dust := _child(lb, "AirDust") != null
+	lb.become("ice")
+	await _ticks(2)
+	var look := _child(lb, "Look")
+	var shadows := 0
+	var lit_extra := false
+	if look != null:
+		for g in look.get_children():
+			if g is GeometryInstance3D:
+				if String(g.name).begins_with("Shadow"):
+					shadows += 1
+				elif (g as GeometryInstance3D).cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+					lit_extra = true
+	var became_ok := had_dust and lb.kind == "ice" and look != null and shadows == 1 and not lit_extra \
+			and _child(lb, "AirDust") == null and lb._trail != null and is_instance_valid(lb._trail)
+	_expect(became_ok, "an Air Lance made ice in flight is an ice spear only: its dust gone, one shadow core, its own trail (dust before %s, look %s, shadows %d)"
+			% [had_dust, look != null, shadows])
+	lb.end("test")
 	_expect(ok, "every bolt kind but air and lightning has its shadow-only core")
 	_expect(air_ok, "air has its dust line instead")
 	_expect(lt_ok, "lightning none")

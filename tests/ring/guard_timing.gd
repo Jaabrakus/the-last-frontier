@@ -123,7 +123,7 @@ static func windup_s(foe: Node, body: Node3D, r: float) -> float:
 	var nb: NpcBending = f.brain.bending
 	if nb.casting == "":
 		return -1.0
-	var shot := NpcBending.shot_of(nb.casting, nb.mode)
+	var shot := NpcBending.shot_of(nb.casting, nb.mode, nb.grown)
 	if shot.is_empty():
 		return -1.0
 	var d := Vector2(f.global_position.x - body.global_position.x, f.global_position.z - body.global_position.z).length()

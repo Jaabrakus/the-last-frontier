@@ -13,7 +13,8 @@ extends Node3D
 ##   guards      on its owner for a moment (window_s): catch (a stone flying at him caught and held before him: Earth Shove
 ##               sends it back), deflect (a stone knocked aside), cushion (a stone slowed to a stop and dropped): a GustLift
 ##               throw, a bot's spike (NpcBending.Flight) or a stone bolt (BendBolt kind "stone": the disc, the pebbles, a
-##               shoved chunk; caught or cushioned it is a FormStone again); redirect (water and ice sent back), return (Air
+##               shoved chunk; caught or cushioned it is a FormStone again); redirect (water, ice and the Air Lance sent
+##               back, the Lance as ice), return (Air
 ##               Redirect: light bolts, fire, water, ice and air, sent back at who sent them), parry (fire knocked aside),
 ##               spin (light bolts knocked aside), absorb (water drunk in: a little health)
 ## put_out (spec.put_out: the spray): what burns in it goes out as it is made and while it stands (fire walls, burning ground,
@@ -32,8 +33,10 @@ extends Node3D
 ##               +rally_step a return, +rally_clean_step off a clean catch, at most rally_max; never under gust.stone.hurl).
 ##               Fire, water and air pass
 ##   Turn        water or ice: perfect, it swings once round the guard's waist (SWING_S) and leaves along his aim x
-##               perfect_mult (steered by Flowing); fire: perfect, doused to steam; a Wave on the beat parts round him
-##               (cone_mult). Stone and air pass
+##               perfect_mult (steered by Flowing); the Air Lance (an air bolt of shape spear, the Gust held long; the
+##               owner, 2026-10-11): the same, and it turns to ice as it is caught (BendBolt.become), wraps round him and
+##               leaves an ice lance along his aim; late, half gets through as every late Turn; fire: perfect, doused to
+##               steam; a Wave on the beat parts round him (cone_mult). Stone and other air pass
 ##   parry       fire of any shape (a bolt, the Kick's floor wave, the High Kick's crescent): perfect, straight back along
 ##               his aim at once x perfect_mult (no dice: never a random side); ice: perfect, melted to a puddle; lightning:
 ##               back along his aim only on a parry in its first perfect_s when it strikes (lightning_back), else it hits.
@@ -645,9 +648,11 @@ func _guard_bolt(b: BendBolt) -> bool:
 			_result("perfect" if perfect else "late", what)
 			return true
 		"redirect":
-			if what in ["water", "ice"]:
+			# (the Air Lance, the only air spear: the Turn takes it as water and ice, and it leaves as ice)
+			var lance := what == "air" and b.shape == "spear"
+			if what in ["water", "ice"] or lance:
 				if perfect:
-					b.begin_swing(owner_node, SWING_S, SWING_R, Bending.rule("perfect_mult", 1.2))
+					b.begin_swing(owner_node, SWING_S, SWING_R, Bending.rule("perfect_mult", 1.2), "ice" if lance else "")
 				else:
 					_late(b)
 			elif what == "fire":

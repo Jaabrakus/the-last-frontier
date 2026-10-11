@@ -9,7 +9,9 @@ extends SceneTree
 ##             in all (catch, throw back); held 10 s with hold_drop_s 0 and still held
 ##   water     Turn: a water bolt on the beat swings round the waist and leaves along the aim x1.2; fire on the beat is
 ##             doused; a Wave on the beat parts round him; late, half gets through; stone passes; a whiff makes the next
-##             guard's lock whiff_lock_s
+##             guard's lock whiff_lock_s. The Air Lance (the Gust held long; the owner, 2026-10-11): on the beat it wraps
+##             round him and turns to ice (its body made anew, drawn short on the circle), his, and leaves an ice lance along
+##             his aim x1.2; late, half gets through and it stays air; a plain air bolt passes as before
 ##   fire      Parry: fire on the beat straight back along the aim at once x1.2, no dice thrown; ice on the beat melts to a
 ##             puddle; lightning back only on the beat; late, half; water passes
 ##   air       Wind Guard: air on the beat bounced back x1.2 and Carried wind charged; stone on the beat cushioned and dropped
@@ -218,6 +220,15 @@ func _shoot(spec: Dictionary, d: float) -> BendBolt:
 	return BendBolt.launch(foe, _chest() - dir * d, dir, spec)
 
 
+## The Air Lance's bolt: the Gust's spec with its grow (moves.json air_gust gust: a spear of air thrown point first).
+func _lance_spec() -> Dictionary:
+	var g: Dictionary = ((SwayMoves.move("air_gust").bend as Dictionary).gust as Dictionary).duplicate(true)
+	var grow: Dictionary = g.get("grow", {})
+	g.erase("grow")
+	g.merge(grow, true)
+	return g
+
+
 ## A guard `kind` of `spec` made on the player now.
 func _guard(kind: String, spec: Dictionary) -> BendZone:
 	return BendZone.make(p, kind, p.global_position, spec, BendCaster.of(p).facing())
@@ -410,6 +421,34 @@ func _water() -> void:
 	_expect(float(fire[0]) == 0.0 and fire[3] == ["perfect"], "Turn on the beat douses fire (%.1f through)" % fire[0])
 	var st := await _met("redirect", tspec, STONE, 0.2)
 	_expect(float(st[0]) > 0.0 and st[3].is_empty(), "Turn lets stone pass (%.1f)" % st[0])
+	# the Air Lance: on the beat it wraps round him as ice and leaves along his aim x1.2, his
+	var lance := _lance_spec()
+	var lbase := await _met("", {}, lance, 0.0)
+	await _calm()
+	var zl := _guard("redirect", tspec)
+	await _secs(0.2)
+	var lb := _shoot(lance, 2.8)
+	var lv0 := lb.velocity.length()
+	var l_swung := await _until(func() -> bool: return lb.swinging(), 0.5)
+	var iced := is_instance_valid(lb) and lb.kind == "ice" and lb.caster == p and lb.find_child("Look", false, false) != null
+	var wrapped := is_instance_valid(lb) and lb._look != null and lb._look.scale.z < 1.0
+	await _secs(0.1)
+	wrapped = wrapped or (is_instance_valid(lb) and lb.swinging() and lb._look != null and lb._look.scale.z < 0.9)
+	await _until(func() -> bool: return not is_instance_valid(lb) or not lb.swinging(), 1.0)
+	var l_aim := BendZone.guard_aim(p, lb.global_position) if is_instance_valid(lb) else Vector3.ZERO
+	var l_along := is_instance_valid(lb) and lb.velocity.normalized().dot((l_aim - lb.global_position).normalized()) > 0.95
+	var l_fast := is_instance_valid(lb) and absf(lb.velocity.length() - lv0 * 1.2) < 0.6
+	var l_ice := is_instance_valid(lb) and lb.kind == "ice" and lb.shape == "spear"
+	_expect(l_swung < INF and iced and wrapped and l_along and l_fast and l_ice and zl.results == ["perfect"] and p.health == p.max_health,
+			"Turn on the beat takes the Air Lance: it wraps round him as ice and leaves an ice lance along his aim x1.2 (%s ice %s wrapped %s along %s fast %s)"
+			% [l_swung, iced, wrapped, l_along, l_fast])
+	await _secs(0.4)
+	var ll := await _met("redirect", tspec, lance, 0.6)
+	var l_half := absf(float(ll[0]) - float(lbase[0]) * 0.5) < 1.0
+	var l_air := not is_instance_valid(ll[2]) or (ll[2] as BendBolt).kind == "air"
+	_expect(ll[3] == ["late"] and l_half and l_air, "Turn late on the Air Lance: half gets through, still air (%.1f of %.1f)" % [ll[0], lbase[0]])
+	var airb := await _met("redirect", tspec, {"kind": "air", "mps": 30.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
+	_expect(float(airb[0]) > 0.0 and airb[3].is_empty(), "Turn lets a plain air bolt pass, the Lance alone is taken (%.1f)" % airb[0])
 	# a Wave on the beat parts round him
 	await _calm()
 	_guard("redirect", tspec)

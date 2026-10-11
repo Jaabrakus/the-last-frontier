@@ -347,6 +347,21 @@ func _bots() -> void:
 			"the bots' guards answer what each guard takes (catch stone; turn water, ice, fire; parry fire, lightning; wind guard air, stone)")
 	check(NpcBending.shot_of("fire_kick", "kick").get("floor", false) == true and String(NpcBending.shot_of("earth_shove", "column").get("kind", "")) == "under",
 			"a bot reads the Kick's wind-up as a wave along the deck, a Column's as rising under it")
+	# the Air Lance (the Gust held long): water's Turn answers it (it turns it back as ice, the owner's 2026-10-11), and a bot
+	# reads a grown Gust as the Lance, a spear of air; every other grow is read as the move itself, as before
+	var lance := NpcBending.shot_of("air_gust", "gust", true)
+	var gust := NpcBending.shot_of("air_gust", "gust")
+	check("air_spear" in (NpcBending.hint_of("water_redirect", "redirect", _spec("water_redirect", "redirect")).get("answers", []) as Array)
+			and not "air" in (NpcBending.hint_of("water_redirect", "redirect", _spec("water_redirect", "redirect")).get("answers", []) as Array),
+			"water's Turn answers the Air Lance (air_spear), not every air shot")
+	check(String(lance.get("kind", "")) == "air" and String(lance.get("shape", "")) == "spear" and is_equal_approx(float(lance.get("mps", 0.0)), 40.0)
+			and is_equal_approx(float(lance.get("knock", 0.0)), 15.0) and is_equal_approx(float(gust.get("mps", 0.0)), 18.0)
+			and is_equal_approx(float(gust.get("knock", 0.0)), 11.0) and NpcBending._as_of("air", "spear") == "air_spear"
+			and NpcBending._as_of("air", "ball") == "",
+			"a bot reads the grown Gust as the Air Lance (air, a spear, 40 m/s, knock 15) and the Gust as the Gust (%s; %s)" % [lance, gust])
+	check(NpcBending.shot_of("fire_blast", "punch", true) == NpcBending.shot_of("fire_blast", "punch")
+			and NpcBending.shot_of("earth_shove", "push", true) == NpcBending.shot_of("earth_shove", "push"),
+			"every other grow is read as the move itself (the Fireball, the Fissure)")
 
 
 # ---------------------------------------------------------------- the deck's stones

@@ -506,6 +506,9 @@ func _record_props(i: int) -> void:
 		if n == null or not is_instance_valid(n) or not (n as Node).is_inside_tree() or (n is BendBolt and (n as BendBolt).spent):
 			p.died = _tick - 1
 			_prop_of.erase(id)
+		elif n is BendBolt and (n as BendBolt).kind != p.kind:
+			p.died = _tick - 1                   # (its kind made anew in flight: a Turn's ice lance; a new prop from its new look)
+			_prop_of.erase(id)
 	for g: StringName in PROP_GROUPS:
 		for n in get_tree().get_nodes_in_group(g):
 			if not (n is Node3D) or not (n as Node3D).is_visible_in_tree():

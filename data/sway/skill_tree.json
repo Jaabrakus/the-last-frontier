@@ -2805,7 +2805,7 @@
         "expert:water_redirect",
         "teacher:water"
        ],
-       "effect": "Hold E through a perfect Turn and the water or ice keeps circling you, up to 0.6 s (the swing is 0.3 s); let go to send it along your aim (x1.2 as before). A late Turn lets 60% through (from 50%).",
+       "effect": "Hold E through a perfect Turn and the water, ice or Air Lance keeps circling you, up to 0.6 s (the swing is 0.3 s); let go to send it along your aim (x1.2 as before). A late Turn lets 60% through (from 50%).",
        "plus": "choose when it goes back",
        "minus": "late lets 60% through",
        "help": "Hold E after a perfect Turn: send it when you choose.",

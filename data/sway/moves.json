@@ -1042,10 +1042,11 @@
           "radius_m": 2.2,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["water", "ice"],
+          "takes": ["water", "ice", "air_gust/gust.grown"],
           "handles": ["fire", "wave"],
           "return": "swing",
-          "swing_s": 0.3
+          "swing_s": 0.3,
+          "_lance": "The Air Lance too (the owner, 2026-10-11: \"lets have water be able to turn it or catch the lance and then turn it back as it wraps around the body for a ice lance\"; \"we can aim it anywhere not just return to sender\"): on the beat it turns to ice as it is caught (BendBolt.become), wraps round the turner (drawn short on the swing's circle) and leaves an ice lance along his aim x perfect_mult; late, half through as every late Turn. Only the Lance (an air bolt of shape spear): the Gust, the Pull, the Slice and the Wind Ball pass as before. takes, handles, return and swing_s are notes; BendZone's Turn arm is the rule."
         },
         "absorb": {"do": "zone", "zone": "absorb", "window_s": 1.0, "radius_m": 2.5},
         "cleanse": {"do": "cleanse", "kind": "water"}
@@ -1503,7 +1504,7 @@
     },
     "air_gust": {
       "label": "Gust",
-      "_lance": "The Gust held long is the Air Lance (the owner, 2026-10-10: \"is air big wave to big should we make it a lance instead? like a air spear throw?\", picked: Gust, then Lance when held): held to full, the Gust (its look trimmed to the 2 m it hits: look_r, the wind arc was drawn ~9 m wide); held past grow_after_s, it grows into a lance thrown point first (do throw, shape spear, kind air: a narrow, fast, long throw that hits hard; its tag air_gust/gust.grown, rules.json's grown Gust class). grow_label names it on the bar, as the Punch's Fireball.",
+      "_lance": "The Gust held long is the Air Lance (the owner, 2026-10-10: \"is air big wave to big should we make it a lance instead? like a air spear throw?\", picked: Gust, then Lance when held): held to full, the Gust (its look trimmed to the 2 m it hits: look_r, the wind arc was drawn ~9 m wide); held past grow_after_s, it grows into a lance thrown point first (do throw, shape spear, kind air: a narrow, fast, long throw that hits hard; its tag air_gust/gust.grown, rules.json's grown Gust class). grow_label names it on the bar, as the Punch's Fireball. Water's Turn on the beat takes it and sends it back an ice lance along the turner's aim (2026-10-11: water's answer to it).",
       "art": "gale",
       "element": "air",
       "lock_s": 0.35,
