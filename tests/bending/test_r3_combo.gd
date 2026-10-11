@@ -419,11 +419,14 @@ func _probe(el: String, follow: String, key1 := 0) -> Array:
 		await _cast("quick")
 		if i < 2:
 			await _until(func() -> bool: return _counted().size() >= i + 1, 1.0)
-	# (its lock begun as the Pop leaves the hand, spec §6.6, and clicked: it goes the moment it is full, as a player who
-	# knows the string presses it)
-	_press(follow, true)
-	await _ticks(3)
-	_press(follow, false)
+	# (its lock begun as the Pop leaves the hand, spec §6.6, held until full and let go: it goes the moment it is full, as a
+	# player who knows the string presses it; no click and forget since 2026-10-10, E keeps its tap: the timed guard)
+	if follow == "guard":
+		_press(follow, true)
+		await _ticks(3)
+		_press(follow, false)
+	else:
+		await _cast(follow)
 	await _until(func() -> bool: return _counted().size() >= 4, 2.5)
 	await _secs(0.2)
 	return _counted()

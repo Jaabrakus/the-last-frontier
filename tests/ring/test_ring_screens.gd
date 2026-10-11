@@ -171,7 +171,7 @@ func _words() -> void:
 	_expect(long.is_empty(), "every tip one line (%s)" % [long])
 	# (round 2's tips: the skills redesign's rules each told once)
 	var want := ["The Kick runs along the floor: jump it.", "Catch just before it hits: your throw back is faster.",
-			"A hit on the beat is yours.", "A click goes when ready; let go of a hold early and nothing is spent.", "Two walls each."]
+			"A hit on the beat is yours.", "Hold until the circle is full, then let go; let go early and nothing is spent.", "Two walls each."]
 	var missing := want.filter(func(t: String) -> bool: return not t in (d.get("tips", []) as Array))
 	var stale: Array = []
 	for t: String in d.get("tips", []):

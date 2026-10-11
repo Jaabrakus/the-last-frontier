@@ -154,6 +154,13 @@ func _tap(action: StringName, s := 0.08) -> void:
 	p.controls.set_held(action, false)
 
 
+## A cast's button held until its lock is full, then let go (the owner, 2026-10-10: casts are held, no click and forget).
+func _hold_cast(action: StringName, limit := 3.0) -> void:
+	p.controls.set_held(action, true)
+	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], limit)
+	p.controls.set_held(action, false)
+
+
 func _reset() -> void:
 	p.controls.release_all()
 	var g := RingMoves.arena_geo(ring)
@@ -189,7 +196,7 @@ func _apex_of_jump() -> float:
 func _basic_keys() -> void:
 	await _reset()
 	var jab := String(KitWords.jab(EL).get("id", ""))
-	await _tap(&"fire", 0.1)
+	await _hold_cast(&"fire")
 	await _until(func() -> bool: return casts.has(jab), 2.0)
 	_expect(casts.has(jab), "LMB: the jab (%s) cast (%s)" % [jab, casts])
 	# 1: the strike, tapped twice its partner; right-click casts it
@@ -201,7 +208,7 @@ func _basic_keys() -> void:
 	var other := k1.size() > 1 and c.readied_spell == String(k1[1].id) and c.base_mode_of(c.readied_spell) == String(k1[1].mode)
 	await _key(&"weapon_1")
 	await _secs(0.4)
-	await _tap(&"aim", 0.1)
+	await _hold_cast(&"aim")
 	await _until(func() -> bool: return not casts.is_empty(), 3.0)
 	_expect(first and other and casts.has(String(k1[0].id)), "1 readies %s, twice %s; right-click casts it (%s)" % [k1[0], k1[1] if k1.size() > 1 else "-", casts])
 	# 2: the push, right-click casts it
@@ -209,7 +216,7 @@ func _basic_keys() -> void:
 	var k2 := KitWords.key_moves(EL, 1)
 	await _key(&"weapon_2")
 	var two := c.readied_spell == String(k2[0].id)
-	await _tap(&"aim", 0.1)
+	await _hold_cast(&"aim")
 	await _until(func() -> bool: return not casts.is_empty(), 3.0)
 	_expect(two and casts.has(String(k2[0].id)), "2 readies %s; right-click casts it (%s)" % [k2[0].id, casts])
 	# E: the guard
@@ -295,7 +302,7 @@ func _basic_blocks() -> void:
 	await _reset()
 	await _key(&"weapon_1")
 	_jump_on_release = true
-	await _tap(&"aim", 0.1)
+	await _hold_cast(&"aim")
 	await _until(func() -> bool: return not released.is_empty(), 3.0)
 	await _ticks(1)
 	var h1 := await _apex_of_jump()
@@ -413,7 +420,7 @@ func _full_keys() -> void:
 	await _reset()
 	await _key(&"weapon_1")
 	_jump_on_release = true
-	await _tap(&"aim", 0.1)
+	await _hold_cast(&"aim")
 	await _until(func() -> bool: return not released.is_empty(), 3.0)
 	await _ticks(1)
 	var h1 := await _apex_of_jump()

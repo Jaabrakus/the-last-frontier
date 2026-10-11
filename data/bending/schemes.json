@@ -30,9 +30,9 @@
     },
     "basic": {
       "label": "Basic",
-      "line": "left click jabs · 1 or 2, then right-click casts · E guards · Space jumps · 3 dashes",
-      "strip": "1 or 2 readies · right-click casts · thrown? hold Space",
-      "f1": "Left click: your jab · 1 your strike, tap twice: its partner · 2 your push, hold right-click longer: it grows · right-click casts the readied move · E: tap on the beat, hold to keep it up · Space jumps, again in the air · 3 dashes · thrown off? hold Space",
+      "line": "hold left click: jab · 1 or 2, then hold right-click and let go · E guards · Space jumps · 3 dashes",
+      "strip": "1 or 2 readies · hold right-click, let go · thrown? hold Space",
+      "f1": "Hold left click: your jab · 1 your strike, tap twice: its partner · 2 your push, hold right-click longer: it grows · hold right-click till full, let go: the readied move · E: tap on the beat, hold to keep it up · Space jumps, again in the air · 3 dashes · thrown off? hold Space",
       "keys": ["fire", "aim", "weapon_1", "weapon_2", "bend_guard", "jump", "weapon_3"],
       "later_keys": ["weapon_4", "weapon_5"],
       "later_line": "Wall (4) and Heal (5) come in after your first win"

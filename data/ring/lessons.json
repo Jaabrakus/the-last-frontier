@@ -82,7 +82,7 @@
       "role": "jab",
       "by": {
         "*": {
-          "line": "Click [fire]: {jab}.  A click goes as soon as it is ready",
+          "line": "Hold [fire]: {jab}.  Let go once its circle is full",
           "do": "jab"
         }
       }
@@ -417,12 +417,12 @@
       "per_element": true,
       "dummy_pct": 0,
       "element_lines": {
-        "earth": "Click on him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it",
-        "air": "Click on him three times: up he goes.  Then right-click your [weapon_2]"
+        "earth": "Jab him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it",
+        "air": "Jab him three times: up he goes.  Then hold right-click: your [weapon_2]"
       },
       "by": {
         "*": {
-          "line": "Click on him three times: up he goes.  Then right-click your [weapon_1]",
+          "line": "Jab him three times: up he goes.  Then hold right-click: your [weapon_1]",
           "do": "string"
         }
       }
@@ -468,7 +468,7 @@
       "role": "jab",
       "by": {
         "*": {
-          "line": "Move with [move_forward] [move_left] [move_back] [move_right]. Aim with the mouse. Walk close to the dummy and click [fire]: {jab}",
+          "line": "Move with [move_forward] [move_left] [move_back] [move_right]. Aim with the mouse. Walk close to the dummy, hold [fire] and let go: {jab}",
           "do": "jab"
         }
       }
@@ -483,7 +483,7 @@
       "per_element": true,
       "by": {
         "*": {
-          "line": "Press {press} to choose {name}. Aim at the dummy, then right-click to cast{grow}",
+          "line": "Press {press} to choose {name}. Aim at the dummy, hold right-click until its circle is full, then let go{grow}",
           "do": "cast"
         }
       }
@@ -554,7 +554,7 @@
     "row_line": "your control scheme's keys at the top left until you have used each",
     "basic": [
       {"line": "[move_forward] [move_left] [move_back] [move_right]: move · Mouse: aim", "uses": ["move_forward", "move_left", "move_back", "move_right"]},
-      {"line": "Up close: click [fire] to jab", "uses": ["fire"]},
+      {"line": "Up close: hold [fire] and let go to jab", "uses": ["fire"]},
       {"line": "[weapon_1] strike or [weapon_2] push, then [aim] to cast", "uses": ["aim"]},
       {"line": "Hold [bend_guard]: guard", "uses": ["bend_guard"]},
       {"line": "[jump]: jump · Thrown off? Hold [jump] for help", "uses": ["jump"], "rules": ["stock"]},
@@ -563,7 +563,7 @@
     ],
     "keys": [
       {
-        "line": "Click [fire]: your jab",
+        "line": "Hold [fire], let go: your jab",
         "uses": [
           "fire"
         ]
@@ -614,7 +614,7 @@
     ],
     "direction": [
       {
-        "line": "Click [fire]: your jab",
+        "line": "Hold [fire], let go: your jab",
         "uses": [
           "fire"
         ]
@@ -658,7 +658,7 @@
     ],
     "radial": [
       {
-        "line": "Click [fire]: your jab",
+        "line": "Hold [fire], let go: your jab",
         "uses": [
           "fire"
         ]
@@ -700,7 +700,7 @@
     ],
     "first_moves": [
       {
-        "line": "Click [fire]: your jab",
+        "line": "Hold [fire], let go: your jab",
         "uses": [
           "fire"
         ]

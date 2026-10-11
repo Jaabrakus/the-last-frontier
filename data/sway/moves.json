@@ -1872,6 +1872,7 @@
     "grow_after_s": 0.45,
     "sputter_s": 0.7,
     "click_s": 0.2,
+    "click_queue": false,
     "double_tap_s": 0.3,
     "switch_hold_s": 0.2,
     "hit_setback_min_s": 0.25,

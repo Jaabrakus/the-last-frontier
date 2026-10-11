@@ -5,7 +5,7 @@
  "_doc": {
   "pick": "BendPoses.pick(move, mode, element): moves[move].modes[mode], else moves[move].pose, else cast[element] (only for a move with a bend spec for that mode: the Sway's old spells keep their tier clip unless mapped here), else {} (the caller plays SwayPose.clip_for). A clip missing from every own library, or in exclude, is passed over to the next.",
   "pose": "A clip's name, or {clip, mask, hand, root, alt, hold_s, strike_s, back_s, legs_always}; what it leaves out comes from clips[clip], then the clip's own metas.",
-  "clips": "Timing and play rules for clips whose library does not carry them (the interim clips were made before strike_s): hold_s (the moment held while the lock fills), strike_s (the moment the move leaves, on the release's clip), back_s (where a broken lock eases out from), hand (the limb the move leaves from: l_palm, r_palm, both, l_foot, r_foot), mask (ToolPose: upper, reach_l, reach_r, full), root (the caster held still while it plays), then (a release played as another clip: the floor cast's press then its stand), press_s (a bot plays the whole clip: its strike there).",
+  "clips": "Timing and play rules for clips whose library does not carry them (the interim clips were made before strike_s): hold_s (the moment held while the lock fills), strike_s (the moment the move leaves, on the release's clip), back_s (where a broken lock eases out from), hand (the limb the move leaves from: l_palm, r_palm, both, l_foot, r_foot), mask (ToolPose: upper, reach_l, reach_r, full), root (the caster held still while it plays; \"strike\": held through the wind-up and the strike, free once the move has left, the recovery walked out of: fire's kicks, the owner 2026-10-10 \"after the spell is cast let the player move\"), then (a release played as another clip: the floor cast's press then its stand), press_s (a bot plays the whole clip: its strike there).",
   "stance": "Each element's stance loop (own-bend-stance-<element>): SwayPose loops it under the casts while the player casts as that element and stands still with his hands free; NpcBody plays it as an element bot's idle. Stance idles only: no gait.",
   "combo_window_s": "Casts this close chain: the same move in the same variation locked again within this many seconds of its last cast takes its pose's alt (the next hand), then its own clip again (SwayPose; a bot takes the alt every other cast)."
  },
@@ -51,10 +51,10 @@
   "own-bend-fire-punch": {"hand": "r_palm", "mask": "upper", "root": false},
   "own-bend-fire-punch-l": {"hand": "l_palm", "mask": "upper", "root": false},
   "own-bend-fire-double": {"hand": "l_palm", "mask": "upper", "root": false},
-  "own-bend-fire-kick": {"hand": "r_foot", "mask": "full", "root": true},
-  "own-bend-fire-kick-l": {"hand": "l_foot", "mask": "full", "root": true},
-  "own-bend-fire-kick-low": {"hand": "r_foot", "mask": "full", "root": true},
-  "own-bend-fire-kick-low-l": {"hand": "l_foot", "mask": "full", "root": true},
+  "own-bend-fire-kick": {"hand": "r_foot", "mask": "full", "root": "strike"},
+  "own-bend-fire-kick-l": {"hand": "l_foot", "mask": "full", "root": "strike"},
+  "own-bend-fire-kick-low": {"hand": "r_foot", "mask": "full", "root": "strike"},
+  "own-bend-fire-kick-low-l": {"hand": "l_foot", "mask": "full", "root": "strike"},
   "own-bend-fire-sweep": {"hand": "r_palm", "mask": "upper", "root": false},
   "own-bend-fire-sweep-l": {"hand": "l_palm", "mask": "upper", "root": false},
   "own-bend-fire-breath": {"hand": "both", "mask": "upper", "root": false},

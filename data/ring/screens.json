@@ -116,7 +116,7 @@
 		"The Kick runs along the floor: jump it.",
 		"Catch just before it hits: your throw back is faster.",
 		"A hit on the beat is yours.",
-		"A click goes when ready; let go of a hold early and nothing is spent.",
+		"Hold until the circle is full, then let go; let go early and nothing is spent.",
 		"Two walls each.",
 		"Water douses fire, fire melts ice, air drops stone.",
 		"Hold 2 longer: a second click, and it grows.",
@@ -154,8 +154,8 @@
 		"q_hold_back": "hold {quick}: %s back",
 		"throw_back": "{guard} again: throw it back",
 		"help": {
-			"keys": "Click: it goes when ready  ·  hold {aim}: aim while it fills, let go to cast  ·  let go early: nothing spent",
-			"first_moves": "1-4 your four moves  ·  click: it goes when ready  ·  hold {aim}: aim, let go to cast",
+			"keys": "Hold {aim}: aim while it fills, let go to cast  ·  let go early: nothing spent",
+			"first_moves": "1-4 your four moves  ·  hold {aim}: aim while it fills, let go to cast",
 			"direction": "Hold W, S, A or D as you press {aim}: strike, wall or dash  ·  nothing held: the readied move",
 			"radial": "Hold {wheel}: your moves round a wheel, point and let go  ·  hold {aim}: aim, let go to cast"
 		},
@@ -167,7 +167,7 @@
 			"radial": "Hold {wheel} for the wheel  ·  {aim}: hold, let go to cast"
 		},
 		"rules": {
-			"lock": "Click: it goes when ready. Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
+			"lock": "Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
 			"web": "Water douses fire, fire melts ice, air drops stone.",
 			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground."

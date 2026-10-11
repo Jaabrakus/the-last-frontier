@@ -45,8 +45,8 @@
 		"ground": {"tint": [0.34, 0.31, 0.24]}
 	},
 	"sockets": {
-		"_about": "Stone sockets in the deck (open rules too): a stone sits in each for Shove, Gust lift and the cushion to work on; taken away, another rises refill_s later; RingArena.rebuild puts every one back. [s, z] per side, mirrored.",
-		"at": [[5.0, 5.6], [5.0, -5.6]],
+		"_about": "Stone sockets in the deck (open rules too): a stone sits in each for Shove, Gust lift and the cushion to work on; taken away, another rises refill_s later; RingArena.rebuild puts every one back. [s, z] per side, mirrored. None since 2026-10-10 (the owner: \"remove the boulders in the arenas now\"): no stone, no iron collar, in every format; the old places were [[5.0, 5.6], [5.0, -5.6]] (2v2 [[6.0, 7.5], [11.0, 3.0]], 4v4 [[6.0, 10.5], [13.5, 4.0]]: formats' sockets_at). A stone Shove kicks up and every other stone on the deck keep these hurls.",
+		"at": [],
 		"refill_s": 8.0,
 		"away_m": 0.9,
 		"loose_life_s": 25.0,
@@ -92,7 +92,7 @@
 			"grate_z": [5.0, -5.0],
 			"grates_per_line": 2,
 			"spout_z": [5.0, -5.0],
-			"sockets_at": [[6.0, 7.5], [11.0, 3.0]],
+			"sockets_at": [],
 			"layout": {
 				"name": "ruins",
 				"pieces": [
@@ -111,7 +111,7 @@
 			"grate_z": [4.0, -4.0, 8.0, -8.0],
 			"grates_per_line": 4,
 			"spout_z": [8.0, -8.0, 4.0, -4.0],
-			"sockets_at": [[6.0, 10.5], [13.5, 4.0]],
+			"sockets_at": [],
 			"layout": {
 				"name": "ruins",
 				"pieces": [

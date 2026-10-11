@@ -307,7 +307,8 @@ static func _timed_as(b: Dictionary, e: Dictionary) -> Dictionary:
 	out["strike_s"] = et[1]
 	out["back_s"] = et[2]
 	out["end_s"] = ea.length
-	out["root"] = bool(e.get("root", false))
+	var root: Variant = e.get("root", false)
+	out["root"] = root if root is String else bool(root)    # ("strike": held up to the strike only, SwayPose.rooting)
 	out["warp"] = warp
 	return out
 

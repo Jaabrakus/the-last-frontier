@@ -271,7 +271,7 @@ func _stock() -> void:
 	var water_line := ls.line_spec(str_l)
 	ls.element = keep_el
 	_expect(earth_line.contains("you keep a stone") and earth_line.contains("[bend_guard]: throw it")
-			and water_line.contains("right-click your [weapon_1]") and not water_line.contains("stone"),
+			and water_line.contains("hold right-click: your [weapon_1]") and not water_line.contains("stone"),
 			"the String card: earth \"%s\", water \"%s\"" % [earth_line, water_line])
 	# the run under the % rules: a fake RingMoves on the player for its moved(kind)
 	var fm := Standins.FakeMoves.put(p, mode.ring, {"pos": p.global_position, "element": el})

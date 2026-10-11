@@ -217,11 +217,18 @@ func current_clip() -> StringName:
 	return StringName(anim_name)
 
 
-## The caster held still while this clip plays: the untrained floor cast, or a pose that says root.
+## The caster held still while this clip plays: the untrained floor cast, or a pose that says root. A pose whose root is
+## "strike" (fire's kicks: the owner, 2026-10-10, "after the spell is cast let the player move") holds him through the
+## wind-up and up to the strike, and lets him go once the move has left (the recovery walked out of).
 func rooting() -> bool:
 	if not posing():
 		return false
-	return bool(pick.get("root", false)) if not pick.is_empty() else tier == 0
+	if pick.is_empty():
+		return tier == 0
+	var r: Variant = pick.get("root", false)
+	if r is String:
+		return String(r) == "strike" and not (phase == "release" and _struck)
+	return bool(r)
 
 
 ## Where the move leaves from (world): the pose's limb as the clip has it after every modifier. INF when no clip plays or
@@ -594,8 +601,12 @@ func _mask() -> String:
 	return "reach_l" if anim_name == String(PUSH_ONE) else "upper"
 
 
-## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always).
+## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always). Not once a pose rooted up to its
+## strike has struck: the caster walks out of the recovery on the walk's own legs (no kick's legs sliding along the deck).
 func _legs_always() -> bool:
+	var r: Variant = pick.get("root", false)
+	if r is String and String(r) == "strike" and phase == "release" and _struck:
+		return false
 	return bool(pick.get("legs_always", _anim.get_meta(&"legs_always", false) if _anim != null else false))
 
 

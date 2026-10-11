@@ -45,19 +45,19 @@ func _hands(foe: Node3D) -> void:
 		if _t >= _second_at:
 			_second_at = -1.0
 			_key(&"weapon_1")
-			_tap(&"aim", 0.08)
+			_cast_hold(&"aim")
 		return
 	if _t < _attack_at:
 		return
 	var caster := SwayCaster.of(player)
-	if caster == null or caster.state != SwayCaster.State.IDLE or player.controls.pressed(&"aim"):
+	if caster == null or caster.state != SwayCaster.State.IDLE or player.controls.pressed(&"aim") or casting():
 		return
 	var pct := mode.rules.pct_of(foe)
 	var close := _flat_d(foe) < 3.8
 	var finishing := pct >= 65.0
 	attack_n += 1
 	if not finishing and close and attack_n % 4 in [0, 1]:
-		_tap(&"fire", 0.06)
+		_cast_hold(&"fire")
 		clicks += 1
 		_attack_at = _t + 0.45
 		return
@@ -79,13 +79,13 @@ func _hands(foe: Node3D) -> void:
 	if not push and secondary:
 		_second_at = _t + 0.10
 	else:
-		_tap(&"aim", hold)
+		_cast_hold(&"aim", hold if hold > 1.0 else 0.0)
 	casts += 1
 	_attack_at = _t + (2.0 if hold > 1.0 else 1.35)
 
 
 func _guard(foe: Node3D) -> void:
 	# Commit to the chosen cast instead of cancelling each charge to guard.
-	if player.controls.pressed(&"aim") or _second_at > 0.0:
+	if player.controls.pressed(&"aim") or _second_at > 0.0 or casting():
 		return
 	super._guard(foe)

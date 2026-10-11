@@ -45,7 +45,7 @@ const PASSIVES := {
 ## The shared cast and guard numbers (moves.json "guard_rules" over these; spec §8.1).
 const RULES := {"perfect_s": 0.3, "late_mult": 0.5, "whiff_lock_s": 0.5, "whiff_s": 1.5, "return_lock_s": 0.35,
 		"perfect_return_lock_s": 0.1, "perfect_mult": 1.2, "rally_step": 0.1, "rally_clean_step": 0.2, "rally_max": 1.6,
-		"grow_after_s": 0.45, "sputter_s": 0.7, "click_s": 0.2, "double_tap_s": 0.3, "switch_hold_s": 0.2,
+		"grow_after_s": 0.45, "sputter_s": 0.7, "click_s": 0.2, "click_queue": false, "double_tap_s": 0.3, "switch_hold_s": 0.2,
 		"hit_setback_min_s": 0.25, "hold_drop_s": 0.0, "quick_reset_s": 0.5, "jab_max_m": 10.0}
 ## The loose stones' numbers (moves.json "stones" over these).
 const STONES := {"loose_max": 3, "shove_loose_m": 6.0}

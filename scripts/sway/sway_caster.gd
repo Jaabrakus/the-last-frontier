@@ -113,9 +113,11 @@ extends Node
 ##               element's guard (Bending.guard), or with a caught stone held (BendZone.held_stone) the throw back. Its
 ##               press takes over any lock running (dropped: free before the click, a raised stone left loose; the dropped
 ##               button must be let go before it locks again). Its lock: BendZone.guard_lock_s (the whiff's, the return's)
-##   the click   a press let go within click_s before the lock is full is a click: the lock runs on and the move goes the
-##               moment it is full, aimed where the crosshair is then (_queued); pressed again meanwhile it is a hold again,
-##               the time kept. A hold let go before full is called off, nothing spent (a raised stone drops loose)
+##   the click   the aim's and the quick button's casts are held until the lock is full, then let go (the owner, 2026-10-10:
+##               "no more click and forget"): let go before full, the lock is called off, nothing spent (a raised stone drops
+##               loose); a let go in hitstun is still kept (a hit never costs the cast: frozen). The guard (E tapped: the timed guard) and key 3 keep the click: a press let go within click_s before
+##               its lock is full runs on and goes the moment it is full (_queued); pressed again meanwhile it is a hold
+##               again, the time kept. Bending.rule("click_queue") true gives the aim and the quick button the click back
 ##   the keys    Hotbar's taps (a tap the key's first move, a double tap its other: Hotbar.select) come here while a lock
 ##               runs (key_tap): the same key moves the lock to its other move with the time kept (_switch_lock; the new
 ##               pose shown switch_hold_s before it may go, taps within double_tap_s of a switch ignored, a raised spike
@@ -1592,10 +1594,11 @@ func _physics_process(dt: float) -> void:
 				else:
 					_cast()
 			State.LOCKING:
-				if elem() and _press_t < Bending.rule("click_s", 0.2):
+				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
 					_queued = true                # (a click: it goes the moment the lock is full)
 				elif frozen():
-					_queued = true                # (round 3: a release in hitstun is kept for the first free frame)
+					_queued = true                # (round 3: a release in hitstun is kept for the first free frame: a hit never
+					                              # costs the cast its lock, the hold rule's one exception)
 				else:
 					_break("let go")
 			State.HOLDING:
@@ -1742,6 +1745,14 @@ func _pick_src() -> void:
 	if (lock_src == SRC_QUICK and quick) or (lock_src == SRC_AIM and aim):
 		return
 	lock_src = SRC_AIM if aim or not quick else SRC_QUICK
+
+
+## Whether a press let go before its lock is full still runs on and casts by itself when the lock fills (the click): the
+## guard's (E tapped is the timed guard) and key 3's always; the aim's and the quick button's only with
+## Bending.rule("click_queue") (the owner, 2026-10-10: "we cant just click and it does we have to hold it no more click and
+## forget": a cast is held until its lock is full, then let go; let go early, it is called off and nothing is spent).
+func _click_runs_on() -> bool:
+	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false))
 
 
 ## The lock's button pressed (true the frame it goes down) and how long it has been held (_press_t: the click's test). A

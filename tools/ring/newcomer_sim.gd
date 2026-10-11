@@ -2,13 +2,15 @@ extends Node
 ## THE FIRST FIVE MINUTES' PLAYERS (Tidebreak round 4, SIMPLE): scripted human input models that play the % ring through the
 ## player's own keys (his PlayerControls driven by set_held, the number keys as key events through the game's own input,
 ## the mouse as his camera's yaw and pitch: nothing else of the game is touched), for tests/ring/test_first_five.gd:
-##   newcomer   walks at the foe (W, the mouse turned toward him slowly and loosely); in jab range clicks LMB every
-##              click_s; far off taps 1 and right-clicks (a click: it goes when ready); when something flies at him taps E
+##   newcomer   walks at the foe (W, the mouse turned toward him slowly and loosely); in jab range jabs (LMB) every
+##              click_s; far off taps 1 and casts (right-click); when something flies at him taps E
 ##              late and imperfectly (reaction react_s, 0.35-0.6 s, a share of them missed: miss_share); thrown (or off the
 ##              deck however he got there), he HOLDS Space (and lets go of everything else) until he is back on the deck
 ##   expert     the same with quicker hands (react 0.15-0.3 s, the mouse quicker and steadier), Push (2) at mid range, and his
 ##              own recovery under Full: toward the lip, the double jump falling near the lip, the Rise falling under it
 ##              (the lead model's order), never his Space held
+## A cast's button (LMB, right-click) is held until its lock is full and let go a human beat after (release_lag; the owner,
+## 2026-10-10: casts are held, no click and forget: _cast_hold); E stays a tap (the timed guard).
 ## Its books (read by the runner): launches [{v, hitstun, survivable (RingPredict.flight: the model's recovery comes back),
 ## off (he went off the deck), result "back" | "out"}], falls [{unused (the double jump or the Rise left, free 0.3 s or more
 ## off the deck before it)}].
@@ -16,9 +18,11 @@ extends Node
 
 const MODELS := {
 	"newcomer": {"react": [0.35, 0.6], "miss_share": 0.25, "turn_rate": 3.0, "aim_err_deg": 4.0, "click_s": [0.25, 0.45],
-			"jab_m": 3.2, "close_m": 2.0, "far_m": 7.0, "cast_every_s": [1.4, 2.4], "push": false, "hold_space": true},
+			"jab_m": 3.2, "close_m": 2.0, "far_m": 7.0, "cast_every_s": [1.4, 2.4], "push": false, "hold_space": true,
+			"release_lag": [0.08, 0.2]},
 	"expert": {"react": [0.15, 0.3], "miss_share": 0.05, "turn_rate": 8.0, "aim_err_deg": 1.5, "click_s": [0.18, 0.28],
-			"jab_m": 3.2, "close_m": 2.2, "far_m": 7.0, "cast_every_s": [0.9, 1.4], "push": true, "hold_space": false},
+			"jab_m": 3.2, "close_m": 2.2, "far_m": 7.0, "cast_every_s": [0.9, 1.4], "push": true, "hold_space": false,
+			"release_lag": [0.03, 0.08]},
 }
 
 var player: FrontierPlayer
@@ -34,6 +38,8 @@ var clicks := 0
 
 var _t := 0.0
 var _taps := {}                 ## action -> release time
+## A cast's button held until its lock is full: action -> {since, at_least (s held at least: a grow's hold), full_at, lag}.
+var _cast_holds := {}
 var _next_click := 0.0
 var _next_cast := 0.0
 var _seen := {}                 ## bolt id -> true
@@ -65,6 +71,7 @@ func _physics_process(dt: float) -> void:
 		return
 	_hook()
 	_untap()
+	_cast_release()
 	if mode.phase != "FIGHT":
 		_let_go()
 		_launch = {}
@@ -207,7 +214,7 @@ func _hands(foe: Node3D) -> void:
 	if d <= float(m.jab_m):
 		if _t >= _next_click:
 			_next_click = _t + rng.randf_range(float(m.click_s[0]), float(m.click_s[1]))
-			_tap(&"fire", 0.05)
+			_cast_hold(&"fire")
 			clicks += 1
 		return
 	if _t < _next_cast:
@@ -216,7 +223,7 @@ func _hands(foe: Node3D) -> void:
 	if d >= float(m.far_m) or push:
 		_next_cast = _t + rng.randf_range(float(m.cast_every_s[0]), float(m.cast_every_s[1]))
 		_key(&"weapon_2" if push else &"weapon_1")
-		_tap(&"aim", 0.08)                       # (a click: it goes as soon as it is ready)
+		_cast_hold(&"aim")
 		casts += 1
 
 
@@ -269,6 +276,36 @@ func _tap(a: StringName, s := 0.0) -> void:
 	_taps[a] = _t + maxf(s, 1.0 / Engine.physics_ticks_per_second)
 
 
+## A cast's button pressed and kept down until the lock is full (then let go a human beat later: release_lag), or held at
+## least `at_least` s (a grow: the Fireball's, a grown push's). Let go anyway when the lock ends without filling or after 3 s.
+func _cast_hold(a: StringName, at_least := 0.0) -> void:
+	player.controls.set_held(a, true)
+	var lag: Array = m.get("release_lag", [0.05, 0.12])
+	_cast_holds[a] = {"since": _t, "at_least": at_least, "full_at": -1.0, "lag": rng.randf_range(float(lag[0]), float(lag[1]))}
+
+
+func _cast_release() -> void:
+	var c := SwayCaster.of(player)
+	for a: StringName in _cast_holds.keys():
+		var h: Dictionary = _cast_holds[a]
+		var go := _t - float(h.since) > 3.0 or c == null
+		if not go:
+			if c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]:
+				if float(h.full_at) < 0.0:
+					h.full_at = _t
+				go = _t >= float(h.full_at) + float(h.lag) and _t - float(h.since) >= float(h.at_least)
+			elif c.state == SwayCaster.State.IDLE and _t - float(h.since) > 0.1:
+				go = true                        # (the lock broke or the move went: nothing more to hold)
+		if go:
+			_cast_holds.erase(a)
+			player.controls.set_held(a, false)
+
+
+## A cast's button is being held for its lock.
+func casting() -> bool:
+	return not _cast_holds.is_empty()
+
+
 func _untap() -> void:
 	for a: StringName in _taps.keys():
 		if _t >= float(_taps[a]):
@@ -290,3 +327,4 @@ func _let_go() -> void:
 			InputSetup.GUARD_ACTION]:
 		player.controls.set_held(a, false)
 	_taps.clear()
+	_cast_holds.clear()

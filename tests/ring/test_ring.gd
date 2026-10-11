@@ -12,7 +12,8 @@ extends SceneTree
 ##   ropes    a 10 m/s knock toward a long side leaves the player on the deck after 1.5 s, not rung out
 ##   out      a stone pushed off the open end is rung out within 0.5 s (is_ring_out), splashing (the water's splashed
 ##            signal); the player dropped into the tank is rung out and keeps full health (no fall hurts)
-##   sockets  each side's stones sit in their sockets; one taken away, another rises there refill_s later
+##   sockets  none since 2026-10-10 (ring.json sockets.at empty): no stone on the deck; with places given, each side's stones
+##            sit in their sockets and one taken away, another rises there refill_s later
 ##   clear    clear_dropped takes every listed group's nodes in the ring and the tank, not one far away, nor a seated stone
 ##   terrain  FrontierTerrain's baked data never loaded in 10 s or more in the scene (its static _data_ok read directly:
 ##            data_loaded() would load it); WorldRiver.off while the ring stands
@@ -283,6 +284,10 @@ func _out() -> void:
 
 func _sockets() -> void:
 	var n := ring.sockets.size()
+	if ((RingArena.data().get("sockets", {}) as Dictionary).get("at", []) as Array).is_empty():
+		# (the owner, 2026-10-10: "remove the boulders in the arenas now": ring.json sockets.at empty, no stone on the deck)
+		_expect(n == 0, "no stones sit on the deck (%d sockets)" % n)
+		return
 	var seated := 0
 	for sk: Dictionary in ring.sockets:
 		var st: Variant = sk.get("stone")

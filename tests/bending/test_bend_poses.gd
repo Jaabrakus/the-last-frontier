@@ -271,6 +271,7 @@ func _go() -> void:
 	DuelMode.element = "earth"
 	_expect(BendPoses.element_of(p) == "earth", "the duel's player casts as his element (%s)" % BendPoses.element_of(p))
 	await _poses()
+	await _kick_free()
 	await _stance()
 	await _combo()
 	await _bots()
@@ -280,6 +281,34 @@ func _go() -> void:
 
 func _ground(v: Vector3) -> Vector3:
 	return Vector3(v.x, FrontierTerrain.height_at(v.x, v.z), v.z)
+
+
+## Fire's Kick and High Kick (root "strike"; the owner, 2026-10-10: "after the spell is cast let the player move not lock
+## them"): held still through the wind-up, free once the kick has struck while its clip still plays out.
+func _kick_free() -> void:
+	for mode: String in ["kick", "high_kick"]:
+		DuelMode.element = "fire"
+		_stage()
+		await _secs(0.2)
+		var ok := _ready_spell("fire_kick", mode)
+		var pt := NpcSenses.chest_of(n) if n != null else Vector3.INF
+		var began := await _hold_until(pt, func() -> bool: return c.state != SwayCaster.State.IDLE)
+		await _secs(0.1)
+		var held_winding := c.rooted
+		var full := await _hold_until(pt, func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
+		c.held_override = false
+		var struck := INF
+		for i in 120:
+			if c.pose.phase == "release" and c.pose._struck:
+				struck = i / float(Engine.physics_ticks_per_second)
+				break
+			await physics_frame
+		await _secs(0.05)
+		var free_after := not c.rooted and c.pose.phase == "release"
+		_expect(ok and began != INF and full != INF and held_winding and struck != INF and free_after,
+				"fire %s: held through the wind-up (%s), free once it has struck while its clip plays on (rooted %s, phase '%s')"
+				% [mode, held_winding, c.rooted, c.pose.phase])
+		await _let_go_and_settle()
 
 
 ## The player in the arena facing +x, the bender `d` m before him, held still and whole.

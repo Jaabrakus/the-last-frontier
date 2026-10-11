@@ -5,7 +5,8 @@ extends SceneTree
 ## round 2's shape (Bending.set_test_data: a key is [id] or [id, id]):
 ##   keys      a tap readies its key's first move, a double tap the second, for a one-id key (its modes) and a two-id key
 ##             (its partner); 4, cast, 4: the same wall; E, cast, E: the guard again
-##   click     a 0.1 s click on LMB casts Pebbles the moment its lock is full; a 0.3 s hold let go before full casts nothing;
+##   click     a 0.1 s click on LMB casts nothing (no more click and forget, 2026-10-10); LMB held until its lock is full
+##             and let go casts Pebbles; a 0.3 s hold let go before full casts nothing;
 ##             a hold past raise_at_fill let go early leaves its spike lying loose (FormStone.make_loose)
 ##   mid-lock  the same key: the lock moves to the other move with its time kept and goes only switch_hold_s after the
 ##             switch; a double tap switches once; another key restarts from nothing; E drops the lock and guards
@@ -290,14 +291,24 @@ func _click() -> void:
 	await _tap(0)
 	casts.clear()
 	var before := FormStone.loose_of(p).size()
-	# a 0.1 s click on LMB: Pebbles, the moment the lock is full
+	# a 0.1 s click on LMB: nothing (the owner, 2026-10-10: "no more click and forget": a cast is held until its lock is full)
 	c.quick_override = true
 	await _secs(0.1)
 	c.quick_override = false
-	var went := await _until(func() -> bool: return not casts.is_empty(), 2.0)
-	var ok := went < INF and String(casts[0][0]) == "rock_jab" and String(casts[0][1]) == "pebbles"
-	_expect(ok, "a 0.1 s click on LMB casts Pebbles when the lock fills (%s after %.2f s)" % [casts, went])
-	metrics["click_casts_ok"] = ok
+	await _secs(0.8)
+	var click_none := casts.is_empty() and c.state == SwayCaster.State.IDLE and c.last_break == "let go"
+	_expect(click_none, "a 0.1 s click on LMB casts nothing: the lock is called off (%s; %s)" % [casts, c.last_break])
+	# LMB held until the lock is full, then let go: Pebbles
+	await _calm()
+	await _tap(0)
+	casts.clear()
+	c.quick_override = true
+	var full := await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 2.0)
+	c.quick_override = false
+	var went := await _until(func() -> bool: return not casts.is_empty(), 1.0)
+	var ok := full < INF and went < INF and String(casts[0][0]) == "rock_jab" and String(casts[0][1]) == "pebbles"
+	_expect(ok, "LMB held until the lock is full and let go casts Pebbles (%s; full after %.2f s)" % [casts, full])
+	metrics["click_casts_ok"] = ok and click_none
 	# a 0.3 s hold let go before full: nothing
 	await _calm()
 	await _tap(0)
