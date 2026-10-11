@@ -480,8 +480,9 @@ func play_once(key: String, blend := 0.1, speed := 1.0) -> float:
 ## its element's pose names (BendPoses.pick: the fighter's own element by default, `element` to say it), else "cast_push",
 ## played from its start at the rate that brings its strike (BendPoses.body_strike_s: the pose's strike_s, a floor cast's
 ## press_s, else the clip's push_s) to `wind_s` from now, so the hands strike as the bot launches. Returns that rate (0:
-## nothing played). Also takes the order (move, mode, element, wind_s).
-func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Variant = "") -> float:
+## nothing played). Also takes the order (move, mode, element, wind_s). `grown`: the lock grows (held past its second click),
+## so a pose with its own grown clip plays that (`grow`: the Air Lance's spear throw, the Fireball's).
+func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Variant = "", grown := false) -> float:
 	var wind: Variant = wind_s
 	var el: Variant = element
 	if wind_s is String or wind_s is StringName:
@@ -494,7 +495,7 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 	if md != "pop" and _in_ring() and BendR3.is_jab(move, md) and BendPoses.has_spec(move, "pop") \
 			and BendR3.pop_armed(get_parent()):
 		md = "pop"                                  # (round 5: the Pop armed: its rising hand, the player's pose)
-	var pk := _pick_turn(move, md, e) if e != "" else {}
+	var pk := _pick_turn(move, md, e, grown) if e != "" else {}
 	var key := "cast_push"
 	var strike := -1.0
 	if not pk.is_empty() and (has_clip(String(pk.clip)) or (_add_pose(String(pk.clip)) and has_clip(String(pk.clip)))):
@@ -520,8 +521,13 @@ func play_cast(move: String, mode: String, wind_s: Variant = 0.8, element: Varia
 
 ## The pose for (move, mode) as an `element` caster (BendPoses.pick), its alt every other cast (the right hand, then the
 ## left, in turn); {} none. A limb named the clips' way (r, l, both, foot_r) is put the game's way (HANDS).
-func _pick_turn(move: String, mode: String, element: String) -> Dictionary:
+func _pick_turn(move: String, mode: String, element: String, grown := false) -> Dictionary:
 	var pk := BendPoses.pick(move, mode, element)
+	if grown and not pk.is_empty():
+		var g := BendPoses._as_pose(pk.get("grow", ""))
+		if not g.is_empty() and BendPoses.usable(String(g.clip)):
+			g["from"] = pk.get("from", "mode")
+			pk = BendPoses._filled(g, BendPoses.data())      # (the grown cast's own clip, its alt in turn as the lock's)
 	if not pk.is_empty() and pk.has("alt"):
 		var k := move + "/" + mode
 		var turn := bool(_alt.get(k, false))

@@ -9,7 +9,9 @@ extends SceneTree
 ## the release), release (+0.05 s), flight (+0.22 s), impact (the first projectile's end +0.05 s, else +0.45 s; the same
 ## frame in both runs) and after (+1.1 s).
 ##   zsh tools/loop/godot_run.sh --path . --resolution 1600x900 --fixed-fps 60 -s tools/fx/fx_lineup.gd -- el=fire [out=<dir>]
-##         [only=fire_blast/punch,fire_wall/wall]     (the wrapper adds --disable-vsync --max-fps 60, never pins the window)
+##         [only=fire_blast/punch,fire_wall/wall] [shipped=1]     (the wrapper adds --disable-vsync --max-fps 60, never pins the window)
+## shipped=1: the "new" run plays config.json's own switches (nothing forced: what ships, a single move's roles in moves_on
+## among them) instead of the whole element forced on.
 ## Writes <out>/<move>_<old|new>_<phase>.png and <out>/sheet_<n>.png (per move an old row above a new row, the phases across);
 ## default out: artifacts/fx_integration/lineup/<el>/. Windowed only (it draws). The stage (the Practice, the placing, the
 ## crosshair, the stills and the sheet) is tools/fx/fx_stage.gd, shared with tools/fx/lightning_shots.gd.
@@ -24,6 +26,8 @@ const LIMIT_S := 900.0
 var el := "fire"
 var out := ""
 var only: Array = []
+var shipped := false
+var new_run := false                    ## (the run under way: the frames' names, old or new)
 var st: FxStage
 var rows: Array = []
 
@@ -38,6 +42,8 @@ func _initialize() -> void:
 				out = kv.get_slice("=", 1)
 			"only":
 				only = Array(kv.get_slice("=", 1).split(",", false))
+			"shipped":
+				shipped = kv.get_slice("=", 1) in ["1", "on", "true"]
 	if out == "":
 		out = ProjectSettings.globalize_path("res://").path_join("artifacts/fx_integration/lineup").path_join(el)
 	DirAccess.make_dir_recursive_absolute(out)
@@ -66,9 +72,13 @@ func _run() -> void:
 		var imgs := {}
 		var live := {}
 		for sw in [false, true]:
+			new_run = sw
 			SbFx.force_on = sw
 			SbFx.force_elements = {el: sw}
-			live["new" if sw else "old"] = SbFx.on(el)
+			if sw and shipped:
+				SbFx.force_on = null                  # (as it ships: config.json's switches, moves_on with them)
+				SbFx.force_elements = {}
+			live["new" if sw else "old"] = SbFx.on(el) or (sw and shipped and SbFx.any_on())   # (shipped: a single move's roles count)
 			var got: Array = await _shot(s, frames)
 			imgs["new" if sw else "old"] = got
 			SbFx.force_on = null
@@ -187,12 +197,12 @@ func _shot(s: Dictionary, frames: Dictionary) -> Array:
 		imgs.append(_snap(id, mo, grown, "after"))
 	st.aiming = false
 	print("  shot %s%s %s: %d frames from the lock, impact +%d" % [id + "/" + mo, ".grown" if grown else "",
-			"new" if SbFx.force_on else "old", rel - t0, int(frames.get("impact", -1))])
+			"new" if new_run else "old", rel - t0, int(frames.get("impact", -1))])
 	return imgs
 
 
 func _snap(id: String, mo: String, grown: bool, ph: String) -> Image:
-	var name := "%s_%s%s_%s_%s.png" % [id, mo, "_grown" if grown else "", "new" if SbFx.force_on else "old", ph]
+	var name := "%s_%s%s_%s_%s.png" % [id, mo, "_grown" if grown else "", "new" if new_run else "old", ph]
 	var img := st.snap(out.path_join(name))
 	var small := img.duplicate() as Image
 	small.resize(CELL.x, CELL.y, Image.INTERPOLATE_BILINEAR)
@@ -212,7 +222,7 @@ func _sheets() -> void:
 				# (the label from what the bridge really did that run: a row claiming Spellbreak that drew today's look
 				# cannot happen again)
 				var lv := bool((r.get("live", {}) as Dictionary).get(which, which == "new"))
-				var tag := "NEW (Spellbreak)" if lv else ("OLD (switch off)" if which == "old" else "NEW? (bridge off!)")
+				var tag := ("AS SHIPPED" if shipped else "NEW (Spellbreak)") if lv else ("OLD (switch off)" if which == "old" else "NEW? (bridge off!)")
 				if which == "old" and lv:
 					tag = "OLD? (bridge on!)"
 				labels.append("%s\n%s" % [r.label, tag])

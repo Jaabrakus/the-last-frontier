@@ -67,7 +67,7 @@
     "The key's job: LMB a close poke, 1 a shot, 2 a push or a launcher, 3 travel that never hits on its own path (it may leave matter behind, as Skate leaves puddles), 4 cover or placed ground, 5 recovery, E the guard table.",
     "The answer: the guard that takes it and what that guard does, the wall cell that stops it, its tell, its pose and limb, its flight sound. A node may add an answer (a set's counters, a heated stone a Parry can send back), never remove or change one."
    ],
-   "applied": "Held under it: Split Shove, Twin Geyser, Twin Wave and Twin Slice (a volley in place of one move), Surfacing Stomp, Breaker and Gust Step (a dash that hits), Reel (a KO strike made a pull that never KOs). Rescoped: Aftershock became Heave (no added stomp ring), Magma Fist flies straight. Dropped: Slingshot (it loses Pull then Palm)."
+   "applied": "Held under it: Forked Fissure, Twin Geyser, Twin Wave and Twin Slice (a volley in place of one move), Surfacing Stomp, Breaker and Gust Step (a dash that hits), Reel (a KO strike made a pull that never KOs). Rescoped: Aftershock became Heave (no added stomp ring), Magma Fist flies straight. Dropped: Slingshot (it loses Pull then Palm)."
   }
  },
  "lock_contract": [
@@ -455,10 +455,10 @@
        "world_gate": [
         "practised:rock_jab"
        ],
-       "effect": "A Pebbles volley that hits nobody leaves one loose stone where its last pebble lands (still three loose stones at most; any earth player within 6 m may Shove it). The spread is 3.6 deg (from 3).",
+       "effect": "A Pebbles volley that hits nobody leaves one loose stone where its last pebble lands (still three loose stones at most). A Fissure that runs under a loose stone throws it on along the crack, whoever's it is. The spread is 3.6 deg (from 3).",
        "plus": "a missed volley leaves ammo",
        "minus": "spread 3.6 deg",
-       "help": "A missed Pebbles volley leaves a stone you can Shove.",
+       "help": "A missed Pebbles volley leaves a stone for your Fissure to throw.",
        "changes": [
         {
          "path": "spec:rock_jab/pebbles.spread_deg",
@@ -496,7 +496,7 @@
       "1",
       "2"
      ],
-     "theme": "The stone you throw and the stone you raise: Spike, Boulder, Shove, Column.",
+     "theme": "The stone you throw and the stone you raise: Spike, Boulder, Fissure, Column.",
      "nodes": [
       {
        "id": "earth.spike.steady_point",
@@ -744,7 +744,7 @@
       },
       {
        "id": "earth.shove.split",
-       "name": "Split Shove",
+       "name": "Forked Fissure",
        "kind": "variation",
        "chip": "2",
        "extends_move": "earth_shove",
@@ -757,56 +757,154 @@
         "expert:earth_shove",
         "teacher:earth"
        ],
-       "effect": "Held for the owner (question 4): one Shove becomes three stones in flight (a volley in place of the Shove). The shoved stone breaks into three 0.15 s after it leaves, 10 deg apart: one volley that adds Shove's 12% (16% grown), only the first knocks, at 80% of Shove's base. Draws on the dormant earth_shove split.",
-       "plus": "three stones cover a dodge",
-       "minus": "knock -20%",
-       "help": "Held: one Shove becomes three stones. Yours to rule on.",
-       "answer": "Same answer: through the air; a Catch holds stone (the rest drop at the catcher's feet); walls stop it.",
+       "effect": "Held for the owner (question 4): one Fissure forks into three cracks (a volley in place of the Fissure). The crack splits as it leaves you, 15 deg apart, each 1.6 m wide (from 2.4; grown 2.4 from 3.6): one volley that adds the Fissure's 12% (16% grown), only the first crack to reach him knocks, at 80% of the Fissure's base.",
+       "plus": "three cracks cover a sidestep",
+       "minus": "knock -20%, narrower",
+       "help": "Held: one Fissure forks into three cracks. Yours to rule on.",
+       "answer": "Same answer: jump the cracks, guard, or wall them.",
        "changes": [
         {
-         "path": "class:earth_shove/push+split.volley_n",
+         "path": "class:earth_shove/push+fork.volley_n",
          "from": 1,
          "to": 3,
          "base_tag": "earth_shove/push",
          "default_from": true
         },
         {
-         "path": "class:earth_shove/push+split.base",
+         "path": "class:earth_shove/push+fork.base",
          "from": 6.9,
          "to": 5.5,
          "base_tag": "earth_shove/push"
         },
         {
-         "path": "class:earth_shove/push.grown+split.base",
+         "path": "class:earth_shove/push.grown+fork.base",
          "from": 7.5,
          "to": 6.0,
          "base_tag": "earth_shove/push.grown"
         },
         {
          "path": "new",
-         "what": "split the flying stone into three (the split spread of BendEffects.shove 'split')",
-         "where": "BendEffects._shove_r2, GustLift"
+         "what": "the floor wave forks into three as it leaves (15 deg apart, each 1.6 m wide, grown 2.4), one volley (volley_id): only the first to reach a body knocks",
+         "where": "BendEffects floor_wave, BendBolt"
         }
        ],
        "visual": {
-        "kind": "projectile",
-        "look": "a stone splitting into three with a chip spray",
+        "kind": "floor",
+        "look": "one crack splitting into three as it leaves the hands",
         "fx": [
          {
-          "index": 76,
-          "name": "BoulderMedium_FX"
-         },
-         {
-          "index": 53,
-          "name": "P_Default_Primary_ImpactA"
+          "index": 85,
+          "name": "P_Shockwave_Earth_Fast_ToonUnlit"
          }
         ]
        },
        "held": {
         "question": 4,
-        "why": "one Shove becomes three stones in flight (a volley in place of the Shove)."
+        "why": "one Fissure becomes three cracks (a volley in place of the Fissure)."
        },
-       "identity": "held: one Shove becomes three stones in flight (a volley in place of the Shove)."
+       "identity": "held: one Fissure becomes three cracks (a volley in place of the Fissure)."
+      },
+      {
+       "id": "earth.fissure.deep",
+       "name": "Deep Fissure",
+       "kind": "variation",
+       "chip": "2",
+       "extends_move": "earth_shove",
+       "mode": "push",
+       "requires": [],
+       "ring_cost": 2,
+       "ring_legal": true,
+       "world_gate": [
+        "expert:earth_shove",
+        "teacher:earth"
+       ],
+       "effect": "Your Fissure runs 12.5 m/s (from 15) but throws him at 45 deg (from 30), grown too: slower to reach him and easier to jump, but he goes up more than out. It rings out later and sets up your air game.",
+       "plus": "throws him up",
+       "minus": "runs slower",
+       "help": "A slower Fissure that throws him up instead of out.",
+       "answer": "Same crack, same answers: jump it, guard it or wall it.",
+       "changes": [
+        {
+         "path": "spec:earth_shove/push.mps",
+         "from": 15.0,
+         "to": 12.5
+        },
+        {
+         "path": "class:earth_shove/push+deep.angle",
+         "from": 30,
+         "to": 45,
+         "base_tag": "earth_shove/push"
+        },
+        {
+         "path": "class:earth_shove/push.grown+deep.angle",
+         "from": 30,
+         "to": 45,
+         "base_tag": "earth_shove/push.grown"
+        }
+       ],
+       "visual": {
+        "kind": "floor",
+        "look": "a slower crack heaving bigger slabs",
+        "fx": [
+         {
+          "index": 85,
+          "name": "P_Shockwave_Earth_Fast_ToonUnlit"
+         }
+        ]
+       },
+       "identity": "pass: the same crack, lane and answers; it throws him higher, so it rings out later"
+      },
+      {
+       "id": "earth.fissure.fault_line",
+       "name": "Fault Line",
+       "kind": "enhance",
+       "chip": "2",
+       "extends_move": "earth_shove",
+       "mode": "push",
+       "requires": [],
+       "ring_cost": 1,
+       "ring_legal": false,
+       "world_gate": [
+        "practised:earth_shove"
+       ],
+       "effect": "The Fissure runs 19.2 m (from 16; grown 25.2 from 21) but is 2 m wide (from 2.4; grown 3 from 3.6). Still a crack you can see and jump.",
+       "plus": "reach +20%",
+       "minus": "narrower",
+       "help": "A longer, narrower Fissure.",
+       "changes": [
+        {
+         "path": "spec:earth_shove/push.range_m",
+         "from": 16.0,
+         "to": 19.2
+        },
+        {
+         "path": "spec:earth_shove/push.grow.range_m",
+         "from": 21.0,
+         "to": 25.2
+        },
+        {
+         "path": "spec:earth_shove/push.width_m",
+         "from": 2.4,
+         "to": 2.0
+        },
+        {
+         "path": "spec:earth_shove/push.grow.width_m",
+         "from": 3.6,
+         "to": 3.0
+        }
+       ],
+       "visual": {
+        "kind": "floor",
+        "look": "a long narrow crack",
+        "fx": [
+         {
+          "index": 85,
+          "name": "P_Shockwave_Earth_Fast_ToonUnlit"
+         }
+        ]
+       },
+       "ring_note": "open world only: a range-for-width swap",
+       "identity": "pass: numbers only (open world only: a range-for-width swap)"
       },
       {
        "id": "earth.column.broad",
@@ -1228,10 +1326,10 @@
         "expert:earth_wall",
         "teacher:earth"
        ],
-       "effect": "When your wall crumbles (shot down, or broken by your third) it leaves 2 loose stones (still three at most). Any earth player within 6 m may Shove them, so in a mirror he can take them. It rises in 0.8 s (from 0.7).",
+       "effect": "When your wall crumbles (shot down, or broken by your third) it leaves 2 loose stones (still three at most). A Fissure that runs under them throws them on, whoever's they are, so in a mirror he can take them. It rises in 0.8 s (from 0.7).",
        "plus": "a broken wall is ammo",
        "minus": "rises 0.1 s slower",
-       "help": "Your crumbled wall leaves two stones to Shove.",
+       "help": "Your crumbled wall leaves two stones for a Fissure to throw.",
        "answer": "Same wall: what it stops and what breaks it are unchanged.",
        "changes": [
         {
@@ -1282,15 +1380,15 @@
         "expert:earth_wall",
         "trial:earth.quarry"
        ],
-       "effect": "A Shove let go on the Beat at your own wall tears its chunk without wearing the wall (the first chunk each wall). Your walls rise in 0.8 s (from 0.7).",
+       "effect": "A Fissure let go on the Beat that runs into your own wall tears a chunk off it and throws the chunk on along the crack, without wearing the wall (the first chunk each wall). Your walls rise in 0.8 s (from 0.7).",
        "plus": "the first chunk is free",
        "minus": "rises 0.1 s slower",
-       "help": "Shove on the Beat tears a free chunk from your wall.",
+       "help": "Fissure on the Beat into your wall throws a free chunk.",
        "changes": [
         {
          "path": "new",
-         "what": "a Beat Shove at your own wall: its first chunk costs the wall no hit",
-         "where": "BendEffects._shove_r2, FormRaised"
+         "what": "a Beat Fissure reaching its caster's own wall tears one chunk off it and throws the chunk on along the wave's line; the first chunk each wall costs the wall no hit",
+         "where": "BendBolt floor_wave (a wall reached), FormRaised"
         },
         {
          "path": "move:earth_wall.wall.rise_s",
@@ -1300,7 +1398,7 @@
        ],
        "visual": {
         "kind": "impact",
-        "look": "a chunk ripping free with a grit spray",
+        "look": "a chunk ripping free of the wall and flying on along the crack",
         "fx": [
          {
           "index": 828,
@@ -1319,7 +1417,7 @@
          }
         ]
        },
-       "identity": "pass: the same wall; a chunk torn free on the Beat"
+       "identity": "pass: the same wall; a chunk torn free by a Beat Fissure"
       },
       {
        "id": "earth.slot.shell",
@@ -5661,7 +5759,7 @@
         "quest:magma",
         "set_teacher:magma"
        ],
-       "effect": "Fire and earth, as a skill set. Where your Kick's wave or the Axe Kick's wave dies (its range's end, or a wall) it leaves a molten seam 1.5 m wide for 3 s (two of yours at once). A foe in a seam gains 1% each 0.5 s, at most 4% from one seam: jump it or step off; it never slows. Water on a seam cools it into a loose obsidian stone that any earth player within 6 m may Shove; mud quenches it with no stone. Opens the Magma nodes. Trade: your floor waves run 16 m/s (from 18).",
+       "effect": "Fire and earth, as a skill set. Where your Kick's wave or the Axe Kick's wave dies (its range's end, or a wall) it leaves a molten seam 1.5 m wide for 3 s (two of yours at once). A foe in a seam gains 1% each 0.5 s, at most 4% from one seam: jump it or step off; it never slows. Water on a seam cools it into a loose obsidian stone that any earth player's Fissure throws on; mud quenches it with no stone. Opens the Magma nodes. Trade: your floor waves run 16 m/s (from 18).",
        "plus": "molten seams where your fire ends",
        "minus": "floor waves 16 m/s",
        "help": "Magma: your floor fire leaves molten seams. Water cools them.",
@@ -6690,7 +6788,7 @@
        "world_gate": [
         "practised:air_gust"
        ],
-       "effect": "The Gust reaches 16.8 m (from 14; grown 21.6 from 18) but is 1.6 m wide (from 2; grown 2.4 from 3). Still a wave you can see and dodge.",
+       "effect": "The Gust reaches 16.8 m (from 14) but is 1.6 m wide (from 2). Still a wave you can see and dodge; the Air Lance (the Gust held long) is the same spear.",
        "plus": "reach +20%",
        "minus": "narrower",
        "help": "A longer, narrower Gust.",
@@ -6701,19 +6799,9 @@
          "to": 16.8
         },
         {
-         "path": "spec:air_gust/gust.grow.range_m",
-         "from": 18.0,
-         "to": 21.6
-        },
-        {
          "path": "spec:air_gust/gust.width_m",
          "from": 2.0,
          "to": 1.6
-        },
-        {
-         "path": "spec:air_gust/gust.grow.width_m",
-         "from": 3.0,
-         "to": 2.4
         }
        ],
        "visual": {
@@ -6756,15 +6844,15 @@
        "world_gate": [
         "practised:air_gust"
        ],
-       "effect": "Grown, the Gust is 3.6 m wide (from 3), but its lock is 0.5 s (from 0.45).",
-       "plus": "grown 3.6 m wide",
+       "effect": "Your Gust is 2.4 m wide (from 2), but its lock is 0.5 s (from 0.45). The Air Lance (the Gust held long) is the same spear.",
+       "plus": "2.4 m wide",
        "minus": "lock 0.5 s",
-       "help": "Grown, your Gust is wider; its lock is longer.",
+       "help": "Your Gust is wider; its lock is longer.",
        "changes": [
         {
-         "path": "spec:air_gust/gust.grow.width_m",
-         "from": 3.0,
-         "to": 3.6
+         "path": "spec:air_gust/gust.width_m",
+         "from": 2.0,
+         "to": 2.4
         },
         {
          "path": "move:air_gust.mode_lock_s.gust",
@@ -6802,7 +6890,7 @@
         "expert:air_gust",
         "teacher:air"
        ],
-       "effect": "Your Gust lifts as it pushes: it throws him at 55 deg (from 30), so he goes up more than out. It rings him out later but sets up your air game.",
+       "effect": "Your Gust lifts as it pushes: it throws him at 55 deg (from 30), and so does your Air Lance (the Gust held long), so he goes up more than out. It rings him out later but sets up your air game.",
        "plus": "throws him up",
        "minus": "rings out later",
        "help": "Your Gust throws him up instead of out.",
@@ -7661,7 +7749,7 @@
         "air.set.frostwind",
         "expert:air_gust"
        ],
-       "effect": "Your Gust puts out a fire wall or burning ground it crosses (today air blows through a fire wall). It is 1.8 m wide (from 2; grown 2.7 from 3).",
+       "effect": "Your Gust puts out a fire wall or burning ground it crosses (today air blows through a fire wall). It is 1.8 m wide (from 2).",
        "plus": "snuffs fire walls",
        "minus": "narrower",
        "help": "Your Gust snuffs out fire walls it crosses.",
@@ -7671,11 +7759,6 @@
          "path": "spec:air_gust/gust.width_m",
          "from": 2.0,
          "to": 1.8
-        },
-        {
-         "path": "spec:air_gust/gust.grow.width_m",
-         "from": 3.0,
-         "to": 2.7
         },
         {
          "path": "new",
@@ -8174,7 +8257,7 @@
     "cap_per_seam_pct": 4.0,
     "seams_per_caster": 2,
     "cools_to": "a loose obsidian stone",
-    "obsidian_owner": "counts toward the seam owner's three loose stones (his oldest crumbles); any earth player within 6 m may Shove it"
+    "obsidian_owner": "counts toward the seam owner's three loose stones (his oldest crumbles); any earth player's Fissure that runs under it throws it on"
    },
    "no_debuff": "A seam adds % to whoever stands in it and nothing else: jump it or step off; no slow, ever.",
    "quest_home": "a forge mountain (for the Thủy Vân world session to place)",
@@ -8437,7 +8520,7 @@
     "water",
     "earth"
    ],
-   "how": "Water on a magma seam cools it into a loose obsidian stone; a perfect Turn of a Magma Fist drops one. The stone counts toward the seam owner's three loose stones, and any earth player within 6 m may Shove it (stones on the deck are fair for both sides). Mud quenches a seam with no stone. In 3v3: fire floors the deck, water cools it, earth throws it.",
+   "how": "Water on a magma seam cools it into a loose obsidian stone; a perfect Turn of a Magma Fist drops one. The stone counts toward the seam owner's three loose stones, and any earth player's Fissure that runs under it throws it on (stones on the deck are fair for both sides). Mud quenches a seam with no stone. In 3v3: fire floors the deck, water cools it, earth throws it.",
    "solo_or_team": "team (all three), versus (water clears seams; an earth foe takes your stones)",
    "visual": {
     "kind": "reaction",
@@ -9079,7 +9162,7 @@
   "The pairings: earth Sulphur (poison), water Mud, air Frostwind (ice), fire Magma, with lightning as fire's Storm branch rather than a second set. Is that the reading you meant? Frostwind now freezes the deck's grates as well as puddles, so it has water in every match; or should air make its own frost?",
   "The loadout shape for skill sets: inside the 10 points or outside; one set per loadout or several; one set per element, or sets any element can carry (a water player wearing Sulphur); poison earth's alone? This draft's answers (one per element, one per loadout, 2 points inside the budget) are proposals.",
   "The round-2 cuts. You cut the shell, the ramp, the bubble, the shards and the Lash jet on 2026-10-05, and you kept Breath with its smoke. Held until you answer: Shell, Ramp, Bubble, Jet, Shatter (the shards) and Clean Burn (Breath with no smoke). Bring any back as pre-match picks? Stream and Double Jab are left out, as the answers file records them standing; say so if you want them back too.",
-  "Twists held by the identity test: a volley in place of one move (Split Shove, Twin Geyser, Twin Wave, Twin Slice), a dash that hits (Surfacing Stomp, Breaker, Gust Step), and Reel (the Lash pulls him in and never KOs). Any of these as pre-match picks, or none?",
+  "Twists held by the identity test: a volley in place of one move (Forked Fissure, Twin Geyser, Twin Wave, Twin Slice), a dash that hits (Surfacing Stomp, Breaker, Gust Step), and Reel (the Lash pulls him in and never KOs). Any of these as pre-match picks, or none?",
   "Walls: only key 4 makes walls (round-2 spec 2.7). This draft keeps that (Mud Mound is low terrain; Ice Sheet hardens an ally's Ice Wall). Relax it for set terrain, or keep it?",
   "New skills on the empty tap twice: Sulphur Vent, Mire, Dust Cloud, Blizzard, Cauterize (and Shell or Bubble if question 3 is yes). Yes, or twists only with no new moves? Air's key 5 stays empty: leave it, or Tornado or Cyclone later?",
   "The Beat (let go within 0.2 s of the lock filling; a flash on your own hands) as the one timing rule techniques pay for. Yes? Without it, techniques need other triggers.",

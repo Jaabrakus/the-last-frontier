@@ -24,7 +24,7 @@
       "rail": [
         {"id": "stance", "chip": "passive", "line": "A low horse stance, tiger and crane hands."},
         {"id": "jab", "chip": "LMB", "line": "Tiger-claw flicks; the Pop is a crane strike, straight up."},
-        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Shove, grown: a double tiger palm, the biggest chunk and the slowest."},
+        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Fissure, grown: a double tiger palm driven into the deck, the widest crack and the slowest."},
         {"id": "guard", "chip": "E", "line": "A two-hand catch from the horse stance."}
       ],
       "home_weapons": []
@@ -48,7 +48,7 @@
       "rail": [
         {"id": "stance", "chip": "passive", "line": "Pushing and thrusting palms that force the foe out of the ring."},
         {"id": "jab", "chip": "LMB", "line": "Open-hand thrusts; the Pop shoves level, best toward the open end."},
-        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Shove: rapid thrusting palms, a wide push built for ring-outs."},
+        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Fissure: rapid thrusting palms into the deck, a wide crack built for ring-outs."},
         {"id": "guard", "chip": "E", "line": "A belly-and-arms catch with the whole body."}
       ],
       "home_weapons": []

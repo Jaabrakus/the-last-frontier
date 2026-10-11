@@ -108,7 +108,7 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 	if shape == "crescent":
 		_crescent_body(parent, kind, r)
 		return
-	if shape == "spear" and kind in ["stone", "ice"]:
+	if shape == "spear" and kind in ["stone", "ice", "air"]:
 		_spear_body(parent, kind, r)
 		return
 	match kind:
@@ -246,8 +246,27 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 
 
 ## A thrown spear (its point -Z, along its flight). Ice: a long thin crystal shaft and a heavy faceted head on it, a glint at
-## the point. Stone: a long rock spike.
+## the point. Stone: a long rock spike. Air (the Air Lance, the Gust held long): a long pale shaft of wind with a sharp head,
+## bands of wind turning round it, its dust under it.
 static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
+	if kind == "air":
+		var sa := ToonFx.vis_rng.randi() % 4
+		var shaft_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, sa, 5), ToonFx.mat("bubble"))
+		shaft_a.scale = Vector3(r * 2.0, r * 2.0, r * 16.0)
+		shaft_a.position = Vector3(0.0, 0.0, r * 3.5)
+		var head_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.3, (sa + 1) % 4, 6), ToonFx.mat("bubble"))
+		head_a.scale = Vector3(r * 3.6, r * 3.6, r * 6.0)
+		head_a.position = Vector3(0.0, 0.0, -r * 4.2)
+		_core(shaft_a)
+		_core(head_a)
+		for i in 2:
+			var band := _mesh(parent, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
+			band.scale = Vector3.ONE * r * 3.2
+			band.rotation = Vector3(PI / 2.0, float(i) * 1.3, 0.0)
+			band.position = Vector3(0.0, 0.0, -r * (1.0 + 3.5 * float(i)))
+			band.set_instance_shader_parameter(&"seed", float(i) * 0.31)
+		_air_dust(parent)
+		return
 	if kind == "stone":
 		var mi := MeshInstance3D.new()
 		mi.name = "Body"
@@ -1176,6 +1195,22 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 ## the crest (a ToonRibbon laid across), sparks thrown ahead, embers, a warm light that travels with it, scorches left along
 ## its path and embers spilling past the deck's lip (WaveFx). The holder (its scale.x the wave's width over `width`: the bolt
 ## widens it as it runs). Headless: the holder alone.
+## Earth's Fissure (a floor wave of kind stone): FissureFx, our own stone spikes bursting along it (a plain holder when nothing
+## is drawn).
+static func fissure_body(parent: Node3D, width: float, height: float) -> Node3D:
+	if not live():
+		var holder := Node3D.new()
+		holder.name = "Fissure"
+		parent.add_child(holder)
+		return holder
+	var f := FissureFx.new()
+	f.name = "Fissure"
+	f.width = width
+	f.height = height
+	parent.add_child(f)
+	return f
+
+
 static func floor_wave_body(parent: Node3D, width: float, height: float) -> Node3D:
 	var holder := Node3D.new()
 	holder.name = "Wave"

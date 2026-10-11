@@ -24,20 +24,23 @@ up on a new machine, what is switched off, and what is waiting on the owner.
 
 | Area | What | Where to read |
 |---|---|---|
-| Skill trees | Design + data for 133 talents (4 elements, ring budget of 10 points, open-world unlocks, 14 held for owner answers), 19 open owner questions | `docs/skill_tree_design.md`, `data/sway/skill_tree.json` |
+| Skill trees | Design + data for 135 talents (4 elements, ring budget of 10 points, open-world unlocks, 14 held for owner answers), 19 open owner questions | `docs/skill_tree_design.md`, `data/sway/skill_tree.json` |
 | Fighting styles | Design (20 classes = element + style), Boxing (fire) clips, Capoeira clips (PARKED: the owner did not like them), style tools | `docs/fighting_styles_design.md`, `docs/fighting_styles/`, `animations_extra/Frontier_Style_*.res`, `tools/anim_author/` |
 | Advancement window | In-game "Character Advancement" window (two trees, class rail, 3 loadout slots per element, painted backdrops). Saves to `user://advancement.json` | `scripts/ui/advancement/`, `data/ui/advancement*.json`, `assets/ui/advancement/`, tests `tests/ui/test_advancement*.gd` |
 | Loadouts live | The worn loadout reaches matches: Boxing per fighter (animation only) and 8 number-only talents per wearer behind a switch. Classic (nothing worn) is unchanged | `docs/tidebreak/loadouts_live.md`, `scripts/bending/bend_loadout.gd`, `data/bending/loadout_apply.json` |
 | Menus | Broadcast-style menus: lobby main menu with your fighter, match setup with four fighter cards, Esc menu, match-end board; the creator ends on "Choose your element" (saved with the character) | `scripts/ui/menu/`, `scripts/ring/ring_menu.gd`, `assets/fonts/barlow/` (OFL fonts), mockups in `tools/ui_audit/menu_variants/` |
 | Menu/HUD fixes | Esc menu fits 1280x720, HUD hidden under overlays, rules text follows Lives vs Zones, first-match key hints collapse, practice banner, credits | `scripts/ui/`, `data/ring/` |
 | Spellbreak FX | The rebuilt Spellbreak particle runtime is in the game and **switched OFF** (the owner prefers our own particles). Only the lightning bolt uses Spellbreak shading | `docs/claude_fx_handoff.md` (Update 2026-10-10), `scripts/fx/cascade/`, `data/bending/sb_fx/` |
+| Moves (late 2026-10-10) | Hold to cast (no click-and-forget); earth's 2 is the **Fissure** (a crack along the deck like fire's Kick; it throws a held stone, and a free stone it runs under); air's Gust held long is the **Air Lance** (a wind spear, thrown with the overhand spear clip); fire's kicks free after the strike; the edge-stand stall fixed; no deck boulders | `docs/tidebreak/unfun_notes.md`, `data/sway/moves.json` (earth_shove, air_gust), `docs/skill_tree_design.md` (the Fissure's and the Lance's nodes) |
 | Tooling | Capture kit, fx lineup tools, portable lock wrappers | `tools/ui_audit/`, `tools/fx/`, `tools/loop/` |
 | Look: Soft (default) | The owner's character study ("03 / softer palette + cel lighting") made the default look of the characters AND the world (owner, 2026-10-10: "this is the new default"). Characters: the study's palette (ring dress: your side teal, the other side cream, the element in the trims) and its soft three-band light. World: the study's sky, flat ambient, warm key light, linear tone curve, every surface in the study's colours, calmed textures; the world's light stays standard (not cel). Settings → Look: Classic gives back the old look exactly. Lobby plates: `assets/ui/menu/lobby_soft_<element>.jpg` | `scripts/customizer/soft_look.gd`, `scripts/world/env/soft_world.gd`, tests `tests/customizer/test_soft_look.gd`, `tests/env/test_soft_world.gd`, review shots `tools/character/soft_look_shots.gd` |
 
 ## Switches (what is on / off)
 
 - `data/bending/sb_fx/config.json`: master + one per element for the Spellbreak effects. **All four are `false`.** Do not turn one on
-  without a side-by-side the owner picks from (`tools/fx/fx_lineup.gd el=<element>`).
+  without a side-by-side the owner picks from (`tools/fx/fx_lineup.gd el=<element>`). `moves_on` switches single roles on by
+  themselves: the one on is earth's Fissure (`earth_shove/push` wave: Spellbreak's ground shockwave along the crack, the
+  owner's pick of 2026-10-10, without the cast's flash). `fx_lineup.gd ... shipped=1` renders what ships.
 - `BendLooks.SB_BOLT` (lightning look): `true`; `false` brings the old blue bolt back exactly.
 - Settings → **Look** (`GameSettings` [look] character): `soft` (the default) or `classic` (characters and world exactly as before
   2026-10-10). Script runs default to Classic unless they pass `character_look=soft` or set `SoftLook.override`.

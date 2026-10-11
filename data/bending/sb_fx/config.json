@@ -3,6 +3,8 @@
  "version": 1,
  "enabled": true,
  "elements": {"earth": false, "water": false, "fire": false, "air": false},
+ "moves_on": {"earth_shove/push": ["wave"]},
+ "_owner_moves_on": "2026-10-10: earth's Fissure runs in Spellbreak's ground shockwave (P_Shockwave_Earth_Fast_ToonUnlit laid along its line), the owner's pick from the side-by-side (A ours, B Spellbreak's full, C its rocks only): \"we should do full but remove that light spark in the beggining\". Only the wave role is on: the cast's flash at the hands (earth_shove/push cast) and every other earth effect stay ours.",
  "max_playing": 40,
  "prewarm_per_frame": 2,
  "hide_materials": ["MI_SimpleFresnelBall", "MI_SimpleFresnelBall3", "MI_SimpleGlow_FireballCore", "MI_SimpleGlow_FireballCoreDepthFade",
@@ -11,6 +13,7 @@
 		"MI_SmokeFixedLightingA"],
  "_owner": "2026-10-09: every element OFF by the owner's call (\"most of our particles are better theres just look cleaner\"; \"for water the new ones suck\"). Turn single elements back on only after the owner picks from a side-by-side.",
  "_doc": {
+  "moves_on": "Single moves switched on while their element is off: {KEY: [ROLE, ...]} (the key's chain counts: 'a/b' covers 'a/b.grown'). Only those roles play, from the move's own element's table; the master switch still rules. The owner's picks from a side-by-side.",
   "what": "The switches of the Spellbreak effects on Tidebreak's moves (SbFx, scripts/fx/cascade/sb_fx.gd). enabled false, or an element false: that element's moves look exactly as before (every seam falls back to today's visual). Effects: Spellbreak by Proletariat, rebuilt Cascade systems in res://assets/fx/spellbreak (SOURCE.md names each source package and the licence note).",
   "max_playing": "Effects playing at once (all scenes' SpellFx). Past it a new one does not play and today's look draws instead (the runtime is GDScript on the CPU: about 0.5 ms a frame per effect).",
   "prewarm_per_frame": "Effects built per prewarm step behind the ring's loading screen (BendLooks.warm_up calls SbFx.prewarm; a step is two frames). With the shader cache warm the whole prewarm takes about 2 s; the first launch on a machine compiles every Cascade shader (about 100 s for the ring's warm-up on an M4, once), so fewer per step keeps each frame shorter.",

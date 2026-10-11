@@ -28,7 +28,7 @@ const NAME := "KITS TEST"
 const LIMIT_S := 60.0
 ## The spec's names (8.1, owner answer 4): "move/variation" -> its label.
 const NAMES := {
-	"stone_form/spike": "Spike", "stone_form/cannonball": "Boulder", "earth_shove/push": "Shove", "earth_shove/column": "Column",
+	"stone_form/spike": "Spike", "stone_form/cannonball": "Boulder", "earth_shove/push": "Fissure", "earth_shove/column": "Column",
 	"earth_skate/burrow": "Burrow", "pillar/self": "Lift", "earth_wall/wall": "Wall", "stone_catch/catch": "Catch",
 	"rock_jab/pebbles": "Pebbles",
 	"water_whip/whip": "Lash", "ice/spear": "Spear", "wave/push": "Wave", "wave/spout": "Geyser", "flow/skate": "Skate",

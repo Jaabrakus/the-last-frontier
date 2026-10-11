@@ -12,9 +12,8 @@ extends SceneTree
 ##               hurls it at the player within 2 s (it comes 3 m nearer him or strikes him)
 ##   mend        his own wall worn by a shot: packed again (no wood: a bot pays none); a wall the player raised, worn: not his,
 ##               left worn
-##   shove       Earth Shove push (a bend spec, BendEffects) with no stone on his line (round 2's order, spec §2.6: the held
-##               stone, else the crosshair's, else one kicked up and pushed at the kick-up's strike): a Throw of his (not a
-##               stone bolt), that strikes or nears the player
+##   shove       earth's 2 (earth_shove push), the Fissure since 2026-10-10 (a crack along the deck like fire's Kick): the
+##               bot's cast is one stone floor wave of his that runs at the player
 ##   the player  his earth wall and stone form through BendCast too (PlayerBendCaster), BendEffects.last his
 ##   water       a wall raised across the edge of a deck over water (a tank's floor 3.4 m down, a water node over it, as the
 ##               ring's) is cut to the deck (narrower, both ends over the deck); one raised wholly over the water is not raised
@@ -346,27 +345,20 @@ func _mend() -> void:
 # ---------------------------------------------------------------- shove
 func _shove() -> void:
 	await _stage()
-	var ths0 := get_nodes_in_group(FormEffects.Throw.GROUP)
 	var bolts0 := get_nodes_in_group(BendBolt.GROUP)
 	var ok := BendCast.cast(bc, "earth_shove", "push")
-	var rec := BendEffects.last_of(bc)
-	var st: FormStone = rec.get("stone") as FormStone
-	_expect(String(rec.get("how", "")) == "kick_up" and st != null, "Earth Shove with no stone on his line kicks one up (%s)" % rec.get("how"))
-	var d0 := st.global_position.distance_to(p.global_position) if st != null else 0.0
-	await _secs(0.45)                         # (pushed at the kick-up's strike: kick_s)
-	var ths := _new_in(FormEffects.Throw.GROUP, ths0)
-	var th: FormEffects.Throw = ths[0] if ths.size() == 1 else null
-	_expect(ok and th != null and th.caster == bc and th.stone == st and _new_in(BendBolt.GROUP, bolts0).is_empty(),
-			"Earth Shove (the bot's): the stone thrown by a Throw of his, no stone bolt (%d throws)" % ths.size())
-	var struck: Array = []
-	if th != null:
-		th.lift.struck.connect(func(who: Node, _d: float) -> void: struck.append(who))
+	var made := _new_in(BendBolt.GROUP, bolts0)
+	var w: BendBolt = made[0] as BendBolt if made.size() == 1 else null
+	_expect(ok and w != null and w.floor_wave and w.kind == "stone" and w._by() == bc.body,
+			"Earth's Fissure (the bot's): one stone floor wave of his (%d bolts)" % made.size())
+	var d0 := Vector2(w.global_position.x - p.global_position.x, w.global_position.z - p.global_position.z).length() if w != null else 0.0
 	var best := d0
 	for i in int(1.5 * Engine.physics_ticks_per_second):
 		await physics_frame
-		if is_instance_valid(st):
-			best = minf(best, st.global_position.distance_to(p.global_position))
-	_expect(struck.has(p) or d0 - best >= 3.0, "and it flies at the player (%.1f m nearer, struck %s)" % [d0 - best, str(struck.has(p))])
+		if w == null or not is_instance_valid(w) or w.spent:
+			break
+		best = minf(best, Vector2(w.global_position.x - p.global_position.x, w.global_position.z - p.global_position.z).length())
+	_expect(d0 - best >= 3.0, "and it runs along the deck at the player (%.1f m nearer)" % (d0 - best))
 
 
 # ---------------------------------------------------------------- the player

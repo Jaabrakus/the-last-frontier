@@ -216,7 +216,8 @@ func _tap(i: int) -> void:
 ## One cast on `src` ("quick" LMB, "aim" RMB, "guard" E) as fast as it may: held until full, let go: its release time.
 func _cast(src: String, limit := 3.0) -> float:
 	_press(src, true)
-	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, limit)
+	# (full, or holding: a Spike's or a Boulder's raised stone hangs ready, its lock done; held on it would grow)
+	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], limit)
 	var n := released.size()
 	_press(src, false)
 	await _until(func() -> bool: return released.size() > n, 0.5)

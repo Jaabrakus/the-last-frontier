@@ -582,7 +582,8 @@
       "mastery_uses": [0, 8, 30]
     },
     "earth_shove": {
-      "label": "Shove",
+      "label": "Fissure",
+      "_fissure": "The Fissure (the owner, 2026-10-10: \"make the 2 shove skill like the a fissure type attack like the kick in fire where its a on the ground fire line\"): a crack runs along the deck toward the aim (a floor wave like fire's Kick: BendBolt floor_wave, kind stone, FissureFx's look), slower than fire's line and heavier, popping whom it reaches up and away; jumped over (miss_above_m) it misses. Held longer it grows (wider, farther, harder). A caught stone held: key 2 throws it instead (held_stone throw, as the Shove did). The mode keeps its id push (its tags earth_shove/push and push.grown: rules.json's launch classes, the bots, the loadouts); the old Shove is kept as shove (not offered).",
       "art": "earth",
       "element": "earth",
       "lock_s": 0.5,
@@ -597,9 +598,26 @@
       "circle_m": 0.7,
       "self_lock": true,
       "modes": ["push", "column"],
-      "mode_labels": {"push": "Shove", "column": "Column"},
+      "mode_labels": {"push": "Fissure", "column": "Column"},
       "bend": {
         "push": {
+          "do": "floor_wave",
+          "kind": "stone",
+          "foot_width_m": 1.3,
+          "width_m": 2.4,
+          "height_m": 0.9,
+          "miss_above_m": 0.6,
+          "mps": 15.0,
+          "range_m": 16.0,
+          "damage": 18.0,
+          "knock_mps": 10.0,
+          "up_mps": 3.0,
+          "wall_wear": 0.6,
+          "held_stone": "throw",
+          "grow": {"width_m": 3.6, "range_m": 21.0, "damage": 22.0, "knock_mps": 12.5, "up_mps": 3.5},
+          "air": "slam"
+        },
+        "shove": {
           "do": "shove",
           "kind": "stone",
           "how": "push",
@@ -1485,6 +1503,7 @@
     },
     "air_gust": {
       "label": "Gust",
+      "_lance": "The Gust held long is the Air Lance (the owner, 2026-10-10: \"is air big wave to big should we make it a lance instead? like a air spear throw?\", picked: Gust, then Lance when held): held to full, the Gust (its look trimmed to the 2 m it hits: look_r, the wind arc was drawn ~9 m wide); held past grow_after_s, it grows into a lance thrown point first (do throw, shape spear, kind air: a narrow, fast, long throw that hits hard; its tag air_gust/gust.grown, rules.json's grown Gust class). grow_label names it on the bar, as the Punch's Fireball.",
       "art": "gale",
       "element": "air",
       "lock_s": 0.35,
@@ -1512,7 +1531,9 @@
           "knock_mps": 11.0,
           "up_mps": 1.0,
           "carry": true,
-          "grow": {"width_m": 3.0, "range_m": 18.0, "knock_mps": 15.0},
+          "look_r": 0.22,
+          "grow": {"do": "throw", "kind": "air", "shape": "spear", "flight": "point_first", "mps": 40.0, "gravity": 1.0, "damage": 18.0, "knock_mps": 15.0, "up_mps": 1.5, "radius_m": 0.18, "range_m": 34.0, "long": true, "look_r": 0.18},
+          "grow_label": "Air Lance",
           "air": "slam"
         },
         "pull": {

@@ -18,8 +18,9 @@ extends SceneTree
 ##   jump      Space jumps while a lock is held, and the lock keeps filling
 ##   walls     a third wall crumbles the oldest; Column and Lift never count and sink sink_s after; fire and wind walls one
 ##             at a time; walls rise 2-6 m off; the earth wall's lock survives the crosshair moving
-##   shove     the held stone first; a loose stone 8 m off is not taken (a stone is kicked up); a fourth loose stone sinks the
-##             oldest; another's held stone is never taken
+##   shove     earth's 2 is the Fissure (2026-10-10): a caught stone held is thrown; else a stone floor wave runs along the
+##             deck; a fourth loose stone sinks the oldest; a loose stone in the Fissure's way is heaved and thrown on;
+##             another's held stone is never taken
 ##   dashes    nothing held: back; a back dash from 1 m inside the open end and a side Step into the ropes end on the deck
 ##   carried   air's Carried wind: x knock_mult 0.5 s after a dash's end, nothing at 1.0 s
 ##   fire      the owner's "keep them all": Punch held past its second click is the Fireball (fire's Strike grows); 1 tapped
@@ -609,56 +610,59 @@ func _stone_at(at: Vector3) -> FormStone:
 	return s
 
 
+## Earth's 2, the Fissure since 2026-10-10 (the owner: "like the kick in fire where its a on the ground fire line"): a caught stone
+## held is thrown (held_stone throw, as the Shove did); else a stone floor wave runs along the deck toward the aim; a fourth
+## loose stone still sinks the oldest; the other side's held stone is never taken.
 func _shove() -> void:
 	await _calm()
 	var bc := BendCaster.of(p)
 	var fwd := bc.facing()
 	var held := _stone_at(p.global_position + fwd * 1.3 + Vector3.UP * 1.1)
 	held.set_meta(&"bend_held_by", p.get_instance_id())
-	var loose := _stone_at(p.global_position + fwd * 4.0)
-	FormStone.make_loose(loose, p)
-	await _aim_at(loose.global_position)
+	await _aim_at(p.global_position + fwd * 6.0 + Vector3.UP * 0.3)
 	BendEffects.apply(bc, "earth_shove", "push", (SwayMoves.move("earth_shove").bend as Dictionary).push)
 	var r := BendEffects.last_of(p)
-	_expect(String(r.get("how", "")) == "held" and r.get("stone") == held, "Shove: the held stone goes first (%s)" % r.get("how"))
+	_expect(r.get("stone") == held and r.has("throw"), "Fissure with a caught stone held: the stone is thrown (%s)" % [r.keys()])
 	await _secs(0.6)
-	# a loose stone at 8 m: not taken, one kicked up instead
+	# nothing held: a crack runs along the deck (a floor wave of stone)
 	await _calm()
 	fwd = bc.facing()
-	var far := _stone_at(p.global_position + fwd * 8.0)
-	FormStone.make_loose(far, p)
-	await _aim_at(far.global_position + Vector3.UP * 0.1)
+	await _aim_at(p.global_position + fwd * 8.0 + Vector3.UP * 0.1)
 	BendEffects.apply(bc, "earth_shove", "push", (SwayMoves.move("earth_shove").bend as Dictionary).push)
 	r = BendEffects.last_of(p)
-	_expect(String(r.get("how", "")) == "kick_up" and is_instance_valid(far) and not GustLift.busy(far),
-			"a loose stone at 8 m is not taken: a stone kicked up instead (%s)" % r.get("how"))
-	# (watched over the 0.8 s: in the ring the pushed stone bursts on what it meets, its Throw gone after)
-	var pushed := [false]
-	for i in int(0.8 * Engine.physics_ticks_per_second):
-		await physics_frame
-		pushed[0] = pushed[0] or (r.has("throw") and is_instance_valid(r.get("throw")))
-	_expect(pushed[0], "the kicked-up stone pushed at the kick-up's strike (%s)" % r.get("throw"))
-	# within 6 m: taken
-	await _calm()
-	fwd = bc.facing()
-	var near := _stone_at(p.global_position + fwd * 4.5)
-	FormStone.make_loose(near, p)
-	await _aim_at(near.global_position + Vector3.UP * 0.1)
-	BendEffects.apply(bc, "earth_shove", "push", (SwayMoves.move("earth_shove").bend as Dictionary).push)
-	r = BendEffects.last_of(p)
-	_expect(String(r.get("how", "")) == "loose" and r.get("stone") == near, "a loose stone within 6 m is shoved (%s)" % r.get("how"))
-	await _secs(0.6)
+	var wave: BendBolt = r.get("bolt") as BendBolt if r.get("bolt") is BendBolt else null
+	var start := wave.global_position if wave != null else Vector3.INF
+	await _secs(0.3)
+	var ran := wave != null and is_instance_valid(wave) and Vector2(wave.global_position.x - start.x, wave.global_position.z - start.z).length() > 2.0
+	_expect(wave != null and wave.floor_wave and wave.kind == "stone" and NpcBending.is_floor_bolt(wave) and ran,
+			"Fissure: a stone floor wave runs along the deck (%s, ran %s)" % [wave.kind if wave != null else "-", ran])
+	await _secs(1.2)
 	# the fourth loose stone sinks the oldest
 	await _calm()
 	var four: Array = []
 	for i in 4:
-		var s := _stone_at(p.global_position + Vector3(i * 0.8 - 1.2, 0.0, 3.0))
-		FormStone.make_loose(s, p)
-		four.append(s)
+		var st := _stone_at(p.global_position + Vector3(i * 0.8 - 1.2, 0.0, 3.0))
+		FormStone.make_loose(st, p)
+		four.append(st)
 	await _ticks(2)
 	_expect((four[0] as FormStone).state == FormStone.State.SINKING and (four[3] as FormStone).state != FormStone.State.SINKING
 			and FormStone.loose_of(p).size() == Bending.stones().get("loose_max", 3),
 			"a fourth loose stone sinks the oldest (%d lying)" % FormStone.loose_of(p).size())
+	# a loose stone in the Fissure's way is heaved up and thrown on at the aim (earth's ammo on the deck, as the Shove took it)
+	var lying := four[3] as FormStone
+	await _aim_at(lying.global_position + Vector3.UP * 0.1)
+	BendEffects.apply(bc, "earth_shove", "push", (SwayMoves.move("earth_shove").bend as Dictionary).push)
+	var heaved := false
+	for k in 45:                                   # (watched each frame: thrown, it may hit and shatter within the half second)
+		await _ticks(1)
+		if not is_instance_valid(lying):
+			break
+		if not lying.has_meta(FormStone.LOOSE_META) and GustLift.busy(lying):
+			heaved = true
+			break
+	_expect(heaved, "a loose stone in the Fissure's way is heaved and thrown on (%s)"
+			% ["thrown" if heaved else ("gone" if not is_instance_valid(lying) else "still lying")])
+	await _secs(1.0)
 	# another's held stone: never taken
 	await _calm()
 	fwd = bc.facing()
@@ -667,8 +671,8 @@ func _shove() -> void:
 	await _aim_at(theirs.global_position)
 	BendEffects.apply(bc, "earth_shove", "push", (SwayMoves.move("earth_shove").bend as Dictionary).push)
 	r = BendEffects.last_of(p)
-	_expect(String(r.get("how", "")) != "loose" and r.get("stone") != theirs and int(theirs.get_meta(&"bend_held_by", -1)) == foe.get_instance_id(),
-			"the other side's held stone is never shoved (%s)" % r.get("how"))
+	_expect(r.get("stone") != theirs and int(theirs.get_meta(&"bend_held_by", -1)) == foe.get_instance_id(),
+			"the other side's held stone is never taken (%s)" % [r.keys()])
 	await _secs(0.6)
 
 

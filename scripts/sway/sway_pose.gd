@@ -171,6 +171,9 @@ var _ring_lean := false
 var _off_until := -INF
 ## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
 var combo_alt := false
+## The lock's pose for its grown cast (its pick's `grow`, the hand the lock began with; {} none): the Air Lance's overhand
+## spear throw, the Fireball's own clip. The lock winds up into it when it grows (_on_grew).
+var _grow_pick := {}
 var _clock := 0.0
 var _last_key := ""
 var _last_alt := false
@@ -184,6 +187,7 @@ func _ready() -> void:
 		return
 	caster.lock_started.connect(_on_started)
 	caster.cast.connect(_on_cast)
+	caster.grew.connect(_on_grew)
 	caster.lock_broken.connect(func(_m: String, _t: Node3D, _why: String) -> void: _on_end())
 	caster.fizzled.connect(func(_m: String, _t: Node3D) -> void: _on_end())
 	if caster.player != null and caster.player.skeleton != null:
@@ -306,6 +310,7 @@ func _on_started(m: String, _t: Node3D) -> void:
 	var el := BendPoses.element_of(caster.player)
 	pick = BendPoses.pick(m, caster.mode_of(m), el, caster.player) if el != "" else {}
 	combo_alt = false
+	_grow_pick = BendPoses._as_pose(pick.get("grow", "")) if not pick.is_empty() else {}
 	if not pick.is_empty() and pick.has("alt"):
 		# (the same move again within the combo window: the other hand, then back)
 		var again := _last_key == m + "/" + caster.mode_of(m) and _clock - _last_at <= BendPoses.combo_window_s()
@@ -315,6 +320,9 @@ func _on_started(m: String, _t: Node3D) -> void:
 				alt["from"] = pick.get("from", "mode")
 				pick = BendPoses._filled(alt, BendPoses.data())
 				combo_alt = true
+				var galt := BendPoses._as_pose(_grow_pick.get("alt", "")) if not _grow_pick.is_empty() else {}
+				if not galt.is_empty():
+					_grow_pick = galt              # (the grown clip on the same hand as the lock)
 	var clip: StringName
 	if not pick.is_empty() and _animation(StringName(String(pick.clip))) != null:
 		clip = StringName(String(pick.clip))
@@ -327,6 +335,24 @@ func _on_started(m: String, _t: Node3D) -> void:
 	_strike_at = Vector3.INF
 	_struck = true
 	_begin(clip, "press")
+
+
+## The lock grown (held past its second click: SwayCaster.grew). A pose with its own grown clip (`grow`: the Air Lance's
+## overhand spear throw (the owner, 2026-10-10: "we can use our spear animation for the lance right"), the Fireball's) winds
+## up into it while still held, from where the hands are (the cast's hand-off blend): the throw it grows into shows before
+## the release, and the release goes on from that clip's held moment. Its strike sits as far after its hold as the clip's
+## own (the sweep's and the overhand throw's alike, 4 frames), so the cast's timing is the move's.
+func _on_grew(m: String) -> void:
+	if phase != "press" or m != move or _grow_pick.is_empty():
+		return
+	var g := _grow_pick
+	_grow_pick = {}
+	if not BendPoses.usable(String(g.clip)) or _animation(StringName(String(g.clip))) == null:
+		return
+	g["from"] = pick.get("from", "mode")
+	pick = BendPoses._filled(g, BendPoses.data())
+	_hand = String(pick.get("hand", ""))
+	_begin(StringName(String(pick.clip)), "press")
 
 
 func _on_cast(m: String, _t: Node3D) -> void:

@@ -151,7 +151,7 @@
   "fire_parry": {"modes": {"parry": "own-bend-fire-parry", "redirect_lightning": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}, "flare": "own-bend-fire-breath"}, "pose": {"clip": "own-bend-fire-sweep", "alt": "own-bend-fire-sweep-l"}},
   "gust": {"modes": {"pull": "own-forage-grab-r"}},
   "air_palm": {"modes": {"palm": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"}, "trip": "own-bend-air-sweep", "cushion": "own-bend-air-shield", "pop": {"clip": "own-bend-jab-rise", "alt": "own-bend-jab-rise-l", "stand_in": {"clip": "own-bend-air-palm", "alt": "own-bend-air-palm-l"}}, "air_hit": {"clip": "own-bend-air-hit-air", "alt": "own-bend-air-hit-air-l", "stand_in": "own-bend-air-spin"}}},
-  "air_gust": {"pose": "own-bend-air-sweep", "modes": {"gust": "own-bend-air-sweep", "pull": "own-bend-air-pull", "slam": {"clip": "own-bend-air-down-gust", "stand_in": "own-bend-air-sweep"}}},
+  "air_gust": {"pose": "own-bend-air-sweep", "modes": {"gust": {"clip": "own-bend-air-sweep", "grow": {"clip": "own-bend-throw-overhand", "alt": "own-bend-throw-overhand-l"}}, "pull": "own-bend-air-pull", "slam": {"clip": "own-bend-air-down-gust", "stand_in": "own-bend-air-sweep"}}},
   "air_blast": {"pose": {"clip": "own-bend-throw-sidearm", "alt": "own-bend-throw-sidearm-l"}, "modes": {"slice": {"clip": "own-bend-air-slice", "alt": "own-bend-air-slice-l"}, "ball": "own-bend-air-sweep", "vacuum": "own-bend-air-sweep"}},
   "evade": {"pose": "own-bend-air-leap", "modes": {"slip": {"clip": "own-bend-air-slip", "alt": "own-bend-air-slip-l", "back": "own-bend-air-slip-back"}, "sidestep": "own-bend-earth-burrow", "backstep": "own-bend-air-leap", "spin": "own-bend-air-spin"}},
   "wind_run": {"modes": {"updraft": "own-bend-air-leap"}},

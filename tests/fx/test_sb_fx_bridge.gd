@@ -221,7 +221,9 @@ func _count(n: Node) -> int:
 
 # ---------------------------------------------------------------- the shipped switches (dormant)
 ## config.json's own switches, nothing forced: an element switched off there plays nothing at any seam and its effects are
-## not prewarmed (the shipped state: the owner turned every element off on 2026-10-09; this holds for any mix).
+## not prewarmed, save a single move's roles switched on by themselves (moves_on: the owner's picks, the Fissure's wave on
+## 2026-10-10), which play and are prewarmed alone (the shipped state: the owner turned every element off on 2026-10-09;
+## this holds for any mix).
 func _dormant() -> void:
 	SbFx.force_on = null
 	SbFx.force_elements = {}
@@ -236,15 +238,26 @@ func _dormant() -> void:
 			on_els.append(el)
 		else:
 			off.append(el)
-	_expect(SbFx.any_on() == (not on_els.is_empty()), "as shipped: any_on() says whether any element is on")
+	var moves_on: Dictionary = cfg.get("moves_on", {}) if cfg.get("moves_on") is Dictionary else {}
+	_expect(SbFx.any_on() == (master and (not on_els.is_empty() or not moves_on.is_empty())),
+			"as shipped: any_on() says whether any element or single move is on")
 	var wanted := _named_effects(on_els)
+	var singles: Array[String] = []                 # ("el key role" of each single move's role on)
+	for k: String in moves_on:
+		var mel := SbFx.element_for(null, k)
+		for r: String in moves_on[k]:
+			singles.append("%s %s %s" % [mel, k, r])
+			var se := SbFx.entry(mel, k, r)
+			if master and not se.is_empty() and SpellFx.has_effect(String(se.effect)):
+				wanted[String(se.effect)] = true
 	var ids := SbFx.ids()
 	_expect(ids.size() == wanted.size() and Array(ids).all(func(id: String) -> bool: return wanted.has(id)),
-			"as shipped: the prewarm lists only the switched-on elements' effects (%d listed, %d wanted; off: %s)" % [ids.size(), wanted.size(), off])
+			"as shipped: the prewarm lists only the switched-on elements' and single moves' effects (%d listed, %d wanted; off: %s)" % [ids.size(), wanted.size(), off])
 	SbFx.log_plays = true
 	SbFx.plays.clear()
 	var leaks: Array[String] = []
 	var tried := 0
+	var singles_play: Array[String] = []
 	for el: String in off:
 		var body := fire_body if el == "fire" else earth_body
 		var t := SbFx.table(el)
@@ -252,13 +265,20 @@ func _dormant() -> void:
 			for r: String in t[k]:
 				if r.begins_with("_"):
 					continue
+				if "%s %s %s" % [el, k, r] in singles:
+					if not SbFx.resolve(body, k, r, el).is_empty():
+						singles_play.append("%s %s %s" % [el, k, r])
+					continue
 				tried += 1
 				if SbFx.fire(body, k, r, {"at": Vector3(0, 1, -3), "el": el}) or not SbFx.resolve(body, k, r, el).is_empty():
 					leaks.append("%s %s %s" % [el, k, r])
 	for l in leaks.slice(0, 10):
 		print("    plays while off: " + l)
 	_expect(leaks.is_empty() and SbFx.plays.is_empty(),
-			"as shipped: every role of the switched-off elements resolves and plays nothing (%d tried, %d played)" % [tried, SbFx.plays.size()])
+			"as shipped: every other role of the switched-off elements resolves and plays nothing (%d tried, %d played)" % [tried, SbFx.plays.size()])
+	var singles_off := singles.filter(func(x: String) -> bool: return x.get_slice(" ", 0) in off and SbFx.entry(x.get_slice(" ", 0), x.get_slice(" ", 1), x.get_slice(" ", 2)).size() > 0)
+	_expect(singles_play.size() == (singles_off.size() if master else 0),
+			"as shipped: a single move's roles switched on by themselves resolve (%s of %s)" % [singles_play, singles_off])
 	SbFx.log_plays = false
 	if on_els.is_empty():
 		var owner := Node.new()

@@ -9,8 +9,8 @@ extends SceneTree
 ##                 degrees of its flight; pebbles are three bolts; a body's cast (BodyBendCaster) launches the same frame
 ##   the meeting   the player's Catch takes a thrown stone disc (a stone held); the player's Wind Guard lets an ice
 ##                 spear through (round 2's guard matrix: it takes air and stone only)
-##   the bots      a hard earth bot catches at least one of the discs thrown at it and shoves the caught stone back (Earth
-##                 Shove push); a hard air bot let go begins no attack before its grace_s and knocks no one in the first
+##   the bots      a hard earth bot catches at least one of the discs thrown at it and sends the caught stone back (E's return, or its 2 (Earth
+##                 earth_shove push, the Fissure)); a hard air bot let go begins no attack before its grace_s and knocks no one in the first
 ##                 second
 ##   sight         the player's smoke between them: a hard fire bot sends no bolt while it hangs; water and fire meeting leave
 ##                 a steam cloud that hides him from a bot, gone in 2 s; the player's flare dazzles a bot (its aim wider)
@@ -478,14 +478,19 @@ func _catch_back() -> void:
 		await _secs(0.5)
 		var c0 := b.catches
 		var s0 := int(b.casts_by.get("earth_shove/push", 0))
+		var e0 := int(b.casts_by.get("stone_catch/catch", 0))
 		_aim(NpcSenses.chest_of(f))
 		BendCast.cast(pbc, "stone_form", "disc", f)
 		await _secs(2.0)
-		if b.catches > c0 and int(b.casts_by.get("earth_shove/push", 0)) > s0:
+		# (sent back: E again, the return (each catch and each return a cast of the Catch), or its 2 (the Fissure throws a held
+		# stone). A duel bot answers a catch with E; the % ring's mixes in the 2, bend_ai pct.held_shove)
+		var caught := b.catches - c0
+		var e_back := int(b.casts_by.get("stone_catch/catch", 0)) - e0 - caught
+		if caught > 0 and (int(b.casts_by.get("earth_shove/push", 0)) > s0 or e_back > 0):
 			shoves_after += 1
 	print("  earth bot: %d catches of %d discs, %d shoved back (reactions %s, casts %s)" % [b.catches, DISCS, shoves_after, b.reactions_by, b.casts_by])
 	_expect(b.catches >= 1, "a hard earth bot catches a thrown disc (%d of %d)" % [b.catches, DISCS])
-	_expect(shoves_after >= 1, "and shoves the caught stone back (Earth Shove push within 2 s: %d)" % shoves_after)
+	_expect(shoves_after >= 1, "and sends the caught stone back within 2 s (E's return or its 2: %d)" % shoves_after)
 	_free_bot(f)
 	await _secs(0.3)
 

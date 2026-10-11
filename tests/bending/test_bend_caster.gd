@@ -10,7 +10,8 @@ extends SceneTree
 ##   its bolts    a bolt from the bot's chest does not strike the bot's own hit parts
 ##   return       Air Redirect's "redirect" (a return zone) on the player sends the bot's fire bolt back at the bot
 ##   catch        Catch's catch zone on the player takes the bot's stone disc and pebbles (stone bolts) and holds a stone; the
-##                player's Earth Shove (push) then sends it back at the bot
+##                player's 2 (earth_shove push: the Fissure since 2026-10-10, which throws a held stone) then sends it back at
+##                the bot
 ##   tornado      a tornado over a raised deck (a StaticBody3D 2 m up) goes along the deck, not the terrain under it
 ##   near         whom a bend reaches finds the player through his group "player" (not by the scene's "Player" name)
 ##   spray        Water Jet's spray (put_out) puts out a fire wall it is cast over

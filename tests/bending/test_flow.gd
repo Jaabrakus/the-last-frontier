@@ -9,9 +9,9 @@ extends SceneTree
 ##               his man; the aim help's cone is measured to the chest, which the bot's own throw pose carries down and
 ##               forward: from a level camera it was 4.4 deg off at rest and up to 10 deg mid-pose, past the 6 deg cone, so
 ##               the stone went along the crosshair over his head, the old flake)
-##   kick-shove  the player kicks a rock up (Rock Jab kick_up), his crosshair on it, and shoves it (Earth Shove push: round
-##               2's order takes the loose stone the crosshair is on within shove_loose_m) at the held bot: it strikes him,
-##               knocked by the player
+##   kick-shove  the player kicks a rock up (Rock Jab kick_up), his crosshair on it, and runs earth's 2 under it (the Fissure
+##               since 2026-10-10: the crack heaves a free stone it runs under and throws it on at the aim, as the Shove took
+##               it) at the held bot: it strikes him, knocked by the player
 ##   trap-drop   the player's trap holds no element fighter's feet (round 2: no roots in element mode, BendStatus.held_off)
 ##               and his boulder (Stone Form cannonball) lands on the bot all the same
 ## Last line "FLOW PASSED" or "FLOW FAILED"; exit 0 only on a pass. User args: seed=<n> (1750).
@@ -271,8 +271,15 @@ func _kick_shove() -> void:
 	var h0 := n.health
 	c.set_mode("earth_shove", "push")
 	var shoved := BendCast.cast(c, "earth_shove", "push")
-	var th := BendEffects.last.get("throw") as FormEffects.Throw
-	_expect(shoved and BendEffects.last.get("target") == st and th != null, "kick-up: Earth Shove (push) throws that rock")
+	var th: FormEffects.Throw = null
+	for i in int(0.6 * Engine.physics_ticks_per_second):   # (the crack runs to it, then heaves it: BendBolt._heave_loose)
+		await physics_frame
+		for t0 in get_nodes_in_group(FormEffects.Throw.GROUP):
+			if (t0 as FormEffects.Throw).stone == st:
+				th = t0 as FormEffects.Throw
+		if th != null:
+			break
+	_expect(shoved and th != null, "kick-up: the Fissure (earth's 2) runs under that rock and throws it on")
 	var struck: Array = []
 	if th != null:
 		th.lift.struck.connect(func(who: Node, _d: float) -> void: struck.append(who))

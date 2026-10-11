@@ -131,6 +131,9 @@ const CONE_MPS := 400.0
 const CONE_SLACK_M := 1.0
 ## Round 5: the move that throws a held stone besides the guard's E (earth's Shove).
 const HELD_SHOVE := "earth_shove/push"
+## How far a move that throws a held stone (its spec's held_stone "throw": earth's 2, the Fissure) reaches while one is held
+## (m): the stone's throw, not the move's own crack (the Shove's band, kept when the Shove became the Fissure, 2026-10-10).
+const HELD_THROW_M := 20.0
 
 static var _ai := {}
 static var _bend_cast: Script = null
@@ -611,7 +614,7 @@ func tick(dt: float) -> void:
 				# (back from a stagger: the cast pose again for what is left of the lock)
 				me.action = "cast"
 				if me.body != null:
-					me.body.play_cast(casting, mode, maxf(lock_s - lock_t, 0.1), element)
+					me.body.play_cast(casting, mode, maxf(lock_s - lock_t, 0.1), element, grown)
 			else:
 				_lose("flinch")
 				return
@@ -721,6 +724,8 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 		if grace and float(o.knock) > 0.0:
 			continue
 		var band := _band(h, o.spec)
+		if String(o.spec.get("held_stone", "")) == "throw" and _held_stone() != null:
+			band = Vector2(0.0, HELD_THROW_M)      # (a caught stone in its hands: this key throws it, as far as a throw goes)
 		if band.y > 0.0 and (d < band.x or d > band.y):
 			continue
 		var ok := true
@@ -1346,7 +1351,7 @@ func begin(id: String, md: String) -> void:
 		me.face_point(t.global_position)
 	me.action = "cast"
 	if me.body != null:
-		me.body.play_cast(id, md, lock_s, element)
+		me.body.play_cast(id, md, lock_s, element, grown)   # (grown: a pose's own grown clip, the Air Lance's spear throw)
 	if bend_cast() == null and id == "stone_form" and md == "spike":
 		_raise_spike(t)
 	if SHOW_LOCK_CIRCLE and me.is_inside_tree():

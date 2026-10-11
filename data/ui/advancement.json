@@ -184,7 +184,7 @@
         "effect": "A 3 m cloud of dust where you aim (2-6 m, placed like a wall, never round you) for 2.5 s that blocks sight both ways, like Breath's smoke. Lock 0.9 s; a new one ends your old one. Trade: your Wind Wall stands 3.5 s (from 4)."
       },
       "earth.shove.split": {
-        "effect": "One Shove breaks into three stones in flight.",
+        "effect": "One Fissure forks into three cracks.",
         "help": ""
       },
       "earth.burrow.surfacing": {

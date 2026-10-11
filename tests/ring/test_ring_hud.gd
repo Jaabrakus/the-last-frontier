@@ -195,7 +195,7 @@ func _arena() -> void:
 # ---------------------------------------------------------------- the strip
 ## Round 2's plain names per element (skills_r2 spec §3, §8.1; the owner's answers: fire's Jab Embers): [jab, guard, keys 1-5].
 const NAMES := {
-	"earth": ["Pebbles", "Catch", "Spike", "Shove", "Burrow", "Wall", "Patch"],
+	"earth": ["Pebbles", "Catch", "Spike", "Fissure", "Burrow", "Wall", "Patch"],
 	"water": ["Splash", "Turn", "Lash", "Wave", "Skate", "Ice Wall", "Patch"],
 	"fire": ["Embers", "Parry", "Punch", "Kick", "Step", "Fire Wall", "Patch"],
 	"air": ["Palm", "Wind Guard", "Slice", "Gust", "Slip", "Wind Wall", "Patch"],
@@ -275,24 +275,24 @@ func _strip() -> void:
 	await _ticks(3)
 	_expect(bool(strip.column(0).readied) and not bool(strip.column(1).readied), "the first column readied")
 	await _action(&"weapon_2")
-	_expect(String(strip.column(1).id) == "earth_shove" and bool(strip.column(1).readied) and strip.ready_line() == "2 · Shove",
-			"2: Shove readied, its chip lit (%s)" % strip.ready_line())
+	_expect(String(strip.column(1).id) == "earth_shove" and bool(strip.column(1).readied) and strip.ready_line() == "2 · Fissure",
+			"2: the Fissure readied, its chip lit (%s)" % strip.ready_line())
 	# the JAB chip: the jab by default, and what the next Q does
 	var jab0 := strip.chip("jab")
 	var qk := KitWords.key(SwayCaster.QUICK_BIND)
-	_expect(String(jab0.label) == "Pebbles" and String(jab0.sub) == "%s: put Shove on left click" % qk
+	_expect(String(jab0.label) == "Pebbles" and String(jab0.sub) == "%s: put Fissure on left click" % qk
 			and (strip._chips.jab.other as Label).text == String(jab0.sub),
 			"the JAB chip: Pebbles, \"%s\"" % jab0.sub)
 	var keep: Dictionary = c.quick_spell().duplicate()
 	c._quick["earth"] = {"id": "earth_shove", "mode": "push"}
 	await _ticks(3)
 	var jab1 := strip.chip("jab")
-	_expect(String(jab1.label) == "Shove" and String(jab1.sub) == "hold %s: Pebbles back" % qk,
-			"Shove on left click: the chip says \"%s\"" % String(jab1.sub).replace("\n", " / "))
+	_expect(String(jab1.label) == "Fissure" and String(jab1.sub) == "hold %s: Pebbles back" % qk,
+			"The Fissure on left click: the chip says \"%s\"" % String(jab1.sub).replace("\n", " / "))
 	await _action(&"weapon_1")
 	await _ticks(3)
 	_expect(String(strip.chip("jab").sub) == "%s: put Spike on left click\nhold %s: Pebbles back" % [qk, qk],
-			"Spike readied with Shove on it: \"%s\"" % String(strip.chip("jab").sub).replace("\n", " / "))
+			"Spike readied with the Fissure on it: \"%s\"" % String(strip.chip("jab").sub).replace("\n", " / "))
 	c._quick["earth"] = keep if not keep.is_empty() else KitWords.jab("earth")
 	_expect(not strip.q_line().contains("no key bound") and not hud.help_text().contains("no key bound"),
 			"no \"set left click: no key bound\" anywhere")
@@ -348,7 +348,7 @@ func _strip() -> void:
 	_expect(counts.earth == 9 and counts.water == 9 and counts.air == 8 and counts.fire == fire_want,
 			"the wheel: earth 9, water 9, air 8, fire %d (Breath on its 4: the owner) (%s)" % [fire_want, counts])
 	var items := RadialWheel.items_for("earth")
-	_expect(items.map(func(it: Dictionary) -> String: return String(it.label)) == ["Spike", "Boulder", "Shove", "Column", "Burrow", "Lift",
+	_expect(items.map(func(it: Dictionary) -> String: return String(it.label)) == ["Spike", "Boulder", "Fissure", "Column", "Burrow", "Lift",
 			"Wall", "Patch", "Mend"], "earth's wheel by plain names (%s)" % [items.map(func(it: Dictionary) -> String: return String(it.label))])
 	_expect(hud.aim_dot_shown(), "the aim dot shows with a move readied and no weapon")
 

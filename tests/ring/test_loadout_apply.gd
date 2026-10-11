@@ -24,10 +24,11 @@ const LIMIT_S := 300.0
 const OWN_STORE := "user://loadout_apply_test.json"
 const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## The nodes whose numbers can be applied (resolve ok: the plan's eight less Skate's Wet Trail) and, of them, those the soak left
-## live in loadout_apply.json (the two walls are switched off: the soak's bots never raise a wall; flip them in the json, not here).
+## live in loadout_apply.json (the two walls are switched off: the soak's bots never raise a wall; Full Sail since 2026-10-10: it
+## widens the plain Gust now that the grown one is the Air Lance, not yet soaked; flip them in the json, not here).
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
 		"earth.wall.thick", "water.wall.thick_ice"]
-const ON_NOW := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick"]
+const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -308,7 +309,8 @@ func _run() -> void:
 			var ok_t := true
 			for k: String in ["hold_s", "strike_s", "back_s"]:
 				ok_t = ok_t and _near(sp.get(k), e.get(k))
-			ok_t = ok_t and bool(sp.get("root", false)) == bool(e.get("root", false)) and _near(sp.get("end_s"), ea.length)
+			# (a root is true, false or "strike": held up to the strike only, fire's kicks since 2026-10-10)
+			ok_t = ok_t and str(sp.get("root", false)) == str(e.get("root", false)) and _near(sp.get("end_s"), ea.length)
 			if not ok_t:
 				timing_bad.append(tag)
 			var wp: Array = sp.get("warp", [])
@@ -558,9 +560,14 @@ func _casts() -> void:
 			caster.grown = grown
 			BendEffects.apply(caster, "air_gust", "gust", SwayMoves.move("air_gust").bend.gust)
 			var g := _newest_bolt(body)
-			var want_w: float = 2.0 if not grown else (3.6 if worn else 3.0)
-			_expect(g != null and absf(g.radius - want_w * 0.5) < 0.001, "%s's %s Gust is %.1f m wide (%s)" % [who[2], "grown" if grown else "plain", want_w,
-					"%.2f" % (g.radius * 2.0) if g != null else "no bolt"])
+			if grown:
+				# (grown, the Gust is the Air Lance since 2026-10-10: a spear thrown point first, Full Sail or not)
+				_expect(g != null and g.kind == "air" and g.shape == "spear", "%s's grown Gust is the Air Lance, a spear (%s)" % [who[2],
+						"%s %s" % [g.kind, g.shape] if g != null else "no bolt"])
+			else:
+				var want_w: float = 2.4 if worn else 2.0
+				_expect(g != null and absf(g.radius - want_w * 0.5) < 0.001, "%s's Gust is %.1f m wide (%s)" % [who[2], want_w,
+						"%.2f" % (g.radius * 2.0) if g != null else "no bolt"])
 			if g != null:
 				g.queue_free()
 		caster.grown = false

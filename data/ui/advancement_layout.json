@@ -29,6 +29,7 @@
         "earth.sulphur.boulder": [3, 2],
         "root:earth_shove/push": [0, 4],
         "earth.shove.split": [0.5, 5],
+        "earth.fissure.deep": [0.5, 5],
         "root:earth_shove/column": [2, 4],
         "earth.sulphur.fuming_column": [2.5, 5],
         "earth.column.heave": [2, 6]
@@ -212,6 +213,7 @@
         "earth.sulphur.boulder": [5.5, 2],
         "root:earth_shove/push": [2.5, 4.15],
         "earth.shove.split": [2.5, 5.15],
+        "earth.fissure.deep": [2.5, 5.15],
         "root:earth_shove/column": [3.5, 4.15],
         "earth.sulphur.fuming_column": [3.5, 5.15],
         "earth.column.heave": [3.5, 6.15]

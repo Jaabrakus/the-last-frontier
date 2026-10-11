@@ -5,7 +5,7 @@ extends RefCounted
 ## one job each, said the same way on the strip (BendStrip), the move wheel (RadialWheel), F1 and the first-time panels
 ## (FrontierHUD, HowTo), the element pick and the Controls panels (MainMenu, RingMenu, DuelMenu) and the lessons
 ## (RingLessons). Every word from data/ring/screens.json "kit" (tests/ring/test_player_words.gd holds them to the owner's
-## rule: no word from the show); the moves' plain names from moves.json's mode labels (Spike, Boulder, Shove ...).
+## rule: no word from the show); the moves' plain names from moves.json's mode labels (Spike, Boulder, Fissure ...).
 ##   the buttons   LMB JAB · E GUARD · 1 STRIKE · 2 PUSH ▲ · 3 DASH · 4 WALL · 5 HEAL (role(i), ROLE_JAB, ROLE_GUARD)
 ##   a key         Bending.keys(el)[i]: [id] (one move, or one move with two modes) or [id, id] (two moves): key_moves(el, i)
 ##                 -> its first move and, tapped twice, its second ({id, mode} each; spec §10's other_move)

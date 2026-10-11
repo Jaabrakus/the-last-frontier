@@ -168,6 +168,18 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			_cur["throw"] = BendZone.return_stone(bc, held)
 			_cur["stone"] = held
 			return
+	if String(spec.get("held_stone", "")) == "throw" and String(spec.get("do", "")) != "slam" and BendStatus.element_mode(p):
+		var held_s := BendZone.held_stone(p)
+		if held_s != null:
+			# (a caught stone held: this move throws it along the aim instead of its own (the Fissure, as Shove did: "Shove
+			# throws the stone you hold"); the Slam has its own, thrown down into its space)
+			var a1 := aim(bc, spec)
+			_record(bc, {"do": "return", "mode": mode, "move": m, "aim": a1.point, "grown": grew})
+			_cur["target"] = held_s                  # (the record the Shove made of it: what it threw and how)
+			_cur["how"] = "held"
+			_cur["throw"] = BendZone.return_stone(bc, held_s)
+			_cur["stone"] = held_s
+			return
 	var a := aim(bc, spec)
 	_record(bc, {"do": String(spec.get("do", "")), "mode": mode, "move": m, "aim": a.point, "grown": grew, "carried": carried,
 			"spec": spec})
@@ -1083,6 +1095,20 @@ static func _shove_pick(bc: BendCaster, spec: Dictionary) -> Node3D:
 			continue
 		return null
 	return null
+
+
+## A loose stone earth's Fissure ran under (BendBolt._heave_loose), heaved up where it lies and thrown on at the caster's aim
+## as the Shove threw a loose stone (_throw_stone: stone_form.throw and gust.stone.hurl's numbers), carrying the wave's hit
+## info `info` (its tag, the Fissure's, grown or not). The Throw (null: no caster).
+static func crack_heave(by: Node, st: FormStone, info: Dictionary) -> FormEffects.Throw:
+	var bc := BendCaster.of(by)
+	if bc == null or not bc.valid() or st == null or not is_instance_valid(st):
+		return null
+	var keep := BendR3.cur
+	BendR3.cur = info
+	var th := _throw_stone(bc, st, 1.0)
+	BendR3.cur = keep
+	return th
 
 
 ## Stone `st` thrown along the caster's aim as a Shove throws (stone_form.throw, gust.stone.hurl's numbers; FormEffects

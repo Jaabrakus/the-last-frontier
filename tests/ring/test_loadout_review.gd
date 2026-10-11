@@ -6,7 +6,9 @@ extends SceneTree
 ##                cost, every element's cast pose, the cast timeline frame by frame at three lock lengths and the other hand, real
 ##                casts' speed, size, damage, knock and lift, the dashes, the walls) equals tests/ring/fixtures/
 ##                loadout_classic_golden.json, taken from the code BEFORE the loadouts (c0a631a0^) by
-##                tools/ring/loadout_classic_print_run.gd: with the file as shipped, with the master switch off, with every node on and
+##                tools/ring/loadout_classic_print_run.gd (taken again 2026-10-10 when Classic itself changed, nothing worn: earth's 2
+##                the Fissure, the Gust grown the Air Lance and its spear throw, fire's kicks free after the strike; every other
+##                entry equal): with the file as shipped, with the master switch off, with every node on and
 ##                nothing worn, and in the next match after one played wearing a loadout
 ##   2 WEARER     a worn node changes its wearer only: the bot's casts and locks are Classic's while the player wears every node of
 ##                an element, the player's are Classic's while the bot wears them, and the next match without the loadout is

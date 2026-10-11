@@ -406,7 +406,10 @@ func _pick_state() -> int:
 	if t != null and NpcSenses.can_fight(t) and not practice_dummy:
 		if on_ledge(t):
 			return S.LEDGETRAP
-		if off_deck(t):
+		# (only a man off the deck AND in the air is kept off: one standing on the coping round the lip is outside the
+		# deck's rectangle but on his feet, and is fought like anyone on the deck. The owner, 2026-10-10, of the cheese
+		# hunt's edge stand: one life up, stand on the lip, the bot waited in EDGEGUARD 7 minutes and lost on time)
+		if off_deck(t) and airborne(t):
 			return S.EDGEGUARD
 		if not string.is_empty() and hitstun_left(t) > 0.0:
 			return S.PRESSURE

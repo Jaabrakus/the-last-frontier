@@ -102,24 +102,52 @@ static func table(el: String) -> Dictionary:
 ## Whether element `el`'s moves play their Spellbreak effects now (the master switch, then the element's). A missing or
 ## unreadable config.json switches nothing on.
 static func on(el: String) -> bool:
-	_load()
-	if not allow_headless and DisplayServer.get_name() == "headless":
-		return false                               # (headless: today's looks, as the tests that count them build them)
-	var master: bool = bool(force_on) if force_on != null else bool(_cfg.get("enabled", false))
-	if not master or not (el in ELEMENTS):
+	if not _master():
+		return false
+	if not (el in ELEMENTS):
 		return false
 	if force_elements.has(el):
 		return bool(force_elements[el])
 	return bool((_cfg.get("elements", {}) as Dictionary).get(el, false))
 
 
-## Whether any element plays now. Every call site is per event, and with every element off (the shipped state) they return
-## here before any table lookup.
+## The master switch (a run's force_on over config.json's enabled); headless always off (today's looks, as the tests that
+## count them build them).
+static func _master() -> bool:
+	_load()
+	if not allow_headless and DisplayServer.get_name() == "headless":
+		return false
+	return bool(force_on) if force_on != null else bool(_cfg.get("enabled", false))
+
+
+## Whether `role` of move `key` plays by itself while its element is off (config.json moves_on: {KEY: [ROLE, ...]}, a single
+## move's roles the owner picked from a side-by-side; the master switch still rules). The key's chain is asked ("a/b.grown"
+## is "a/b"'s too). A forced element (force_elements: the lineup's own runs) is its own answer either way.
+static func move_on(key: String, role: String) -> bool:
+	if key == "" or not _master():
+		return false
+	if force_elements.has(element_for(null, key)):
+		return false
+	var mo: Variant = _cfg.get("moves_on", {})
+	if not (mo is Dictionary) or (mo as Dictionary).is_empty():
+		return false
+	for k: String in _chain(key):
+		var roles: Variant = (mo as Dictionary).get(k)
+		if roles is Array and role in roles:
+			return true
+	return false
+
+
+## Whether any element, or any single move (moves_on), plays now. Every call site is per event, and with everything off they
+## return here before any table lookup.
 static func any_on() -> bool:
 	for el: String in ELEMENTS:
 		if on(el):
 			return true
-	return false
+	if not _master():
+		return false
+	var mo: Variant = _cfg.get("moves_on", {})
+	return mo is Dictionary and not (mo as Dictionary).is_empty()
 
 
 ## The key of a hit info (its tag), else move/mode.
@@ -189,17 +217,17 @@ static func resolve(by: Variant, key: String, role: String, el := "") -> Diction
 	for e: String in els:
 		var en := entry(e, key, role)
 		if not en.is_empty():
-			return en.merged({"_el": e}) if on(e) else {}
+			return en.merged({"_el": e}) if on(e) or (e == element_for(null, key) and move_on(key, role)) else {}
 	return {}
 
 
-## Every effect id the tables name (only the elements switched on; all with `all`), for the prewarm.
+## Every effect id the tables name (only the elements switched on and the single moves on; all with `all`), for the
+## prewarm.
 static func ids(all := false) -> PackedStringArray:
 	_load()
 	var out := PackedStringArray()
 	for el: String in ELEMENTS:
-		if not all and not on(el):
-			continue
+		var whole := all or on(el)
 		var t := table(el)
 		for k: String in t:
 			var roles: Variant = t[k]
@@ -207,7 +235,7 @@ static func ids(all := false) -> PackedStringArray:
 				continue
 			for r: String in roles:
 				var e: Variant = roles[r]
-				if e is Dictionary:
+				if e is Dictionary and (whole or (el == element_for(null, k) and move_on(k, r))):
 					var id := String((e as Dictionary).get("effect", ""))
 					if id != "" and not id in out and SpellFx.has_effect(id):
 						out.append(id)

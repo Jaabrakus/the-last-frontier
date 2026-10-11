@@ -283,8 +283,10 @@ func _player_locks() -> void:
 func _coverage(el: String) -> void:
 	_clear()
 	await _secs(0.2)
-	_place_player(mid + Vector3(-6.0, 0.0, 0.0))
-	var f := await _bot_ready(el, mid + Vector3(6.0, 0.0, 0.0))
+	# (9 m apart, within every element's keep band and its jab's reach: the whole kit is in range. At 12 m the earth bot held
+	# its ground past Pebbles' 10 m; the old Shove's kicked-up stones had bumped it nearer by chance, 2026-10-10)
+	_place_player(mid + Vector3(-4.5, 0.0, 0.0))
+	var f := await _bot_ready(el, mid + Vector3(4.5, 0.0, 0.0))
 	if f == null:
 		_expect(false, "%s: a bot spawned" % el)
 		return

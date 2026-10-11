@@ -185,7 +185,11 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		SbFx.fire(by, "flowing", "curve", sbo.merged({"el": "water", "life": b.steer_s + 0.1}, true))
 	if b.floor_wave:
 		if not sb:
-			b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
+			# (earth's Fissure, a stone floor wave: spikes of stone, FissureFx; fire's Kick its flame tongues)
+			if b.kind == "stone":
+				b._wave_look = BendLooks.fissure_body(b, b.width_m, b.height_m)
+			else:
+				b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
 	elif not sb:
 		BendLooks.bolt_body(holder, b.kind, float(spec.get("look_r", b.radius)), b.long, b.shape)
 		b._trail = BendLooks.trail(b, b.kind, b.radius)
@@ -397,8 +401,32 @@ func steered_deg() -> float:
 	return _steered
 
 
+## Earth's Fissure and the deck's loose stones (2026-10-10: the Shove took them; the Fissure's skill tree keeps them earth's
+## ammo): a stone lying free in this step's width on this deck (a loose one, a kicked-up rock, a standing spike: whoever's,
+## stones on the deck are fair for both sides; never one held or raised, in flight or sinking, as the Shove's pick) is
+## heaved up where it lies and thrown on at the caster's aim (BendEffects.crack_heave: the Shove's throw of a loose stone,
+## this wave's hit info). Once each: thrown, it is in flight.
+func _heave_loose(from: Vector3, flat: Vector3, fwd: Vector3, across: Vector3, w: float) -> void:
+	var by := _by()
+	if by == null:
+		return
+	for s: Node in get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := s as FormStone
+		if st == null or st.state == FormStone.State.SINKING or GustLift.busy(st) or st.has_meta(&"bend_held_by") \
+				or st.has_meta(&"bend_raised_by"):
+			continue
+		var l := st.global_position - from
+		var along := l.dot(fwd)
+		if along < -0.3 or along > flat.length() + 0.35 or absf(l.dot(across)) > w * 0.5 + st.radius:
+			continue
+		if absf(st.global_position.y - deck_y) > 1.2:
+			continue                                  # (not lying on this deck: under the lip, up on a wall)
+		BendEffects.crack_heave(by, st, info)
+
+
 ## The floor wave's step (see the header): any wall across its foot stops it (a box at its height swept along); a body in
-## its width whose feet are within miss_above_m of the deck is struck; else on, its width growing.
+## its width whose feet are within miss_above_m of the deck is struck; earth's Fissure heaves the loose stones in its width
+## (_heave_loose); else on, its width growing.
 func _wave_step(from: Vector3, step: Vector3) -> void:
 	var flat := Vector3(step.x, 0.0, step.z)
 	var w := lerpf(FLOOR_W0, width_m, clampf(travelled / maxf(range_m, 0.1), 0.0, 1.0))
@@ -440,6 +468,8 @@ func _wave_step(from: Vector3, step: Vector3) -> void:
 				ex.append(info.rid)
 			else:
 				break
+		if kind == "stone":
+			_heave_loose(from, flat, fwd, across, w)   # (earth's Fissure: the loose stones it runs under thrown on)
 		# whom it runs into: in its width, the feet low enough
 		for e in BendCaster.near(_by() if _by() != null else self, from, w * 0.5 + 1.5):
 			var n: Node3D = e[0]
@@ -460,7 +490,10 @@ func _wave_step(from: Vector3, step: Vector3) -> void:
 	travelled += flat.length()
 	_face()
 	if _wave_look != null and is_instance_valid(_wave_look):
-		_wave_look.scale = Vector3(w / FLOOR_W0, 1.0, 1.0)
+		if _wave_look.has_method(&"set_width"):
+			_wave_look.call(&"set_width", w)        # (a look that lays itself out across the width: FissureFx)
+		else:
+			_wave_look.scale = Vector3(w / FLOOR_W0, 1.0, 1.0)
 	if travelled > range_m:
 		end("range")
 

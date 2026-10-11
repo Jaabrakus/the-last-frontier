@@ -37,15 +37,15 @@
 			"width": 2.2
 		},
 		"air_gust/gust+grown": {
-			"damage": 8.0,
-			"gravity": 0.0,
+			"damage": 18.0,
+			"gravity": 1.0,
 			"height": 0.9,
 			"knock": 15.0,
 			"lock_s": 0.45,
-			"mps": 18.0,
-			"radius": 1.5,
-			"range": 18.0,
-			"up": 1.0,
+			"mps": 40.0,
+			"radius": 0.18,
+			"range": 34.0,
+			"up": 1.5,
 			"width": 2.2
 		},
 		"air_gust/pull": {
@@ -819,6 +819,25 @@
 		"earth_shove/push": {
 			"cost": 0.5,
 			"mode_seen": "push",
+			"npc": [
+				0.52,
+				0.52,
+				0.44,
+				0.44,
+				0.4,
+				0.4
+			],
+			"npc_range": 40.0,
+			"player": [
+				0.5,
+				0.5,
+				0.5
+			],
+			"range": 40.0
+		},
+		"earth_shove/shove": {
+			"cost": 0.5,
+			"mode_seen": "shove",
 			"npc": [
 				0.52,
 				0.52,
@@ -2664,7 +2683,7 @@
 		"air:air_blast/ball": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"air:air_blast/slice": "{\"alt\":\"own-bend-air-slice-l\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slice\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"air:air_blast/vacuum": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
-		"air:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"air:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"grow\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"air:air_gust/pull": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-pull\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"air:air_gust/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-air-down-gust\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-air-sweep\",\"strike_s\":0.2}",
 		"air:air_jump/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -2688,6 +2707,7 @@
 		"air:earth_shove/column": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-uproot\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"air:earth_shove/pull": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-catch\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"air:earth_shove/push": "{\"alt\":\"own-bend-earth-shove-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-earth-shove\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.233333333333333,\"kick_up\":{\"alt\":\"own-bend-earth-kickup-l\",\"clip\":\"own-bend-earth-kickup\"},\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"air:earth_shove/shove": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-raise\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"air:earth_shove/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-earth-hammer\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-earth-stomp\",\"strike_s\":0.2}",
 		"air:earth_shove/split": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"air:earth_skate/burrow": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
@@ -2700,7 +2720,7 @@
 		"air:evade/sidestep": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
 		"air:evade/slip": "{\"alt\":\"own-bend-air-slip-l\",\"back\":\"own-bend-air-slip-back\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slip\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"air:evade/spin": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-spin\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.166666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"air:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"air:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"air:fire_arc/lightning": "{\"back_s\":1.56666666666667,\"clip\":\"own-bend-fire-lightning\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":1.06666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":1.2}",
 		"air:fire_arc/sweep": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"air:fire_blast/fireball": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -2719,8 +2739,8 @@
 		"air:fire_jets/jets": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"air:fire_jets/jump": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"air:fire_kick/air_kick": "{\"alt\":\"own-bend-fire-flip-kick-l\",\"back_s\":0.466666666666667,\"clip\":\"own-bend-fire-flip-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
-		"air:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
-		"air:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"air:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
+		"air:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"air:fire_kick/slam": "{\"alt\":\"own-bend-fire-axe-kick-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-fire-axe-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
 		"air:fire_parry/flare": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"air:fire_parry/parry": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-fire-parry\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.133333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -2784,7 +2804,7 @@
 		"earth:air_blast/ball": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"earth:air_blast/slice": "{\"alt\":\"own-bend-air-slice-l\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slice\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"earth:air_blast/vacuum": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
-		"earth:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"earth:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"grow\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"earth:air_gust/pull": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-pull\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"earth:air_gust/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-air-down-gust\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-air-sweep\",\"strike_s\":0.2}",
 		"earth:air_jump/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -2808,6 +2828,7 @@
 		"earth:earth_shove/column": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-uproot\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"earth:earth_shove/pull": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-catch\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"earth:earth_shove/push": "{\"alt\":\"own-bend-earth-shove-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-earth-shove\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.233333333333333,\"kick_up\":{\"alt\":\"own-bend-earth-kickup-l\",\"clip\":\"own-bend-earth-kickup\"},\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"earth:earth_shove/shove": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-raise\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"earth:earth_shove/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-earth-hammer\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-earth-stomp\",\"strike_s\":0.2}",
 		"earth:earth_shove/split": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"earth:earth_skate/burrow": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
@@ -2820,7 +2841,7 @@
 		"earth:evade/sidestep": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
 		"earth:evade/slip": "{\"alt\":\"own-bend-air-slip-l\",\"back\":\"own-bend-air-slip-back\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slip\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"earth:evade/spin": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-spin\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.166666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"earth:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"earth:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"earth:fire_arc/lightning": "{\"back_s\":1.56666666666667,\"clip\":\"own-bend-fire-lightning\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":1.06666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":1.2}",
 		"earth:fire_arc/sweep": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"earth:fire_blast/fireball": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -2839,8 +2860,8 @@
 		"earth:fire_jets/jets": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"earth:fire_jets/jump": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"earth:fire_kick/air_kick": "{\"alt\":\"own-bend-fire-flip-kick-l\",\"back_s\":0.466666666666667,\"clip\":\"own-bend-fire-flip-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
-		"earth:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
-		"earth:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"earth:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
+		"earth:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"earth:fire_kick/slam": "{\"alt\":\"own-bend-fire-axe-kick-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-fire-axe-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
 		"earth:fire_parry/flare": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"earth:fire_parry/parry": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-fire-parry\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.133333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -2904,7 +2925,7 @@
 		"fire:air_blast/ball": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"fire:air_blast/slice": "{\"alt\":\"own-bend-air-slice-l\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slice\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"fire:air_blast/vacuum": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
-		"fire:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"fire:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"grow\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"fire:air_gust/pull": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-pull\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"fire:air_gust/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-air-down-gust\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-air-sweep\",\"strike_s\":0.2}",
 		"fire:air_jump/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -2928,6 +2949,7 @@
 		"fire:earth_shove/column": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-uproot\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"fire:earth_shove/pull": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-catch\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"fire:earth_shove/push": "{\"alt\":\"own-bend-earth-shove-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-earth-shove\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.233333333333333,\"kick_up\":{\"alt\":\"own-bend-earth-kickup-l\",\"clip\":\"own-bend-earth-kickup\"},\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"fire:earth_shove/shove": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-raise\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"fire:earth_shove/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-earth-hammer\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-earth-stomp\",\"strike_s\":0.2}",
 		"fire:earth_shove/split": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"fire:earth_skate/burrow": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
@@ -2940,7 +2962,7 @@
 		"fire:evade/sidestep": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
 		"fire:evade/slip": "{\"alt\":\"own-bend-air-slip-l\",\"back\":\"own-bend-air-slip-back\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slip\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"fire:evade/spin": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-spin\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.166666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"fire:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"fire:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"fire:fire_arc/lightning": "{\"back_s\":1.56666666666667,\"clip\":\"own-bend-fire-lightning\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":1.06666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":1.2}",
 		"fire:fire_arc/sweep": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"fire:fire_blast/fireball": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -2959,8 +2981,8 @@
 		"fire:fire_jets/jets": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"fire:fire_jets/jump": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"fire:fire_kick/air_kick": "{\"alt\":\"own-bend-fire-flip-kick-l\",\"back_s\":0.466666666666667,\"clip\":\"own-bend-fire-flip-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
-		"fire:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
-		"fire:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"fire:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
+		"fire:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"fire:fire_kick/slam": "{\"alt\":\"own-bend-fire-axe-kick-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-fire-axe-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
 		"fire:fire_parry/flare": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"fire:fire_parry/parry": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-fire-parry\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.133333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -3024,7 +3046,7 @@
 		"water:air_blast/ball": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"water:air_blast/slice": "{\"alt\":\"own-bend-air-slice-l\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slice\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"water:air_blast/vacuum": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
-		"water:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"water:air_gust/gust": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-sweep\",\"from\":\"mode\",\"grow\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"water:air_gust/pull": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-air-pull\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
 		"water:air_gust/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-air-down-gust\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-air-sweep\",\"strike_s\":0.2}",
 		"water:air_jump/dash": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
@@ -3048,6 +3070,7 @@
 		"water:earth_shove/column": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-uproot\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"water:earth_shove/pull": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-earth-catch\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.233333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"water:earth_shove/push": "{\"alt\":\"own-bend-earth-shove-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-earth-shove\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.233333333333333,\"kick_up\":{\"alt\":\"own-bend-earth-kickup-l\",\"clip\":\"own-bend-earth-kickup\"},\"mask\":\"upper\",\"root\":false,\"strike_s\":0.366666666666667}",
+		"water:earth_shove/shove": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-raise\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"full\",\"root\":true,\"strike_s\":0.466666666666667}",
 		"water:earth_shove/slam": "{\"back_s\":0.433333333333333,\"clip\":\"own-bend-earth-hammer\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":\"own-bend-earth-stomp\",\"strike_s\":0.2}",
 		"water:earth_shove/split": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"water:earth_skate/burrow": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
@@ -3060,7 +3083,7 @@
 		"water:evade/sidestep": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-earth-burrow\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.3}",
 		"water:evade/slip": "{\"alt\":\"own-bend-air-slip-l\",\"back\":\"own-bend-air-slip-back\",\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-slip\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"water:evade/spin": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-spin\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.166666666666667,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"strike_s\":0.266666666666667}",
-		"water:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"water:fire_arc/kick": "{\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"water:fire_arc/lightning": "{\"back_s\":1.56666666666667,\"clip\":\"own-bend-fire-lightning\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":1.06666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":1.2}",
 		"water:fire_arc/sweep": "{\"alt\":\"own-bend-fire-sweep-l\",\"back_s\":0.6,\"clip\":\"own-bend-fire-sweep\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"water:fire_blast/fireball": "{\"alt\":\"own-bend-fire-punch-l\",\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -3079,8 +3102,8 @@
 		"water:fire_jets/jets": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"water:fire_jets/jump": "{\"back_s\":0.666666666666667,\"clip\":\"own-bend-air-leap\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
 		"water:fire_kick/air_kick": "{\"alt\":\"own-bend-fire-flip-kick-l\",\"back_s\":0.466666666666667,\"clip\":\"own-bend-fire-flip-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
-		"water:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
-		"water:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":true,\"strike_s\":0.3}",
+		"water:fire_kick/high_kick": "{\"alt\":\"own-bend-fire-kick-l\",\"back_s\":0.733333333333333,\"clip\":\"own-bend-fire-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
+		"water:fire_kick/kick": "{\"alt\":\"own-bend-fire-kick-low-l\",\"back_s\":0.666666666666667,\"clip\":\"own-bend-fire-kick-low\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.2,\"legs_always\":true,\"mask\":\"full\",\"root\":\"strike\",\"strike_s\":0.3}",
 		"water:fire_kick/slam": "{\"alt\":\"own-bend-fire-axe-kick-l\",\"back_s\":0.433333333333333,\"clip\":\"own-bend-fire-axe-kick\",\"from\":\"mode\",\"hand\":\"r_foot\",\"hold_s\":0.1,\"legs_always\":true,\"mask\":\"full\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-fire-kick-l\",\"clip\":\"own-bend-fire-kick\"},\"strike_s\":0.2}",
 		"water:fire_parry/flare": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-fire-breath\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"water:fire_parry/parry": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-fire-parry\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.133333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
@@ -4039,6 +4062,30 @@
 			"trace": "46d116d8b0d0422e",
 			"wait": 0.1333
 		},
+		"earth:earth_shove/shove@0.030": {
+			"clip": "own-bend-earth-raise",
+			"end": 78,
+			"root": 77,
+			"struck": 27,
+			"trace": "c75e46425d2a8782",
+			"wait": 0.4333
+		},
+		"earth:earth_shove/shove@0.483": {
+			"clip": "own-bend-earth-raise",
+			"end": 60,
+			"root": 59,
+			"struck": 8,
+			"trace": "f903e3cc755f8cf3",
+			"wait": 0.1333
+		},
+		"earth:earth_shove/shove@1.033": {
+			"clip": "own-bend-earth-raise",
+			"end": 60,
+			"root": 59,
+			"struck": 8,
+			"trace": "f903e3cc755f8cf3",
+			"wait": 0.1333
+		},
 		"earth:earth_shove/slam@0.030": {
 			"clip": "own-bend-earth-hammer",
 			"end": 42,
@@ -4578,7 +4625,7 @@
 		"fire:fire_arc/kick@0.030": {
 			"clip": "own-bend-fire-kick",
 			"end": 70,
-			"root": 69,
+			"root": 15,
 			"struck": 16,
 			"trace": "98dbf152ad652fee",
 			"wait": 0.2667
@@ -4586,7 +4633,7 @@
 		"fire:fire_arc/kick@0.350": {
 			"clip": "own-bend-fire-kick",
 			"end": 60,
-			"root": 59,
+			"root": 5,
 			"struck": 6,
 			"trace": "e48f02fbd79a3c07",
 			"wait": 0.1
@@ -4594,7 +4641,7 @@
 		"fire:fire_arc/kick@0.900": {
 			"clip": "own-bend-fire-kick",
 			"end": 60,
-			"root": 59,
+			"root": 5,
 			"struck": 6,
 			"trace": "e48f02fbd79a3c07",
 			"wait": 0.1
@@ -5098,7 +5145,7 @@
 		"fire:fire_kick/high_kick@0.030": {
 			"clip": "own-bend-fire-kick",
 			"end": 70,
-			"root": 69,
+			"root": 15,
 			"struck": 16,
 			"trace": "98dbf152ad652fee",
 			"wait": 0.2667
@@ -5106,7 +5153,7 @@
 		"fire:fire_kick/high_kick@0.350": {
 			"clip": "own-bend-fire-kick",
 			"end": 60,
-			"root": 59,
+			"root": 5,
 			"struck": 6,
 			"trace": "e48f02fbd79a3c07",
 			"wait": 0.1
@@ -5114,7 +5161,7 @@
 		"fire:fire_kick/high_kick@0.900": {
 			"clip": "own-bend-fire-kick",
 			"end": 60,
-			"root": 59,
+			"root": 5,
 			"struck": 6,
 			"trace": "e48f02fbd79a3c07",
 			"wait": 0.1
@@ -5122,7 +5169,7 @@
 		"fire:fire_kick/high_kick@alt": {
 			"clip": "own-bend-fire-kick-l",
 			"end": 60,
-			"root": 59,
+			"root": 5,
 			"struck": 6,
 			"trace": "e48f02fbd79a3c07",
 			"wait": 0.1
@@ -5130,7 +5177,7 @@
 		"fire:fire_kick/kick@0.030": {
 			"clip": "own-bend-fire-kick-low",
 			"end": 62,
-			"root": 61,
+			"root": 15,
 			"struck": 16,
 			"trace": "96333288de06637b",
 			"wait": 0.2667
@@ -5138,7 +5185,7 @@
 		"fire:fire_kick/kick@0.350": {
 			"clip": "own-bend-fire-kick-low",
 			"end": 52,
-			"root": 51,
+			"root": 5,
 			"struck": 6,
 			"trace": "03411576bd460bff",
 			"wait": 0.1
@@ -5146,7 +5193,7 @@
 		"fire:fire_kick/kick@0.900": {
 			"clip": "own-bend-fire-kick-low",
 			"end": 52,
-			"root": 51,
+			"root": 5,
 			"struck": 6,
 			"trace": "03411576bd460bff",
 			"wait": 0.1
@@ -5154,7 +5201,7 @@
 		"fire:fire_kick/kick@alt": {
 			"clip": "own-bend-fire-kick-low-l",
 			"end": 52,
-			"root": 51,
+			"root": 5,
 			"struck": 6,
 			"trace": "03411576bd460bff",
 			"wait": 0.1
