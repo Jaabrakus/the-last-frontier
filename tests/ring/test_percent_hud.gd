@@ -173,8 +173,10 @@ func _hit() -> void:
 	var after := float(_info(1).pct)
 	await _secs(0.2)
 	var settled := float(s.pop_t) == 0.0 and float(s.shake_t) == 0.0
-	# (round 4: the pushed Shove's d 16 x rules.json stock.pct_scale, BOTS2's pace)
-	_expect(absf(d - 16.0 * RingRules.stock_num("pct_scale", 1.0)) < 0.01 and mid > before and absf(after - rules.pct_of(f)) < 0.01 and popping and settled,
+	# (round 4: earth's 2 grown, its class's d (the Fissure's 17 since 2026-10-11, the Shove's 16 before) x rules.json
+	# stock.pct_scale, BOTS2's pace)
+	var want_d := float(RingRules.class_of("earth_shove/push.grown").d)
+	_expect(absf(d - want_d * RingRules.stock_num("pct_scale", 1.0)) < 0.01 and mid > before and absf(after - rules.pct_of(f)) < 0.01 and popping and settled,
 			"a %.0f%% hit: the digits move within a frame (%.1f), read %.0f by 0.16 s; the pop and the shake (%.1f px) over by 0.35 s"
 			% [d, mid, after, float(s.shake_a)])
 	rules.reset_pct(f, 0.0)

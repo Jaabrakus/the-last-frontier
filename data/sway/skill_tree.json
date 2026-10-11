@@ -757,7 +757,7 @@
         "expert:earth_shove",
         "teacher:earth"
        ],
-       "effect": "Held for the owner (question 4): one Fissure forks into three cracks (a volley in place of the Fissure). The crack splits as it leaves you, 15 deg apart, each 1.6 m wide (from 2.4; grown 2.4 from 3.6): one volley that adds the Fissure's 12% (16% grown), only the first crack to reach him knocks, at 80% of the Fissure's base.",
+       "effect": "Held for the owner (question 4): one Fissure forks into three cracks (a volley in place of the Fissure). The crack splits as it leaves you, 15 deg apart, each 1.6 m wide (from 2.4; grown 2.4 from 3.6): one volley that adds the Fissure's 14% (17% grown), only the first crack to reach him knocks, at 80% of the Fissure's base.",
        "plus": "three cracks cover a sidestep",
        "minus": "knock -20%, narrower",
        "help": "Held: one Fissure forks into three cracks. Yours to rule on.",
@@ -772,14 +772,14 @@
         },
         {
          "path": "class:earth_shove/push+fork.base",
-         "from": 6.9,
-         "to": 5.5,
+         "from": 6.6,
+         "to": 5.3,
          "base_tag": "earth_shove/push"
         },
         {
          "path": "class:earth_shove/push.grown+fork.base",
-         "from": 7.5,
-         "to": 6.0,
+         "from": 7.4,
+         "to": 5.9,
          "base_tag": "earth_shove/push.grown"
         },
         {
@@ -818,7 +818,7 @@
         "expert:earth_shove",
         "teacher:earth"
        ],
-       "effect": "Your Fissure runs 12.5 m/s (from 15) but throws him at 45 deg (from 30), grown too: slower to reach him and easier to jump, but he goes up more than out. It rings out later and sets up your air game.",
+       "effect": "Your Fissure runs 14.5 m/s (from 17) but throws him at 55 deg (from 40), grown too: slower to reach him and easier to jump, but he goes up more than out. It rings out later and sets up your air game.",
        "plus": "throws him up",
        "minus": "runs slower",
        "help": "A slower Fissure that throws him up instead of out.",
@@ -826,19 +826,19 @@
        "changes": [
         {
          "path": "spec:earth_shove/push.mps",
-         "from": 15.0,
-         "to": 12.5
+         "from": 17.0,
+         "to": 14.5
         },
         {
          "path": "class:earth_shove/push+deep.angle",
-         "from": 30,
-         "to": 45,
+         "from": 40,
+         "to": 55,
          "base_tag": "earth_shove/push"
         },
         {
          "path": "class:earth_shove/push.grown+deep.angle",
-         "from": 30,
-         "to": 45,
+         "from": 40,
+         "to": 55,
          "base_tag": "earth_shove/push.grown"
         }
        ],
