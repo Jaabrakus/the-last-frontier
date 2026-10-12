@@ -258,11 +258,14 @@ of `test_loadout_review.gd` still passes).
 | Mudslide | (with the set) Wave base 8.6 (grown 9.7), reach 7.5 m (10); a 2 m mud pool of his where it ends | `BendEffects._wave_talents` |
 | Mud Mound | (with the set) the Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose (a FormRaised of mud, never counted in max_walls, two at once): floor fire stops at it, anyone can stand on it; Geyser base 9.3 | `BendEffects.spout`, `_mud_mound` |
 | Delta | (with the set) his locks fill x1.15 standing in his own mud (a bot's tick too); his mud pools last 6.5 s | `SwayCaster.passive_fill`, `BendZone.in_own_mud`, `home_fill`, `NpcBending.tick` |
+| Mire | (with the set) a new skill on 4 tapped twice (the strip and the wheel show it): lock 0.9 s (the Ice Wall's 0.85), a 3 m mud pool of his for 8 s (Delta's 6.5) placed where he aims, 2-6 m like a wall, cast with the Ice Wall's pose, on the deck only; one of his at a time (a second dries the first), never one of the set's four pools; what his mud does (floor fire dies in it, his Geyser's source, Wellspring's and Delta's water); his Ice Wall rises in 0.8 s | `BendLoadout.modes_added` / `new_spec`, `SwayCaster.modes_of` / `spec_of`, `Bending.other_move`, `FormEffects.apply`, `BendCast.cast`, `BendEffects.zone`, `BendZone.make` (`MIRE_META`), `BendPoses.pick` |
 
 Bots (never worn in a normal match): a bot wearing Whirl Turn holds the swing while the foe it aims at stands guarding and sends
 it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; a bot wearing Ride the Wave lets its Wave go on the Beat
 when its foe is further than 4.5 m and the deck has room ahead (NpcBending._on_beat); a bot's Patch lock takes Wellspring's share;
-the rest are its casts' own.
+a bot wearing Mire has it among its options (built again when what it wears changes) and lays one 4-14 m from a foe whose kit has
+floor fire (fire's Kick), never against another, once in 9 s at most (its spec's own `ai` hint, `foe_floor_fire`); the rest are its
+casts' own.
 
 The Beat (skill_tree.json beat, the owner's yes): SwayCaster marks a cast held and let go within `BEAT_S` (0.2 s) of its click
 (never a click, a guard, key 3, Patch or a cast that goes by itself) as `beat` in `BendR3.release` while it lands; only a worn
@@ -288,9 +291,12 @@ Magma set): over mud it ends "quenched" (its own code should leave no stone for 
 Lightning) is not built here. Rolling stones roll only in the open world (in the % ring a hurled stone shatters where it lands),
 so in a ring match that counter has nothing to stop.
 
-Mire (water.mud.mire, a new skill on 4 tapped twice) is not built: it needs a per-body mode on water_shield (SwayCaster.modes_of is
-static and read by the HUD, the keys, the wheel and the bots) and its spec cannot go into moves.json (the Classic fingerprint
-lists every bend spec: a new one there is a Classic change). The plan: its spec as the node's own `new:mire.spec` dictionary
-(BendLoadout's tune part holds dictionaries), modes_of(id, body) adding a worn node's mode, the cast path (SwayCaster.spec_of,
-FormEffects/BendEffects.apply) reading that spec for the wearer, its lock 0.9 s from the spec, the Ice Wall's pose for its cast,
-and a bot option for a wearer (a mud pool before a fire foe's floor fire).
+Mire (water.mud.mire) is a NEW MODE a worn talent adds (the tree's new skills on empty double taps, the owner's yes): its spec
+cannot go into moves.json (the Classic fingerprint lists every bend spec), so it is the node's own change `new:mire.spec`
+{move, mode, label, lock_s, pose_as, bend}. BendLoadout reads it for the wearer alone: `modes_added(body, m)` (SwayCaster.modes_of
+and Bending.other_move take an optional body: the keys, the strip, the wheel and a bot's options see the mode; with no body or
+nothing worn the same array as before), `new_spec(body, m, mode)` where a cast reads its spec (SwayCaster.spec_of and needs_ground,
+FormEffects.apply, BendCast.cast, NpcBending.spec_of), its lock_s in the lock part (SwayCaster._lock_time and NpcBending.lock_for
+as any node's lock), pose_as (BendPoses.pick: the Ice Wall's clip) and its label (SwayCaster.mode_label). Not worn, 4 tapped twice
+is the Ice Wall as ever. Its "Skate" source has nothing to act on in a ring match: no Skate reads a water source there. Online:
+a remote player's loadout is not on his puppet (the older limit), so a joiner's Mire is not made on the host yet.

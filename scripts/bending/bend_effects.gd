@@ -674,6 +674,8 @@ static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
 			var old := z as BendZone
 			if old != null and old.kind == zk and old.owner_node == p:
 				old.end()
+	if zk == "mud" and bool(spec.get("mire", false)):
+		spec["life_s"] = BendZone.mud_life(p)    # (Mire, a skill tree new skill: his mud's life, Delta's over the set's; BendZone.make)
 	var z := BendZone.make(p, zk, at, spec, way)
 	_cur["zone"] = z
 	_cur["zone_kind"] = z.kind

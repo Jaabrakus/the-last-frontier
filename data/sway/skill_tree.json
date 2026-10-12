@@ -4210,7 +4210,45 @@
         {
          "path": "new",
          "what": "water_shield bend 'mire': do zone, zone mud, at place (2-6 m), radius 3, life 8, lock 0.9, one at a time",
-         "where": "moves.json (new spec), BendZone mud, SwayCaster.modes_of (per body)"
+         "where": "new:mire.spec below (not moves.json: the Classic fingerprint lists every bend spec there), BendLoadout.modes_added / new_spec, SwayCaster.modes_of (per body), BendZone mud (MIRE_META)"
+        },
+        {
+         "path": "new:mire.spec",
+         "from": null,
+         "to": {
+          "move": "water_shield",
+          "mode": "mire",
+          "label": "Mire",
+          "lock_s": 0.9,
+          "pose_as": "ice_wall",
+          "bend": {
+           "do": "zone",
+           "zone": "mud",
+           "kind": "water",
+           "at": "place",
+           "mire": true,
+           "wall_key": true,
+           "place": {
+            "min_m": 2.0,
+            "max_m": 6.0
+           },
+           "radius_m": 3.0,
+           "life_s": 8.0,
+           "ai": {
+            "role": "control",
+            "range_m": [
+             4.0,
+             14.0
+            ],
+            "cool_s": 9.0,
+            "weight": 2.5,
+            "when": [
+             "foe_floor_fire"
+            ]
+           }
+          }
+         },
+         "note": "the new mode itself, the wearer's alone (BendLoadout's new modes): its bend spec, its lock (0.9 s, the move's 0.85 for the Ice Wall), the Ice Wall's pose; life_s is his mud's (Delta's 6.5 over the set's 8); ai is a bot's hint (a wearer lays it against a foe whose kit has floor fire)"
         },
         {
          "path": "move:earth_wall.wall.rise_s",

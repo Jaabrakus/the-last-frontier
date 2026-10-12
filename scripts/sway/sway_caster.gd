@@ -820,7 +820,7 @@ func key3_press() -> bool:
 ## Key 3's lock turned to the key's other move (a second tap within key3_min_s), the time kept; its pose shown
 ## switch_hold_s before it may go, and never before key3_min_s from the first press.
 func _dash_switch(key: Array) -> void:
-	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")))
+	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")), player)
 	if nxt.is_empty():
 		return
 	var spent := fill * lock_s
@@ -903,11 +903,13 @@ func frozen() -> bool:
 ## Terrain and restorative moves need the caster grounded. A hotbar key is not a terrain rule: Fire Breath shares the
 ## wall key but is an aimed attack. Keep the Form wall/Lift/mend and explicit ground effects grounded, while projectiles,
 ## cones, held attacks, guards and the Slam retain their existing airborne behavior. The caller gates this to round 3.
-static func needs_ground(m: String, mode: String) -> bool:
+static func needs_ground(m: String, mode: String, body: Object = null) -> bool:
 	if m in ["earth_wall", "pillar", "mend", "patch", "fire_wall"]:
 		return true
 	var modes: Dictionary = SwayMoves.move(m).get("bend", {})
 	var spec: Dictionary = modes.get(mode, {})
+	if spec.is_empty() and body != null:
+		spec = BendLoadout.new_spec(body, m, mode)    # (a new mode a worn talent adds: Mire, on the wall's key)
 	return bool(spec.get("wall_key", false)) or String(spec.get("do", "")) in [
 			"ice_wall", "wind_wall", "column", "ramp", "shell", "spout", "draw", "freeze_water", "heal"]
 
@@ -922,7 +924,7 @@ func _cast_wait() -> bool:
 	var rm := RingMoves.of(player)
 	if rm != null and not rm.can_cast():
 		return true
-	return move != "" and needs_ground(move, mode_of(move)) and airborne()
+	return move != "" and needs_ground(move, mode_of(move), player) and airborne()
 
 
 ## The key (0-based) holding move `m` for the player's element (-1 none).
@@ -1210,9 +1212,14 @@ func keeps_weapon(id: String) -> bool:
 
 
 # ---------------------------------------------------------------- modes
-## Move `id`'s modes as the ring's kits offer them (moves.json "modes": the element's keys, Bending, the HUD, the bots).
-static func modes_of(id: String) -> Array:
-	return SwayMoves.move(id).get("modes", [])
+## Move `id`'s modes as the ring's kits offer them (moves.json "modes": the element's keys, Bending, the HUD, the bots). `body`:
+## with the new modes the talents it wears add after them (BendLoadout.modes_added: Mire on water's 4; Classic the same array).
+static func modes_of(id: String, body: Object = null) -> Array:
+	var ms: Array = SwayMoves.move(id).get("modes", [])
+	if body == null:
+		return ms
+	var add := BendLoadout.modes_added(body, id)
+	return ms if add.is_empty() else ms + add
 
 
 ## Move `id`'s modes in the open world: "world_modes" where round 2's kits offer fewer of a spell the open world shares
@@ -1225,7 +1232,7 @@ static func world_modes_of(id: String) -> Array:
 
 ## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
 func my_modes(id: String) -> Array:
-	return modes_of(id) if elem() else world_modes_of(id)
+	return modes_of(id, player) if elem() else world_modes_of(id)
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
@@ -1297,7 +1304,12 @@ func step_mode(dir: int) -> String:
 
 
 static func mode_label(id: String, m: String) -> String:
-	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
+	var ls: Dictionary = SwayMoves.move(id).get("mode_labels", {})
+	if not ls.has(m):
+		var nl := BendLoadout.new_mode_label(id, m)       # (a new mode a skill tree talent adds: "Mire")
+		if nl != "":
+			return nl
+	return String(ls.get(m, m))
 
 
 ## Mode `m`'s name in the open world ("world_mode_labels" where it has its own: "boulder", "free"), else mode_label.
@@ -2476,7 +2488,12 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 ## Move `m`'s bend spec at its mode now ({} none: an old mode, a scripted lock).
 func spec_of(m: String) -> Dictionary:
 	var b: Variant = SwayMoves.move(m).get("bend", {})
-	var s: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	var md := mode_of(m)
+	var s: Variant = (b as Dictionary).get(md, {}) if b is Dictionary else {}
+	if s is Dictionary and (s as Dictionary).is_empty():
+		var ns := BendLoadout.new_spec(player, m, md)      # (a new mode a worn talent adds: Mire; Classic {})
+		if not ns.is_empty():
+			return ns
 	return s if s is Dictionary else {}
 
 
@@ -2594,7 +2611,7 @@ func step_other() -> bool:
 	var k := Bending.key_of(el, move)
 	if k < 0:
 		return false
-	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move))
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move), player)
 	if nxt.is_empty():
 		return false
 	var keep := [readied_spell, String(modes.get(String(nxt.id), ""))]
@@ -2767,7 +2784,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 	if state == State.LOCKING:
 		if not on:
 			return                            # (the grace: the ring flickers and waits)
-		if r3() and needs_ground(move, mode_of(move)) and airborne():
+		if r3() and needs_ground(move, mode_of(move), player) and airborne():
 			return                                # (terrain spells wait for the ground, the fill kept)
 		var rate := 1.0 / lock_s
 		var hs := _hspeed()

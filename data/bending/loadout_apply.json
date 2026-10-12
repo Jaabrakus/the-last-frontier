@@ -21,6 +21,7 @@
   "enabled": true,
   "classic_style": false,
   "nodes": {
+    "water.mud.mire": true,
     "water.mud.delta": true,
     "water.mud.mound": true,
     "water.mud.mudslide": true,
@@ -88,7 +89,8 @@
     "water.mud.lash": "BendBolt.meet (fire smothered, no steam), BendBolt.launch (clods); its numbers over the set's",
     "water.mud.mudslide": "BendEffects._wave_talents (a 2 m mud pool where the cone ends)",
     "water.mud.mound": "BendEffects.spout, _mud_mound (a low mud mound, 2 at once, never a wall)",
-    "water.mud.delta": "SwayCaster.passive_fill, BendZone.in_own_mud / home_fill, NpcBending.tick; set:mud.pool_life_s"
+    "water.mud.delta": "SwayCaster.passive_fill, BendZone.in_own_mud / home_fill, NpcBending.tick; set:mud.pool_life_s",
+    "water.mud.mire": "a new mode on water_shield (4 tapped twice): BendLoadout.modes_added / new_spec (new:mire.spec), SwayCaster.modes_of / spec_of, Bending.other_move, FormEffects.apply, BendCast.cast, BendEffects.zone, BendZone.make (MIRE_META), BendPoses.pick (pose_as), NpcBending options (foe_floor_fire)"
   },
   "live": [
     "air.ball.dense",
@@ -128,7 +130,8 @@
     "water.mud.lash",
     "water.mud.mudslide",
     "water.mud.mound",
-    "water.mud.delta"
+    "water.mud.delta",
+    "water.mud.mire"
   ],
   "styles_live": ["boxing"]
 }

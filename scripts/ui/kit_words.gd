@@ -60,8 +60,9 @@ static func _first_mode(id: String) -> String:
 	return String(ms[0]) if not ms.is_empty() else ""
 
 
-## Key `i` (0-based) of element `el`: its moves, the first then the one a second tap readies ([{id, mode}], one or two).
-static func key_moves(el: String, i: int) -> Array:
+## Key `i` (0-based) of element `el`: its moves, the first then the one a second tap readies ([{id, mode}], one or two). `body`:
+## the player's, whose worn talents may add a mode to a one-move key (SwayCaster.modes_of: Mire on water's 4).
+static func key_moves(el: String, i: int, body: Object = null) -> Array:
 	var keys := Bending.keys(el)
 	if i < 0 or i >= keys.size():
 		return []
@@ -71,7 +72,7 @@ static func key_moves(el: String, i: int) -> Array:
 	if k.is_empty():
 		return []
 	var id := String(k[0])
-	var ms := SwayCaster.modes_of(id)
+	var ms := SwayCaster.modes_of(id, body)
 	if ms.size() >= 2:
 		return [{"id": id, "mode": String(ms[0])}, {"id": id, "mode": String(ms[1])}]
 	return [{"id": id, "mode": _first_mode(id)}]

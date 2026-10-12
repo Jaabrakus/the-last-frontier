@@ -84,7 +84,7 @@ func held_move() -> Vector2:
 
 
 func mode_of(id: String) -> String:
-	var ms := SwayCaster.modes_of(id)
+	var ms := SwayCaster.modes_of(id, body)
 	var m := String(modes.get(id, ""))
 	if m in ms:
 		return m

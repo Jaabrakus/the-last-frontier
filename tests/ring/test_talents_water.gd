@@ -2,7 +2,8 @@ extends SceneTree
 ## Water's talents in a real ring match (the owner, 2026-10-11: "we need to make sure all the talents work and they work in game
 ## right"): a 1v1 % ring, the player water against a fire bot; each talent worn by one fighter alone, played through the game's own
 ## code (BendEffects.apply's casts, the bolts' flight, the zones, the walls), worn and not worn, and a bot wearing it:
-##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_talents_water.gd
+##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_talents_water.gd [-- only=<name>[,<name>...]]
+##                    (only: those checks alone, by their function's name without the underscore: mire, delta, mud_set ...)
 ##   each             live (BendLoadout.why_not ""), every water id of loadout_apply.json's behaviour map
 ##   Thick Ice        the Ice Wall raised and shot with ice: worn it takes 4 hits and rises in 0.8 s (Classic 3, 0.7 s); a bot
 ##                    wearing it raises the same; switched on in loadout_apply.json
@@ -39,10 +40,15 @@ extends SceneTree
 ##                    Kick's fire stops at it, a body stands on it, two at once; the Geyser launches lower; a bot's own
 ##   Delta            (with the set) his mud lasts 6.5 s; in his own mud his locks fill x1.15 (another's or dry x1): the Lash's
 ##                    real lock 0.400 s for 0.467; a bot's tick takes the same
+##   Mire             (with the set) the player's real 4 tapped twice readies it (the strip shows it); its lock (0.9 for the Ice
+##                    Wall's 0.85) let go lays a 3 m mud pool of his for 8 s 6 m on where he aims (2-6), a pool, cast with the Ice
+##                    Wall's pose; one at a time beside his four other pools; a Kick's floor fire dies in it; his Geyser's source;
+##                    his Ice Wall rises in 0.8 s; Delta's 6.5 s; not worn 4 twice is the Ice Wall; a bot's lock and its own Mire,
+##                    laid against a foe with floor fire (never a water foe, never unworn)
 ## Last line "TALENTS WATER PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS WATER"
-const LIMIT_S := 400.0
+const LIMIT_S := 520.0
 
 var checks := 0
 var fails: Array[String] = []
@@ -84,6 +90,14 @@ func _end() -> void:
 			print("  FAIL " + f)
 		print("%s FAILED (%d of %d)" % [NAME, fails.size(), checks])
 		quit(1)
+
+
+## Whether check `name` runs (every one, unless the user args say only=...).
+func _on(name: String) -> bool:
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("only="):
+			return name in a.substr(5).split(",")
+	return true
 
 
 func _ticks(n: int) -> void:
@@ -265,22 +279,40 @@ func _run() -> void:
 	for id: String in BendLoadout.behaviour():
 		if id.begins_with("water."):
 			_expect(BendLoadout.why_not(id) == "", "%s is live (%s)" % [id, BendLoadout.why_not(id)])
-	await _thick_ice()
-	await _washout()
-	await _splashdown()
-	await _steamcraft()
-	await _cleanse()
-	await _whirl()
-	await _eddy()
-	await _pooling()
-	await _ride()
-	await _wet_trail()
-	await _wellspring()
-	await _mud_set()
-	await _mud_lash()
-	await _mudslide()
-	await _mud_mound()
-	await _delta()
+	if _on("thick_ice"):
+		await _thick_ice()
+	if _on("washout"):
+		await _washout()
+	if _on("splashdown"):
+		await _splashdown()
+	if _on("steamcraft"):
+		await _steamcraft()
+	if _on("cleanse"):
+		await _cleanse()
+	if _on("whirl"):
+		await _whirl()
+	if _on("eddy"):
+		await _eddy()
+	if _on("pooling"):
+		await _pooling()
+	if _on("ride"):
+		await _ride()
+	if _on("wet_trail"):
+		await _wet_trail()
+	if _on("wellspring"):
+		await _wellspring()
+	if _on("mud_set"):
+		await _mud_set()
+	if _on("mud_lash"):
+		await _mud_lash()
+	if _on("mudslide"):
+		await _mudslide()
+	if _on("mud_mound"):
+		await _mud_mound()
+	if _on("delta"):
+		await _delta()
+	if _on("mire"):
+		await _mire()
 	_end()
 
 
@@ -1235,3 +1267,239 @@ func _delta() -> void:
 	var bf0 := BendZone.home_fill(foe)
 	_wear(foe, [])
 	_expect(_near(bf, 1.15) and _near(bf0, 1.0), "Delta on a bot: its lock fills x%.2f in its own mud, x%.2f out of it (NpcBending.tick)" % [bf, bf0])
+
+
+# ---------------------------------------------------------------- Mire
+## The player's real key 4 tapped twice (Hotbar.select twice: the double tap, Bending.other_move), then the aim held to the click
+## and let go (SwayCaster's own lock and cast; the crosshair on the foe 10 m off): {mode (what the double tap readied), lock (s),
+## mud (the mud pool of his it made, read at once: radius, life, along (m from him toward the foe), pool, mire), wall (an Ice Wall
+## of his rose)}.
+func _mire_by_keys() -> Dictionary:
+	await _face_off(10.0)
+	var sc := SwayCaster.of(player)
+	for i in 180:
+		if sc.state == SwayCaster.State.IDLE and not sc._cast_wait() and player.is_on_floor():
+			break
+		await physics_frame
+	sc._wait_release = false
+	player.hotbar.select(3)
+	player.hotbar.select(3)                          # (the same key again within double_tap_s: its other move)
+	await _ticks(3)
+	var out := {"mode": sc.base_mode_of("water_shield") if sc.readied_spell == "water_shield" else "", "lock": -1.0, "mud": {}, "wall": false}
+	var before := _zones("mud")
+	var w0 := _newest_wall(player)
+	var from := player.global_position
+	var way := foe.global_position - from
+	way.y = 0.0
+	way = way.normalized()
+	sc.held_override = true
+	for i in 240:
+		await physics_frame
+		if sc.state != SwayCaster.State.IDLE and float(out.lock) < 0.0:
+			out.lock = sc.lock_s
+		if sc.state == SwayCaster.State.FULL:
+			break
+	sc.held_override = false
+	await _ticks(3)
+	sc.held_override = null
+	var z := _new_zone("mud", before, player)
+	if z != null:
+		out.mud = {"radius": z.radius, "life": z.life_s, "along": (z.global_position - from).dot(way), "pool": z.is_in_group(Bending.POOLS),
+				"mire": z.has_meta(BendZone.MIRE_META)}
+	var w := _newest_wall(player)
+	out.wall = w != null and w != w0
+	if w != null and w != w0:
+		w.crumble("test")
+	await _secs(0.8)
+	return out
+
+
+func _flat(a: Node3D, b: Node3D) -> float:
+	return Vector2(a.global_position.x - b.global_position.x, a.global_position.z - b.global_position.z).length()
+
+
+## The wearer's Mire cast as the game casts it (BendEffects.apply of his new mode's spec), aimed at the foe: the pool it made.
+func _mire_now(by: Node3D) -> BendZone:
+	var before := _zones("mud")
+	BendEffects.apply(BendCaster.of(by), "water_shield", "mire", BendLoadout.new_spec(by, "water_shield", "mire"))
+	return _new_zone("mud", before, by)
+
+
+func _mire() -> void:
+	var mi := ["water.set.mud", "water.mud.mire"]
+	_wear(player, mi)
+	var hud := KitWords.key_moves("water", 3, player)
+	var w: Dictionary = await _mire_by_keys()
+	_wear(player, ["water.set.mud"])
+	var hud0 := KitWords.key_moves("water", 3, player)
+	var set_refused := not SwayCaster.of(player).set_mode("water_shield", "mire")
+	var c: Dictionary = await _mire_by_keys()
+	_wear(player, [])
+	var m: Dictionary = w.mud
+	_expect(String(w.mode) == "mire" and not m.is_empty() and _near(m.get("radius"), 3.0) and _near(m.get("life"), 8.0)
+			and absf(float(m.get("along", -1.0)) - 6.0) < 0.6 and bool(m.get("pool", false)) and bool(m.get("mire", false)),
+			"Mire: 4 tapped twice readies it; its lock let go lays a 3 m mud pool of his for 8 s where he aims (%.1f m on, 2-6), a source (%s)"
+			% [float(m.get("along", -1.0)), w])
+	_expect(String(c.mode) == "ice_wall" and (c.mud as Dictionary).is_empty() and bool(c.wall) and set_refused,
+			"Mire not worn (the set alone): 4 tapped twice is the Ice Wall, no mud (%s); the mode cannot be set" % [c])
+	_expect(float(c.lock) > 0.0 and absf(float(w.lock) / float(c.lock) - 0.9 / 0.85) < 0.01,
+			"Mire's lock %.3f s for the Ice Wall's %.3f (0.9 for 0.85)" % [float(w.lock), float(c.lock)])
+	_expect(hud.size() == 2 and String(hud[1].mode) == "mire" and KitWords.move_name("water_shield", "mire") == "Mire" and hud0.size() == 1,
+			"Mire: the strip and the wheel show 4's tap twice as Mire for the wearer (%s), nothing for another (%s)" % [hud, hud0])
+	# the Ice Wall's pose for it, the wearer's alone
+	_wear(player, mi)
+	var clip := String(BendPoses.pick("water_shield", "mire", "water", player).get("clip", ""))
+	var iw := String(BendPoses.pick("water_shield", "ice_wall", "water", player).get("clip", ""))
+	_wear(player, ["water.set.mud"])
+	var clip0 := String(BendPoses.pick("water_shield", "mire", "water", player).get("clip", ""))
+	_expect(clip != "" and clip == iw and clip0 == "", "Mire is cast with the Ice Wall's pose (%s); not worn there is no such cast (%s)" % [clip, clip0])
+	# one at a time; his other mud pools stay and the Mire is not one of the set's four
+	_wear(player, mi)
+	await _face_off(10.0)
+	for i in 4:
+		_pool_at(player, home + Vector3(float(i) * 1.5 - 2.0, 0.0, -3.0), 1.0)
+	var first := _mire_now(player)
+	await _ticks(2)
+	var first_up := first != null and is_instance_valid(first) and not first.is_queued_for_deletion()
+	var second := _mire_now(player)
+	await _ticks(2)
+	var n_mire := 0
+	var n_mud := 0
+	for z: BendZone in _zones("mud").values():
+		if z.owner_node == player:
+			n_mud += 1
+			n_mire += 1 if z.has_meta(BendZone.MIRE_META) else 0
+	var first_gone := first == null or not is_instance_valid(first) or first.is_queued_for_deletion()
+	_expect(first_up and second != null and first_gone and n_mire == 1 and n_mud == 5,
+			"Mire: one at a time (a second dries the first: %s), his four other mud pools stay beside it (%d of his)" % [first_gone, n_mud])
+	await _end_pools()
+	# floor fire dies in it: the foe's Kick at him across his Mire
+	await _face_off(10.0)
+	RingRules.current().reset_pct(player, 0.0)
+	_mire_now(player)
+	await _ticks(2)
+	BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
+	await _secs(1.0)
+	var kick_w := RingRules.current().pct_of(player)
+	RingRules.current().reset_pct(player, 0.0)
+	await _end_pools()
+	await _face_off(10.0)
+	BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
+	await _secs(1.0)
+	var kick_c := RingRules.current().pct_of(player)
+	RingRules.current().reset_pct(player, 0.0)
+	_expect(is_zero_approx(kick_w) and kick_c > 0.0, "Mire: a Kick's floor fire dies in it (+%.1f%%); with none it hits (+%.1f%%)" % [kick_w, kick_c])
+	# his water: the Geyser's source there (the grates out of the pools meanwhile)
+	await _face_off(10.0)
+	var grates: Array = get_nodes_in_group(Bending.POOLS).filter(func(n: Node) -> bool: return not (n is BendZone))
+	for g: Node in grates:
+		g.remove_from_group(Bending.POOLS)
+	var mz := _mire_now(player)
+	var made := mz != null
+	await _ticks(2)
+	if mz != null:
+		foe.global_position = Vector3(mz.global_position.x, foe.global_position.y, mz.global_position.z)
+		foe.velocity = Vector3.ZERO
+	await _ticks(3)
+	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	var src := bool(BendEffects.last_of(pc).get("source", false))
+	if mz != null and is_instance_valid(mz):
+		mz.end("test")
+	await _secs(0.5)
+	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	var src0 := bool(BendEffects.last_of(pc).get("source", false))
+	for g: Node in grates:
+		g.add_to_group(Bending.POOLS)
+	_expect(made and src and not src0, "Mire: his Geyser's source (over it %s, without it %s)" % [src, src0])
+	await _secs(1.0)
+	# the trade: his Ice Wall rises in 0.8 s; with Delta his Mire lasts 6.5 s
+	await _face_off(10.0)
+	BendEffects.apply(pc, "water_shield", "ice_wall", SwayMoves.move("water_shield").bend.ice_wall)
+	var iwall := _newest_wall(player)
+	var rise := iwall.rise_s if iwall != null else -1.0
+	if iwall != null:
+		iwall.crumble("test")
+	_wear(player, ["water.set.mud", "water.mud.delta", "water.mud.mire"])
+	var dz := _mire_now(player)
+	var dlife := dz.life_s if dz != null else -1.0
+	_wear(player, [])
+	await _end_pools()
+	_expect(_near(rise, 0.8) and _near(dlife, 6.5), "Mire's trade: his Ice Wall rises in %.2f s (0.7); with Delta his Mire lasts %.1f s" % [rise, dlife])
+	await _secs(1.0)
+	# a bot wearing it: its lock (lock_for), its own Mire toward its foe, and it lays one against a foe whose kit has floor fire only
+	var nb: NpcBending = foe.brain.bending if foe.brain != null else null
+	_wear(foe, mi)
+	var bl := NpcBending.lock_for("water_shield", "mire", "normal", 0.0, foe)
+	var bl0 := NpcBending.lock_for("water_shield", "ice_wall", "normal", 0.0, foe)
+	await _face_off(10.0)
+	var bz: BendZone = null
+	var b_along := -1.0
+	if nb != null:
+		var before := _zones("mud")
+		var bfrom := foe.global_position
+		nb.begin("water_shield", "mire")
+		nb._release()
+		bz = _new_zone("mud", before, foe)
+		if bz != null:
+			var bway := player.global_position - bfrom
+			bway.y = 0.0
+			b_along = (bz.global_position - bfrom).dot(bway.normalized())
+	_expect(absf(bl / maxf(bl0, 0.001) - 0.9 / 0.85) < 0.01 and bz != null and bz.has_meta(BendZone.MIRE_META) and b_along >= 1.9 and b_along <= 6.1,
+			"Mire on a bot: its lock x%.3f the Ice Wall's, its own Mire %.1f m on toward its foe" % [bl / maxf(bl0, 0.001), b_along])
+	await _end_pools()
+	var picks: Array = []                            # [vs a fire foe, vs a water foe, not worn vs fire]
+	var loose: Array = [0, false]                    # [its Mires let loose on a fire foe, one of its lay there]
+	if nb != null:
+		var keep_el := [nb.element, foe.get(&"element"), Bending.of(foe).element, Bending.of(player).element]
+		nb.element = "water"
+		foe.set(&"element", "water")
+		Bending.of(foe).element = "water"
+		var seen_was: bool = foe.brain.seen_now
+		for run: Array in [[mi, "fire"], [mi, "water"], [[], "fire"]]:
+			_wear(foe, run[0] as Array)
+			nb._build_options()
+			Bending.of(player).element = String(run[1])
+			await _face_off(8.0)
+			var n := 0
+			for i in 300:
+				nb._cool.clear()
+				foe.brain.seen_now = true
+				var pk := nb._choose(player, 8.0)
+				n += 1 if String(pk.get("key", "")) == "water_shield/mire" else 0
+			picks.append(n)
+		# its own play, let loose on him (a fire foe) for up to 20 s: it lays a Mire of its own (his % kept at 0 meanwhile)
+		_wear(foe, mi)
+		nb._build_options()
+		Bending.of(player).element = "fire"
+		await _face_off(9.0)
+		var n0 := int(nb.casts_by.get("water_shield/mire", 0))
+		var all0 := nb.casts_by.duplicate()
+		var before_l := _zones("mud")
+		foe.held = false
+		for i in ceili(20.0 * Engine.physics_ticks_per_second):
+			await physics_frame
+			RingRules.current().reset_pct(player, 0.0)
+			if int(nb.casts_by.get("water_shield/mire", 0)) > n0:
+				break
+		foe.held = true
+		var laid := _new_zone("mud", before_l, foe)
+		var others := {}
+		for k: String in nb.casts_by:
+			if int(nb.casts_by[k]) > int(all0.get(k, 0)):
+				others[k] = int(nb.casts_by[k]) - int(all0.get(k, 0))
+		loose = [int(nb.casts_by.get("water_shield/mire", 0)) - n0, laid != null and laid.has_meta(BendZone.MIRE_META), others,
+				"brain %d mind %d seen %s d %.1f" % [foe.brain.state, nb.mind().state, foe.brain.seen_now, _flat(foe, player)]]
+		nb._cancel()
+		await _secs(0.5)
+		foe.brain.seen_now = seen_was
+		nb.element = String(keep_el[0])
+		foe.set(&"element", keep_el[1])
+		Bending.of(foe).element = String(keep_el[2])
+		Bending.of(player).element = String(keep_el[3])
+		_wear(foe, [])
+		nb._build_options()
+	_expect(picks.size() == 3 and int(picks[0]) > 0 and int(picks[1]) == 0 and int(picks[2]) == 0,
+			"Mire on a bot: it lays one against a foe with floor fire (%s of 300 picks), never against a water foe or unworn" % [picks])
+	_expect(int(loose[0]) >= 1 and bool(loose[1]), "Mire on a bot let loose on a fire foe: its own play lays one (%s)" % [loose])
+	await _end_pools()
+	await _face_off(10.0)

@@ -66,7 +66,8 @@ extends Node3D
 ## wearer's puddles made mud pools, mud_life long, pools_per_caster; floor fire dies in it, a fire wall over it burns 2 s and dries
 ## it, a seam over it is quenched, a rolling stone stops; nobody slowed), gas (the Sulphur set's cloud, earth's: Washout's bolts and
 ## Cleanse's Turn wash it out: wash), a Turn's Whirl (a held swing: whirl_held) and Eddy (report, eddy_fill), Steamcraft's drifting
-## steam, Wellspring's own water (in_own_water), Delta's home ground (in_own_mud, home_fill).
+## steam, Wellspring's own water (in_own_water), Delta's home ground (in_own_mud, home_fill), Mire's placed mud pool (one of his
+## at a time, never one of the set's pools_per_caster: MIRE_META).
 
 const GROUP := &"bend_zones"
 const LIGHT := ["fire", "water", "ice", "air"]
@@ -98,6 +99,9 @@ const EDDY_MOVES := ["water_whip", "ice"]
 ## Water's Mud set (a skill tree skill set): its wearer's puddles are mud pools (make, _mud_every, on_bolt); Delta, its home
 ## ground passive: his locks fill DELTA_FILL faster standing in his own mud (in_own_mud: SwayCaster.passive_fill, a bot's tick).
 const MUD_SET := "water.set.mud"
+## Mire (a skill tree new skill on 4 tapped twice; its spec's mire): a mud pool of his he places, one at a time (a second dries the
+## first; his other mud pools stay), not counted among the set's pools_per_caster.
+const MIRE_META := &"bend_mire"
 const DELTA := "water.mud.delta"
 const DELTA_FILL := 1.15
 ## Guard results by element, for the soak and the HUD: {element: {perfect, late, whiff}}.
@@ -156,6 +160,9 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 		p_kind = "mud"
 		spec = spec.duplicate()
 		spec["life_s"] = mud_life(by)
+	var mire := p_kind == "mud" and bool(spec.get("mire", false))
+	if mire:
+		_end_mire(by)                            # (Mire: one of his at a time; BendEffects.zone gave it his mud's life)
 	var z := BendZone.new()
 	z.name = "BendZone_" + p_kind
 	z.kind = p_kind
@@ -187,6 +194,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	if p_kind in ["puddle", "mud"]:
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)
+	if mire:
+		z.set_meta(MIRE_META, true)
 	NetSpells.tag(z)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(z)
 	var x := Vector3.UP.cross(z.way).normalized()
@@ -711,12 +720,20 @@ static func _cap_mud(by: Node) -> void:
 	var mine: Array[BendZone] = []
 	for z in by.get_tree().get_nodes_in_group(GROUP):
 		var m := z as BendZone
-		if m != null and m.kind == "mud" and m.owner_node == by and not m.is_queued_for_deletion():
+		if m != null and m.kind == "mud" and m.owner_node == by and not m.is_queued_for_deletion() and not m.has_meta(MIRE_META):
 			mine.append(m)
 	mine.sort_custom(func(a: BendZone, b: BendZone) -> bool: return a.get_instance_id() < b.get_instance_id())
 	var cap := int(_mud_rule("pools_per_caster", 4.0))
 	while mine.size() > cap:
 		mine.pop_front().end("dried")
+
+
+## `by`'s Mire dried up (a new one placed: one at a time).
+static func _end_mire(by: Node) -> void:
+	for z in by.get_tree().get_nodes_in_group(GROUP):
+		var m := z as BendZone
+		if m != null and m.kind == "mud" and m.owner_node == by and m.has_meta(MIRE_META) and not m.is_queued_for_deletion():
+			m.end("dried")
 
 
 ## A mud pool each tick (see the set): a fire wall or burning ground over it burns fire_wall_life_on_mud_s from its making at
