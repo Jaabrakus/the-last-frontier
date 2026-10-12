@@ -234,10 +234,6 @@ const SRC_GUARD := "guard"
 const SRC_DASH := "dash"
 ## Round 3: the shortest lock the jab step leaves (s).
 const MIN_LOCK_S := 0.05
-## The Beat (data/sway/skill_tree.json beat.window_s; the owner's yes 2026-10-11): a held cast let go within this of its lock
-## filling (never a click, a guard, key 3, Patch, or a cast that goes by itself) is on the Beat: BendR3.release beat while it
-## lands. Only a worn technique pays it (Ride the Wave: BendEffects._wave_talents); with none worn it does nothing.
-const BEAT_S := 0.2
 ## Water's Wellspring (a skill tree enhance): Patch's ring lock by where its wearer stands (_lock_time).
 const WELLSPRING := "water.patch.wellspring"
 ## The control schemes' data (MatchSetup.schemes_data; see the header's schemes).
@@ -3143,8 +3139,12 @@ func _cast() -> void:
 		if jbc != null:
 			jbc.jab_step_until = -INF             # (round 3: the step spent by this jab; its own hit owes the next one's)
 	var rel := {"air": airborne(), "at": BendStatus.now()} if r3_on else {}
-	if r3_on and state == State.FULL and not _queued and src in [SRC_AIM, SRC_QUICK] and full_t <= BEAT_S:
-		rel["beat"] = true                        # (the Beat: held, let go within BEAT_S of the click; only a worn technique pays it)
+	if r3_on and state == State.FULL and not _queued and src in [SRC_AIM, SRC_QUICK] and full_t <= BendLoadout.beat_s() \
+			and BendLoadout.beat_paid(player):
+		# (the Beat, data/sway/skill_tree.json beat (the owner's yes 2026-10-11): a held cast let go within beat_s of its lock
+		# filling, never a click, a guard, key 3 or Patch; only for a wearer of a technique it pays (BendLoadout.beat_paid: Ride
+		# the Wave), where it pays (BendEffects._wave_talents: its flash on his own hands). Classic: never)
+		rel["beat"] = true
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

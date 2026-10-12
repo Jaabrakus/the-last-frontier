@@ -503,6 +503,9 @@ static func _wave_talents(p: Node3D, flat: Vector3, r: float) -> void:
 			and (p as CharacterBody3D).is_on_floor():
 		BendMotion.of(p as CharacterBody3D).ride(flat, RIDE_M, RIDE_S)
 		BendLooks.burst(p.global_position + Vector3.UP * 0.1, "water", 18, -flat + Vector3.UP * 0.4, 60.0, 3.0, 0.3)
+		# (the Beat's cue, the tree's beat.cue: a click and a brief flash on his own hands, his alone; nothing on anyone else)
+		var sc := SwayCaster.of(p)
+		BendLooks.beat_flash(sc if sc != null else p, "water")
 		_cur["ride"] = true
 
 
@@ -591,7 +594,7 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 		var start := p.global_position
 		BendZone.make(p, "burn", start + dir * 3.0, {"width_m": 1.4, "height_m": 0.4, "thick_m": 6.0, "life_s": 3.0, "damage_s": 10.0}, dir)
 	if spec.get("puddles") is Dictionary and BendLoadout.wears(p, WET_TRAIL):
-		_wet_trail(p, dir, spec.puddles as Dictionary)
+		_wet_trail(p, dir, spec.puddles as Dictionary, fwd)
 	if bool(spec.get("shove", false)):
 		for e in BendCaster.near(p, p.global_position + dir * 2.0, 3.0):
 			var n: Node3D = e[0]
@@ -600,27 +603,46 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 
 
 ## Wet Trail (a skill tree enhance): the Skate's puddles (its spec's puddles: count, life_s, radius_m; the wearer's numbers) laid
-## at his feet as he slides, WET_TRAIL_EVERY_S apart from the start: his water, Geyser sources (his mud with the Mud set). The
-## Skate leaves none for anyone who does not wear it (Classic made none: the data's puddles were never made).
+## at his feet along his slide: the first where he sets off, then one each time he has slid a step (the Skate's own reach, its
+## fwd_mps over the dash's WET_TRAIL_CARRY_S carry, shared over the count), the last no later than where the slide ends (slower
+## than WET_TRAIL_STOP_MPS, or WET_TRAIL_MAX_S on): new ground each, never two on one spot (a slide cut short, at the lip, lays
+## fewer). His water, Geyser sources (his mud with the Mud set). The Skate leaves none for anyone who does not wear it (Classic made
+## none: the data's puddles were never made).
 const WET_TRAIL := "water.skate.wet_trail"
-const WET_TRAIL_EVERY_S := 0.18
-static func _wet_trail(p: CharacterBody3D, dir: Vector3, pd: Dictionary) -> void:
+const WET_TRAIL_CARRY_S := 0.25                   # (dash: BendMotion.carry's 0.25 s)
+const WET_TRAIL_STOP_MPS := 1.0
+const WET_TRAIL_MAX_S := 1.0
+static func _wet_trail(p: CharacterBody3D, dir: Vector3, pd: Dictionary, fwd: float) -> void:
 	var n := int(pd.get("count", 3))
 	var spec := {"radius_m": float(pd.get("radius_m", 1.2)), "life_s": float(pd.get("life_s", 6.0))}
+	var step := maxf(fwd * WET_TRAIL_CARRY_S / float(maxi(n - 1, 1)), 0.5)
 	var nctx := NetSpells.ctx()                   # (online: the later puddles named in its cast's run, NetSpells)
-	for i in n:
-		var lay := func() -> void:
-			if not is_instance_valid(p) or not p.is_inside_tree():
-				return
-			var g := FormEffects.ground_at(p, p.global_position)
-			if p.global_position.y - g.y > 1.0:
-				return                            # (off the deck in the air: nothing to lie on)
-			BendLooks.burst(g + Vector3.UP * 0.05, "water", 8, Vector3.UP, 60.0, 1.5, 0.2)
-			BendZone.make(p, "puddle", g, spec, dir)
-		if i == 0:
-			lay.call()
-		else:
-			p.get_tree().create_timer(WET_TRAIL_EVERY_S * i, false).timeout.connect(func() -> void: NetSpells.with(nctx, lay))
+	var st := {"n": 0, "last": p.global_position, "t": 0.0}
+	var lay := func() -> void:
+		if not is_instance_valid(p) or not p.is_inside_tree():
+			return
+		var g := FormEffects.ground_at(p, p.global_position)
+		if p.global_position.y - g.y > 1.0:
+			return                                # (off the deck in the air: nothing to lie on)
+		BendLooks.burst(g + Vector3.UP * 0.05, "water", 8, Vector3.UP, 60.0, 1.5, 0.2)
+		BendZone.make(p, "puddle", g, spec, dir)
+		st["n"] = int(st.n) + 1
+		st["last"] = p.global_position
+	lay.call()
+	var dt := 1.0 / float(Engine.physics_ticks_per_second)
+	var tick: Array = []
+	tick.append(func() -> void:
+		if int(st.n) >= n or not is_instance_valid(p) or not p.is_inside_tree():
+			return
+		st["t"] = float(st.t) + dt
+		var last: Vector3 = st.last
+		var slid := Vector2(p.global_position.x - last.x, p.global_position.z - last.z).length()
+		var done := float(st.t) >= WET_TRAIL_MAX_S or (float(st.t) > 0.1 and Vector2(p.velocity.x, p.velocity.z).length() < WET_TRAIL_STOP_MPS)
+		if slid >= step or (done and slid >= step * 0.5):
+			NetSpells.with(nctx, lay)
+		if not done and int(st.n) < n:
+			p.get_tree().create_timer(dt, false, true).timeout.connect(tick[0]))
+	p.get_tree().create_timer(dt, false, true).timeout.connect(tick[0])
 
 
 static func buff(c: Variant, spec: Dictionary) -> void:
@@ -743,8 +765,11 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
 	var rec := _cur
 	var mound := BendLoadout.wears(p, MOUND)
+	var wash := float(spec.get("bind_s", 0.0)) <= 0.0           # (a water column: Frost Geyser's ice throws no water up)
 	if rise <= 0.0:
 		status_at(p, at, s)
+		if wash:
+			_wash_gas(p, at, float(s.get("radius_m", 1.8)))
 		if mound:
 			_cur["mound"] = _mud_mound(p, at)
 		return
@@ -754,9 +779,25 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		var keep := _cur
 		_cur = rec
 		status_at(p, at, s)
+		if wash:
+			_wash_gas(p, at, float(s.get("radius_m", 1.8)))
 		if mound:
 			_cur["mound"] = _mud_mound(p, at)
 		_cur = keep)
+
+
+## The gas (a BendZone of kind gas: earth's Sulphur set's cloud) that a Geyser's water rising at `at` `r` m round reaches, whoever's,
+## washed away (the skill tree's Washed Ground: "a Wave or a Geyser washes out the gas it passes", for everyone; the Wave's cone is
+## the Sulphur set's own, BendGas.cone; Washout adds the Splash and Lash, Cleanse the Turn). No gas in a match (Classic, nobody
+## wearing the set): nothing.
+static func _wash_gas(p: Node3D, at: Vector3, r: float) -> void:
+	if not NetSpells.decides():
+		return                                    # (online the host's: its zone's end is told on)
+	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var g := z as BendZone
+		if g != null and g.kind == "gas" and not g.is_queued_for_deletion() and absf(g.global_position.y - at.y) < 3.0 \
+				and Vector2(g.global_position.x - at.x, g.global_position.z - at.z).length() <= r + g.radius:
+			g.wash()
 
 
 ## Mud Mound (a Mud set twist on the Geyser): the plug its water throws up settles where it rose as a low mound of mud
@@ -765,6 +806,8 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 const MOUND := "water.mud.mound"
 const MOUND_D := {"width_m": 1.5, "height_m": 0.7, "thick_m": 1.5, "life_s": 3.0, "rise_s": 0.2}
 const MOUNDS_PER_CASTER := 2
+## A mound's caster (instance id): its only mark (no bend_by: not his wall).
+const MOUND_META := &"bend_mound_by"
 static func _mud_mound(p: Node3D, at: Vector3) -> FormRaised:
 	var wd: Dictionary = SwayMoves.move("earth_wall").get("wall", {})
 	var wn := FormMatter.numbers(wd, FormMatter.entry("earth_wall", "mud"), "mud")
@@ -775,13 +818,14 @@ static func _mud_mound(p: Node3D, at: Vector3) -> FormRaised:
 	way = way.normalized() if way.length_squared() > 1e-4 else -p.global_basis.z
 	var x := Vector3.UP.cross(way).normalized()
 	var r := FormRaised.raise(p.get_tree().current_scene, "wall", Transform3D(Basis(x, Vector3.UP, way), at), wn, absi(hash(at)) % 97)
-	r.set_meta(&"bend_by", p.get_instance_id())
-	r.set_meta(&"bend_mound", true)
+	# (its owner under its own meta, never bend_by: every reader of "his raised wall" keys on bend_by (Mend's target, a bot's
+	# own wall and stone, Brace, the lessons' wall count, max_walls, the camera's own-wall fade), and a mound is none of them)
+	r.set_meta(MOUND_META, p.get_instance_id())
 	BendLooks.burst(at + Vector3.UP * 0.4, "stone", 14, Vector3.UP, 70.0, 2.5, 0.3)
 	var mine: Array[FormRaised] = []
 	for n in p.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var w := n as FormRaised
-		if w != null and w.has_meta(&"bend_mound") and int(w.get_meta(&"bend_by", 0)) == p.get_instance_id() \
+		if w != null and int(w.get_meta(MOUND_META, 0)) == p.get_instance_id() \
 				and w.state != FormRaised.State.CRUMBLING and not w.is_queued_for_deletion():
 			mine.append(w)
 	mine.sort_custom(func(a: FormRaised, b: FormRaised) -> bool: return a.get_instance_id() < b.get_instance_id())

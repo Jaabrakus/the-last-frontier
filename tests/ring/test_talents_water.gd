@@ -4,40 +4,45 @@ extends SceneTree
 ## code (BendEffects.apply's casts, the bolts' flight, the zones, the walls), worn and not worn, and a bot wearing it:
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_talents_water.gd [-- only=<name>[,<name>...]]
 ##                    (only: those checks alone, by their function's name without the underscore: mire, delta, mud_set ...)
-##   each             live (BendLoadout.why_not ""), every water id of loadout_apply.json's behaviour map
+##   each             live (BendLoadout.why_not ""), every water id of loadout_apply.json's behaviour map; Washout and Cleanse wait
+##                    for earth's Sulphur set (their switch names it: the only gas in the game is its), live once it is
 ##   Thick Ice        the Ice Wall raised and shot with ice: worn it takes 4 hits and rises in 0.8 s (Classic 3, 0.7 s); a bot
 ##                    wearing it raises the same; switched on in loadout_apply.json
-##   Washout          a gas cloud (the Sulphur set's interface: a BendZone of kind gas, made here) between them: the wearer's
-##                    Splash and Lash wash it out and fly on to hit; not worn it stays; a bot's too; his Splash adds 3.5 for 4
+##   Washout          (switched on here as it will be with the Sulphur set live) a gas cloud (the Sulphur set's interface: a
+##                    BendZone of kind gas, made here) between them: the wearer's Splash and Lash wash it out and fly on to hit;
+##                    not worn it stays; a bot's too; his Splash adds 3.5 for 4; anyone's Geyser rising in gas washes it
 ##   Splashdown       the wearer's Lash on him (and into a wall) leaves a 1.2 m puddle of his for 6 s where it stopped, his
 ##                    Geyser's source there (the grates out of the pools meanwhile); not worn none; a bot's own; Lash 8 for 9
 ##   Steamcraft       his Lash met head-on by fire: the steam is his, hangs 2.5 s and drifts 1.2 m a second toward his aim; not
 ##                    worn 1.5 s and still; a bot's drifts toward its foe
-##   Cleanse          his Turn washes out a gas cloud 1 m off, not one 7 m off; not worn none; a bot's too; the Turn's lock on E
-##                    (SwayCaster's guard lock) and a bot's x1.2
+##   Cleanse          (switched on as Washout) his Turn washes out a gas cloud 1 m off, not one 7 m off; not worn none; a bot's
+##                    too; the Turn's lock on the player's real E (0.24 s for 0.2) and a bot's x1.2
 ##   Whirl Turn       a perfect Turn on a water bolt: E held the water circles him 0.6 s, a tap 0.3 s; not worn 0.3 s; a late
 ##                    Turn lets 0.6 through (0.5); a bot holds it while its foe guards
 ##   Eddy             after a perfect Turn the Lash's real lock (key 1, the aim held) starts 0.4 full, 1.6 s after or not worn
 ##                    from nothing; his Turn's beat 0.25 s; a bot's next Lash lock begins 0.4 full
 ##   Pooling Wave     his Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends; not worn none; a bot's
-##                    own; his Wave hits launch lower (base 6.8 for 7.5, grown 7.6 for 8.4: RingRules.on_hit)
+##                    own; his Wave hits launch exactly as its class says (base 6.8 for 7.5, grown 7.6 for 8.4: RingRules.on_hit)
 ##   Ride the Wave    the player's real Wave (key 2, the aim held to the click): let go on the Beat it carries him 3 m on
-##                    behind the water; 0.3 s after the click, or not worn, none; its lock 0.65 s (0.6); a bot rides its Wave
-##                    in from 10 m, not from 4 (NpcBending._on_beat)
-##   Wet Trail        his Skate travels 10.8 m/s and leaves 4 puddles of his for 7.2 s along its way; not worn 12 m/s, none;
-##                    a bot's own
-##   Wellspring       Patch's ring lock (SwayCaster's, a bot's lock_for): 1.25 s in his own puddle or at a grate, 1.6 s dry or in
-##                    another's puddle (1.5)
+##                    behind the water, the Beat's flash on his own hands; 0.3 s after the click, or not worn, none; its lock
+##                    0.65 s (0.6); hit sideways 3 frames into the ride he is knocked as far as one standing (the ride ends);
+##                    the Beat flag only for a wearer (Classic never); a bot rides its Wave in from 10 m, not from 4, at its
+##                    difficulty's beat_rate (1: always, 0: never)
+##   Wet Trail        his Skate travels 10.8 m/s and leaves 4 puddles of his for 7.2 s spread along its slide (each 0.6 m on
+##                    at least, 2.4 m from first to last); not worn 12 m/s, none; a bot's own
+##   Wellspring       Patch's ring lock (the player's real key 5 held: SwayCaster's lock as it begins; a bot's lock_for): 1.25 s
+##                    in his own puddle or at a grate, 1.6 s dry or in another's puddle (1.5)
 ##   the Mud set      his Downpour leaves a mud pool of his for 8 s (a puddle for 6 not worn), still a pool; a Kick's floor fire
 ##                    dies in his mud and hits across a puddle; a Fire Wall over it burns 2 s and dries it in about 1 s; a
 ##                    rolling stone stops in it; a seam (the fire set's interface, a stand-in) is quenched; four pools of his at
 ##                    most; his Splash 25.2 and Lash 30.6 m/s (28, 34); a bot's Downpour its own mud
 ##   Mud Lash         (with the set) the Lash flies 28 m/s; fire it meets is smothered, no steam (the set alone: steam); it adds
 ##                    10 for 9 and launches harder; a bot's smothers too
-##   Mudslide         (with the set) the Wave reaches 7.5 m (9) and leaves a 2 m mud pool of his where it ends; launches harder;
-##                    a bot's own pool
+##   Mudslide         (with the set) the Wave reaches 7.5 m (9), grown 10 m (12), and leaves a 2 m mud pool of his where it
+##                    ends; its hits launch as its class says (8.6 for 7.5, grown 9.7 for 8.4); a bot's own pool
 ##   Mud Mound        (with the set) his Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose, never one of his walls: a
-##                    Kick's fire stops at it, a body stands on it, two at once; the Geyser launches lower; a bot's own
+##                    Kick's fire stops at it, a body stands on it, two at once, nobody's wall (no bend_by: Mend's target,
+##                    a bot's own wall); the Geyser launches as its class says (9.3 for 10.9); a bot's own
 ##   Delta            (with the set) his mud lasts 6.5 s; in his own mud his locks fill x1.15 (another's or dry x1): the Lash's
 ##                    real lock 0.400 s for 0.467; a bot's tick takes the same
 ##   Mire             (with the set) the player's real 4 tapped twice readies it (the strip shows it); its lock (0.9 for the Ice
@@ -45,9 +50,14 @@ extends SceneTree
 ##                    Wall's pose; one at a time beside his four other pools; a Kick's floor fire dies in it; his Geyser's source;
 ##                    his Ice Wall rises in 0.8 s; Delta's 6.5 s; not worn 4 twice is the Ice Wall; a bot's lock and its own Mire,
 ##                    laid against a foe with floor fire (never a water foe, never unworn)
+##   stacking         worn together as the tree's stacking says (BendLoadout._fold_n): Splashdown and Steamcraft's Lash 8 for 9
+##                    each, both paid (9 x 8/9 x 8/9); Mud Lash's 28 m/s final over the set's 30.6 in either order; Drench beside
+##                    Mudslide (6.5 and 8.6 from 7.5: opposite pulls) refused; Thick Ice beside Mire: Mire's rise final
 ## Last line "TALENTS WATER PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS WATER"
+## The talents that only wash gas (their switch waits for earth's Sulphur set: loadout_apply.json nodes).
+const GAS_TALENTS := ["water.splash.washout", "water.turn.cleanse"]
 const LIMIT_S := 520.0
 
 var checks := 0
@@ -276,9 +286,14 @@ func _run() -> void:
 	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
 	player.pitch = 0.0
 	physics_frame.connect(_aim)
+	var sulphur := BendLoadout.why_not("earth.set.sulphur") == ""
 	for id: String in BendLoadout.behaviour():
 		if id.begins_with("water."):
-			_expect(BendLoadout.why_not(id) == "", "%s is live (%s)" % [id, BendLoadout.why_not(id)])
+			if id in GAS_TALENTS and not sulphur:
+				_expect(BendLoadout.why_not(id).begins_with("waits for earth.set.sulphur") and not AdvancementData.is_live(id),
+						"%s waits for the Sulphur set's gas, the window's dot too (%s)" % [id, BendLoadout.why_not(id)])
+			else:
+				_expect(BendLoadout.why_not(id) == "", "%s is live (%s)" % [id, BendLoadout.why_not(id)])
 	if _on("thick_ice"):
 		await _thick_ice()
 	if _on("washout"):
@@ -313,6 +328,8 @@ func _run() -> void:
 		await _delta()
 	if _on("mire"):
 		await _mire()
+	if _on("stacking"):
+		_stacking()
 	_end()
 
 
@@ -378,7 +395,16 @@ func _through_gas(shooter: Node3D, other: Node3D, m: String, md: String) -> Dict
 	return out
 
 
+## The gas talents' switches on, as they will be with the Sulphur set live (its gas the only gas in the game: stand-in clouds here).
+func _gas_on(on: bool) -> void:
+	var nd := {}
+	for id: String in GAS_TALENTS:
+		nd[id] = true
+	BendLoadout.config_override = {"nodes": nd} if on else {}
+
+
 func _washout() -> void:
+	_gas_on(true)
 	for m: Array in [["water_jet", "splash"], ["water_whip", "whip"]]:
 		_wear(player, ["water.splash.washout"])
 		var w: Dictionary = await _through_gas(player, foe, String(m[0]), String(m[1]))
@@ -395,6 +421,25 @@ func _washout() -> void:
 	_wear(player, [])
 	var pn: float = await _pct_of_cast(player, foe, "water_jet", "splash")
 	_expect(pn > 0.0 and absf(pw / pn - 3.5 / 4.0) < 0.01, "Washout's trade: the wearer's Splash adds %.2f%% for the %.2f (3.5 for 4)" % [pw, pn])
+	# the Washed Ground synergy's base, for everyone (the node's "the Wave and Geyser already do"): a Geyser rising in gas washes
+	# it; nothing worn
+	await _face_off(8.0)
+	var g := _gas(foe, foe.global_position, 2.0)
+	var far := _gas(foe, foe.global_position + Vector3(6.0, 0.0, 0.0), 1.0)
+	await _ticks(2)
+	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	await _secs(0.8)
+	var gw := not is_instance_valid(g) or g.is_queued_for_deletion()
+	var fw := not is_instance_valid(far) or far.is_queued_for_deletion()
+	for z: BendZone in [g, far]:
+		if is_instance_valid(z):
+			z.end()
+	_expect(gw and not fw, "Washed Ground: anyone's Geyser (nothing worn) washes the gas it rises in, not a cloud 6 m off (%s, %s)" % [gw, fw])
+	_gas_on(false)
+	BendLoadout.wear(player, ["water.splash.washout"], "", "water")
+	_expect(not BendLoadout.wears(player, "water.splash.washout") or BendLoadout.why_not("earth.set.sulphur") == "",
+			"Washout with no Sulphur set live: refused, nothing of it applies (no trade with nothing to wash)")
+	_wear(player, [])
 
 
 # ---------------------------------------------------------------- Splashdown
@@ -531,7 +576,30 @@ func _turn_gas(who: Node3D, other: Node3D) -> Array:
 	return out
 
 
+## The player's real Turn on E (a tap: SwayCaster's guard lock as it begins, the Turn cast when it fills): its lock (s).
+func _turn_lock_by_e() -> float:
+	var sc := SwayCaster.of(player)
+	for i in 120:
+		if sc.state == SwayCaster.State.IDLE and not sc._cast_wait():
+			break
+		await physics_frame
+	_clear_whiff(player)
+	sc.guard_override = true
+	var lock := -1.0
+	for i in 30:
+		await physics_frame
+		if sc.state != SwayCaster.State.IDLE and sc.lock_src == SwayCaster.SRC_GUARD:
+			lock = sc.lock_s
+			break
+	sc.guard_override = false
+	await _secs(1.2)
+	sc.guard_override = null
+	_clear_whiff(player)
+	return lock
+
+
 func _cleanse() -> void:
+	_gas_on(true)
 	_wear(player, ["water.turn.cleanse"])
 	var w: Array = await _turn_gas(player, foe)
 	_wear(player, [])
@@ -542,22 +610,20 @@ func _cleanse() -> void:
 	var b: Array = await _turn_gas(foe, player)
 	_wear(foe, [])
 	_expect(bool(b[0]), "Cleanse on a bot: its Turn clears the gas round it (%s)" % [b])
-	# the Turn's lock, the player's real one on E (SwayCaster's guard lock) and a bot's
-	var sc := SwayCaster.of(player)
-	var keep := sc.lock_src
-	sc.lock_src = SwayCaster.SRC_GUARD
+	# the Turn's lock, the player's real one on E (SwayCaster's guard lock as it begins) and a bot's
 	var got := {}
 	for worn: bool in [true, false]:
 		_wear(player, ["water.turn.cleanse"] if worn else [])
 		_wear(foe, ["water.turn.cleanse"] if worn else [])
-		_clear_whiff(player)
+		await _face_off(10.0)
 		_clear_whiff(foe)
-		got[worn] = [sc._lock_time("water_redirect", null, 0.0, 10.0), NpcBending.lock_for("water_redirect", "redirect", "normal", 0.0, foe)]
-	sc.lock_src = keep
+		got[worn] = [await _turn_lock_by_e(), NpcBending.lock_for("water_redirect", "redirect", "normal", 0.0, foe)]
 	_wear(player, [])
 	_wear(foe, [])
-	_expect(absf(float(got[true][0]) / float(got[false][0]) - 1.2) < 0.001 and absf(float(got[true][1]) / float(got[false][1]) - 1.2) < 0.001,
-			"Cleanse's trade: the Turn's lock 0.24 s for the 0.2 (the player's %.3f for %.3f, a bot's %.3f for %.3f)" % [got[true][0], got[false][0],
+	_gas_on(false)
+	_expect(float(got[false][0]) > 0.0 and absf(float(got[true][0]) / float(got[false][0]) - 1.2) < 0.001
+			and absf(float(got[true][1]) / float(got[false][1]) - 1.2) < 0.001,
+			"Cleanse's trade: the Turn's lock on E %.3f s for the %.3f (0.24 for 0.2), a bot's %.3f for %.3f" % [got[true][0], got[false][0],
 			got[true][1], got[false][1]])
 
 
@@ -701,17 +767,45 @@ func _wave_puddle(who: Node3D) -> BendZone:
 	return pd
 
 
-## The launch (m/s) a Wave hit of `by`'s on `on` gives him at 0% (RingRules.on_hit, the stock class of the tag), his % back after.
-func _wave_launch(by: Node3D, on: Node3D, tag: String) -> float:
+## The launch (m/s) a hit of `by`'s with `tag` gives `on` at 0% (RingRules.on_hit, the class of the tag for the hitter), `on` first
+## still on the deck (no knock, hitstun, tumble or lying left from a check before), his % back after. Checked exact against the
+## launch formula (RingRules.launch_v) with the stock class's numbers and the node text's own `want_base` (and `want_d`: -1 the
+## class's), read from no loadout code.
+func _wave_launch(by: Node3D, on: Node3D, tag: String, want_base := -1.0, want_d := -1.0) -> float:
 	var rules := RingRules.current()
-	rules.reset_pct(on, 0.0)
-	var r := rules.on_hit(on, by, {"tag": tag, "at": (on as Node3D).global_position + Vector3.UP})
-	rules.reset_pct(on, 0.0)
 	var kn := BendKnock.peek(on)
 	if kn != null:
 		kn.reset()
 		kn.stun_t = 0.0
-	return (r.get("v", Vector3.ZERO) as Vector3).length()
+	(on as CharacterBody3D).velocity = Vector3.ZERO
+	await _ticks(4)
+	for i in 90:
+		if (on as CharacterBody3D).is_on_floor():
+			break                                    # (back on the deck from a knock before: the hit's own rule for the feet)
+		await physics_frame
+	var floored := (on as CharacterBody3D).is_on_floor()
+	rules.reset_pct(on, 0.0)
+	var r := rules.on_hit(on, by, {"tag": tag, "at": (on as Node3D).global_position + Vector3.UP})
+	rules.reset_pct(on, 0.0)
+	if kn == null:
+		kn = BendKnock.peek(on)
+	if kn != null:
+		kn.reset()
+		kn.stun_t = 0.0
+	var v := (r.get("v", Vector3.ZERO) as Vector3).length()
+	var cls := RingRules.class_of(tag).duplicate()
+	if want_base >= 0.0:
+		cls["base"] = want_base
+	if want_d >= 0.0:
+		cls["d"] = want_d
+	var d := float(cls.get("d", 0.0)) * RingRules.stock_num("pct_scale", 1.0)
+	var want := RingRules.launch_v(cls, d, d, RingRules.weight_of(BendPoses.element_of(on)))
+	var ang := float(cls.get("angle", 30.0))
+	if floored and want < RingRules.stock_num("tumble_mps", 9.0) and absf(ang) < RingRules.stock_num("tumble_deg", 60.0):
+		want *= cos(deg_to_rad(ang))               # (no tumble on the feet: a flinch-slide, its up part dropped: RingRules.on_hit)
+	_expect(absf(v - want) < 0.02, "%s by %s: launches %.3f m/s, the formula with base %.2f says %.3f" % [tag,
+			"the player" if by == player else "the bot", v, float(cls.get("base", 0.0)), want])
+	return v
 
 
 func _pooling() -> void:
@@ -722,12 +816,12 @@ func _pooling() -> void:
 	_expect(pd != null and _near(pd.radius, 1.2) and _near(pd.life_s, 6.0) and d <= reach + 0.3 and d >= reach - 2.0
 			and absf(pd.global_position.y - _wave_from.y) < 0.5 and pd.is_in_group(Bending.POOLS),
 			"Pooling Wave: the wearer's Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends, %.1f m on (its reach %.0f, kept off the lip)" % [d, reach])
-	var lw := _wave_launch(player, foe, "wave/push")
-	var lgw := _wave_launch(player, foe, "wave/push.grown")
+	var lw: float = await _wave_launch(player, foe, "wave/push", 6.8)
+	var lgw: float = await _wave_launch(player, foe, "wave/push.grown", 7.6)
 	_wear(player, [])
 	var p0 := await _wave_puddle(player)
-	var lc := _wave_launch(player, foe, "wave/push")
-	var lgc := _wave_launch(player, foe, "wave/push.grown")
+	var lc: float = await _wave_launch(player, foe, "wave/push", 7.5)
+	var lgc: float = await _wave_launch(player, foe, "wave/push.grown", 8.4)
 	_expect(p0 == null, "Pooling Wave not worn: the Wave leaves no puddle")
 	_expect(lw > 0.0 and lw < lc and lgw < lgc, "Pooling Wave's trade: his Wave launches %.2f m/s for the %.2f (grown %.2f for %.2f)" % [lw, lc, lgw, lgc])
 	_wear(foe, ["water.wave.pooling"])
@@ -769,8 +863,55 @@ func _ride_wave(late: float) -> Dictionary:
 	await _secs(0.6)
 	sc.held_override = null
 	var out := {"lock": lock, "moved": (player.global_position - at).dot(way), "ride": bool(BendEffects.last_of(pc).get("ride", false)),
-			"move": String(BendEffects.last_of(pc).get("move", ""))}
+			"move": String(BendEffects.last_of(pc).get("move", "")),
+			"beat": bool(((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("_info", {}) as Dictionary).get("beat", false))}
 	await _secs(0.8)
+	return out
+
+
+## The player hit sideways (an 8 m/s launch, as RingRules.on_hit sets one) `riding`: 3 frames into his ride (the real Wave on the
+## Beat), else standing: how far the knock took him sideways and on along the Wave's way in 1.2 s.
+func _ride_hit(riding: bool) -> Dictionary:
+	await _face_off(10.0)
+	var way := (foe.global_position - player.global_position)
+	way.y = 0.0
+	way = way.normalized()
+	var side := way.cross(Vector3.UP).normalized()
+	var rode := false
+	if riding:
+		var sc := SwayCaster.of(player)
+		for i in 180:
+			if sc.state == SwayCaster.State.IDLE and not sc._cast_wait() and player.is_on_floor():
+				break
+			await physics_frame
+		sc._wait_release = false
+		player.hotbar.select(1)
+		await _ticks(3)
+		sc.held_override = true
+		for i in 120:
+			await physics_frame
+			if sc.state == SwayCaster.State.FULL:
+				break
+		sc.held_override = false
+		var bm := BendMotion.of(player)
+		for i in 20:
+			await physics_frame
+			if bm.riding():
+				rode = true
+				break
+		await _ticks(3)
+		sc.held_override = null
+	var at := player.global_position
+	var v := side * 8.0
+	BendKnock.of(player).knock(v, foe, {"_launch": {"v": v, "hitstun_s": RingRules.hitstun_of(8.0), "tumble": false}})
+	await _secs(1.2)
+	var d := player.global_position - at
+	var out := {"rode": rode, "side": d.dot(side), "on": d.dot(way)}
+	var kn := BendKnock.peek(player)
+	if kn != null:
+		kn.reset()
+		kn.stun_t = 0.0
+	await _secs(0.5)
 	return out
 
 
@@ -784,11 +925,26 @@ func _ride() -> void:
 			"Ride the Wave: his Wave let go on the Beat carries him %.2f m on behind it (3)" % float(beat.moved))
 	_expect(late.move == "wave" and not bool(late.ride) and absf(float(late.moved)) < 0.5, "Ride the Wave: let go 0.3 s after the click, no ride (%.2f m)" % float(late.moved))
 	_expect(c.move == "wave" and not bool(c.ride) and absf(float(c.moved)) < 0.5, "Ride the Wave not worn: on the Beat or not, the Wave carries no one (%.2f m)" % float(c.moved))
+	_expect(bool(beat.beat) and not bool(late.beat) and not bool(c.beat),
+			"the Beat: its hits say beat only for the wearer let go on it (worn on the Beat %s, 0.3 s late %s, nothing worn on the click %s: Classic as ever)"
+			% [beat.beat, late.beat, c.beat])
 	_expect(float(c.lock) > 0.0 and absf(float(beat.lock) / float(c.lock) - 0.65 / 0.6) < 0.01, "Ride the Wave's trade: the Wave's lock %.3f s for the %.3f (0.65 for 0.6)" % [float(beat.lock), float(c.lock)])
+	# hit while riding: the hit's motion, as for anyone (the ride ends; no knock lost)
+	_wear(player, ["water.wave.ride"])
+	var hr: Dictionary = await _ride_hit(true)
+	_wear(player, [])
+	var hs: Dictionary = await _ride_hit(false)
+	_expect(bool(hr.rode) and float(hs.side) > 2.0 and absf(float(hr.side) - float(hs.side)) < 0.35 and float(hr.on) < 1.5,
+			"Ride the Wave: hit sideways 3 frames into the ride he is knocked %.2f m, as far as standing (%.2f m), and the ride ends (%.2f m on)"
+			% [float(hr.side), float(hs.side), float(hr.on)])
 	# a bot wearing it rides its Wave in from afar, not from close by (NpcBending's release: _on_beat)
 	var nb: NpcBending = foe.brain.bending if foe.brain != null else null
+	var pre: Dictionary = NpcBending.preset_of(nb._preset_name()) if nb != null else {}
+	var rate_keep: Variant = pre.get("beat_rate")
 	var got := {}
-	for d: float in [10.0, 4.0]:
+	for c2: Array in [[10.0, 1.0], [4.0, 1.0], [10.0, 0.0]]:
+		pre["beat_rate"] = float(c2[1])              # (its difficulty's beat_rate: 1 always, 0 never)
+		var d := float(c2[0])
 		_wear(foe, ["water.wave.ride"])
 		await _face_off(d)
 		var at := foe.global_position
@@ -799,11 +955,19 @@ func _ride() -> void:
 			nb.begin("wave", "push")
 			nb._release()
 		await _secs(0.6)
-		got[d] = (foe.global_position - at).dot(way)
+		got["%d/%d" % [int(d), int(c2[1])]] = (foe.global_position - at).dot(way)
 		_wear(foe, [])
 		await _secs(0.6)
-	_expect(nb != null and absf(float(got[10.0]) - 3.0) < 0.6 and absf(float(got[4.0])) < 0.5,
-			"Ride the Wave on a bot: from 10 m its Wave rides it %.2f m in; from 4 m it stays (%.2f m)" % [float(got.get(10.0, -1.0)), float(got.get(4.0, -1.0))])
+	if rate_keep == null:
+		pre.erase("beat_rate")
+	else:
+		pre["beat_rate"] = rate_keep
+	_expect(nb != null and absf(float(got["10/1"]) - 3.0) < 0.6 and absf(float(got["4/1"])) < 0.5 and absf(float(got["10/0"])) < 0.5,
+			"Ride the Wave on a bot: from 10 m its Wave rides it %.2f m in; from 4 m it stays (%.2f m); at a beat_rate of 0 never (%.2f m)"
+			% [float(got.get("10/1", -1.0)), float(got.get("4/1", -1.0)), float(got.get("10/0", -1.0))])
+	var rates := [float(NpcBending.preset_of("easy").get("beat_rate", -1.0)), float(NpcBending.preset_of("normal").get("beat_rate", -1.0)),
+			float(NpcBending.preset_of("hard").get("beat_rate", -1.0))]
+	_expect(_near(rates[0], 0.0) and _near(rates[1], 0.2) and _near(rates[2], 0.5), "the Beat's bot rate by difficulty (bend_ai.json): %s (0, 0.2, 0.5)" % [rates])
 
 
 # ---------------------------------------------------------------- Wet Trail
@@ -811,6 +975,14 @@ func _ride() -> void:
 ## last), mps (its travel)}.
 func _skate_trail(who: Node3D) -> Dictionary:
 	await _face_off(10.0)
+	# (room to slide: the skater at the deck's middle, the other 5 m on; nothing held, so the Skate goes back across the deck)
+	var other: Node3D = foe if who == player else player
+	var way := (other.global_position - who.global_position)
+	way.y = 0.0
+	way = way.normalized()
+	who.global_position = Vector3(home.x, who.global_position.y, home.z)
+	other.global_position = Vector3(home.x, other.global_position.y, home.z) + way * 5.0
+	await _ticks(3)
 	var before := _zones("puddle")
 	BendEffects.apply(BendCaster.of(who), "flow", "skate", SwayMoves.move("flow").bend.skate)
 	var v: Vector3 = BendEffects.last_of(BendCaster.of(who)).get("v", Vector3.ZERO)
@@ -820,11 +992,15 @@ func _skate_trail(who: Node3D) -> Dictionary:
 		if not before.has(z.get_instance_id()) and z.owner_node == who:
 			mine.append(z)
 	var spread := 0.0
+	var gap := INF                                   # (the nearest two: each puddle new ground)
 	for a: BendZone in mine:
 		for b: BendZone in mine:
 			spread = maxf(spread, a.global_position.distance_to(b.global_position))
+			if a != b:
+				gap = minf(gap, a.global_position.distance_to(b.global_position))
 	var out := {"n": mine.size(), "life": (mine[0] as BendZone).life_s if not mine.is_empty() else -1.0,
-			"radius": (mine[0] as BendZone).radius if not mine.is_empty() else -1.0, "spread": spread, "mps": Vector2(v.x, v.z).length()}
+			"radius": (mine[0] as BendZone).radius if not mine.is_empty() else -1.0, "spread": spread, "gap": gap,
+			"mps": Vector2(v.x, v.z).length()}
 	for z: BendZone in mine:
 		z.end()
 	await _secs(0.5)
@@ -836,24 +1012,46 @@ func _wet_trail() -> void:
 	var w: Dictionary = await _skate_trail(player)
 	_wear(player, [])
 	var c: Dictionary = await _skate_trail(player)
-	_expect(int(w.n) == 4 and _near(w.life, 7.2) and _near(w.radius, 1.2) and float(w.spread) > 1.5 and _near(w.mps, 10.8, 0.01),
-			"Wet Trail: the wearer's Skate travels %.1f m/s and leaves 4 puddles of his for 7.2 s along %.1f m (%s)" % [float(w.mps), float(w.spread), w])
+	_expect(int(w.n) == 4 and _near(w.life, 7.2) and _near(w.radius, 1.2) and float(w.spread) >= 2.4 and float(w.gap) >= 0.6
+			and _near(w.mps, 10.8, 0.01),
+			"Wet Trail: the wearer's Skate travels %.1f m/s and leaves 4 puddles of his for 7.2 s spread along %.1f m, %.1f m apart at least (%s)"
+			% [float(w.mps), float(w.spread), float(w.gap), w])
 	_expect(int(c.n) == 0 and _near(c.mps, 12.0, 0.01), "Wet Trail not worn: the Skate travels %.1f m/s and leaves no puddle (%d)" % [float(c.mps), int(c.n)])
 	_wear(foe, ["water.skate.wet_trail"])
 	var b: Dictionary = await _skate_trail(foe)
 	_wear(foe, [])
-	_expect(int(b.n) == 4, "Wet Trail on a bot: its Skate leaves its own 4 puddles (%d)" % int(b.n))
+	_expect(int(b.n) == 4 and float(b.spread) >= 2.4, "Wet Trail on a bot: its Skate leaves its own 4 puddles along %.1f m (%d)" % [float(b.spread), int(b.n)])
 
 
 # ---------------------------------------------------------------- Wellspring
-## Patch's ring lock for the player (SwayCaster's own, as its lock begins) and for the bot (NpcBending.lock_for), each standing where
-## it is now.
+## Patch's ring lock for the player (his real key 5 held: SwayCaster's lock as it begins, let go before it fills: called off, nothing
+## spent) and for the bot (NpcBending.lock_for), each standing where it is now.
 func _patch_locks() -> Array:
 	var sc := SwayCaster.of(player)
-	var keep := sc.lock_src
-	sc.lock_src = SwayCaster.SRC_AIM
-	var l := sc._lock_time("patch", player, 0.0, 10.0)
-	sc.lock_src = keep
+	var at := player.global_position
+	for i in 120:
+		if sc.state == SwayCaster.State.IDLE and not sc._cast_wait() and player.is_on_floor():
+			break
+		await physics_frame
+	sc._wait_release = false
+	RingRules.current().add_pct(player, 6.0, foe, "water_jet/splash")     # (a fresh pool to take back: Patch may begin)
+	await _secs(Bending.rule("double_tap_s", 0.3) + 0.1)   # (a key 5 again within double_tap_s would be Mend, its other)
+	player.hotbar.select(4)
+	await _ticks(2)
+	sc.held_override = true
+	var l := -1.0
+	for i in 30:
+		await physics_frame
+		if sc.state != SwayCaster.State.IDLE and sc.move == "patch":
+			l = sc.lock_s
+			break
+	sc.held_override = false
+	await _ticks(3)
+	sc.held_override = null
+	RingRules.current().reset_pct(player, 0.0)
+	player.global_position = at
+	player.velocity = Vector3.ZERO
+	await _ticks(2)
 	return [l, NpcBending.lock_for("patch", "patch", "normal", 0.0, foe)]
 
 
@@ -867,16 +1065,16 @@ func _wellspring() -> void:
 		await _face_off(10.0)
 		for g: Node in grates:
 			g.remove_from_group(Bending.POOLS)        # (out of the pools while dry and puddle are read: no grate in reach then)
-		var dry := _patch_locks()
+		var dry: Array = await _patch_locks()
 		var pp := BendZone.make(player, "puddle", FormEffects.ground_at(player, player.global_position), {"radius_m": 1.2, "life_s": 6.0})
 		var pf := BendZone.make(foe, "puddle", FormEffects.ground_at(foe, foe.global_position), {"radius_m": 1.2, "life_s": 6.0})
 		var other := BendZone.make(foe, "puddle", FormEffects.ground_at(player, player.global_position), {"radius_m": 1.2, "life_s": 6.0})
 		await _ticks(2)
-		var wet := _patch_locks()
+		var wet: Array = await _patch_locks()
 		pp.end()
 		pf.end()
 		await _ticks(2)
-		var theirs := _patch_locks()                 # (in the foe's puddle only: not his own water)
+		var theirs: Array = await _patch_locks()     # (in the foe's puddle only: not his own water)
 		other.end()
 		for g: Node in grates:
 			g.add_to_group(Bending.POOLS)
@@ -886,7 +1084,7 @@ func _wellspring() -> void:
 			var keep_at := player.global_position
 			player.global_position = Vector3(g3.global_position.x, player.global_position.y, g3.global_position.z)
 			await _ticks(2)
-			grate = _patch_locks()
+			grate = await _patch_locks()
 			player.global_position = keep_at
 		got[worn] = {"dry": dry, "wet": wet, "theirs": theirs, "grate": grate}
 		await _ticks(2)
@@ -1069,9 +1267,9 @@ func _mud_lash() -> void:
 	_expect(w.is_empty() and not c.is_empty(), "Mud Lash: fire it meets is smothered, no steam (with the set alone, steam: %s)" % [c])
 	_expect(pc0 > 0.0 and absf(pw / pc0 - 10.0 / 9.0) < 0.01, "Mud Lash: it adds %.2f%% for the %.2f (10 for 9)" % [pw, pc0])
 	_wear(player, ml)
-	var lw := _wave_launch(player, foe, "water_whip/whip")
+	var lw: float = await _wave_launch(player, foe, "water_whip/whip", 5.3, 10.0)
 	_wear(player, ["water.set.mud"])
-	var lc := _wave_launch(player, foe, "water_whip/whip")
+	var lc: float = await _wave_launch(player, foe, "water_whip/whip", 4.6, 9.0)
 	_wear(player, [])
 	_expect(lw > lc, "Mud Lash: it knocks harder, base 5.3 for 4.6 (launch %.2f m/s for %.2f)" % [lw, lc])
 	_wear(foe, ml)
@@ -1095,7 +1293,16 @@ func _mudslide() -> void:
 	var pool_life := pool.life_s if pool != null else -1.0
 	var reach := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
 	await _secs(0.8)
-	var lw := _wave_launch(player, foe, "wave/push")
+	var lw: float = await _wave_launch(player, foe, "wave/push", 8.6)
+	var lgw: float = await _wave_launch(player, foe, "wave/push.grown", 9.7)
+	# (the grown Wave: its reach 10 m from 12, the grow merged as a held lock grows it: BendCaster.grown)
+	await _face_off(8.0)
+	pc.grown = true
+	_cast(player, "wave", "push")
+	pc.grown = false
+	var greach := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
+	var grew := bool(BendEffects.last_of(pc).get("grown", false))
+	await _secs(0.8)
 	_wear(player, ["water.set.mud"])
 	await _face_off(8.0)
 	var before0 := _zones("mud")
@@ -1104,12 +1311,20 @@ func _mudslide() -> void:
 	var pool0_made := _new_zone("mud", before0, player) != null
 	var reach0 := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
 	await _secs(0.8)
-	var lc := _wave_launch(player, foe, "wave/push")
+	var lc: float = await _wave_launch(player, foe, "wave/push", 7.5)
+	var lgc: float = await _wave_launch(player, foe, "wave/push.grown", 8.4)
+	await _face_off(8.0)
+	pc.grown = true
+	_cast(player, "wave", "push")
+	pc.grown = false
+	var greach0 := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
+	await _secs(0.8)
 	_wear(player, [])
 	_expect(_near(pool_r, 2.0) and _near(pool_life, 8.0) and d <= 7.5 + 0.3 and d >= 7.5 - 2.0 and _near(reach, 7.5),
 			"Mudslide: the Wave reaches %.1f m (9 not worn) and leaves a 2 m mud pool of his where it ends, %.1f m on" % [reach, d])
 	_expect(not pool0_made and _near(reach0, 9.0), "Mudslide not worn (the set alone): the Wave reaches %.1f m and leaves no pool" % reach0)
-	_expect(lw > lc, "Mudslide: it knocks 15%% harder, base 8.6 for 7.5 (launch %.2f m/s for %.2f)" % [lw, lc])
+	_expect(lw > lc and lgw > lgc, "Mudslide: it knocks 15%% harder, base 8.6 for 7.5 (launch %.2f m/s for %.2f; grown %.2f for %.2f)" % [lw, lc, lgw, lgc])
+	_expect(grew and _near(greach, 10.0) and _near(greach0, 12.0), "Mudslide grown: the Wave reaches %.1f m (12 not worn: %.1f)" % [greach, greach0])
 	_wear(foe, ms)
 	await _face_off(8.0)
 	var bb := _zones("mud")
@@ -1121,13 +1336,36 @@ func _mudslide() -> void:
 	await _end_pools()
 
 
+# ---------------------------------------------------------------- stacking
+## Water's picks worn together as the tree's stacking says (same_answer_gate.stacking): same way from the same base, the ratios
+## multiply; a set twist's number final; opposite pulls refused.
+func _stacking() -> void:
+	_gas_on(false)
+	var sp := BendLoadout.overlay_for(["water.lash.splashdown", "water.lash.steamcraft"], "water")
+	var wd: Variant = ((sp["class"] as Dictionary).get("water_whip/whip", {}) as Dictionary).get("d")
+	_expect((sp.ids as Array).size() == 2 and _near(wd, 9.0 * 8.0 / 9.0 * 8.0 / 9.0),
+			"stacking: Splashdown and Steamcraft worn together both pay their Lash trade, 9 x 8/9 x 8/9 = %.2f%% (%s)" % [float(wd if wd != null else -1.0), sp.refused])
+	for order: Array in [["water.set.mud", "water.mud.lash"], ["water.mud.lash", "water.set.mud"]]:
+		var ml := BendLoadout.overlay_for(order, "water")
+		var mps: Variant = ((ml.spec as Dictionary).get("water_whip/whip", {}) as Dictionary).get("mps")
+		_expect((ml.ids as Array).size() == 2 and _near(mps, 28.0), "stacking: Mud Lash's 28 m/s is final over the set's 30.6 (%s first: %s)" % [order[0], str(mps)])
+	var dm := BendLoadout.overlay_for(["water.wave.drench", "water.set.mud", "water.mud.mudslide"], "water")
+	_expect((dm.ids as Array).has("water.wave.drench") and not (dm.ids as Array).has("water.mud.mudslide")
+			and (dm.refused as Dictionary).has("water.mud.mudslide"),
+			"stacking: Drench (base 6.5) and Mudslide (8.6) pull the Wave's base 7.5 opposite ways: the later one is refused (%s)" % [dm.refused])
+	var tm := BendLoadout.overlay_for(["water.wall.thick_ice", "water.set.mud", "water.mud.mire"], "water")
+	var rise: Variant = (tm.ice as Dictionary).get("rise_s")
+	_expect((tm.ids as Array).size() == 3 and _near(rise, 0.8) and int((((tm.ice as Dictionary).get("materials", {}) as Dictionary).get("snow", {}) as Dictionary).get("hits", 0)) == 4,
+			"stacking: Thick Ice beside Mire: the Ice Wall rises in %s s (Mire's, a set twist's, final), takes Thick Ice's 4 hits" % str(rise))
+
+
 # ---------------------------------------------------------------- Mud Mound
 ## The mounds of `by`'s standing now.
 func _mounds(by: Node) -> Array:
 	var out: Array = []
 	for n in get_nodes_in_group(FormRaised.GROUP):
 		var w := n as FormRaised
-		if w != null and w.has_meta(&"bend_mound") and int(w.get_meta(&"bend_by", 0)) == by.get_instance_id() \
+		if w != null and int(w.get_meta(BendEffects.MOUND_META, 0)) == by.get_instance_id() \
 				and w.state != FormRaised.State.CRUMBLING and not w.is_queued_for_deletion():
 			out.append(w)
 	return out
@@ -1146,6 +1384,8 @@ func _mud_mound() -> void:
 			and not m.has_meta(&"wall_n") and Vector2(m.global_position.x - at.x, m.global_position.z - at.z).length() < 1.0
 	_expect(ok, "Mud Mound: the wearer's Geyser leaves a low mud mound 1.5 m across, 0.7 m high, for 3 s where it rose, never one of his walls (%s)"
 			% ["%s %.1f x %.1f, %.1f s" % [m.matter, m.size.x, m.size.y, m.life_s] if m != null else "none"])
+	_expect(m != null and not m.has_meta(&"bend_by") and not FormEffects.own(pc, m),
+			"Mud Mound: nobody's raised wall (no bend_by: Mend never targets it, a bot's own wall, Brace and the lessons never count it)")
 	# floor fire stops at it: the foe's Kick at the player with the mound between them
 	if m != null:
 		player.global_position = m.global_position + (m.global_position - foe.global_position).normalized() * 3.0
@@ -1177,9 +1417,9 @@ func _mud_mound() -> void:
 		BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
 		await _secs(0.5)
 	_expect(_mounds(player).size() == 2, "Mud Mound: two of his at once (%d)" % _mounds(player).size())
-	var lw := _wave_launch(player, foe, "wave/spout")
+	var lw: float = await _wave_launch(player, foe, "wave/spout", 9.3)
 	_wear(player, ["water.set.mud"])
-	var lc := _wave_launch(player, foe, "wave/spout")
+	var lc: float = await _wave_launch(player, foe, "wave/spout", 10.9)
 	await _secs(3.0)
 	await _face_off(8.0)
 	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)

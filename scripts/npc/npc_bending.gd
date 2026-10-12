@@ -1488,13 +1488,14 @@ func _release() -> void:
 	_after_cast(o, before)
 
 
-## Whether a bot lets (id, md) go on the Beat (SwayCaster.BEAT_S: the player's timing rule) now: only for a technique it wears
+## Whether a bot lets (id, md) go on the Beat (BendLoadout.beat_s: the player's timing rule) now: only for a technique it wears
 ## that pays it, when it helps. Ride the Wave: its Wave rides it in RIDE_M behind the water when the foe is further off than that
 ## and the deck has room ahead. Nothing worn (every normal match's bot), never.
 func _on_beat(id: String, md: String, t: Node3D) -> bool:
 	if id == "wave" and md == "push" and BendLoadout.wears(me, BendEffects.RIDE):
+		# (as a player's hand, not every time: its difficulty's beat_rate, bend_ai.json presets, the tree's beat.bots)
 		return t != null and is_instance_valid(t) and _flat_d(t) > BendEffects.RIDE_M + 1.5 \
-				and _room(_way(t)) > BendEffects.RIDE_M + 1.5
+				and _room(_way(t)) > BendEffects.RIDE_M + 1.5 and me.rng.randf() < float(preset().get("beat_rate", 0.2))
 	return false
 
 

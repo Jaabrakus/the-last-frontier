@@ -8,7 +8,7 @@
     "moves": "Per move, then per mode: what overrides the defaults (role, range_m, when, answers, cool_s, weight, grow (the chance a spec that grows is held to grow), way (a dash whose way is the keys held: 'side', 'back', 'forward'), combo {after: 'move/mode', bonus}). when: hurt (struck within hurt_s, or under half health), close (the foe within close_m), far (past far_m), stone_near, own_wall, own_damaged_wall, near_pool, foe_airborne, foe_grounded, foe_up_or_walled (in the air, or a wall on the line between: the High Kick's arc clears it), holding (a caught stone held), room_back, edge_behind, airborne, foe_far. answers on an option of any role makes it a guard too (NpcBending.is_guard: begun against a threat of those kinds as a reaction is), with min_knock (the threat's knock_mps at least this) and guard_when; a dash only with room for it. Threat kinds past the attacks': held (a stone held up and aimed at it), vortex (a tornado), floor (a Boulder rolling along the deck: jumped), under (a Column or a Geyser being cast at it: stepped off by a dash). A wave along the deck (the Kick's floor wave) is its element's kind for the guards and jumped as well (jump_*). Round 2: the moves the kits cut are gone from here.",
     "old": "The Sway's old spells (no bend spec: stone_form spike and cannonball, earth_wall wall, pillar self, mend): BendCast.cast casts them when it is there; without it only spike and wall are cast (NpcBending's own fallbacks).",
     "elements": "Each element's personality: a multiplier per role (and 'knock' for options whose knock_mps is 8 or more), react (x the preset's react_chance: how often a threat is answered at all; one roll a volley: NpcBending.VOLLEY_S), grow (the chance a move that grows is held to grow) and the range band it keeps between casts (keep_m).",
-    "presets": "The difficulty: reaction_s (from a threat seen to its answer begun), guard_reaction_s (the same for its own guard on E: a reflex on his wind-up, so even an easy bot guards some shots; KITS round 2), scatter_deg (one sigma of the aim's line), lead (the share of a moving foe's lead taken), lock_mult (x the player's lock), ai_factor (the move's ai_factor applied: easy and normal only), react_chance (a threat answered at all), perfect_chance (an answered threat met on the beat: in the guard's first guard_rules.perfect_s; else late, half through; round 2, spec 8.1: easy 0.1, normal 0.3, hard 0.6), jump_chance (a wave along the deck jumped), lightning_dash (a dash on a lightning's flash), rest_s (between one release and the next lock), think_s, grace_s (the opening: no attack or control begun and nothing that knocks; guards and footwork only).",
+    "presets": "The difficulty: reaction_s (from a threat seen to its answer begun), guard_reaction_s (the same for its own guard on E: a reflex on his wind-up, so even an easy bot guards some shots; KITS round 2), scatter_deg (one sigma of the aim's line), lead (the share of a moving foe's lead taken), lock_mult (x the player's lock), ai_factor (the move's ai_factor applied: easy and normal only), react_chance (a threat answered at all), perfect_chance (an answered threat met on the beat: in the guard's first guard_rules.perfect_s; else late, half through; round 2, spec 8.1: easy 0.1, normal 0.3, hard 0.6), jump_chance (a wave along the deck jumped), lightning_dash (a dash on a lightning's flash), rest_s (between one release and the next lock), think_s, grace_s (the opening: no attack or control begun and nothing that knocks; guards and footwork only), beat_rate (a technique it wears that the Beat pays, Ride the Wave, let go on the Beat when it helps: the skill tree's beat.bots, easy 0, normal 0.2, hard 0.5; a bot of a normal match wears none).",
     "jump": "The floor rule (spec 2.8: along the floor? jump): jump_mps the bot's jump (m/s up at its gravity 18: its feet over 0.6 m from about 0.1 s to 0.6 s after), jump_lead_s the takeoff that long before the wave reaches its feet."
   },
   "roles": {
@@ -153,7 +153,8 @@
       "perfect_chance": 0.1,
       "jump_chance": 0.3,
       "lightning_dash": false,
-      "guard_reaction_s": 0.4
+      "guard_reaction_s": 0.4,
+      "beat_rate": 0.0
     },
     "normal": {
       "reaction_s": 0.35,
@@ -168,7 +169,8 @@
       "perfect_chance": 0.3,
       "jump_chance": 0.6,
       "lightning_dash": false,
-      "guard_reaction_s": 0.28
+      "guard_reaction_s": 0.28,
+      "beat_rate": 0.2
     },
     "hard": {
       "reaction_s": 0.22,
@@ -183,7 +185,8 @@
       "perfect_chance": 0.6,
       "jump_chance": 0.85,
       "lightning_dash": true,
-      "guard_reaction_s": 0.18
+      "guard_reaction_s": 0.18,
+      "beat_rate": 0.5
     }
   },
   "pct": {

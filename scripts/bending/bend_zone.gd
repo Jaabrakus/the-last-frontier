@@ -711,7 +711,7 @@ static func mud_life(by: Node) -> float:
 
 ## A number of the Mud set's zone rules (skill_tree.json skill_sets.mud.zone), `def` when it has none.
 static func _mud_rule(key: String, def: float) -> float:
-	var v: Variant = BendLoadout.set_rule("mud." + key)
+	var v: Variant = BendLoadout.set_rule("mud", key)
 	return float(v) if v is float or v is int else def
 
 
