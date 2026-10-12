@@ -9,7 +9,13 @@ extends "res://tools/ring/gameplay_highlight.gd"
 ##   GODOT_TIMEOUT=1800 zsh tools/loop/godot_run.sh --path . --resolution 640x360 --fixed-fps 60 \
 ##     --write-movie <dir>/raw.avi -s tools/ring/team_fight_film.gd -- out=<dir> format=4v4 fps=60 size=1920x1080 \
 ##     quality=high upscale=off music=on character_look=soft [seconds=40] [lead=2.5] [light=noon] [element=fire]
-##     [mates=earth,water,air] [foes=water,earth,air,fire] [seed=31] [captions=1] [stills=1]
+##     [mates=earth,water,air] [foes=water,earth,air,fire] [seed=31] [captions=1] [stills=1] [public=on]
+## public=on: for posting, only our own effects (SbFx off and the lightning's own shading, none rebuilt from Spellbreak).
+## plan=follow,wide,low,...: the shots in turn (PLAN's names; "player" the player's own view): posting clips leave the player's
+## view out, the camera always on the thick of it. A big launch (CHASE_MPS_HIGH or more) is noted in events.json as well as a
+## fall (social_cut.py picks the busiest stretch by them). chase=off: a launch is never chased (the chase can end on the
+## tank's bare wall); a fall still cuts to its splash. shots.json: each recorded frame's [seconds, shot, fighters in the picture]
+## (social_cut.py --min-on leaves out stretches with too few in it).
 ## Ends with SHOWCASE DONE (the base's line).
 
 ## The shots in turn and how long each holds (s); a big launch cuts in to chase the flyer for FLIGHT_S, a fall to its splash
@@ -32,6 +38,10 @@ const LOOK_K := 2.2
 const MOVE_K := 1.6
 
 var fmt := "4v4"
+var _plan: Array = PLAN
+var _chase := true
+## Each recorded frame: [seg_t, shot, fighters in play whose chest is in the picture's frustum].
+var _shots: Array = []
 var _plan_i := 0
 var _shot := ""
 var _shot_t := 0.0
@@ -63,6 +73,14 @@ func _block_user_input() -> void:
 	MatchSetup.mates = Array(String(args.get("mates", "")).split(",", false))
 	MatchSetup.light = String(args.get("light", "noon"))
 	_seconds = float(args.get("seconds", "40"))
+	var pl := Array(String(args.get("plan", "")).split(",", false)).filter(func(x: String) -> bool: return x in HOLD)
+	if not pl.is_empty():
+		_plan = pl
+	_chase = String(args.get("chase", "on")) != "off"
+	if String(args.get("public", "off")) == "on":
+		# (footage for posting: only our own effects, none rebuilt from Spellbreak's: SbFx off, the bolt's own shading)
+		SbFx.force_on = false
+		BendLooks.sb_bolt = false
 
 
 func _order() -> Array:
@@ -81,7 +99,7 @@ func seg_team() -> void:
 	sim.m = sim.m.duplicate(true)
 	level.add_child(sim)
 	await _warm(int(float(args.get("lead", "2.5")) * fps))
-	_shot_to("wide")
+	_shot_to(String(_plan[0]) if not "wide" in _plan else "wide")
 	var deck := "%s x %s m" % [str(int(_num("deck_w", 28.0))), str(int(_num("deck_l", 52.0)))]
 	await _roll("Tidebreak  ·  team fights", "%s  ·  the Ruins" % fmt.replace("v", " v "), deck, 0)
 	while (seg_t < _seconds or seg_t - _fall_t < FALL_S) and seg_t < _seconds + FALL_S and mode.phase != "DONE":
@@ -99,12 +117,21 @@ func seg_team() -> void:
 	print("TEAM FILM BOARD ", JSON.stringify(board))
 	FileAccess.open(out.path_join("board.json"), FileAccess.WRITE).store_string(JSON.stringify(board, "\t"))
 	FileAccess.open(out.path_join("events.json"), FileAccess.WRITE).store_string(JSON.stringify(events, "\t"))
+	FileAccess.open(out.path_join("shots.json"), FileAccess.WRITE).store_string(JSON.stringify(_shots))
 	_write_log()
 
 
 # --- the director ------------------------------------------------------------------------------------------------------
 
 func _direct() -> void:
+	if recording:
+		var cam: Camera3D = cine if use_cine else player.camera
+		var n := 0
+		if cam != null:
+			for b: Node3D in _in_play():
+				if b.visible and cam.is_position_in_frustum(b.global_position + Vector3.UP):
+					n += 1
+		_shots.append([snappedf(seg_t, 0.001), _shot, n])
 	# (the flyer's last place in its flight, before any jump back to a spout)
 	if is_instance_valid(_fly):
 		var p := _fly.global_position
@@ -119,8 +146,8 @@ func _direct() -> void:
 			_shot_to("flight")
 		return
 	if _shot in ["fall", "flight"] or seg_t - _shot_t >= float(HOLD.get(_shot, 4.0)):
-		_plan_i = (_plan_i + 1) % PLAN.size()
-		_shot_to(PLAN[_plan_i])
+		_plan_i = (_plan_i + 1) % _plan.size()
+		_shot_to(String(_plan[_plan_i]))
 
 
 func _shot_to(shot: String) -> void:
@@ -256,9 +283,15 @@ func _hide_hud() -> void:
 
 func _film_launch(body: Node3D, velocity: Vector3, stun: float, by: Node, tag: String) -> void:
 	super._film_launch(body, velocity, stun, by, tag)
-	if not recording or not is_instance_valid(body) or seg_t - _fly_t < CHASE_GAP_S:
+	if not recording or not is_instance_valid(body):
 		return
 	var v := velocity.length()
+	var who := "player" if body == player else RingMode.name_of(body)
+	var last: Dictionary = events.back() if not events.is_empty() else {}
+	if v >= CHASE_MPS_HIGH and not (String(last.get("who", "")) == who and absf(float(last.get("time", -9.0)) - seg_t) < 0.05):
+		events.append({"kind": "launch", "time": seg_t, "v": v, "who": who, "move": tag})     # (once: a launch is told twice)
+	if not _chase or seg_t - _fly_t < CHASE_GAP_S:
+		return
 	if v >= CHASE_MPS or (v >= CHASE_MPS_HIGH and mode.rules.pct_of(body) >= CHASE_PCT):
 		_fly = body
 		_fly_t = seg_t
