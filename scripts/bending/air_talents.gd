@@ -978,6 +978,7 @@ static func toxic_gale(z: BendZone, b: BendBolt) -> bool:
 	if z.has_meta(key):
 		return false
 	z.set_meta(key, true)
+	z.set_meta(StringName("gas_reacted_%d" % b.get_instance_id()), true)   # (this ball has acted: BendGas.react never carries it on too)
 	var flat := Vector3(b.velocity.x, 0.0, b.velocity.z)
 	flat = flat.normalized() if flat.length_squared() > 1e-6 else -by.global_basis.z
 	var to := FormEffects.ground_at(z, z.global_position + flat * GALE_M)

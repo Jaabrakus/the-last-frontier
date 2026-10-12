@@ -701,6 +701,7 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		return
 	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
 		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
+		return
 	if who is FormRaised and kind == "fire" and AirTalents.melt_crust(who as FormRaised):
 		BendLooks.burst(at, "steam", 14, n, 70.0, 2.0, 0.5)
 		end("melted")                             # (Frostwind's crust melted back by fire)

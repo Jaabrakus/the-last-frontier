@@ -1529,6 +1529,8 @@ func _release() -> void:
 	# on its own hands. Fire's own techniques (Rhythm, Chain) pay through FireTalents.beat, air's through AirTalents.bot_beat)
 	var keep_rel := BendR3.release
 	var beat := BendLoadout.beat_paid(me, id, md) and took - lock_s <= BendLoadout.beat_s()
+	if beat and id == "wave" and md == "push" and BendLoadout.wears(me, BendEffects.RIDE):
+		beat = _on_beat(id, md, t)                   # (Ride the Wave: only from afar with room ahead, at its beat_rate: water's own)
 	if beat:
 		BendR3.release = {"beat": true}
 		beat_at = _now()

@@ -12,8 +12,8 @@ extends RefCounted
 ##                hurts its owner, allies never (BendStatus.can_take)
 ##   reactions    a bolt through a cloud (BendZone.on_bolt): fire lights it (the Ignited Sulphur burst: reaction/ignited_gas, a
 ##                set knock away from its middle on everyone within BURST_K of its round but the lighter's side, owned by the
-##                lighter; the cloud gone; IGNITED! at the callouts' spot), water washes it (gone), wind carries it (moved on
-##                along the bolt, CARRY_M 4 m, the mover's now); the wearer's own Pebbles light his own gas with Flint Pebbles
+##                lighter; the cloud gone; IGNITED! at the callouts' spot), water washes it (gone: the Wave and Geyser, a Washout wearer's Splash and Lash), wind carries it (moved on
+##                along the bolt, CARRY_M 4 m, still its owner's); the wearer's own Pebbles light his own gas with Flint Pebbles
 ##                (his gas only). Pass 2: a cone that reaches it the same by its kind (cone: Breath, a fire Sweep or ring, the
 ##                Lash, the Wave); a Fire Wall or burning ground on it lights it, a Wind Wall on it carries it away from its
 ##                face once (every: its own look round, each 0.25 s); lightning through it charges it (live, Live Gas: everyone
@@ -228,13 +228,12 @@ static func wash(z: BendZone) -> void:
 	z.end("washed")
 
 
-## Wind through gas zone `z` along `way`: the cloud moved on CARRY_M that way (over CARRY_S), the mover's now.
-static func carry(z: BendZone, way: Vector3, mover: Node3D) -> void:
+## Wind through gas zone `z` along `way`: the cloud moved on CARRY_M that way (over CARRY_S), still its owner's (the tree: "wind
+## carries it"; making it the mover's is Toxic Gale's own plus, AirTalents.toxic_gale; the lanes' merge, 2026-10-12).
+static func carry(z: BendZone, way: Vector3, _mover: Node3D) -> void:
 	if way.length_squared() < 1e-4:
 		return
 	var to := FormEffects.ground_at(z, z.global_position + way.normalized() * CARRY_M)
-	if mover != null and is_instance_valid(mover):
-		z.owner_node = mover
 	z.set_meta(&"gas_carried", true)
 	var tw := z.create_tween()
 	tw.tween_property(z, "global_position", to, CARRY_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -242,7 +241,7 @@ static func carry(z: BendZone, way: Vector3, mover: Node3D) -> void:
 
 ## A cone of `kind` cast by `p` along `flat`, `r` long and `deg` wide (`ring`: all round him; BendEffects.cone: Breath, a fire
 ## Sweep, the Lash, the Wave's push, a fire ring) over the gas it reaches: fire lights it (his burst), water washes it, wind
-## carries it on away from him (his now). A cloud is reached when its round comes within the cone. Classic never has gas.
+## carries it on away from him (still its owner's). A cloud is reached when its round comes within the cone. Classic never has gas.
 static func cone(p: Node3D, flat: Vector3, r: float, deg: float, kind: String, ring: bool) -> void:
 	if live_n <= 0 or p == null or not is_instance_valid(p) or not kind in ["fire", "water", "air"]:
 		return

@@ -44,7 +44,7 @@ extends SceneTree
 ##   Sulphur (set)     his Pebbles add 4% (5); his Boulder landing leaves a 2.5 m, 3 s cloud there (Classic none); a cloud on the
 ##                     bot ticks 1% x the pace each 0.5 s, 6 at most, no knock, no slow (one tick a 0.5 s in two clouds); his
 ##                     own gas never hurts him; his stone clashing with the bot's raises a cloud; fire lights it (the burst,
-##                     the lighter's), water washes it, wind carries it on (the mover's); the bot steps out of his gas; the
+##                     the lighter's), water washes it, wind carries it on (still his); the bot steps out of his gas; the
 ##                     bot wearing the set leaves its own
 ##   Sulphur twists    (each worn with the set) Spike: a 1.5 m puff where it stops, 12% (its hit on the bot); Boulder: three
 ##                     puffs laid on the deck behind it as it flies, before it lands (none over the water), 13% (its hit);
@@ -1384,7 +1384,7 @@ func _sulphur_set() -> void:
 	await _secs(0.5)
 	_expect(BendGas.gas_of(player).size() == 1 and BendGas.gas_of(bot).is_empty(), "Sulphur: his stone clashing with the bot's raises his cloud there (%d)" % BendGas.gas_of(player).size())
 	await _no_gas()
-	# the reactions: fire lights it (the burst, the lighter's), water washes it, wind carries it on (the mover's)
+	# the reactions: fire lights it (the burst, the lighter's), a Classic water bolt passes, wind carries it on (still his)
 	await _stage(-4.5, 4.5)
 	var side := way.cross(Vector3.UP)
 	var zc := BendGas.make(player, player.global_position + side * 1.0, "cloud")
@@ -1396,13 +1396,15 @@ func _sulphur_set() -> void:
 	var zw := BendGas.make(player, player.global_position + side * 3.0, "cloud")
 	_bolt_across(bot, "water", zw.global_position, way)
 	await _secs(0.6)
-	_expect(not is_instance_valid(zw), "Sulphur: a water bolt through it washes it away")
+	_expect(is_instance_valid(zw), "Sulphur: a Classic water bolt passes through it (only a Washout wearer's Splash and Lash wash gas, the Wave and Geyser everyone's: the tree, the lanes' merge 2026-10-12)")
+	if is_instance_valid(zw):
+		zw.end("test")
 	var za := BendGas.make(player, player.global_position + side * 3.0, "cloud")
 	var at0 := za.global_position
 	_bolt_across(bot, "air", za.global_position, way)
 	await _secs(0.8)
-	_expect(is_instance_valid(za) and za.owner_node == bot and _near(at0.distance_to(za.global_position), BendGas.CARRY_M, 0.4),
-			"Sulphur: wind through it carries it %.1f m on, the mover's now" % (at0.distance_to(za.global_position) if is_instance_valid(za) else -1.0))
+	_expect(is_instance_valid(za) and za.owner_node == player and _near(at0.distance_to(za.global_position), BendGas.CARRY_M, 0.4),
+			"Sulphur: wind through it carries it %.1f m on, still his (taking it is Toxic Gale's)" % (at0.distance_to(za.global_position) if is_instance_valid(za) else -1.0))
 	await _no_gas()
 	# the bot steps out of his gas
 	await _stage(-4.5, 4.5)
@@ -1935,19 +1937,23 @@ func _vent_bot() -> void:
 	await _stage(-3.5, 3.5)
 	var n0 := int(nb.casts_by.get("earth_wall/vent", 0))
 	var on_him := -1.0
+	var him_at := player.global_position             # (where he stood as the bot began its vent: a knock in its lock moves him)
 	bot.held = false
 	for i in 200:
 		await _secs(0.1)
 		if i % 10 == 0:
 			rules.reset_pct(player, 0.0)
+		if nb.casting == "earth_wall" and nb.mode == "vent" and nb.lock_t < 0.15:
+			him_at = player.global_position
 		var vs := _gas_kind(bot, "vent")
 		if not vs.is_empty():
-			on_him = _flat((vs[0] as Node3D).global_position, player.global_position)
+			on_him = minf(_flat((vs[0] as Node3D).global_position, player.global_position),
+					_flat((vs[0] as Node3D).global_position, him_at))
 			break
 	bot.held = true
 	await _secs(0.3)
 	var nv := int(nb.casts_by.get("earth_wall/vent", 0)) - n0
-	_expect(nv >= 1 and on_him >= 0.0 and on_him <= 3.0, "Sulphur Vent on the bot: in a fight it places its vent on the player (%.1f m from him, %d cast)" % [on_him, nv])
+	_expect(nv >= 1 and on_him >= 0.0 and on_him <= 3.0, "Sulphur Vent on the bot: in a fight it places its vent on the player (%.1f m from him as it began, %d cast)" % [on_him, nv])
 	_wear(bot, "")
 	nb._talent_options()
 	_expect(nb._option("earth_wall/vent").is_empty(), "Sulphur Vent off the bot: its options are its kit's again")
@@ -2000,8 +2006,8 @@ func _reactions() -> void:
 	await _cast_at("air_palm", "palm", za.global_position + Vector3.UP * 0.8)
 	await _secs(0.7)
 	var moved := (za.global_position - a0).dot(way) if is_instance_valid(za) else -1.0
-	_expect(is_instance_valid(za) and _near(moved, BendGas.CARRY_M, 0.5) and za.owner_node == player,
-			"the set's gas: his air Palm (a cone) carries it %.1f m on away from him (4), his now" % moved)
+	_expect(is_instance_valid(za) and _near(moved, BendGas.CARRY_M, 0.5) and za.owner_node == bot,
+			"the set's gas: his air Palm (a cone) carries it %.1f m on away from him (4), still the bot's" % moved)
 	await _no_gas()
 	# a Fire Wall raised on a cloud lights it (the wall's owner the lighter); a Wind Wall standing on one carries it off its face
 	await _stage(-4.5, 4.5)
@@ -2019,8 +2025,8 @@ func _reactions() -> void:
 	var ww := BendZone.make(bot, "wind_wall", zn.global_position - way * 1.0, {"width_m": 3.0, "height_m": 2.5, "thick_m": 0.6, "life_s": 2.0}, -way)
 	await _secs(1.0)
 	var blown := _flat(zn.global_position, n0) if is_instance_valid(zn) else -1.0
-	_expect(is_instance_valid(zn) and _near(blown, BendGas.CARRY_M, 0.5) and zn.owner_node == bot,
-			"the set's gas: a Wind Wall standing on his cloud carries it %.1f m off its face, once, the wall's owner's now" % blown)
+	_expect(is_instance_valid(zn) and _near(blown, BendGas.CARRY_M, 0.5) and zn.owner_node == player,
+			"the set's gas: a Wind Wall standing on his cloud carries it %.1f m off its face, once, still his" % blown)
 	if is_instance_valid(ww):
 		ww.end("test")
 	await _no_gas()

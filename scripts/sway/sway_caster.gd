@@ -2396,8 +2396,8 @@ func _try_begin(q: Dictionary) -> void:
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
 	var head_mode := _form_mode if _form_id == m and _form_mode != "" else mode_of(m)
-	fill = FireTalents.head_start(player, m, head_mode)     # (a worn technique's head start on this lock, by its move and mode
-	                                                        # or air form, FireTalents; Classic: 0.0)
+	fill = maxf(fill, FireTalents.head_start(player, m, head_mode))   # (a worn technique's head start on this lock, by its move
+	                                                        # and mode or air form, FireTalents; the larger with Rebound's; Classic 0)
 	if elem() and lock_src != SRC_GUARD:
 		fill = maxf(fill, BendZone.eddy_fill(player, m))     # (Eddy, a skill tree technique: a head start after a perfect Turn)
 	if ring:

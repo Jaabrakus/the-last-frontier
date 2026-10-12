@@ -1812,9 +1812,11 @@ func _flashfire() -> void:
 	fts.set(&"_earth_gas", int(cached))
 	var mc: Dictionary = merged[""]
 	var mf: Dictionary = merged[ff_id]
-	_expect(not bool(mc.lit) and not bool(mc.breath) and not bool(mc.wall) and float(mc.pct) < 0.01,
-			"merged build: fire's stand-in leaves a Classic lighter's gas to earth's BendGas (Embers %s, Breath %s, wall %s)"
-			% [str(mc.lit), str(mc.breath), str(mc.wall)])
+	# (the lanes merged, 2026-10-12: earth's BendGas is in the build, so a Classic lighter's fire lights the cloud by the world
+	# rule (BendGas.react, cone, every) while fire's stand-in steps aside; the foe 4.25 m off is past the world rule's reach)
+	_expect(bool(mc.lit) and bool(mc.breath) and bool(mc.wall) and float(mc.pct) < 0.01,
+			"merged build: a Classic lighter's gas is lit by earth's BendGas, its burst short of a foe 4.25 m off (Embers %s, Breath %s, wall %s, %.2f%%)"
+			% [str(mc.lit), str(mc.breath), str(mc.wall), float(mc.pct)])
 	_expect(bool(mf.lit) and bool(mf.breath) and bool(mf.wall) and absf(float(mf.pct) - 8.0 * scale) < 0.05 and int(mf.stale_e) == 1,
 			"merged build: a Flashfire wearer's fire lights the cloud first, his burst 1 m farther (a foe 4.25 m off: %.2f%%), staled as his Embers (%d); Breath %s, wall %s"
 			% [mf.pct, int(mf.stale_e), str(mf.breath), str(mf.wall)])

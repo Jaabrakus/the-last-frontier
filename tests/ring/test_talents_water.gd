@@ -1287,6 +1287,7 @@ func _mud_set() -> void:
 	var seam := BendZone.make(foe, "seam", FormEffects.ground_at(foe, home), {"width_m": 1.5, "height_m": 0.4, "thick_m": 4.0, "life_s": 3.0})
 	await _secs(0.4)
 	var seam_w := not is_instance_valid(seam) or seam.is_queued_for_deletion()
+	var obs_w := _obsidian_near(home)
 	await _end_pools()
 	# four pools of his at once
 	await _face_off(10.0)
@@ -1314,6 +1315,7 @@ func _mud_set() -> void:
 	var seam0 := BendZone.make(foe, "seam", FormEffects.ground_at(foe, home), {"width_m": 1.5, "height_m": 0.4, "thick_m": 4.0, "life_s": 3.0})
 	await _secs(0.4)
 	var seam_c := not is_instance_valid(seam0) or seam0.is_queued_for_deletion()
+	var obs_c := _obsidian_near(home)
 	await _end_pools()
 	await _face_off(10.0)
 	var sp0 := _cast(player, "water_jet", "splash")
@@ -1329,7 +1331,11 @@ func _mud_set() -> void:
 			"the Mud set: a rolling stone stops in his mud (%s); through a puddle it rolls on (%s)" % [roll_w, roll_c])
 	_expect(String(low_w.why) == "dropped" and bool(low_w.inside) and float(low_c.went) > float(low_w.went) + 1.0,
 			"the Mud set: a stone rolling along the deck (a low stone bolt, the Avalanche's kind) stops in his mud (%s); through a puddle it rolls on (%s)" % [low_w, low_c])
-	_expect(seam_w and not seam_c, "the Mud set: a magma seam over his mud is quenched (a stand-in seam: the fire set is built elsewhere); not over a puddle")
+	# (the lanes merged, 2026-10-12: fire's Magma set is in the build, "water on a seam cools it into a loose obsidian stone ...
+	# mud quenches it with no stone": FireTalents.seam_water with the Mud set's own quench)
+	_expect(seam_w and obs_w == 0 and seam_c and obs_c == 1,
+			"the Mud set: a magma seam over his mud is quenched with no stone (%d); over a plain puddle it cools into an obsidian stone (%d)"
+			% [obs_w, obs_c])
 	_expect(n_mud == 4, "the Mud set: four mud pools of his at most (%d)" % n_mud)
 	_expect(absf(float(sw[0]) - 25.2) < 0.05 and absf(float(sw[1]) - 30.6) < 0.05 and absf(float(sc0[0]) - 28.0) < 0.05 and absf(float(sc0[1]) - 34.0) < 0.05,
 			"the Mud set's trade: his Splash flies %.1f m/s and his Lash %.1f (28, 34 not worn)" % [float(sw[0]), float(sw[1])])
@@ -1943,3 +1949,15 @@ func _mire() -> void:
 	_expect(int(loose[0]) >= 1 and bool(loose[1]), "Mire on a bot let loose on a fire foe: its own play lays one (%s)" % [loose])
 	await _end_pools()
 	await _face_off(10.0)
+
+
+## Loose obsidian stones (FireTalents.obsidian: a cooled magma seam's) within 2.5 m of `at`, each counted once and cleared away.
+func _obsidian_near(at: Vector3) -> int:
+	var n := 0
+	for o in get_nodes_in_group(FormStone.GROUP):
+		var st := o as FormStone
+		if st != null and is_instance_valid(st) and st.has_meta(&"talent_obsidian") and not st.is_queued_for_deletion() \
+				and Vector2(st.global_position.x - at.x, st.global_position.z - at.z).length() < 2.5:
+			n += 1
+			st.queue_free()
+	return n
