@@ -70,7 +70,12 @@
     "fire.breath.scald": true,
     "fire.wall.curved": true,
     "fire.lightning.forked": true,
-    "fire.parry.hold_storm": true
+    "fire.parry.hold_storm": true,
+    "fire.set.magma": true,
+    "fire.magma.fist": true,
+    "fire.magma.lava_kick": true,
+    "fire.magma.landing": true,
+    "fire.magma.forge": true
   },
   "behaviour": {
     "fire.parry.hot_hands": "FireTalents.guarded (BendZone.report), FireTalents.head_start (SwayCaster._try_begin, NpcBending.begin)",
@@ -85,7 +90,12 @@
     "fire.breath.scald": "FireTalents.through_steam (BendZone.on_bolt, FireTalents.cast for the Breath)",
     "fire.wall.curved": "FireTalents.curve_wall (FireTalents.cast from BendEffects._apply)",
     "fire.lightning.forked": "FireTalents.struck (BendEffects._strike), BendZone live (reaction/live, RingRules d_of_strike)",
-    "fire.parry.hold_storm": "FireTalents.hold_storm, storm_back, lightning_back_k (BendEffects._strike)"
+    "fire.parry.hold_storm": "FireTalents.hold_storm, storm_back, lightning_back_k (BendEffects._strike)",
+    "fire.set.magma": "FireTalents.seam (BendZone seam: matter/magma), from FireTalents.bolt_ended (BendBolt._finish: the Kick's and the Axe Kick's waves); FireTalents.seam_water (BendZone._every)",
+    "fire.magma.fist": "FireTalents.bolt_ended (a seam where the grown bolt hits or lands)",
+    "fire.magma.lava_kick": "FireTalents.bolt_ended (the Kick's last 4 m one seam)",
+    "fire.magma.landing": "FireTalents.cast (the Jets' mark), FireTalents.dash_ended (BendMotion._dash_end)",
+    "fire.magma.forge": "FireTalents.fill_mult (on_own_seam), FireTalents.seam_life (tune set:magma.seam_life_s)"
   },
   "live": [
     "air.ball.dense",
@@ -123,6 +133,11 @@
     "fire.breath.scald",
     "fire.wall.curved",
     "fire.lightning.forked",
-    "fire.parry.hold_storm"],
+    "fire.parry.hold_storm",
+    "fire.set.magma",
+    "fire.magma.fist",
+    "fire.magma.lava_kick",
+    "fire.magma.landing",
+    "fire.magma.forge"],
   "styles_live": ["boxing"]
 }

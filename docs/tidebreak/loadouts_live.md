@@ -209,6 +209,39 @@ Also checked and cleared: the soak's wall keys (`earth_wall/wall`, `water_shield
 
 The fixes moved nothing: air, fire and water played the same ten games, line for line, on the code before the fixes and after them. The loadout was found on the wearer at every check (19 of 19 per run), with no anomaly and no script error. Ten games is a smoke run, not a fairness measure (see "How strict the gate is"). These are mirror matches, so they say nothing about one element against another.
 
+## Fire's behaviour talents (11 October 2026, pass 1)
+
+The owner, 2026-10-11: "we need to make sure all the talents work and they work in game right". Fire's talents whose effect
+is new code are built in `scripts/bending/fire_talents.gd` (`FireTalents`) and live through `loadout_apply.json`
+`behaviour` (each id, where its code is), `live` and `nodes`. Live on that word, **not soaked**. Each is played worn and not
+worn in a ring by `tests/ring/test_talents_fire.gd` (`-- mode=ring practice=stand element=fire foe=fire`). Classic reads none
+of it: every seam asks `FireTalents.any(body)` (one meta lookup) first.
+
+| Talent | What the wearer gets | The seam |
+|---|---|---|
+| Hot Hands | a perfect Parry: the next Punch's lock begun within 1 s starts half full; late 60% through | `BendZone.report`, `SwayCaster._try_begin` / `NpcBending.begin` (`FireTalents.head_start`) |
+| Two-Hand Rhythm | a Punch let go on the Beat (within 0.2 s of its click; never a click, never a grown cast): the next Punch 30% full within 1 s; a brief flash on his own hands | SwayCaster's release, `NpcBending._release` (`FireTalents.beat`) |
+| Chain Kicks | a Kick on the Beat: the next Kick 40% full within 0.6 s; Kick lock 0.65 s | the same |
+| Grounded Charge | a hit breaks the Lightning charge: the next Lightning begun within 1 s starts half full | `SwayCaster.took_hit`, `NpcBending.tick` |
+| Hot Feet / Dancing Feet | fill x1.1 moving and x0.9 standing / x0.9 moving and x1.15 for 0.6 s after a Step ends | `SwayCaster._moving_mult` (tune `rules:passives.fire.moving_mult`), `SwayCaster._hold`, `NpcBending.tick` |
+| Blazing Fireball | a 2 m burst where the grown Punch ends (its own class, `class_new`), not past the wall it hit, not on the one its core struck | `BendBolt._finish` (`FireTalents.bolt_ended`), `RingRules.on_hit` (`BendLoadout.new_hit_class`) |
+| Crescent Burn / Ignite Step | a 2 m patch where the crescent ends / a 2 m line where the Step leaves, 1.5 s, floor fire | `BendBolt._finish`, `BendEffects._apply` (`FireTalents.cast`) |
+| Scald | his fire through steam (a bolt, the Breath) makes the cloud burn 1.5 s | `BendZone.on_bolt`, `FireTalents.cast` |
+| Curved Curtain | the Fire Wall as 4 pieces along a 120 deg arc, 5 m of curtain round the point aimed at (its middle on the far side), 4 s | `FireTalents.cast` |
+| Forked Lightning | the strike forks to the nearest puddle, steam or water bolt within 6 m of its line: live 0.5 s, half the strike's % to everyone in it (no launch, no stun, no set-back) | `BendEffects._strike` (`FireTalents.struck`), rules.json `reaction/live` (`d_of_strike`) |
+| Hold the Storm | a perfect Parry of Lightning with E held keeps it in his arms until E is let go (0.8 s at most), then along his aim at x1.2; fire goes back x1.1 | `BendEffects._strike` (`FireTalents.hold_storm`) |
+| Magma (the set) | where the Kick's or the Axe Kick's wave dies (range, a wall) a 1.5 m seam for 3 s: matter/magma, 4% at most, two at once; water on it leaves a loose obsidian stone of his; a zone of kind mud quenches it; waves 16 / 14.2 m/s | `BendBolt._finish`, `BendZone` seam (`FireTalents.seam`, `seam_bolt`, `seam_water`) |
+| Lava Kick / Magma Fist / Magma Landing / Forge | the Kick's last 4 m one seam / a seam where the grown Punch lands / a 2 m seam where the Jets land / x1.15 fill on his own seam, seams 2.5 s | the same, `BendMotion._dash_end`, `FireTalents.fill_mult`, tune `set:magma.seam_life_s` |
+| Cauterize | Patch's key tapped twice: Cauterize (2% cost no Patch takes back, then up to 12% of the fresh pool back, gas within 1.5 m ends), lock 1.2 s; his Patch 1.7 s | `FireTalents.modes_for` (`Bending.other_move`, `SwayCaster.my_modes`), `BendEffects` heal, `RingRules.patch(b, max)` / `add_pct_kept` |
+
+The floor fire and the seams are `BendZone` MATTER (a zone with a `tick_tag`): % only through rules.json `matter/burn` and
+`matter/magma` (`no_flinch`, and `no_hurt`: `BendR3.take` and `BendStatus.hurt` skip the struck one's lock, so no set-back
+and no Lightning-charge break), one tick each 0.5 s from all the matter a body stands in, capped per zone (3% a patch or line,
+4% a seam), never to its owner or his side, and floor fire is jumped (feet more than 0.45 m over it). The Lava Kick node's
+class change was written against the Kick's old base (5.8); its `from` is today's 9.5 and its `to` 10.5 (the node's +10%).
+Flashfire is not built: its partner, the Sulphur set's gas and its ignite reaction (`reaction/ignited_gas`), is earth's and not
+in this branch.
+
 ## Tests and commands
 
 ```

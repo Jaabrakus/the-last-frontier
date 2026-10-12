@@ -82,7 +82,8 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
 		"move:stone_form.cannonball.radius_m",
-		"rules:passives.fire.moving_mult"]      # (fire's Footwork on the move: Hot Feet, Dancing Feet; SwayCaster._moving_mult)
+		"rules:passives.fire.moving_mult",      # (fire's Footwork on the move: Hot Feet, Dancing Feet; SwayCaster._moving_mult)
+		"set:magma.seam_life_s"]                # (the Magma set's seams: Forge; FireTalents.seam_life)
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -413,6 +414,13 @@ static func tune_base(path: String) -> Variant:
 				return (RingRules.data().get("stock", {}) as Dictionary).get(String(keys[0]))
 			if keys.size() == 2:
 				return RingRules.stock_block(String(keys[0])).get(String(keys[1]))
+		"set":
+			# (a skill set's rule: data/sway/skill_tree.json skill_sets.<set>.zone.<key>)
+			if keys.size() == 2:
+				var t: Variant = JSON.parse_string(FileAccess.get_file_as_string(TREE_PATH)) if FileAccess.file_exists(TREE_PATH) else null
+				var zd: Variant = (((t as Dictionary).get("skill_sets", {}) as Dictionary).get(String(keys[0]), {}) as Dictionary).get("zone") \
+						if t is Dictionary else null
+				return (zd as Dictionary).get(String(keys[1])) if zd is Dictionary else null
 		"move":
 			var md := SwayMoves.move(String(keys[0]))
 			var v2: Variant = _dig(md, keys.slice(1))

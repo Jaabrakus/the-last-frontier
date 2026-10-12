@@ -548,6 +548,8 @@ func _every(dt: float) -> void:
 				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
 	_inside_was = now_in
+	if kind == "seam":
+		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -563,6 +565,8 @@ func _every(dt: float) -> void:
 func on_bolt(b: BendBolt) -> bool:
 	if kind == "steam" and b.kind == "fire" and not b.spent and FireTalents.any(b.caster) and inside(b.global_position):
 		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
+	if kind == "seam" and b.kind == "water" and not b.spent:
+		FireTalents.seam_bolt(self, b)               # (water on a Magma seam cools it to obsidian)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false

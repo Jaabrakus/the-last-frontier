@@ -135,6 +135,8 @@ static func fill_mult(body: Object, moving: bool) -> float:
 		k *= HOT_FEET_STILL
 	if BendLoadout.wears(body, "fire.passive.dancing_feet") and stepped_within(body as Node, DANCING_S):
 		k *= DANCING_MULT
+	if BendLoadout.wears(body, "fire.magma.forge") and on_own_seam(body as Node):
+		k *= FORGE_MULT
 	return k
 
 
@@ -163,6 +165,8 @@ static func cast(bc: BendCaster, m: String, mode: String, spec: Dictionary, _a: 
 			var at := FormEffects.ground_at(p, p.global_position)
 			matter(p, "burn", at + dir * IGNITE_M * 0.5, dir, {"width_m": IGNITE_W, "thick_m": IGNITE_M, "life_s": IGNITE_S,
 					"tick_tag": "matter/burn", "tick_cap": BURN_CAP}, m)
+	if m == "fire_jets" and mode == "jets" and BendLoadout.wears(p, "fire.magma.landing"):
+		p.set_meta(JETS_META, BendStatus.now())         # (Magma Landing: where this dash ends, a seam: dash_ended)
 	if m == "fire_wall" and mode == "wall" and BendLoadout.wears(p, "fire.wall.curved"):
 		curve_wall(p, BendEffects.last_of(bc).get("zone") as BendZone, spec)
 	if m == "fire_breath" and mode == "breath" and BendLoadout.wears(p, "fire.breath.scald"):
@@ -232,6 +236,18 @@ static func bolt_ended(b: BendBolt, why: String) -> void:
 		burst(by, at + back, BLAZE_R, "fire_blast/punch.grown+burst", b.struck_who)
 	if tag == "fire_kick/high_kick" and BendLoadout.wears(by, "fire.highkick.crescent_burn"):
 		patch(by, at + back, CRESCENT_R, CRESCENT_S, "burn", "matter/burn", BURN_CAP, "fire_kick")
+	if tag in WAVE_TAGS and b.floor_wave and why in ["range", "wall", "world"] and BendLoadout.wears(by, "fire.set.magma"):
+		# (the Magma set: where the Kick's or the Axe Kick's wave dies, a seam; Lava Kick: the Kick's last 4 m)
+		var flat := Vector3(b.velocity.x, 0.0, b.velocity.z)
+		var dir := flat.normalized() if flat.length_squared() > 1e-6 else Vector3.FORWARD
+		var lava := tag != "fire_kick/slam_wave" and BendLoadout.wears(by, "fire.magma.lava_kick")
+		var length := LAVA_M if lava else SEAM_W
+		seam(by, FormEffects.ground_at(by, at - dir * (length * 0.5 + 0.1)), dir, {"width_m": SEAM_W, "thick_m": length}, lava)
+	if tag == "fire_blast/punch.grown" and BendLoadout.wears(by, "fire.magma.fist"):
+		# (Magma Fist: a seam where the ball of magma hits or lands)
+		var g := FormEffects.ground_at(by, at + back)
+		if (at + back).y - g.y <= LANDS_M:
+			seam(by, g, Vector3.FORWARD, {"radius_m": FIST_R, "round": true, "width_m": FIST_R * 1.8, "thick_m": FIST_R * 1.8})
 
 
 ## A burst of `by`'s at `at`, `r` m round (its hit class `key`: the wearer's whole new class, BendLoadout.new_class, read by
@@ -366,6 +382,127 @@ static func struck(bc: BendCaster, from: Vector3, to: Vector3) -> BendZone:
 			var a := best_at + Vector3(randf_range(-best_r, best_r) * 0.7, 0.2, randf_range(-best_r, best_r) * 0.7)
 			BendLooks.lightning(a, a + Vector3(randf_range(-0.6, 0.6), randf_range(0.3, 0.9), randf_range(-0.6, 0.6)))
 	return live
+
+
+# ---------------------------------------------------------------- the Magma set (skill_tree.json skill_sets.magma)
+const JETS_META := &"talent_jets_at"
+const SEAM_W := 1.5
+const SEAM_S := 3.0                       ## (the set's seam_life_s; Forge's own: BendLoadout.tune "set:magma.seam_life_s")
+const SEAM_CAP := 4                       ## (the tick contract: one magma seam 4%)
+const SEAMS_EACH := 2
+const LAVA_M := 4.0
+const FIST_R := 0.75
+const LANDING_R := 1.0
+const FORGE_MULT := 1.15
+const WAVE_TAGS := ["fire_kick/kick", "fire_kick/kick.grown", "fire_kick/slam_wave"]
+
+
+## How long `by`'s seams last (s): the set's, or a worn Forge's.
+static func seam_life(by: Node) -> float:
+	return BendLoadout.tune_f(by, "set:magma.seam_life_s", SEAM_S)
+
+
+## `by`'s seams standing, the oldest first.
+static func seams_of(by: Node) -> Array:
+	var out: Array = []
+	if by == null or not is_instance_valid(by) or not by.is_inside_tree():
+		return out
+	for z in by.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "seam" and bz.owner_node == by and not bz.is_queued_for_deletion():
+			out.append(bz)
+	out.sort_custom(func(a: BendZone, b: BendZone) -> bool: return a.t > b.t)
+	return out
+
+
+## A molten seam of `by`'s (the Magma set's matter: BendZone "seam", matter/magma, 1% each 0.5 s, 4% at most, never its owner;
+## jump it or step off; no slow): at `at`, its strip `way` along (spec width_m across, thick_m along; or round), seam_life s.
+## His oldest past SEAMS_EACH cools at once. Water on it leaves a loose obsidian stone (seam_water), mud quenches it.
+static func seam(by: Node3D, at: Vector3, way: Vector3, spec: Dictionary, lava := false) -> BendZone:
+	if by == null or not is_instance_valid(by) or not NetSpells.decides():
+		return null
+	var mine := seams_of(by)
+	while mine.size() >= SEAMS_EACH:
+		(mine.pop_front() as BendZone).end("seams")
+	var s := spec.duplicate()
+	s["life_s"] = seam_life(by)
+	s["tick_tag"] = "matter/magma"
+	s["tick_cap"] = SEAM_CAP
+	s["height_m"] = 0.3
+	var z := matter(by, "seam", at, way, s, "fire_kick")
+	if z != null:
+		z.set_meta(&"talent_lava", lava)
+		BendLooks.burst(at + Vector3.UP * 0.15, "fire", 22, Vector3.UP, 55.0, 3.2, 0.35)
+	return z
+
+
+## Seam `z` (its _every): water on it (a puddle, a spray or a water wall in it; a water bolt low over it: seam_bolt) cools it to a
+## loose obsidian stone of its owner's (FormStone.make_loose: his three loose stones; any earth player's Fissure throws it on); a
+## zone of mud (kind "mud", the Mud set's when it is built) quenches it, no stone.
+static func seam_water(z: BendZone) -> void:
+	if z.is_queued_for_deletion() or not NetSpells.decides():
+		return
+	var tree := z.get_tree()
+	var reach := maxf(z.radius, maxf(z.size.x, z.size.z) * 0.5) + 0.3
+	for o in tree.get_nodes_in_group(BendZone.GROUP):
+		var oz := o as BendZone
+		if oz == null or oz == z or oz.is_queued_for_deletion() or not oz.kind in ["puddle", "spray", "water_wall", "mud"]:
+			continue
+		if Vector2(oz.global_position.x - z.global_position.x, oz.global_position.z - z.global_position.z).length() <= reach + oz.radius * 0.5:
+			_cool(z, oz.kind != "mud")
+			return
+
+
+## A water bolt `b` passing seam `z` (BendZone.on_bolt, each frame): low over it (WATER_ON_M: a shot onto the floor, not one
+## flying over at a man's chest), it cools it to a loose obsidian stone.
+const WATER_ON_M := 1.0
+static func seam_bolt(z: BendZone, b: BendBolt) -> void:
+	if z.is_queued_for_deletion() or not NetSpells.decides():
+		return
+	if b.global_position.y - z.global_position.y < WATER_ON_M and _over(z, b.global_position, 0.3):
+		_cool(z, true)
+
+
+## Whether `q` is over seam `z`'s ground (its strip or its round, `slack` m more), flat.
+static func _over(z: BendZone, q: Vector3, slack: float) -> bool:
+	var l := z.global_transform.affine_inverse() * q
+	if z.round_zone:
+		return Vector2(l.x, l.z).length() <= z.radius + slack
+	return absf(l.x) <= z.size.x * 0.5 + slack and absf(l.z) <= z.size.z * 0.5 + slack
+
+
+static func _cool(z: BendZone, stone: bool) -> void:
+	var at := z.global_position
+	BendLooks.burst(at + Vector3.UP * 0.4, "steam", 26, Vector3.UP, 90.0, 2.2, 0.9)
+	if stone and z.is_inside_tree():
+		var s := FormStone.ball(z.get_tree().current_scene, at, {"radius_m": 0.24, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0,
+				"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+		s.state = FormStone.State.RESTING
+		s.freeze = false
+		s.set_meta(&"talent_obsidian", true)
+		FormStone.make_loose(s, z.owner_node)
+	z.end("cooled")
+
+
+## `body`'s dash ended (BendMotion._dash_end): Magma Landing's seam where his Jets land.
+static func dash_ended(body: Node) -> void:
+	if not body.has_meta(JETS_META):
+		return
+	body.remove_meta(JETS_META)
+	if body is Node3D and BendLoadout.wears(body, "fire.magma.landing"):
+		seam(body as Node3D, FormEffects.ground_at(body, (body as Node3D).global_position), Vector3.FORWARD,
+				{"radius_m": LANDING_R, "round": true, "width_m": LANDING_R * 1.8, "thick_m": LANDING_R * 1.8})
+
+
+## Whether `body` stands on a seam of his own now (Forge's home ground: his feet on it).
+static func on_own_seam(body: Node) -> bool:
+	if not (body is Node3D):
+		return false
+	var q := (body as Node3D).global_position
+	for z: BendZone in seams_of(body):
+		if q.y - z.global_position.y <= BendZone.MATTER_FEET_M and _over(z, q, 0.0):
+			return true
+	return false
 
 
 ## Everyone (the players and the fighters, whatever their side) within `r` m of `at`, flat, as BendStatus.near lists them: a

@@ -24,12 +24,20 @@ extends SceneTree
 ##                     half the strike's % (11 of 22), no launch; its caster in live water too; Classic nothing
 ##   Hold the Storm    the foe's Lightning perfectly Parried with E held: nothing goes back while E is held; let go, it strikes
 ##                     him at x1.2 (as Classic's at once); held past 0.8 s it leaves by itself; his fire sent back x1.1 (1.2)
+##   Magma (the set)   a real Kick's wave dying on a wall leaves a 1.5 m seam for 3 s: a foe on it gains 1% each 0.5 s, 4 at
+##                     most; never its owner; two at once (a third cools the oldest); water over it leaves a loose obsidian
+##                     stone of his; the Axe Kick's wave too; a bot wearing it the same; Classic none
+##   Lava Kick         the Kick's last 4 m one seam; its knock base 10.5 (9.5: the tree's from fixed to today's data)
+##   Magma Fist        a seam where the grown Punch lands; its core 22% (20)
+##   Magma Landing     a real Jets dash: a 2 m seam where it lands; with the set alone none
+##   Forge             standing on his own seam his fill x1.15; his seams last 2.5 s (3)
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
 const BUILT := ["fire.parry.hot_hands", "fire.punch.rhythm", "fire.kick.chain", "fire.lightning.grounded",
 		"fire.passive.dancing_feet", "fire.passive.hot_feet", "fire.fireball.blazing", "fire.highkick.crescent_burn",
-		"fire.step.ignite", "fire.breath.scald", "fire.wall.curved", "fire.lightning.forked", "fire.parry.hold_storm"]
+		"fire.step.ignite", "fire.breath.scald", "fire.wall.curved", "fire.lightning.forked", "fire.parry.hold_storm",
+		"fire.set.magma", "fire.magma.fist", "fire.magma.lava_kick", "fire.magma.landing", "fire.magma.forge"]
 const WATCHDOG_S := 400.0
 
 var checks := 0
@@ -154,6 +162,8 @@ func _run() -> void:
 	await _curved()
 	await _forked()
 	await _hold_storm()
+	await _magma()
+	await _magma_nodes()
 	_end()
 
 
@@ -791,6 +801,180 @@ func _hold_storm() -> void:
 		c.guard_override = false
 	_expect(is_equal_approx(float(rm[""]), 1.2) and is_equal_approx(float(rm["fire.parry.hold_storm"]), 1.1),
 			"Hold the Storm: a perfect Parry sends fire back x%.1f (Classic x%.1f)" % [rm["fire.parry.hold_storm"], rm[""]])
+
+
+# ---------------------------------------------------------------- the Magma set
+## `ids` worn together by `who` (the player by default) as a fire caster.
+func _wear_all(ids: Array, on: Node = null) -> void:
+	var who: Node = p if on == null else on
+	BendLoadout.clear(who)
+	var ov := BendLoadout.wear(who, ids, "", "fire")
+	if (ov.ids as Array).size() != ids.size():
+		_expect(false, "%s worn (refused: %s)" % [ids, str(ov.refused)])
+
+
+func _seams_of(owner: Node) -> Array:
+	return FireTalents.seams_of(owner)
+
+
+## A stone wall `ahead` m along `dir` from `from` (on the deck), across the way.
+func _wall_at(from: Vector3, dir: Vector3, ahead: float) -> FormRaised:
+	var at := FormEffects.ground_at(p, from + dir * ahead)
+	return BendEffects._wall(p, Transform3D(Basis.looking_at(-dir, Vector3.UP), at), "stone", 8.0, 4.0)
+
+
+## A real Kick (key 2) let go at its click into a wall `ahead` m before him: the seams of his after it (and the wall's place).
+func _kick_into_wall(ahead := 5.0) -> Array:
+	await _calm()
+	var dir := bc.facing()
+	var w := _wall_at(p.global_position, dir, ahead)
+	await _secs(0.8)
+	await _tap(1)
+	var began := await _begin("fire_kick")
+	var cast_ok := await _cast_at(0.0)
+	await _secs(1.0)
+	var seams := _seams_of(p)
+	var out := [began and cast_ok, seams.size(), seams[0] if not seams.is_empty() else null, w.global_position if is_instance_valid(w) else Vector3.INF]
+	return out
+
+
+func _magma() -> void:
+	# Classic: the Kick into a wall leaves nothing
+	_wear("")
+	var c0: Array = await _kick_into_wall()
+	_wear_all(["fire.set.magma"])
+	var m0: Array = await _kick_into_wall()
+	_expect(bool(c0[0]) and bool(m0[0]), "Kick: real casts into a wall")
+	var sz: BendZone = m0[2]
+	var wall_at: Vector3 = m0[3]
+	_expect(int(c0[1]) == 0 and int(m0[1]) == 1 and sz != null and sz.kind == "seam" and is_equal_approx(sz.size.x, 1.5)
+			and is_equal_approx(sz.life_s, 3.0) and sz.tick_cap == 4 and sz.tick_tag == "matter/magma"
+			and Vector2(sz.global_position.x - wall_at.x, sz.global_position.z - wall_at.z).length() < 1.6,
+			"Magma: the Kick's wave dying on a wall leaves a seam %.1f m wide, %.1f s, 4 ticks at most, before the wall (Classic %d)"
+			% [sz.size.x if sz else -1.0, sz.life_s if sz else -1.0, int(c0[1])])
+	if sz == null:
+		return
+	var seam_at := sz.global_position
+	var on := await _foe_in(seam_at, 2.6)
+	_expect(_ticks_on(foe, "matter/magma", BendStatus.now() - 2.7) == 4, "Magma: a foe on the seam gains %d ticks (%.2f%%), 4 at most" % [_ticks_on(foe, "matter/magma", BendStatus.now() - 2.7), on[1]])
+	# its owner never; two at once (a third cools the oldest)
+	await _calm()
+	_wear_all(["fire.set.magma"])
+	var a := FireTalents.seam(p, p.global_position, Vector3.FORWARD, {"width_m": 1.5, "thick_m": 1.5})
+	var t0 := BendStatus.now()
+	await _secs(1.0)
+	var own := _ticks_on(p, "matter/magma", t0)
+	var b := FireTalents.seam(p, p.global_position + Vector3(0, 0, 3), Vector3.FORWARD, {"width_m": 1.5, "thick_m": 1.5})
+	await _ticks(2)
+	var c := FireTalents.seam(p, p.global_position + Vector3(0, 0, -3), Vector3.FORWARD, {"width_m": 1.5, "thick_m": 1.5})
+	await _ticks(2)
+	var mine := _seams_of(p)
+	_expect(own == 0 and mine.size() == 2 and not mine.has(a) and mine.has(b) and mine.has(c),
+			"Magma: his own seam never burns him (%d); two at once, a third cools the oldest (%d standing)" % [own, mine.size()])
+	# water over it: a loose obsidian stone of his
+	var loose0 := FormStone.loose_of(p).size()
+	var bz: BendZone = c
+	var wspec := {"do": "bolt", "kind": "water", "mps": 20.0, "damage": 4.0, "knock_mps": 1.0, "radius_m": 0.2, "range_m": 6.0}
+	BendBolt.launch(foe, bz.global_position + Vector3.UP * 1.5, Vector3.DOWN, wspec)
+	await _secs(0.5)
+	var stones := FormStone.loose_of(p).filter(func(s: Node) -> bool: return s.has_meta(&"talent_obsidian"))
+	_expect((not is_instance_valid(bz) or bz.is_queued_for_deletion()) and stones.size() >= 1 and FormStone.loose_of(p).size() > loose0,
+			"Magma: water on a seam cools it to a loose obsidian stone of his (%d)" % stones.size())
+	# the Axe Kick's wave into a wall: a seam too
+	await _calm()
+	_wear_all(["fire.set.magma"])
+	var dir := bc.facing()
+	var w := _wall_at(p.global_position, dir, 3.5)
+	await _secs(0.8)
+	var ws: Dictionary = ((((SwayMoves.move("fire_kick").bend as Dictionary).slam as Dictionary).wave) as Dictionary).duplicate()
+	var wsp := BendLoadout.spec(p, "fire_kick", "slam", (SwayMoves.move("fire_kick").bend as Dictionary).slam as Dictionary)
+	var winfo := BendR3.info_for(bc, "fire_kick", "slam", false, wsp)
+	winfo["tag"] = String(winfo.tag) + "_wave"
+	ws["_info"] = winfo
+	ws["mps"] = float(((wsp.wave) as Dictionary).mps)
+	var wb := BendBolt.launch(p, p.global_position + dir * 0.5, dir, ws)
+	await _secs(0.8)
+	_expect(_seams_of(p).size() == 1 and is_equal_approx(ws.mps, 14.2), "Magma: the Axe Kick's wave (%.1f m/s) dying on a wall leaves a seam too (%d)" % [ws.mps, _seams_of(p).size()])
+	if is_instance_valid(w):
+		w.queue_free()
+	# a bot wearing the set: its own Kick's wave into a wall
+	var nb: NpcBending = (foe.get(&"brain") as NpcBrain).bending if foe.get(&"brain") != null else null
+	if nb != null:
+		await _calm()
+		_wear_all(["fire.set.magma"], foe)
+		var to_p := Vector3(p.global_position.x - foe.global_position.x, 0.0, p.global_position.z - foe.global_position.z).normalized()
+		var bw := BendEffects._wall(foe, Transform3D(Basis.looking_at(-to_p, Vector3.UP), FormEffects.ground_at(foe, foe.global_position + to_p * 4.0)), "stone", 8.0, 4.0)
+		await _secs(0.8)
+		nb.begin("fire_kick", "kick")
+		nb.lock_t = nb.lock_s
+		nb._release()
+		await _secs(1.5)
+		_expect(FireTalents.seams_of(foe).size() == 1, "Magma: a bot wearing the set leaves a seam where its Kick's wave dies (%d)" % FireTalents.seams_of(foe).size())
+		nb._cancel()
+		BendLoadout.clear(foe)
+		if is_instance_valid(bw):
+			bw.queue_free()
+
+
+func _magma_nodes() -> void:
+	# Lava Kick: the Kick's last 4 m one seam
+	_wear_all(["fire.set.magma", "fire.magma.lava_kick"])
+	var lk: Array = await _kick_into_wall(6.0)
+	var lz: BendZone = lk[2]
+	var cls := BendLoadout.hit_class(p, RingRules.class_of("fire_kick/kick"))
+	_expect(lz != null and is_equal_approx(lz.size.z, 4.0) and is_equal_approx(lz.size.x, 1.5) and is_equal_approx(float(cls.get("base", 0.0)), 10.5),
+			"Lava Kick: the wave's last %.1f m one seam; its knock base %.1f (9.5)" % [lz.size.z if lz else -1.0, float(cls.get("base", 0.0))])
+	# Magma Fist: a seam where the grown Punch lands
+	var fist := {}
+	for ids: Array in [["fire.set.magma"], ["fire.set.magma", "fire.magma.fist"]]:
+		await _calm()
+		_wear_all(ids)
+		var dir := bc.facing()
+		var g := FormEffects.ground_at(p, p.global_position + dir * 4.0)
+		var b := _fireball_at(g, g + Vector3.UP * 3.0)
+		await _until(func() -> bool: return not is_instance_valid(b), 2.0)
+		await _ticks(3)
+		var s := _seams_of(p)
+		fist[ids.size()] = [s.size(), (s[0] as BendZone).global_position.distance_to(g) if not s.is_empty() else -1.0]
+	var fc := BendLoadout.hit_class(p, RingRules.class_of("fire_blast/punch.grown"))
+	_expect(int(fist[1][0]) == 0 and int(fist[2][0]) == 1 and float(fist[2][1]) < 0.6 and is_equal_approx(float(fc.get("d", 0.0)), 22.0),
+			"Magma Fist: a seam where the ball of magma lands (%d, %.2f m off; the set alone %d); its core %.0f%% (20)" % [fist[2][0], fist[2][1], fist[1][0], float(fc.get("d", 0.0))])
+	# Magma Landing: a real Jets dash
+	var land := {}
+	for ids: Array in [["fire.set.magma"], ["fire.set.magma", "fire.magma.landing"]]:
+		await _calm()
+		_wear_all(ids)
+		var n0 := casts.size()
+		await _tap(2)
+		await _tap(2)                       # (key 3 tapped twice: the Jets)
+		var cast_ok := await _until(func() -> bool: return casts.size() > n0, 1.5) < INF
+		var jets := cast_ok and String(casts[-1][0]) == "fire_jets"
+		var ended := await _until(func() -> bool: return p.has_meta(&"bend_dash_end"), 3.0) < INF
+		await _ticks(3)
+		var s := _seams_of(p)
+		land[ids.size()] = [jets and ended, s.size(), (s[0] as BendZone).radius if not s.is_empty() else -1.0,
+				Vector2((s[0] as BendZone).global_position.x - p.global_position.x, (s[0] as BendZone).global_position.z - p.global_position.z).length() if not s.is_empty() else -1.0]
+	_expect(bool(land[1][0]) and bool(land[2][0]), "Jets: real dashes cast and landed")
+	_expect(int(land[1][1]) == 0 and int(land[2][1]) == 1 and is_equal_approx(float(land[2][2]), 1.0) and float(land[2][3]) < 1.0,
+			"Magma Landing: a %.1f m seam where the Jets land (%.2f m from him; the set alone %d)" % [float(land[2][2]) * 2.0, land[2][3], land[1][1]])
+	# Forge: his fill x1.15 on his own seam; his seams 2.5 s
+	var forge := {}
+	for ids: Array in [["fire.set.magma"], ["fire.set.magma", "fire.magma.forge"]]:
+		await _calm()
+		_wear_all(ids)
+		var s := FireTalents.seam(p, FormEffects.ground_at(p, p.global_position), Vector3.FORWARD, {"width_m": 1.5, "thick_m": 1.5})
+		await _tap(3)
+		c.speed_override = 0.0
+		var began := await _begin("fire_wall")
+		await _ticks(2)
+		var f0 := c.fill
+		await _ticks(18)
+		forge[ids.size()] = [began, c.fill - f0, s.life_s if s != null else -1.0]
+		c.held_override = false
+		c.speed_override = null
+	_expect(absf(float(forge[2][1]) / maxf(float(forge[1][1]), 1e-4) - 1.15) < 0.03 and is_equal_approx(float(forge[2][2]), 2.5)
+			and is_equal_approx(float(forge[1][2]), 3.0),
+			"Forge: on his own seam the fill x%.2f; his seams last %.1f s (the set alone %.1f s)" % [float(forge[2][1]) / maxf(float(forge[1][1]), 1e-4), forge[2][2], forge[1][2]])
 
 
 # ---------------------------------------------------------------- a bot wearing them

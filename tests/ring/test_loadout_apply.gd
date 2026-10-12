@@ -191,8 +191,10 @@ func _run() -> void:
 		var el := id.get_slice(".", 0)
 		var w := _body()
 		var bot := _body()
-		var ov := BendLoadout.wear(w, [id], "", el)
-		_expect((ov.ids as Array) == [id] and BendLoadout.picks_of(w) == [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
+		# (worn with the nodes it requires, as a loadout must wear it: a set's node with its set; their numbers do not overlap)
+		var rq: Array = (n.get("requires", []) as Array).duplicate() if n.get("requires") is Array else []
+		var ov := BendLoadout.wear(w, rq + [id], "", el)
+		_expect((ov.ids as Array) == rq + [id] and BendLoadout.picks_of(w) == rq + [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
 			var rest := path.get_slice(":", 1)
@@ -262,7 +264,10 @@ func _run() -> void:
 					_expect(_near(_dig(bs, keys.slice(1)), from) and bs == base, "%s: a body that wears nothing reads %s (%s)" % [id, path, from])
 				# every key the node does not name is today's
 				var named := {}
-				for c2: Dictionary in n.changes:
+				var worn_ch: Array = (n.changes as Array).duplicate()
+				for q: Variant in rq:
+					worn_ch.append_array(_node(String(q)).get("changes", []) as Array)     # (and the nodes it is worn with)
+				for c2: Dictionary in worn_ch:
 					if String(c2.path).begins_with("spec:%s/%s." % [mv, md]):
 						named[String(c2.path).get_slice(".", 1)] = true
 				var rest_same := true
