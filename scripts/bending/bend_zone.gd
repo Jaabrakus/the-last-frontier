@@ -124,6 +124,17 @@ var _tick := 0.0
 var _fx: Array[Node] = []
 var _pushed := {}                  ## a wind wall: body id -> when it last pushed it back (BendStatus.now())
 var _caught := {}                  ## a Wind Prison: body id -> true once it has caught him (_imprison)
+## MATTER (the skill tree's tick contract; a worn fire talent's floor fire, FireTalents): a zone with a tick class (spec tick_tag,
+## matter/burn or matter/magma in rules.json stock.classes) adds % only (no_flinch, no_hurt) to whoever stands in it with his feet
+## on its floor, one tick each MATTER_EVERY_S from all the matter he stands in, at most tick_cap ticks from one zone; never to its
+## owner or his side; a jump clears it. Classic makes none (no spec has a tick_tag).
+var tick_tag := ""
+var tick_cap := 0
+var round_zone := false            ## (a patch: inside() reads its radius, not its box)
+var _ticks_to := {}                ## body id -> the ticks it gave him
+const MATTER_META := &"bend_matter_tick_at"
+const MATTER_EVERY_S := 0.5
+const MATTER_FEET_M := 0.45
 
 
 static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_way := Vector3.FORWARD) -> BendZone:
@@ -139,6 +150,9 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.speed = float(spec.get("mps", 0.0))
 	z.put_out = bool(spec.get("put_out", false))
 	z.prison_s = float(spec.get("prison_s", 0.0))
+	z.tick_tag = String(spec.get("tick_tag", ""))
+	z.tick_cap = int(spec.get("tick_cap", 0))
+	z.round_zone = bool(spec.get("round", false))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -221,7 +235,7 @@ func _look() -> void:
 			_fx.append_array([crest, foam, foot])
 			_grow(look, Vector3(1.0, 0.02, 1.0))
 			_own_fade(look)
-		"fire_wall", "burn":
+		"fire_wall", "burn", "seam":
 			_flames(look)
 			var h := size.y if kind == "fire_wall" else 0.5
 			var em := BendLooks.emitter(self, "embers", Vector3(size.x * 0.5, 0.1, size.z * 0.5), int(10 * maxf(size.x, size.z)),
@@ -495,7 +509,7 @@ func _wind_push() -> void:
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
 	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
-			or kind in GUARDS:
+			or kind in GUARDS or round_zone:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
 
@@ -511,6 +525,9 @@ func _every(dt: float) -> void:
 		if not inside(n.global_position):
 			continue
 		now_in[n.get_instance_id()] = true
+		if tick_tag != "":
+			_matter_tick(n)
+			continue
 		match kind:
 			"fire_wall", "burn":
 				if BendR3.stock() and kind == "fire_wall":
@@ -876,6 +893,7 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 	var bc := BendCaster.of(owner)
 	if bc != null:
 		bc.guarded.emit(result, what)
+	FireTalents.guarded(owner, result, what, el)        # (a worn talent's answer to a guard: Hot Hands)
 
 
 ## Carried wind on `body` (air's passive: a hit straight out of a dash, a near miss or a bounced guard knocks harder for
@@ -1368,6 +1386,23 @@ static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) ->
 ## A body inside a fire wall at a tick, in the % ring (spec §2.3): on its entry (not inside at the last tick, and its last
 ## entry pop fire_wall.entry_every_s ago or more) a set pop of entry_mps at entry_deg out of the wall's face; inside after,
 ## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
+## A matter zone's tick on `n` (see MATTER): % only, the hit no_hurt (no lock set-back, no Lightning-charge break, no string).
+func _matter_tick(n: Node3D) -> void:
+	if not BendStatus.can_take(n, owner_node) or n.global_position.y - global_position.y > MATTER_FEET_M:
+		return                                    # (his own and his side's never; floor fire: jumped, his feet over it)
+	var id := n.get_instance_id()
+	var k := int(_ticks_to.get(id, 0))
+	if tick_cap > 0 and k >= tick_cap:
+		return
+	var now := BendStatus.now()
+	if now - float(n.get_meta(MATTER_META, -INF)) < MATTER_EVERY_S - 1e-3:
+		return                                    # (one tick each 0.5 s from all the matter he stands in)
+	n.set_meta(MATTER_META, now)
+	_ticks_to[id] = k + 1
+	BendR3.deliver(n, 1.0, n.global_position + Vector3.UP * 0.3, way, owner_node, -1.0, Vector3.ZERO,
+			{"tag": tick_tag, "no_hurt": true, "matter": kind, "move": String(info.get("move", "")), "from": global_position})
+
+
 func _fire_wall_hit(n: Node3D, dt: float) -> void:
 	var id := n.get_instance_id()
 	var fw := BendR3.block("fire_wall")

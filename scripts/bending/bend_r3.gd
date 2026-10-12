@@ -177,8 +177,9 @@ static func take(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_
 		hits_log.pop_front()
 	hits_log.append({"n": n, "by": by, "tag": String(inf.get("tag", "")), "info": inf, "kv": kv, "at": BendStatus.now()})
 	var vs := SwayCaster.of(n)
-	if vs != null:
-		vs.took_hit()                              # (the struck one's lock: Lightning's charge breaks, nothing else)
+	if vs != null and not bool(inf.get("no_hurt", false)):
+		vs.took_hit()                              # (the struck one's lock: Lightning's charge breaks, nothing else; a matter
+		                                           # tick's no_hurt hit never: the tree's tick contract)
 
 
 ## The hitter's side of a hit (deliver): his SwayCaster's note of it (landing lag, the jab step), his last hit's time.

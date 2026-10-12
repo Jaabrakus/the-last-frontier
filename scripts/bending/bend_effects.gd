@@ -273,6 +273,8 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			brace(bc, float(spec.get("range_m", 12.0)))
 		"shove":
 			shove(bc, a, String(spec.get("how", "push")), spec)
+	if FireTalents.any(p):
+		FireTalents.cast(bc, m, mode, spec, a)       # (what a worn talent adds to this cast; Classic never gets here)
 
 
 ## Move `m`'s lock time at `mode` (s; its mode_lock_s, else its lock_s): what a hit with it costs the struck one's lock.

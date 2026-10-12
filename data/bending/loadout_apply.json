@@ -15,7 +15,8 @@
     "fire.lightning.pistol (Lightning Pistol, 2026-10-11, the owner: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"): fire's Storm twist. Worn, Lightning is cast from the game's standing pistol aim (its change pose:fire_arc/lightning, BendLoadout's pose overlay) and charges in 1.5 s (from 2.2), its flash 0.4 s before the strike (from 0.25); not worn, the original two-handed Lightning plays as before. Live on the owner's word for him to try; its numbers are starting values and have not been through the soak yet.",
     "The class numbers (2026-10-11, the owner on the tree: \"fix it\"): a node's change class:<tag>+<variant>.<key> sets one number (d, base, growth, angle, set_stun; volley_n only beside the node's own spec count) of the % ring class of the wearer's own hits with that tag (BendLoadout's class part, RingRules.on_hit through BendLoadout.hit_class); the hit keeps its tag, so staling and the range exemption still see the move. That made nine more nodes whole, live on the owner's word and NOT yet through the soak (their numbers are the tree's starting values): earth.fissure.deep (Deep Fissure), water.spear.cold_hands (Cold Hands), water.spear.heavy (Heavy Spear), water.downpour.pooling (Pooling Downpour), fire.punch.snap (Snap Punch), fire.lightning.short_fuse (Short Fuse), fire.embers.tight (Tight Embers), air.palm.shoving (Shoving Palm), air.gust.rising (Rising Gust). water.mud.lash is not live: it requires the Mud set (new mud pools, not numbers) and its smother is not in its changes; a node whose required node is not live is refused (BendLoadout.why_not).",
     "The binds (2026-10-11, the owner: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: the feet only, as a skill tree twist, fire's a lightning shock): Stone Grip (earth.column.grip), Frost Geyser (water.geyser.frost), Static Shock (fire.lightning.shock) and Tripwind (air.pull.trip). Each sets its move's new spec key bind_s (from none: BendLoadout.NEW_SPEC_KEYS) to 0.7: its hit holds the feet (BendStatus.bind: no run, jump, roll, dodge or dash; aim, casts and the guard free; weaker each time on the same body, rules.json stock.bind) in place of its launch, and lowers its %. Live on the owner's word, not yet soaked.",
-    "Wind Prison (air.wall.prison) and Drenching Wave (water.wave.drench), 2026-10-11 (the owner: \"air should have air prisons where they can catch someone mid flight and water should be able slowdown\"; both as twists): spec keys Classic lacks, prison_s 1.0 (BendZone: the Wind Wall holds whoever it touches in the air, helpless, and turns no shot aside; its wall 4.5 m tall from 2.5, so it reaches a knock-up's float) and drench_s 1.5 (the Wave's hit soaks him: 30% slower, BendStatus.drench). Live on the owner's word, not soaked."
+    "Wind Prison (air.wall.prison) and Drenching Wave (water.wave.drench), 2026-10-11 (the owner: \"air should have air prisons where they can catch someone mid flight and water should be able slowdown\"; both as twists): spec keys Classic lacks, prison_s 1.0 (BendZone: the Wind Wall holds whoever it touches in the air, helpless, and turns no shot aside; its wall 4.5 m tall from 2.5, so it reaches a knock-up's float) and drench_s 1.5 (the Wave's hit soaks him: 30% slower, BendStatus.drench). Live on the owner's word, not soaked.",
+    "Fire's behaviour talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"; scripts/bending/fire_talents.gd, tests/ring/test_talents_fire.gd), live on that word and NOT soaked. The techniques' head starts (a lock begun within its window starts part full, never a whole lock): Hot Hands (a perfect Parry: the next Punch half full within 1 s), Two-Hand Rhythm (a Punch let go on the Beat, within 0.2 s of its click: the next Punch 30% full within 1 s), Chain Kicks (a Kick on the Beat: the next Kick 40% full within 0.6 s), Grounded Charge (a hit breaks the Lightning charge: the next Lightning half full within 1 s); the passives' fill: Hot Feet (standing still x0.9, on the move x1.1), Dancing Feet (on the move x0.9, x1.15 for 0.6 s after a Step ends). A bot wearing one (a test) reads the same seams in NpcBending."
   ],
   "enabled": true,
   "classic_style": false,
@@ -56,9 +57,22 @@
     "water.passive.rapids": true,
     "fire.parry.reaching": true,
     "air.passive.long_carry": true,
-    "air.passive.gale_force": true
+    "air.passive.gale_force": true,
+    "fire.parry.hot_hands": true,
+    "fire.punch.rhythm": true,
+    "fire.kick.chain": true,
+    "fire.lightning.grounded": true,
+    "fire.passive.dancing_feet": true,
+    "fire.passive.hot_feet": true
   },
-  "behaviour": {},
+  "behaviour": {
+    "fire.parry.hot_hands": "FireTalents.guarded (BendZone.report), FireTalents.head_start (SwayCaster._try_begin, NpcBending.begin)",
+    "fire.punch.rhythm": "FireTalents.beat (SwayCaster's release, NpcBending._release), FireTalents.head_start",
+    "fire.kick.chain": "FireTalents.beat, FireTalents.head_start",
+    "fire.lightning.grounded": "FireTalents.charge_broken (SwayCaster.took_hit, NpcBending.tick), FireTalents.head_start",
+    "fire.passive.dancing_feet": "FireTalents.fill_mult (SwayCaster._hold, NpcBending.tick), FireTalents.cast (the Step's mark)",
+    "fire.passive.hot_feet": "FireTalents.fill_mult (SwayCaster._hold, NpcBending.tick)"
+  },
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -82,6 +96,12 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force",
+    "fire.parry.hot_hands",
+    "fire.punch.rhythm",
+    "fire.kick.chain",
+    "fire.lightning.grounded",
+    "fire.passive.dancing_feet",
+    "fire.passive.hot_feet"],
   "styles_live": ["boxing"]
 }

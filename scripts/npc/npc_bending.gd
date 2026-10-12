@@ -598,6 +598,7 @@ func tick(dt: float) -> void:
 		_jump_floor()                              # (mid-lock too: the jump never gates a lock, the player's Space)
 	if casting != "" and stock():
 		if mind().stunned() and casting == "fire_arc" and mode == "lightning":
+			FireTalents.charge_broken(me, casting)  # (a worn Grounded Charge keeps half of it)
 			_lose("hit")                           # (lightning's charge breaks in hitstun)
 			return
 		if (owned and not mind().lock_runs()) or mind().stunned():
@@ -627,7 +628,7 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		lock_t += dt
+		lock_t += dt if not FireTalents.any(me) else dt * FireTalents.fill_mult(me, Vector2(me.velocity.x, me.velocity.z).length() > 1.0)
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -1358,6 +1359,10 @@ func begin(id: String, md: String) -> void:
 	# this lock's cast, _release)
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
+	var head := FireTalents.head_start(me, id)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
+	if head > 0.0:
+		lock_t = lock_s * head
+		fill = head
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1372,7 +1377,8 @@ func begin(id: String, md: String) -> void:
 		me.face_point(t.global_position)
 	me.action = "cast"
 	if me.body != null:
-		me.body.play_cast(id, md, lock_s, element, grown)   # (grown: a pose's own grown clip, the Air Lance's spear throw)
+		me.body.play_cast(id, md, lock_s - lock_t, element, grown)   # (grown: a pose's own grown clip, the Air Lance's spear
+		                                                             # throw; what is left of it after a worn head start)
 	if bend_cast() == null and id == "stone_form" and md == "spike":
 		_raise_spike(t)
 	if SHOW_LOCK_CIRCLE and me.is_inside_tree():
@@ -1412,6 +1418,8 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
+	if FireTalents.any(me) and not caster.grown:
+		FireTalents.beat(me, id, md, took - lock_s)   # (let go on the Beat: a worn technique's; a grown cast never is)
 	var ok := _cast(id, md, t)
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)

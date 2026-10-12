@@ -81,7 +81,8 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"stock:late_mult", "rules:passives.water.steer_dps", "rules:passives.water.steer_max_deg", "rules:passives.water.steer_s",
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
-		"move:stone_form.cannonball.radius_m"]
+		"move:stone_form.cannonball.radius_m",
+		"rules:passives.fire.moving_mult"]      # (fire's Footwork on the move: Hot Feet, Dancing Feet; SwayCaster._moving_mult)
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}

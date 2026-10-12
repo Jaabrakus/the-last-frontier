@@ -952,6 +952,7 @@ func took_hit() -> void:
 		return
 	if String(spec_of(move).get("do", "")) == "lightning":
 		var src := lock_src
+		FireTalents.charge_broken(player, move)  # (a worn Grounded Charge keeps half of it)
 		_break("hit")
 		if _src_held(src):
 			_wait_release = true
@@ -1609,6 +1610,8 @@ func _physics_process(dt: float) -> void:
 				elif _cast_wait():
 					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
+					if elem() and FireTalents.any(player):
+						FireTalents.beat(player, move, mode_of(move), full_t)     # (let go on the Beat: a worn technique's)
 					_cast()
 			State.LOCKING:
 				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
@@ -2336,6 +2339,7 @@ func _try_begin(q: Dictionary) -> void:
 		_r3_form(m)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
+	fill = FireTalents.head_start(player, m)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:
@@ -2716,7 +2720,8 @@ func _moving_mult(m: String) -> float:
 	var mm: Dictionary = d.get("mode_moving_mult", {})
 	var k := float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
 	if elem() and quick_element() == "fire":
-		k = maxf(k, float(Bending.passive("fire").get("moving_mult", 1.0)))     # (Footwork: full speed on the move)
+		# (Footwork: full speed on the move; a worn Hot Feet or Dancing Feet its own, BendLoadout.tune)
+		k = maxf(k, BendLoadout.tune_f(player, "rules:passives.fire.moving_mult", float(Bending.passive("fire").get("moving_mult", 1.0))))
 	return k
 
 
@@ -2756,6 +2761,8 @@ func _hold(dt: float, q: Dictionary) -> void:
 			rate = 0.0                            # (Patch: standing still only)
 		var pf := passive_fill()
 		rate *= pf
+		if FireTalents.any(player):
+			rate *= FireTalents.fill_mult(player, hs > moving_mps)     # (a worn passive's fill: Hot Feet, Dancing Feet)
 		if pf > 1.0:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:
