@@ -8,7 +8,7 @@ extends SceneTree
 ##                loadout_classic_golden.json, taken from the code BEFORE the loadouts (c0a631a0^) by
 ##                tools/ring/loadout_classic_print_run.gd (taken again 2026-10-10 when Classic itself changed, nothing worn: earth's 2
 ##                the Fissure, the Gust grown the Air Lance and its spear throw, fire's kicks free after the strike; every other
-##                entry equal): with the file as shipped, with the master switch off, with every node on and
+##                entry equal; and 2026-10-11 the High Kick's and the air kick's lock 0.55 s, the owner's "fast": their locks only): with the file as shipped, with the master switch off, with every node on and
 ##                nothing worn, and in the next match after one played wearing a loadout
 ##   2 WEARER     a worn node changes its wearer only: the bot's casts and locks are Classic's while the player wears every node of
 ##                an element, the player's are Classic's while the bot wears them, and the next match without the loadout is

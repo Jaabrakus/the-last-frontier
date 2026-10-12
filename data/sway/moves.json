@@ -1229,8 +1229,8 @@
       "self_lock": true,
       "modes": ["kick", "high_kick"],
       "mode_labels": {"kick": "Kick", "high_kick": "High Kick"},
-      "mode_lock_s": {"high_kick": 0.85, "air_kick": 0.85, "slam": 0.3},
-      "_high_kick_blast": "2026-10-11, the owner: \"the high kick we have to make it not like a arch bomb throw but make it a speedy blast\": straight along the aim (as the air kick always flew), 40 m/s (from 22, with 9 m/s2 of drop). Then \"it needs to shoot higher or flyup to the cursor\", his pick \"exactly to the crosshair\": to_crosshair, the player's blast goes to his crosshair's point, the aim's help never bending it onto a body (BendEffects.aim; a bot's aim is its own).",
+      "mode_lock_s": {"high_kick": 0.55, "air_kick": 0.55, "slam": 0.3},
+      "_high_kick_blast": "2026-10-11, the owner: \"the high kick we have to make it not like a arch bomb throw but make it a speedy blast\": straight along the aim (as the air kick always flew), 40 m/s (from 22, with 9 m/s2 of drop). Then \"it needs to shoot higher or flyup to the cursor\", his pick \"exactly to the crosshair\": to_crosshair, the player's blast goes to his crosshair's point, the aim's help never bending it onto a body (BendEffects.aim; a bot's aim is its own). Then (2026-10-11) \"we need to make where it is fast and aims at the cursor because the opponent is really close and it hits the ground its like useless\": its lock 0.55 s (from 0.85; the air kick's too), and on the ground it never meets the deck nearer than min_reach_m (6 m): a crosshair on the deck between him and a near foe tips it up just enough to fly through the foe, an aim down the deck farther off is still exactly the crosshair's (BendThrow.one; in the air it still aims down at whoever is under him).",
       "bend": {
         "kick": {
           "do": "floor_wave",
@@ -1255,6 +1255,7 @@
           "flight": "point_first",
           "straight": true,
           "to_crosshair": true,
+          "min_reach_m": 6.0,
           "width_m": 1.6,
           "radius_m": 0.4,
           "mps": 40.0,

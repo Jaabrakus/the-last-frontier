@@ -73,6 +73,17 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 		dir = v.normalized()
 	else:
 		dir = aim_dir(from, bc.chest(), point, mps, g)
+	if spec.has("min_reach_m") and not low and not BendR3.airborne(p) and dir.y < 0.0:
+		# (on the ground never into the deck close before him: the High Kick at a near foe, the crosshair on the deck between
+		# them, the owner 2026-10-11 "it hits the ground its like useless"; tipped up only as far as it needs to meet the deck's
+		# level no nearer than min_reach_m, so an aim down the deck far off is still exactly the crosshair's)
+		var h := maxf(from.y - p.global_position.y, 0.05)
+		var flat := Vector2(dir.x, dir.z).length()
+		var reach := float(spec.min_reach_m)
+		if flat > 1e-4 and h * flat / -dir.y < reach:
+			var hd := Vector2(dir.x, dir.z) / flat
+			var down := atan2(h, reach)
+			dir = Vector3(hd.x * cos(down), -sin(down), hd.y * cos(down)).normalized()
 	var flight := String(spec.get("flight", "point_first"))
 	var spread := deg_to_rad(float(spec.get("spread_deg", 0.0)))
 	if spread > 0.0 and n > 1:

@@ -241,8 +241,8 @@ func _specs() -> void:
 			and (kick.get("grow", {}) as Dictionary).has("width_m") and is_equal_approx(float(SwayMoves.move("fire_kick").get("lock_s", 0.0)), 0.6),
 			"the Kick: a floor wave along the deck, missing feet 0.6 m up, that grows; lock 0.6 s")
 	check(String(hk.get("do", "")) == "throw" and String(hk.get("shape", "")) == "crescent"
-			and is_equal_approx(float((SwayMoves.move("fire_kick").get("mode_lock_s", {}) as Dictionary).get("high_kick", 0.0)), 0.85),
-			"the High Kick: a crescent thrown on an arc, lock 0.85 s")
+			and is_equal_approx(float((SwayMoves.move("fire_kick").get("mode_lock_s", {}) as Dictionary).get("high_kick", 0.0)), 0.55),
+			"the High Kick: a crescent blast, lock 0.55 s (the owner, 2026-10-11: \"fast\")")
 	check(is_equal_approx(float(_spec("fire_arc", "lightning").get("flash_s", 0.0)), 0.25), "Lightning flashes 0.25 s before it strikes")
 	for el: String in Bending.ELEMENTS:
 		var k2: Array = Bending.keys(el)[1]
