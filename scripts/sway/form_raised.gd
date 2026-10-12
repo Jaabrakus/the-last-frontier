@@ -285,9 +285,8 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null
 		return
 	if not NetSpells.decide(self, "wall_hit", [damage, point, dir]):
 		return
-	if has_meta(&"bend_brace"):
-		remove_meta(&"bend_brace")            # (mended or braced: this hit is taken free; round 2's Mend)
-		return
+	if take_brace(self):
+		return                                # (mended or braced: this hit is taken free; round 2's Mend)
 	hits += 1
 	if is_inside_tree():
 		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
@@ -311,6 +310,19 @@ func _chips(scn: Node, point: Vector3, normal: Vector3, n: int) -> void:
 			GatherFx.soil(scn, point, normal, n)
 		_:
 			GatherFx.stone_chips(scn, point, normal, n)
+
+
+## A brace on `w` (meta bend_brace: true takes one hit free, as Mend and the Catch's brace give; an int n takes n: Reinforce's
+## two, FormEffects.mend) spent on one hit: true when it took it.
+static func take_brace(w: Node) -> bool:
+	if w == null or not w.has_meta(&"bend_brace"):
+		return false
+	var v: Variant = w.get_meta(&"bend_brace")
+	if v is int and int(v) > 1:
+		w.set_meta(&"bend_brace", int(v) - 1)
+	else:
+		w.remove_meta(&"bend_brace")
+	return true
 
 
 ## Worn by shot (mend can pack it again).

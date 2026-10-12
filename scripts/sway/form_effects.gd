@@ -959,6 +959,13 @@ static func take_wood(p: Node, kind: String, n: int) -> bool:
 	return true
 
 
+## Earth's Reinforce (data/sway/skill_tree.json earth.mend.reinforce; the owner, 2026-10-11: "make sure all the talents work"):
+## a piece its wearer mends takes its next REINFORCE_N hits free (meta bend_brace an int: FormRaised.take_brace); Mend's lock
+## is the node's (2.6 s).
+const REINFORCE := "earth.mend.reinforce"
+const REINFORCE_N := 2
+
+
 ## Mend `t` by caster `c` (see the header): the stage it mended ("" none). The player pays the pack's wood; any other caster
 ## (a bot: BendCast.cast) mends only raised earth it raised itself (own()), worn, and pays nothing.
 static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
@@ -984,7 +991,8 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 		"worn":
 			(t as FormRaised).mend()
 			if not pack:
-				t.set_meta(&"bend_brace", true)          # (round 2: a mended piece takes its next hit free)
+				# (round 2: a mended piece takes its next hit free; Reinforce's wearer, its next REINFORCE_N)
+				t.set_meta(&"bend_brace", REINFORCE_N if BendLoadout.wears(bc.body, REINFORCE) else true)
 			_tell(bc, (t as FormRaised).mended_line)       # (by its matter: "The stones set again", "The logs set again")
 		"alight":
 			var fs := FireSpread.find(t.get_tree())

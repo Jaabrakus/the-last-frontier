@@ -653,6 +653,9 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		_end_look("wall" if who is FormRaised else "world", at, n)
 		_finish("wall" if who is FormRaised else "world")
 		return
+	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
+		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
+		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)
 		if not SbFx.fire(by, sbk, "impact", sbo):
@@ -742,6 +745,41 @@ func _kick_up_end(why: String) -> void:
 	GatherFx.fall_dust(get_tree().current_scene, at, 0.4)
 
 
+## Earth's Quarry (data/sway/skill_tree.json earth.wall.quarry; the owner, 2026-10-11: "make sure all the talents work"): its
+## wearer's Fissure let go on the Beat (its info says beat: SwayCaster, NpcBending) that runs into his own wall (meta bend_by)
+## tears a chunk off it and throws the chunk on along the crack (FormEffects.gust_chunk at the wall's far side, the Fissure's own
+## hit info), the wave ending there unworn on it; the first chunk each wall costs the wall no hit (a brace for it), later ones a
+## hit each (gust_chunk's). True when it did. Its walls rise in 0.8 s (the node's rise_s).
+const QUARRY := "earth.wall.quarry"
+
+
+func _quarry(w: FormRaised, at: Vector3) -> bool:
+	var by := _by()
+	if by == null or not BendLoadout.wears(by, QUARRY) or int(w.get_meta(&"bend_by", 0)) != by.get_instance_id() \
+			or not w.is_up() or not NetSpells.decides():
+		return false
+	var first := not w.has_meta(&"quarry_torn")
+	w.set_meta(&"quarry_torn", int(w.get_meta(&"quarry_torn", 0)) + 1)
+	var had: Variant = w.get_meta(&"bend_brace") if w.has_meta(&"bend_brace") else null
+	if first:
+		w.set_meta(&"bend_brace", true)            # (the first chunk free: gust_chunk's hit taken by it)
+	var fwd := Vector3(velocity.x, 0.0, velocity.z)
+	fwd = fwd.normalized() if fwd.length_squared() > 1e-6 else -w.global_basis.z
+	var keep := BendR3.cur
+	BendR3.cur = info
+	var to := w.global_position + fwd * 20.0 + Vector3.UP * 1.2
+	var ch := FormEffects.gust_chunk(by, w, Vector3(at.x, w.global_position.y + 1.0, at.z), fwd, to)
+	BendR3.cur = keep
+	if first and is_instance_valid(w):
+		if had != null:
+			w.set_meta(&"bend_brace", had)
+		elif w.has_meta(&"bend_brace"):
+			w.remove_meta(&"bend_brace")
+	if ch != null:
+		BendLooks.burst(ch.global_position, "stone", 14)
+	return ch != null
+
+
 ## Kiln Stone (BendZone.KILN_STONE): heated by fire it crossed (its hits' info says so: the launch base x KILN_MULT for its
 ## thrower, BendLoadout.hit_class), a fire trail behind it; douse() makes it a plain stone again (a Turn).
 var heated := false
@@ -769,9 +807,8 @@ func douse() -> void:
 
 ## A raised wall worn by this bolt (WEAR by its kind and the wall's matter; the water jet's erode on an earth wall).
 func wear(w: FormRaised, at: Vector3) -> void:
-	if w.has_meta(&"bend_brace"):
-		w.remove_meta(&"bend_brace")             # (braced: this one is taken free; Catch's brace)
-		return
+	if FormRaised.take_brace(w):
+		return                                    # (braced: this one is taken free; Catch's brace, Mend's, Reinforce's two)
 	var ice := w.has_meta(&"bend_ice") or w.matter == "snow"
 	var k := float((WEAR.get(kind, [1.0, 1.0]) as Array)[1 if ice else 0])
 	if kind == "water" and not ice:

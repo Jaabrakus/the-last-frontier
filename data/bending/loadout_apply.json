@@ -64,7 +64,9 @@
     "earth.boulder.avalanche": true,
     "earth.column.heave": true,
     "earth.stone.kiln_stone": true,
-    "earth.wall.rubble": true
+    "earth.wall.rubble": true,
+    "earth.wall.quarry": true,
+    "earth.mend.reinforce": true
   },
   "behaviour": {
     "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)",
@@ -73,7 +75,9 @@
     "earth.boulder.avalanche": "GustLift._land / _avalanche (where the wearer's Boulder lands on the deck: three low rolling stone bolts fanned 15 deg, one volley of 3); FormEffects._one_boulder (the Boulder's own hit whole); BendZone catch (one of a volley held, the rest dropped at the catcher's feet); class base and volley_n per wearer",
     "earth.column.heave": "the Beat (SwayCaster _beat_go, NpcBending._release: the hit's info beat) and BendLoadout.hit_class's class_beat (the node's class change, when beat: base 11.3 only on a Beat Column); Column lock 1.7 per wearer",
     "earth.stone.kiln_stone": "BendZone.on_bolt (a stone bolt through a fire_wall or burn: BendBolt.heat) and GustLift._kiln_check (a hurled stone); BendLoadout.hit_class (info.heated: base x1.15); BendZone parry (perfect sends it back: _straight_back, _lift_back) and Turn (douse)",
-    "earth.wall.rubble": "FormRaised.crumble / _rubble_stones (shot down or capped: two loose stones of the raiser's at its foot); rise_s per wearer (wall_numbers)"
+    "earth.wall.rubble": "FormRaised.crumble / _rubble_stones (shot down or capped: two loose stones of the raiser's at its foot); rise_s per wearer (wall_numbers)",
+    "earth.wall.quarry": "BendBolt._hit / _quarry (a Beat Fissure into his own wall: FormEffects.gust_chunk thrown on along the crack, the first chunk each wall free); the Beat (info.beat); rise_s per wearer (wall_numbers)",
+    "earth.mend.reinforce": "FormEffects.mend (a mended piece's brace 2: REINFORCE_N) and FormRaised.take_brace (BendBolt.wear, apply_hit: a counted brace); Mend's lock 2.6 per wearer (move:mend.lock_s, its one mode)"
   },
   "live": [
     "air.ball.dense",
@@ -98,6 +102,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce"],
   "styles_live": ["boxing"]
 }

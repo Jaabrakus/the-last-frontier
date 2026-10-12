@@ -27,6 +27,11 @@ extends SceneTree
 ##                     (plain ones it only stops); its Turn douses them; the bot wearing it heats its own Spike the same
 ##   Rubble Wall       the wearer's wall rises in 0.8 s (0.7); shot down it leaves two loose stones of his at its foot, broken
 ##                     by his third (the cap) the same (Classic none); the bot's Fissure throws them on; the bot's own walls too
+##   Quarry            his Fissure through his own lock let go on the Beat into his own wall: a chunk torn off and thrown on
+##                     along the crack, the wall unworn (the first); again: a chunk and one hit; let go past the Beat: no chunk,
+##                     the wall worn as ever (Classic on the Beat the same); his walls rise in 0.8 s; the bot's Beat Fissure too
+##   Reinforce         his wall shot once and Mended (the cast's builder): the next two shots free, the third counts (Classic:
+##                     one free); Mend's lock x2.6/2.2 through his own lock time; the bot's Mend the same
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -178,6 +183,8 @@ func _run() -> void:
 	await _heave()
 	await _kiln_stone()
 	await _rubble()
+	await _quarry()
+	await _reinforce()
 	_end()
 
 
@@ -887,6 +894,138 @@ func _rubble() -> void:
 	_wear(bot, "")
 	await _clear_held(bot)
 	await _clear_held(player)
+
+
+# ---------------------------------------------------------------- Quarry
+## The player's move `m` at `md` through his own lock (RMB held: held_override, the key's move readied), his crosshair on `at`,
+## let go `after_s` after the lock filled. Whether it went on the Beat.
+func _lock_release(m: String, md: String, at: Vector3, after_s: float) -> bool:
+	sc.ready_spell(m)
+	sc.set_mode(m, md)
+	await _aim_at(at)
+	var beat0 := sc.beat_at
+	sc.held_override = true
+	for i in 600:
+		await _ticks(1)
+		if sc.state == SwayCaster.State.FULL:
+			break
+	await _secs(after_s)
+	sc.held_override = false
+	await _ticks(2)
+	sc.held_override = null
+	return sc.beat_at > beat0
+
+
+## The stones `by` throws from a wall (a GustLift whose stone starts within 2 m of `w`) over the next `s` s.
+func _chunks_from(by: Node3D, w_at: Vector3, s: float) -> int:
+	var seen := {}
+	for i in ceili(s * Engine.physics_ticks_per_second / 2.0):
+		await _ticks(2)
+		for l in get_nodes_in_group(GustLift.GROUP):
+			var gl := l as GustLift
+			if gl.by() == by and not seen.has(gl.get_instance_id()) and gl.stone != null and is_instance_valid(gl.stone) \
+					and gl.stone.global_position.distance_to(w_at + Vector3.UP) < 2.0:
+				seen[gl.get_instance_id()] = true
+	return seen.size()
+
+
+func _quarry() -> void:
+	var id := "earth.wall.quarry"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Quarry is live, its code built (%s)" % BendLoadout.why_not(id))
+	var res := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		await _stage(-4.5, 4.5)
+		await _clear_held(player)
+		var w := await _wall_of(player, 3.0)
+		var rows: Array = []
+		for after: float in ([0.05, 0.05, 0.3] if wid != "" else [0.05]):
+			var h0 := w.hits if is_instance_valid(w) else -1
+			var beat := await _lock_release("earth_shove", "push", NpcSenses.chest_of(bot), after)
+			var n := await _chunks_from(player, w.global_position if is_instance_valid(w) else Vector3.ZERO, 1.2)
+			rows.append([beat, n, (w.hits if is_instance_valid(w) else 99) - h0])
+			await _secs(0.4)
+		res[wid] = [rows, w.rise_s if is_instance_valid(w) else -1.0]
+		if is_instance_valid(w):
+			w.crumble("time")
+		await _secs(1.6)
+	var c: Array = res[""][0]
+	var q: Array = res[id][0]
+	_expect(not bool(c[0][0]) and int(c[0][1]) == 0 and int(c[0][2]) >= 1,
+			"Classic: a Fissure into his own wall tears nothing off, it wears it (%d chunks, +%d hits)" % [c[0][1], c[0][2]])
+	_expect(bool(q[0][0]) and int(q[0][1]) == 1 and int(q[0][2]) == 0,
+			"Quarry: let go on the Beat into his own wall, a chunk torn off and thrown on, the wall unworn (%d chunk, +%d hits)" % [q[0][1], q[0][2]])
+	_expect(bool(q[1][0]) and int(q[1][1]) == 1 and int(q[1][2]) == 1, "Quarry: the next chunk of the same wall costs it a hit (%d chunk, +%d hit)" % [q[1][1], q[1][2]])
+	_expect(not bool(q[2][0]) and int(q[2][1]) == 0 and int(q[2][2]) >= 1,
+			"Quarry: let go past the Beat, no chunk, the wall worn as ever (%d chunks, +%d hits)" % [q[2][1], q[2][2]])
+	_expect(_near(float(res[id][1]), 0.8) and _near(float(res[""][1]), 0.7), "Quarry: his walls rise in %.1f s (Classic %.1f)" % [res[id][1], res[""][1]])
+	_wear(player, "")
+	# the bot wearing it: its Fissure, let go when its lock fills (the Beat), into its own wall
+	var nb: NpcBending = bot.brain.bending
+	_wear(bot, id)
+	await _stage(-4.5, 4.5)
+	var bw := await _wall_of(bot, 3.0)
+	bot.held = false
+	nb.begin("earth_shove", "push")
+	var bn := await _chunks_from(bot, bw.global_position if is_instance_valid(bw) else Vector3.ZERO, 2.5)
+	bot.held = true
+	_expect(bn >= 1, "Quarry on the bot: its Beat Fissure into its own wall throws a chunk on (%d)" % bn)
+	_wear(bot, "")
+	if is_instance_valid(bw):
+		bw.crumble("time")
+	await _secs(1.6)
+	await _clear_held(player)
+
+
+# ---------------------------------------------------------------- Reinforce
+## One water bolt at wall `r` from `shooter`'s side; its hits after.
+func _one_shot(r: FormRaised, shooter: Node3D) -> int:
+	var mid := r.global_position + Vector3.UP * 1.0
+	var way := shooter.global_position - mid
+	way.y = 0.0
+	way = way.normalized()
+	BendBolt.launch(shooter, mid + way * 4.0, -way, SHOT)
+	await _secs(0.35)
+	return r.hits if is_instance_valid(r) else -1
+
+
+## `by`'s wall shot once, Mended by `by` (FormEffects.mend, the cast's builder), then shot three times: [mended's stage,
+## hits after each of the three].
+func _mend_and_shoot(by: Node3D, shooter: Node3D) -> Array:
+	var r := await _wall_of(by, 3.0)
+	await _one_shot(r, shooter)
+	var stage := FormEffects.mend(BendCaster.of(by), r, SwayMoves.move("mend"))
+	var hs: Array = []
+	for i in 3:
+		hs.append(await _one_shot(r, shooter))
+	if is_instance_valid(r):
+		r.crumble("time")
+	await _secs(1.6)
+	return [stage, hs]
+
+
+func _reinforce() -> void:
+	var id := "earth.mend.reinforce"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Reinforce is live, its code built (%s)" % BendLoadout.why_not(id))
+	await _stage(-4.5, 4.5)
+	var got := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		got[wid] = await _mend_and_shoot(player, bot)
+	_expect(String(got[""][0]) == "worn" and got[""][1] == [0, 1, 2], "Classic: a mended wall takes its next shot free, then counts (%s)" % [got[""][1]])
+	_expect(String(got[id][0]) == "worn" and got[id][1] == [0, 0, 1], "Reinforce: his mended wall takes its next two shots free, the third counts (%s)" % [got[id][1]])
+	# Mend's lock, his own lock time for it
+	var lk := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		lk[wid] = sc._lock_time("mend", null, 1.0, 3.0)
+	_expect(_near(float(lk[id]) / float(lk[""]), 2.6 / 2.2, 0.01), "Reinforce: Mend locks %.2f s (Classic %.2f: x2.6/2.2)" % [lk[id], lk[""]])
+	_wear(player, "")
+	# the bot's own Mend
+	_wear(bot, id)
+	var b: Array = await _mend_and_shoot(bot, player)
+	_expect(String(b[0]) == "worn" and b[1] == [0, 0, 1], "Reinforce on the bot: its mended wall takes two shots free (%s)" % [b[1]])
+	_wear(bot, "")
 
 
 ## A body made to wear `id` (a stand-in for the checks of what a wearer's overlay says).
