@@ -110,13 +110,15 @@ static func decide(thing: Node, op: String, args: Array = []) -> bool:
 
 # ---------------------------------------------------------------- the names
 ## A run that names what it makes begins (a cast's: its id; the host's decision: "" for a fresh one): the run before it,
-## for run_end.
-static func run_begin(id := "") -> Dictionary:
+## for run_end. `keep_made`: the things it makes are kept in its ctx's "made" (NetCasts' catch-up).
+static func run_begin(id := "", keep_made := false) -> Dictionary:
 	var keep := _ctx
 	if id == "":
 		_seq += 1
 		id = "h%d" % _seq
 	_ctx = {"id": id, "n": 0}
+	if keep_made:
+		_ctx["made"] = []
 	return keep
 
 
@@ -159,6 +161,8 @@ static func tag(n: Node) -> void:
 	_ctx["n"] = int(_ctx.n) + 1
 	n.set_meta(ID_META, id)
 	_things[id] = weakref(n)
+	if _ctx.has("made"):
+		(_ctx.made as Array).append(n)            # (a cast's run keeps what it made: NetCasts' catch-up)
 	if _things.size() > 512:
 		for k: String in _things.keys():
 			if (_things[k] as WeakRef).get_ref() == null:

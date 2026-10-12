@@ -173,7 +173,16 @@ attack, the Rise's, a get-up attack) is told the host, who lands it as his own d
 fighter's machine); the host checks the move came from the hitter's own machine. A jab string ended on its victim's machine
 (RingRules.string_ended) is told the host and from there the hitter's own machine, so one Pop a string holds everywhere.
 
-**Still to come in R1:** lag compensation (R1 e).
+**The wire's delay** (R1 e). A cast run on another machine is as old as the wire made it: its age is the host's clock
+now less the moment it was cast (every machine keeps the host's clock), at most 0.15 s (NetCasts.age_of). Its bolts are
+flown on by that age at once, a physics tick at a time (BendBolt.catch_up: on the host its meetings are decided as it goes,
+on a ghost passed), so the host's bolt and every ghost stand where the caster sees his. Its zones are that much older: a
+guard's beat is measured from when its guarder raised it, not from when the news came. Not done: rewinding a target to where
+the caster saw him (a hit is judged where the host has him), and lengthening a guard's beat by its guarder's own delay (on a
+slow link a guard must be raised that much sooner); both matter only past about 60 ms one way.
+
+**R1 is built.** Next: R2, 2v2 and 4v4 online (bots only on the host, the others' copies of them puppets, their casts recorded
+and run as a player's are), then R3, the player-run server.
 
 ## Phases
 
@@ -183,7 +192,7 @@ fighter's machine); the host checks the move came from the hitter's own machine.
 | R1 b | casts: every spell predicted, run by the host, ghosted elsewhere; names; the host's words about spells (built but stones) | `tests/net/test_ring_net_casts.gd` |
 | R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online; body moves and strings (built) | `tests/net/test_ring_net_casts.gd` |
 | R1 d | the match mirrored: phases, clock, lives, falls, respawns, rounds, the screens (built) | `tests/net/test_ring_net_match.gd` |
-| R1 e | lag compensation: cast fast-forward, rewound hits, guard timing; a simulated 80 ms link | `test_ring_net_lag.gd` |
+| R1 e | lag compensation: a cast's age caught up (its bolts flown on, its zones older); rewound hits not yet (built) | `tests/net/test_ring_net_lag.gd` |
 | R2 | 2v2 and 4v4 online, bots filling empty slots, more than one remote human, spectators | |
 | R3 | the player-run server: a headless export with the graphics stripped, start scripts per format, server.json (port, players, format, rounds, time, arena, bots, password, twists allowed), the main menu's Join row (address, recent servers), the host's match settings, admin commands | |
 | later | Steam relay and invites (no port forwarding), reconnect, a server list | |

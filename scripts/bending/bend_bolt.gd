@@ -980,6 +980,16 @@ func _end_look(why: String, at: Vector3, n: Vector3) -> void:
 			BendLooks.burst(at, kind, 14)
 
 
+## Flown on `s` seconds at once, a physics tick at a time (NetCasts.catch_up: a cast run here as old as the wire made it), its
+## meetings as they go (the host's: decided; a ghost's: passed).
+func catch_up(s: float) -> void:
+	var step := 1.0 / maxf(float(Engine.physics_ticks_per_second), 1.0)
+	while s > 1e-4 and not spent and is_inside_tree():
+		var d := minf(step, s)
+		_physics_process(d)
+		s -= d
+
+
 ## A turned bolt's look as it leaves a swing (drawn back to its length: become's wrap).
 func _leave_look() -> void:
 	if _swing_became:

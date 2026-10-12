@@ -15,13 +15,22 @@ extends RefCounted
 ##   raised      a Spike's or Boulder's stone raised at its lock's fill (SwayCaster._raise_at_fill) and turned by a switch
 ##               (step_other) recorded and run the same way (kind "raise", "reshape": FormEffects.raise_stone, reshape_raised
 ##               on the puppet); its grow and its drop are the lock's course (net_lock "grew", "drop", "broken", "fizzled")
+##   its age     (R1 e) a cast run here is as old as the wire made it (the host's clock now less its `sent`, at most
+##               MAX_AGE_S): its bolts are flown on by it at once (BendBolt.catch_up: on the host their meetings decided as
+##               they go), its zones are that much older (a guard's beat measured from when he raised it), so the host's
+##               things and every ghost stand where the caster sees his
 ##   the lock    the player's lock as it goes (SwayCaster's lock_started, lock_switched, locked, grew, cast, lock_broken, fizzled;
 ##               watch()) sent too (RingNet.send_lock); the puppet's SwayCaster plays it (SwayCaster.net_lock): its state
 ##               and its signals, so its SwayPose poses him as his own machine poses him
 ## Offline nothing is recorded and nothing is sent: begin() is {} and end() does nothing.
 
+## The most of a cast's age caught up (s): what the wire took past it is not made up (a bolt never jumps far).
+const MAX_AGE_S := 0.15
+
 ## Every cast this machine has sent (tests: the newest last, at most 32) and run for another machine.
 static var sent: Array = []
+## Tests: added to every cast's age here (a slow link stood in for on one machine).
+static var age_bias := 0.0
 static var ran: Array = []
 static var _seq := 0
 ## The SwayCasters watched for their locks (instance ids).
@@ -119,7 +128,8 @@ static func run(ev: Dictionary, from: int) -> void:
 	var t: Node3D = net.body_by_net_id(int(ev.get("t", 0)))
 	if t == null:
 		t = p                                         # (no body: the move's own point (`at`) is what it reads)
-	var keep_ctx := NetSpells.run_begin(String(ev.get("id", "")))
+	var keep_ctx := NetSpells.run_begin(String(ev.get("id", "")), true)
+	var made: Array = NetSpells.ctx().get("made", [])
 	match String(ev.get("kind", "cast")):
 		"raise":
 			sc.raised = FormEffects.raise_stone(sc, m, mode)          # (his Spike or Boulder up before him, as on his machine)
@@ -130,6 +140,7 @@ static func run(ev: Dictionary, from: int) -> void:
 			SwayEffects.apply(sc, m, t, ev.get("at", p.global_position))
 			FormEffects.drop_raised_of(p)              # (a stone the cast did not throw lies loose, as his)
 	NetSpells.run_end(keep_ctx)
+	catch_up(made, age_of(ev))
 	sc.net_unpin()
 	nbc.grown = false
 	nbc.end()
@@ -141,6 +152,25 @@ static func run(ev: Dictionary, from: int) -> void:
 	p.velocity = keep_v
 	p.yaw = keep_yaw
 	p.pitch = keep_pitch
+
+
+## Cast `ev`'s age here (s): the host's clock now less when it was cast, at most MAX_AGE_S (0: no clock yet).
+static func age_of(ev: Dictionary) -> float:
+	var net := NetSpells.net
+	if net == null or not net.clock.synced or not ev.has("sent"):
+		return 0.0
+	return clampf(net.clock.now() - float(ev.sent) + age_bias, 0.0, MAX_AGE_S)
+
+
+## The things a cast's run made, `age` s on: its bolts flown on (BendBolt.catch_up), its zones that much older.
+static func catch_up(made: Array, age: float) -> void:
+	if age <= 0.0:
+		return
+	for n: Variant in made:
+		if n is BendBolt and is_instance_valid(n):
+			(n as BendBolt).catch_up(age)
+		elif n is BendZone and is_instance_valid(n):
+			(n as BendZone).t += age
 
 
 ## Peer `from`'s lock event `e` played on his puppet's SwayCaster.
