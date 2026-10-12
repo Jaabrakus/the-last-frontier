@@ -84,13 +84,23 @@ func _rest() -> void:
 	c.last_key3 = ""
 
 
-## Both mid-deck again, the fight on and casting let back (a case's dash may carry him out: a new round's countdown holds
-## casts, RingMode._hold_casts).
+## The sign along the deck's axis of the player's own end (+1 or -1): each fighter set down on his own side (Zones' soft walls
+## hold him behind the other side's line, RingRules.forward_limit: set down past it, he is put back on it and a step forward
+## meets it).
+func _own_side() -> float:
+	var rm := RingMode.find(self)
+	var e := rm.rules.end_of(p) if rm != null and rm.rules != null else -1
+	return RingArena.side_sign(e) if e >= 0 else -1.0
+
+
+## Both mid-deck again, each on his own side, the fight on and casting let back (a case's dash may carry him out: a new round's
+## countdown holds casts, RingMode._hold_casts).
 func _mid() -> void:
 	var rm := RingMode.find(self)
 	await _until(func() -> bool: return rm.phase == "FIGHT" and c.enabled, 10.0)
 	var ar := RingArena.find(self)
-	for e: Array in [[p, -3.0], [rm.foe, 3.0]]:
+	var sg := _own_side()
+	for e: Array in [[p, 3.0 * sg], [rm.foe, -3.0 * sg]]:
 		var b: CharacterBody3D = e[0]
 		if b != null:
 			b.global_position = ar.center() + ar.axis() * float(e[1]) + Vector3.UP * 0.05
@@ -138,7 +148,8 @@ func _run() -> void:
 	# (the crosshair on the foe's chest, as in a fight: key 3's move still goes, by the keys held; the move reel, 2026-10-12)
 	var foe := RingMode.find(self).foe
 	var ar := RingArena.find(self)
-	for e: Array in [[p, -3.0], [foe, 3.0]]:                 # (both mid-deck again: the cases above walked him to an edge)
+	var sg := _own_side()
+	for e: Array in [[p, 3.0 * sg], [foe, -3.0 * sg]]:       # (both mid-deck again, each on his own side: the cases above walked him to an edge)
 		var b: CharacterBody3D = e[0]
 		b.global_position = ar.center() + ar.axis() * float(e[1]) + Vector3.UP * 0.05
 		b.velocity = Vector3.ZERO
