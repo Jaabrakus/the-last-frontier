@@ -704,6 +704,44 @@ func _drop_loose(at: Vector3) -> void:
 	FormStone.make_loose(s, _by())
 
 
+## Earth's Kick-Up (data/sway/skill_tree.json earth.pebbles.kick_up; the owner, 2026-10-11: "make sure all the talents work"):
+## its wearer's Pebbles volley that hits nobody (no pebble struck a body nor was taken by a guard) leaves one loose stone,
+## KICK_UP_R round, where its last pebble lands (the deck under where it ended; none off the deck), his own (FormStone.make_loose:
+## still loose_max at most). A Fissure that runs under it throws it on (_heave_loose), whoever's it is. Its spread is the node's.
+const KICK_UP := "earth.pebbles.kick_up"
+const KICK_UP_R := 0.16
+## A pebble that ended so met someone (a body, a guard).
+const MET_ENDS := ["hit", "caught", "cushioned", "dropped", "blocked", "absorbed", "drunk", "steam", "melted", "doused"]
+## The wearer's volleys in flight: volley id -> {n: pebbles ended, met: any met someone}.
+static var _kick := {}
+
+
+func _kick_up_end(why: String) -> void:
+	var vid := int(info.volley_id)
+	var e: Dictionary = _kick.get(vid, {"n": 0, "met": false})
+	e["n"] = int(e.n) + 1
+	if why in MET_ENDS or not guarded_by.is_empty():
+		e["met"] = true
+	_kick[vid] = e
+	if int(e.n) < int(info.get("volley_n", 1)):
+		if _kick.size() > 64:
+			_kick.clear()
+		return
+	_kick.erase(vid)
+	if bool(e.met):
+		return
+	var at := FormEffects.ground_at(self, global_position)
+	var ar := RingArena.find(get_tree())
+	if ar != null and not ar.on_deck(at):
+		return                                    # (its last pebble fell past the deck: into the water, no stone)
+	var s := FormStone.ball(get_tree().current_scene, at, {"radius_m": KICK_UP_R, "mass_kg": 15.0, "rise_s": 0.15, "life_s": 30.0,
+			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.set_meta(&"bend_weight", "medium")
+	FormStone.make_loose(s, _by())
+	BendLooks.burst(at + Vector3.UP * 0.1, "stone", 10, Vector3.UP, 90.0, 2.0, 0.2)
+	GatherFx.fall_dust(get_tree().current_scene, at, 0.4)
+
+
 ## A raised wall worn by this bolt (WEAR by its kind and the wall's matter; the water jet's erode on an earth wall).
 func wear(w: FormRaised, at: Vector3) -> void:
 	if w.has_meta(&"bend_brace"):
@@ -869,6 +907,9 @@ func _finish(why: String) -> void:
 	if spent:
 		return
 	spent = true
+	if kind == "stone" and info.has("volley_id") and String(info.get("tag", "")) == "rock_jab/pebbles" and is_inside_tree() \
+			and BendLoadout.wears(_by(), KICK_UP) and NetSpells.decides():
+		_kick_up_end(why)
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)

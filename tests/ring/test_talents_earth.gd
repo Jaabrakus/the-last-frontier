@@ -12,6 +12,9 @@ extends SceneTree
 ##   Return to Sender  a stone caught clean on E (the player's real lock: guard_override) and E again 0.05 s after the catch:
 ##                     thrown back on the Beat x1.15 (Classic x1, the same timing; the wearer at 0.35 s x1, no Beat); a late
 ##                     catch's return lock 0.4 s (0.35); the bot wearing it throws a clean catch back on the Beat
+##   Kick-Up           the player's Pebbles (the cast's own path) at the deck away from the bot: one loose stone of his where the
+##                     last pebble landed (Classic none); at the bot (hit): none; its spread 3.6 deg (3); his Fissure run at it
+##                     throws it on
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -31,6 +34,7 @@ var mode: RingMode
 var rules: RingRules
 var pc: BendCaster
 var sc: SwayCaster
+var pitch_sign := 1.0
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -78,6 +82,33 @@ func _near(a: float, b: float, tol := 0.03) -> bool:
 	return absf(a - b) <= tol
 
 
+## The player's crosshair on world point `p` (his camera's yaw and pitch), a few frames for the camera to follow.
+func _aim_at(p: Vector3) -> void:
+	for i in 3:
+		var d := (p - player.camera.global_position).normalized()
+		player.yaw = atan2(-d.x, -d.z)
+		player.pitch = asin(clampf(d.y, -1.0, 1.0)) * pitch_sign
+		await _ticks(2)
+
+
+## The deck `dist` m from the player, `deg` off the line to the bot (turned to his left).
+func _deck_off(dist: float, deg: float) -> Vector3:
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized().rotated(Vector3.UP, deg_to_rad(deg))
+	return FormEffects.ground_at(player, player.global_position + way * dist)
+
+
+## The bot stood `dist` m from the player on the line between them (held still there), the player facing it.
+func _bot_at(dist: float) -> void:
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	bot.global_position = FormEffects.ground_at(player, player.global_position + way * dist) + Vector3.UP * 0.05
+	bot.velocity = Vector3.ZERO
+	await _secs(0.3)
+
+
 ## `body` wears `id` alone as an earth caster ("" nothing: Classic).
 func _wear(body: Node, id: String) -> void:
 	BendLoadout.clear(body)
@@ -113,9 +144,14 @@ func _run() -> void:
 	await _secs(4.5)                                 # (past the countdown and the start's safety)
 	bot.held = true                                  # (the bot stands where it is: every hit below on a still body)
 	await _secs(0.25)
+	player.pitch = 0.3
+	await _ticks(3)
+	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
+	player.pitch = 0.0
 	await _thick_wall()
 	await _juggle()
 	await _return_to_sender()
+	await _kick_up()
 	_end()
 
 
@@ -374,3 +410,50 @@ func _return_to_sender() -> void:
 	_wear(bot, "")
 	await _secs(1.2)
 	await _clear_held(bot)
+
+
+# ---------------------------------------------------------------- Kick-Up
+## The player's Pebbles cast at world point `p` (the cast's own path: BendEffects.apply with his crosshair on it): [his loose
+## stones after it lands, the cast's spread (deg), the newest loose stone].
+func _pebbles_at(id: String, p: Vector3) -> Array:
+	_wear(player, id)
+	await _clear_held(player)
+	await _aim_at(p)
+	BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+	var spread := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("spread_deg", -1.0))
+	await _secs(1.2)
+	var loose := FormStone.loose_of(player)
+	return [loose.size(), spread, loose[loose.size() - 1] if not loose.is_empty() else null]
+
+
+func _kick_up() -> void:
+	var id := "earth.pebbles.kick_up"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Kick-Up is live, its code built (%s)" % BendLoadout.why_not(id))
+	var deck := _deck_off(5.0, 70.0)
+	var c := await _pebbles_at("", deck)
+	var w := await _pebbles_at(id, deck)
+	_expect(int(c[0]) == 0 and _near(float(c[1]), 3.0), "Classic: Pebbles that hit nobody leave nothing (%d), spread %.1f deg" % [c[0], c[1]])
+	var st: Node3D = w[2]
+	_expect(int(w[0]) == 1 and _near(float(w[1]), 3.6) and st != null and st.global_position.distance_to(deck) < 2.5,
+			"Kick-Up: a volley that hits nobody leaves one loose stone of his where it landed (%d, %.2f m from the aim), spread %.1f deg"
+			% [w[0], st.global_position.distance_to(deck) if st != null else -1.0, w[1]])
+	await _bot_at(6.0)
+	var hit := await _pebbles_at(id, NpcSenses.chest_of(bot))
+	_expect(int(hit[0]) == 0, "Kick-Up: a volley that hits the bot leaves none (%d)" % hit[0])
+	# a stone left, then his Fissure run under it throws it on
+	var w2 := await _pebbles_at(id, deck)
+	var s2: Node3D = w2[2]
+	await _secs(0.4)
+	var thrown := false
+	if s2 != null:
+		await _aim_at(s2.global_position)
+		BendEffects.apply(pc, "earth_shove", "push", SwayMoves.move("earth_shove").bend.push)
+		for i in 40:
+			await _ticks(2)
+			if not is_instance_valid(s2) or GustLift.busy(s2) or not s2.has_meta(FormStone.LOOSE_META):
+				thrown = true
+				break
+	_expect(s2 != null and thrown, "Kick-Up: his Fissure run under the stone throws it on")
+	_wear(player, "")
+	await _secs(1.0)
+	await _clear_held(player)
