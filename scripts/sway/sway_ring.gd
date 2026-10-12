@@ -124,11 +124,13 @@ func _draw() -> void:
 	var on := caster.state != SwayCaster.State.IDLE
 	if on:
 		var a := _alpha
-		if caster.off_t > 0.0:
-			a *= 0.3 + 0.7 * absf(sin(_t * 38.0))     # (the grace: it flickers)
+		if caster.off_t > 0.0 or (caster.track_off > 0.0 and caster._tracks(caster.move)):
+			a *= 0.3 + 0.7 * absf(sin(_t * 38.0))     # (the grace, or a tracking meter off the foe: it flickers)
 		var full := caster.state == SwayCaster.State.FULL
 		var holding := caster.state == SwayCaster.State.HOLDING
 		var bright := col.lerp(Color.WHITE, 0.35) if full or holding else col
+		if BendCombo.follow_on(caster.player) and not BendCombo.knockup(caster.move, caster.mode_of(caster.move)):
+			bright = bright.lerp(Color.WHITE, 0.45)   # (a knock-up's follow-up: this lock fills faster, the ring glows)
 		var strain := caster.hold.strain if holding and caster.hold != null and is_instance_valid(caster.hold) else 0.0
 		if strain > 0.0:
 			bright = bright.lerp(Color(1.0, 0.45, 0.25), strain)       # (the strain: it reddens and shakes)

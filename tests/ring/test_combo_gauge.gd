@@ -238,4 +238,40 @@ func _run() -> void:
 	_expect(BendCombo.stacks(p) == 0 and is_equal_approx(BendStatus.cast_mult(p), 1.0), "drained to none")
 	await _secs(0.6)
 	_expect(float((ring.meters() if ring != null else {}).get("combo_a", 1.0)) < 0.05, "and the crosshair's combo bracket gone")
+	await _follow_up()
 	_end()
+
+
+## A knock-up's follow-up (BendCombo.knocked_up): his Spike's lock filled for 0.15 s before and after a Column knock-up of his
+## lands, the window's moves, and its end.
+func _follow_up() -> void:
+	await _rest()
+	BendCombo.reset(p)
+	BendCombo.reset(foe)
+	p.hotbar.ready_move(0, "stone_form", "spike")
+	await _ticks(5)
+	var fill_of := func() -> float:
+		c.held_override = true
+		await _secs(0.15)
+		var f := c.fill
+		c.held_override = false
+		c.drop_all()
+		await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 2.0)
+		await _ticks(5)
+		return f
+	var f0: float = await fill_of.call()
+	var kn := BendKnock.peek(foe)
+	if kn != null:
+		kn.reset()
+	_hit(foe, p, {"tag": "earth_shove/column", "move": "earth_shove", "mode": "column"})
+	var up := BendCombo.follow_on(p) and BendStatus.floating(foe)
+	var k := _num("follow_up", "k")
+	_expect(up and is_equal_approx(BendCombo.follow_share(p, "fire_blast", "punch"), 1.0 - k)
+			and is_equal_approx(BendCombo.follow_share(p, "earth_shove", "column"), 1.0)
+			and is_equal_approx(BendCombo.follow_share(p, "wave", "spout"), 1.0),
+			"a Column knock-up of his lands: his other moves fill %.0f%% faster, his knock-ups never (the window %s)" % [k * 100.0, up])
+	var f1: float = await fill_of.call()
+	_expect(f0 > 0.0 and f1 / f0 > 1.0 / (1.0 - k) - 0.25, "his Spike fills %.2f in 0.15 s in the window (%.2f before)" % [f1, f0])
+	await _until(func() -> bool: return not BendCombo.follow_on(p), 4.0)
+	_expect(not BendCombo.follow_on(p) and is_equal_approx(BendCombo.follow_share(p, "fire_blast", "punch"), 1.0),
+			"the window closes after the float")

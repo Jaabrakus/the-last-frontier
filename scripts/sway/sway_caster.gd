@@ -296,6 +296,16 @@ var target: Node3D = null
 var fill := 0.0
 ## Seconds the aim has been off the target (the grace).
 var off_t := 0.0
+## A tracking lock's (spec track: the Geyser, the Column, the Wind Prison; the owner, 2026-10-12: "geiser wind prison and column
+## should be tracking meters"): the foe the crosshair is on (TRACK_CONE_DEG round it, in sight), how long it has been off any
+## (the fill waits through TRACK_GRACE_S, then drains back). Kept on the body too (TRACK_META) for the cast: it goes under him.
+var track_target: Node3D = null
+var track_off := 0.0
+const TRACK_META := &"bend_track"
+const TRACK_CONE_DEG := 4.0
+const TRACK_GRACE_S := 0.25
+## A tracking meter let go within this long of the foe leaving the crosshair still goes under him.
+const TRACK_LET_GO_S := 0.5
 ## Seconds since the lock was full.
 var full_t := 0.0
 ## Seconds a hold has run.
@@ -2778,6 +2788,52 @@ func _self_cast(m: String) -> bool:
 	return self_lock_of(m)
 
 
+## Whether `m`'s lock is a tracking meter now (its spec's track, a worn twist's too: the Wind Prison's; the % ring's).
+func _tracks(m: String) -> bool:
+	if not elem() or not r3() or m == "":
+		return false
+	var s := BendLoadout.spec(player, m, mode_of(m), spec_of(m))
+	return bool(s.get("track", false)) or float(s.get("prison_s", 0.0)) > 0.0      # (the Wind Prison worn: it tracks)
+
+
+## A frame of a tracking lock: the foe under the crosshair (TRACK_CONE_DEG, in sight, of another side) taken and kept on the
+## body for the cast (TRACK_META), else the time off him counted.
+func _track_tick(dt: float) -> void:
+	var tg := _track_pick()
+	if tg != null:
+		track_target = tg
+		track_off = 0.0
+		player.set_meta(TRACK_META, {"id": tg.get_instance_id(), "at": BendStatus.now()})
+	else:
+		track_off += dt
+
+
+func _track_pick() -> Node3D:
+	var cam: Camera3D = player.camera if player != null else null
+	if cam == null:
+		return null
+	var from := cam.global_position
+	var dir := -cam.global_basis.z
+	var reach := float(SwayMoves.move(move).get("range_m", 30.0)) + 6.0
+	var best: Node3D = null
+	var best_a := TRACK_CONE_DEG
+	for e in BendCaster.near(player, player.global_position, reach):
+		var n: Node3D = e[0]
+		if n == player or not BendStatus.can_take(n, player):
+			continue
+		var c := NpcSenses.chest_of(n)
+		for pt: Vector3 in [c, n.global_position + Vector3.UP * 0.3]:      # (his chest, or his feet: a ground spell's mark)
+			var a := rad_to_deg(dir.angle_to(pt - from))
+			if a < best_a:
+				var ray := PhysicsRayQueryParameters3D.create(from, pt)
+				ray.exclude = [player.get_rid()]
+				var h := player.get_world_3d().direct_space_state.intersect_ray(ray)
+				if h.is_empty() or resolve(h.collider, h.position) == n or (h.position as Vector3).distance_to(pt) < 0.4:
+					best = n
+					best_a = a
+	return best
+
+
 ## Whether a lock of `m` is taken under the caster (its circle at the feet, the aim free: _self_cast): the self pillar,
 ## Stone Form, a move or mode with self_lock; with an element the earth wall and the Column too, wherever KITS keys it (spec
 ## §2.7: moving the crosshair never breaks its lock; its place is taken from the crosshair at the release,
@@ -2837,11 +2893,19 @@ func _hold(dt: float, q: Dictionary) -> void:
 	if not _self_cast(move) and reach_to(locked_point(), move) > range_of(move, target) * RANGE_SLACK:
 		_break("far")
 		return
+	var tracks := _tracks(move)
+	if tracks:
+		_track_tick(dt)
 	if state == State.LOCKING:
 		if not on:
 			return                            # (the grace: the ring flickers and waits)
 		if r3() and needs_ground(move, mode_of(move), player) and airborne():
 			return                                # (terrain spells wait for the ground, the fill kept)
+		if tracks and track_off > 0.0:
+			# (a tracking meter fills only on the foe: off him it waits, and past TRACK_GRACE_S it drains back)
+			if track_off > TRACK_GRACE_S:
+				fill = maxf(fill - dt / maxf(lock_s, 0.05), 0.0)
+			return
 		var rate := 1.0 / lock_s
 		var hs := _hspeed()
 		if hs > moving_mps:
@@ -2850,6 +2914,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 			rate = 0.0                            # (Patch: standing still only)
 		var pf := passive_fill()
 		rate *= pf
+		rate /= BendCombo.follow_share(player, move, mode_of(move))     # (a knock-up of his landed: the rest fill faster)
 		if FireTalents.any(player):
 			rate *= FireTalents.fill_mult(player, hs > moving_mps)     # (a worn passive's fill: Hot Feet, Dancing Feet)
 		rate *= AirTalents.home_fill(player)       # (Whiteout on his own frost; Classic 1)
@@ -3189,6 +3254,10 @@ func _cast() -> void:
 	var m := move
 	var t := target
 	var at := locked_point()
+	if _tracks(m) and track_target != null and is_instance_valid(track_target) and track_off <= TRACK_LET_GO_S:
+		# (a tracking meter let go with the foe followed a moment ago: it goes under him at its strike, whatever the crosshair
+		# does meanwhile; BendEffects._tracked reads it, cast_at marking the release)
+		player.set_meta(TRACK_META, {"id": track_target.get_instance_id(), "at": BendStatus.now(), "cast_at": BendStatus.now()})
 	# (the cast's own variation, the quick spell's frozen one or the key's, through its landing and its strike wait,
 	# whatever lock runs by then: a quick lock of the same move must not land an RMB cast at its own variation)
 	var pin := [m, mode_of(m)]

@@ -222,7 +222,10 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			if wk != 1.0:
 				ws["life_s"] = float(ws.get("life_s", 4.0)) * wk      # (Blizzard's wearer: his Wind Wall 15% shorter)
 			ws["zone"] = "wind_wall"
-			if not ws.has("at"):
+			if _tracked(p, ws) != null:
+				ws["at"] = "aim"                  # (the Wind Prison tracked: round the foe it followed, not 2-6 m out)
+				ws.erase("place")
+			elif not ws.has("at"):
 				ws["at"] = "place"
 			zone(bc, a, ws)
 		"status_at":
@@ -310,7 +313,13 @@ static func aim(c: Variant, spec := {}) -> Dictionary:
 	# blast, the owner 2026-10-11: "exactly to the crosshair". A bot aims with its own pick, lead and scatter as ever)
 	if not (bool(spec.get("to_crosshair", false)) and bc is PlayerBendCaster):
 		target = bc.aim_target()
-	if target != null:
+	var tracked := _tracked(p, spec)
+	if tracked != null:
+		# (a tracking meter: under the foe it tracked, where he is now; the aim help's pull toward the crosshair never moves it,
+		# the meter earned the place)
+		target = tracked
+		point = NpcSenses.chest_of(tracked)
+	elif target != null:
 		point = bc.target_point(target, float(spec.get("mps", 0.0)))
 	if point == Vector3.INF:
 		point = chest - p.global_basis.z * 20.0
@@ -319,6 +328,19 @@ static func aim(c: Variant, spec := {}) -> Dictionary:
 	flat = flat.normalized() if flat.length_squared() > 1e-4 else -p.global_basis.z
 	var from := bc.launch_point(flat)
 	return {"from": from, "dir": (point - from).normalized(), "flat": flat, "point": point, "target": target}
+
+
+## The foe a tracking meter (spec track; SwayCaster's lock) followed up to its release (marked then: SwayCaster._cast), the
+## strike TRACK_FRESH_S after it at most; null none.
+const TRACK_FRESH_S := 1.5
+static func _tracked(p: Node3D, spec: Dictionary) -> Node3D:
+	if not (bool(spec.get("track", false)) or float(spec.get("prison_s", 0.0)) > 0.0) or p == null or not p.has_meta(SwayCaster.TRACK_META):
+		return null
+	var tm: Dictionary = p.get_meta(SwayCaster.TRACK_META)
+	if BendStatus.now() - float(tm.get("at", -INF)) > TRACK_FRESH_S:
+		return null
+	var n := instance_from_id(int(tm.get("id", 0))) as Node3D
+	return n if n != null and is_instance_valid(n) and n.is_inside_tree() else null
 
 
 ## The ground at the aim's place, no further than spec.range_m from the caster.

@@ -650,7 +650,7 @@
           "air": "slam"
         },
         "column": {
-          "do": "column",
+          "do": "column", "track": true,
           "kind": "stone",
           "range_m": 20.0,
           "radius_m": 1.3,
@@ -979,7 +979,7 @@
         },
         "slam": {"do": "slam", "kind": "water", "label": "Downpour", "width_m": 3.2, "depth_m": 3.0, "lean_m": 1.5, "active_s": 0.12, "damage": 16.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "put_out": true, "puddle": {"radius_m": 1.6, "life_s": 6.0}},
         "spout": {
-          "do": "spout",
+          "do": "spout", "track": true,
           "kind": "water",
           "radius_m": 1.8,
           "range_m": 16.0,

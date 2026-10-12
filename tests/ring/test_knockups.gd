@@ -124,7 +124,10 @@ func _hold_bots(on: bool) -> void:
 func _cast_at(foe: NpcFighter, home: Vector3, el: String, m: String, md: String) -> Dictionary:
 	mode.ring.clear_dropped()
 	_clear(foe)
-	var way := player.global_position - home
+	# (along the deck's long way from him, his side's: on the 2v2 deck drawn in (2026-10-12) the diagonal from the player's spawn
+	# ran beside the Ruins' middle wall, and a ground wave on it met the wall, the cover it is)
+	var ax := mode.ring.axis()
+	var way := ax * signf((player.global_position - home).dot(ax))
 	way.y = 0.0
 	way = way.normalized()
 	player.global_position = home + way * 6.0

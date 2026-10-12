@@ -1459,6 +1459,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		var held_f := BendStatus.float_up(n, rise, fl)
 		if held_f > 0.0:
 			stun = maxf(stun, rise + held_f)
+			if by != null and is_instance_valid(by) and not BendCaster.same_team(by, n):
+				BendCombo.knocked_up(by, rise + held_f)   # (the follow-up: his other moves fill faster while it floats)
 	if by != null:
 		st["last_by"] = by
 	launched.emit(n, sv, stun, by, String(cls.tag))

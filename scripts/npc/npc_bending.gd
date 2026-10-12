@@ -1470,6 +1470,8 @@ func begin(id: String, md: String) -> void:
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
 	if not bool(o.get("guard", false)):
+		lock_s *= BendCombo.follow_share(me, id, md)    # (a knock-up of its own landed: the follow-up fills faster)
+	if not bool(o.get("guard", false)):
 		lock_t = lock_s * BendZone.eddy_fill(me, id)     # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
 	var head := FireTalents.head_start(me, id, md)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
 	if head > 0.0:

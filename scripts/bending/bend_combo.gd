@@ -175,6 +175,38 @@ static func _break(n: Node, z: BendZone) -> void:
 		z.end("broken")
 
 
+# ---------------------------------------------------------------- the follow-up (the owner, 2026-10-12: "if a user scores a
+# sucessfull knock up any skill besides a knock up should cast faster so they can utilize the knock up")
+const FOLLOW_META := &"bend_follow_up"
+
+
+## A knock-up of `by`'s landed (RingRules.on_hit: its float begun on another side's body), `s` its rise and float: for that and
+## follow_up.extra_s more his locks of any move but a knock-up fill follow_up.k faster.
+static func knocked_up(by: Node, s: float) -> void:
+	if by == null or not is_instance_valid(by) or not on():
+		return
+	var until := BendStatus.now() + s + _num("follow_up", "extra_s", 0.4)
+	by.set_meta(FOLLOW_META, maxf(until, float(by.get_meta(FOLLOW_META, -INF))))
+
+
+## Whether `n`'s follow-up window is open now.
+static func follow_on(n: Node) -> bool:
+	return n != null and is_instance_valid(n) and on() and BendStatus.now() < float(n.get_meta(FOLLOW_META, -INF))
+
+
+## The share of its lock time `n`'s lock of m/md takes for the follow-up (1: none, or a knock-up of his own: no chain of them).
+static func follow_share(n: Node, m: String, md: String) -> float:
+	if not follow_on(n) or knockup(m, md):
+		return 1.0
+	return 1.0 - _num("follow_up", "k", 0.4)
+
+
+## Whether m/md knocks up (its ring class a launcher or with a float: the Column, the Geyser, the tapped Fissure, the Kicks).
+static func knockup(m: String, md: String) -> bool:
+	var cls := RingRules.class_of(BendR3.tag_of(m, md, false))
+	return bool(cls.get("launcher", false)) or float(cls.get("float_s", 0.0)) > 0.0
+
+
 ## Both meters back to their start for `n` (a round's start).
 static func reset(n: Node) -> void:
 	if n == null or not is_instance_valid(n):
@@ -182,3 +214,5 @@ static func reset(n: Node) -> void:
 	lose(n)
 	if n.has_meta(GAUGE_META):
 		n.remove_meta(GAUGE_META)
+	if n.has_meta(FOLLOW_META):
+		n.remove_meta(FOLLOW_META)
