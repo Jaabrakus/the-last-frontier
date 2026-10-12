@@ -39,11 +39,12 @@ static func throw(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	var n := maxi(int(spec.get("count", 1)), 1)
 	var every := float(spec.get("every_s", 0.0))
 	var first: BendBolt = null
+	var nctx := NetSpells.ctx()                   # (online: the later throws named in the cast's run, NetSpells)
 	for i in n:
 		if every > 0.0 and i > 0:
 			var later := func() -> void:
 				if bc.valid():
-					one(bc, BendEffects.aim(bc, spec), spec, i, n)
+					NetSpells.with(nctx, func() -> void: one(bc, BendEffects.aim(bc, spec), spec, i, n))
 			bc.body.get_tree().create_timer(every * i, false).timeout.connect(later)
 		else:
 			var b := one(bc, a, spec, i, n)

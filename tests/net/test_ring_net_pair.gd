@@ -105,10 +105,11 @@ func _run() -> void:
 	_expect(mode.rules.end_of(player) != mode.rules.end_of(p), "the two at opposite ends (%d, %d)" % [mode.rules.end_of(player), mode.rules.end_of(p)])
 	# ---- clock
 	if role == "join":
-		var synced := await _until(func() -> bool: return net.clock.synced, 10.0)
 		# (two headless rings on one machine: a message waits for the other's frame to be read, so the round trip is the two
-		# frames', not the wire's; a live game's frames are 16 ms)
-		_expect(synced and net.clock.rtt < 0.25, "the joiner's clock synced with the host's (round trip %.1f ms)" % (net.clock.rtt * 1000.0))
+		# frames', not the wire's; a live game's frames are 16 ms. Its first answers may wait on the host's loading: its quick
+		# asks as it joins settle it, the best of them its round trip)
+		var synced := await _until(func() -> bool: return net.clock.synced and net.clock.rtt < 0.25, 10.0)
+		_expect(synced, "the joiner's clock synced with the host's (round trip %.1f ms, %d answers)" % [net.clock.rtt * 1000.0, net.clock.answers()])
 	# ---- follow: each on a spot of its own, the other's puppet of it there
 	await _frames(60)
 	var side := Vector3.UP.cross(mode.ring.axis()).normalized()

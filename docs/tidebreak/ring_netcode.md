@@ -87,23 +87,72 @@ when its owner raised it.
 | RingNet | the ring's session: host, join, a dedicated server, the peers and the competitors they own, the clock, the RPC hub |
 | NetClock | the host's clock on every machine |
 | NetBody | a body's state: write it, read it, the puppet's buffer and interpolation, the host's history |
-| NetBendCaster | a BendCaster from a cast event |
-| NetCasts | send a cast, predict it, run it on the host, pass it on, run it as a ghost |
-| NetSpells | entity ids, ghost mode, the host's words about spells and their application |
-| NetHits | a body effect sent to its owner and run there |
-| NetMatch | the match mirrored; falls reported, respawns ordered |
+| NetBendCaster | a BendCaster from a cast event: its tape's answers in order, its seed's dice |
+| NetCasts | record a cast (its tape), send it, run it on another machine; the lock's course for the puppet's pose |
+| NetSpells | who decides, the names, the host's words and the hits sent to the owners (with their application) |
+| NetMatch | the match mirrored; falls reported, respawns ordered (R1 d) |
 
 The game's own code gets one-line seams, each a no-op offline: BendEffects.apply, the entity constructors, BendBolt's and
 BendZone's meetings, BendR3.deliver and BendStatus' body effects, RingMoves, SwayCaster, RingMode and RingRules. Offline
 nothing changes (every existing test keeps passing).
 
+## As built (R1 a, R1 b)
+
+**The tape.** A cast is recorded where it lands (SwayCaster._apply_grown: NetCasts.begin .. end round SwayEffects.apply).
+While it runs, every question its caster is asked is kept in order under its name (PlayerBendCaster: chest, facing,
+aim_ray, aim_point, aim_target, assist_target, target_point, launch_point, side_sign, held_side, held_move, jump_held; the
+outermost question only, so one that asks another is kept once), with the modes and tiers it gave by move, and its dice
+are drawn from the cast's seed. The event carries the tape, the seed, the move, its variation and tier, grown, airborne,
+the release time on the caster's own clock (what the host's hit tells him back is in it), the target's net id, the lock
+point, where he stood, his velocity and facings, whether a bind held his feet and his Carried wind. Another machine runs it
+on the caster's puppet (NetCasts.run): his NetBendCaster answers from the tape in the same order (the same code asks the
+same questions), the puppet stands where he stood while it runs, his SwayCaster is pinned to the variation. A question
+asked after the run (a volley's later bolts, Flowing's steer, a stone following his aim) is answered from his streamed
+state (NetBody's aim slot: the point his crosshair is on). The puppet wears the caster's loadout (his hello's picks and
+style), so his twists are his.
+
+**Names.** Every spell thing made while a cast runs is named "<peer>:<seq>:<n>" in the order it is made (BendBolt,
+BendZone, FormRaised, FormStone); a volley's and a throw's later parts are made in the cast's run again (NetSpells.with).
+A zone the host makes by a decision outside a cast (steam, a parry's puddle) is named in a run of its own and made on the
+others by its word.
+
+**Ghosts.** Only the host decides (NetSpells.decides). A ghost bolt flies and steers, ends on the world and on a raised
+wall at once with its look (the host's will be the same), and passes bodies, stones, other bolts and zones until the host's
+word; a ghost zone decides nothing (_every, _stones, _wind_push, on_bolt, guard_take, cone_mult, lightning_back), its own
+ends (its life, its owner gone, its owner's drop) its own. A cast's synchronous run does on every machine what it does to
+the things it finds (one fire wall at a time, put out, melt, a chunk torn from a wall): the same things are there. A
+decision outside a cast is the host's (NetSpells.decide: done there and told).
+
+**The host's words** (NetSpells.word, reliable, to every other machine): "end" (a bolt or zone ended by a decision: why
+and where; a bolt's look played there), "bolt" (a bolt changed by a meeting: its state, compared each frame; a Turn's
+swing begun round the guard and left again, a new kind, a fire taken, its numbers halved, a new caster), "guard" (a
+guard's result: BendZone.report on every machine, the HUD and the look), "wall_hit" (a raised wall worn), "zone" (a zone
+made by a decision).
+
+**Hits** (NetSpells.forward, to the body's owner): the host's BendR3.deliver on a puppet sends "hit" (its owner takes it on
+his own body: BendR3.take, hurt then knock then his lock told; RingRules.on_hit runs there: his %, his launch, his float,
+bind or soak), and the hitter's side to the hitter's owner ("hit_by": the jab string as the host keeps it, the step, his
+SwayCaster's note of the hit; "jab_guarded"). BendStatus' other effects on a puppet go the same way: hurt, knock, root,
+slow, rescue, a parry's cast share ("cast_mult": the guarder's 0.85, the parried caster's 1.15), a whiff, Carried wind, a
+Wind Prison's catch ("imprison"). A body's own effects (a heal, Patch, cleanse, anchor, a dash's motion) are its owner's
+only (NetSpells.owns). Only the host may send hits (RingNet._hit is the authority's).
+
+**The puppet's lock.** The caster's lock goes to the others as it goes (start, full, grew, cast, broken, fizzled): the
+puppet's SwayCaster plays it (its state and signals: SwayPose poses him, FormCast draws his circle at his feet) and never
+locks by itself; his E comes with his state (NetBody's keys), so his guard stands held as long as he holds it.
+
+**Still to come in R1:** stones (FormStone, FormEffects.Throw, GustLift: catches, held stones, returns, loose stones, the
+Fissure's heave, a stone's place while it lies loose); body attacks decided by a joiner's own machine (a ledge attack, the
+Rise's hit: through the host to the victim's owner); the jab string's end on a victim's machine back to the hitter's
+(RingRules.string_ended); earth's Pop stone; the match mirror (R1 d); lag compensation (R1 e).
+
 ## Phases
 
 | Phase | What | Test |
 |---|---|---|
-| R1 a | the session: host and join into a 1v1 % ring, the second fighter a remote human; bodies streamed, puppets animated | `tests/net/test_ring_net_pair.gd` |
-| R1 b | casts: every spell predicted, run by the host, ghosted elsewhere; ids; the host's words about spells | `test_ring_net_casts.gd` |
-| R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online | `test_ring_net_hits.gd` |
+| R1 a | the session: host and join into a 1v1 % ring, the second fighter a remote human; bodies streamed, puppets animated (built) | `tests/net/test_ring_net_pair.gd` |
+| R1 b | casts: every spell predicted, run by the host, ghosted elsewhere; names; the host's words about spells (built but stones) | `tests/net/test_ring_net_casts.gd` |
+| R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online (the spells' built with R1 b; body attacks, strings, stones to come) | `test_ring_net_hits.gd` |
 | R1 d | the match mirrored: phases, clock, lives, falls, respawns, rounds, the screens | `test_ring_net_match.gd` |
 | R1 e | lag compensation: cast fast-forward, rewound hits, guard timing; a simulated 80 ms link | `test_ring_net_lag.gd` |
 | R2 | 2v2 and 4v4 online, bots filling empty slots, more than one remote human, spectators | |

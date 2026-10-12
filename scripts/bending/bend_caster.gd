@@ -171,6 +171,17 @@ func jump_held() -> bool:
 	return false
 
 
+## Whether a bind holds its feet now (BendStatus.bound: its dash key's moves go nowhere; BendEffects). Online a remote
+## fighter's cast answers as his own machine did (NetBendCaster).
+func feet_bound() -> bool:
+	return BendStatus.bound(body)
+
+
+## Whether its Carried wind is charged now (meta bend_carry_until: a carry spec knocks harder; BendEffects). Online as feet_bound.
+func carry_ready() -> bool:
+	return BendStatus.until(body, &"bend_carry_until") > 0.0
+
+
 func mode_of(id: String) -> String:
 	var ms := SwayCaster.modes_of(id)
 	return String(ms[0]) if not ms.is_empty() else ""

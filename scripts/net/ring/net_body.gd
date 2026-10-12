@@ -9,7 +9,8 @@ extends RefCounted
 ##                  place and velocity between the two states around `at` (extrapolated along the newest's velocity at most
 ##                  EXTRAP_S when none is newer), its facing and aim turned the short way, its keys held (its legs' pace),
 ##                  its RingMoves' puppet state (RingMoves.puppet_state: the clip, the mode, the flags) from the older of
-##                  the two (a state is never shown before its time)
+##                  the two (a state is never shown before its time); `aim` the point its owner's crosshair was on (his
+##                  NetBendCaster's streamed_aim: what a cast of his asks after its run)
 ## A puppet does nothing of its own: its RingMoves in puppet mode moves nothing, its keys only feed its legs' animation.
 
 ## How far behind the owner a remote body is shown (s): two states at 30 a second always around it, one lost still covered.
@@ -18,8 +19,9 @@ const INTERP_S := 0.1
 const EXTRAP_S := 0.15
 ## The states kept (s of the newest).
 const KEEP_S := 1.0
-## The keys a puppet holds from its owner's (their bits, in this order).
-const KEYS := [&"move_left", &"move_right", &"move_forward", &"move_back", &"sprint"]
+## The keys a puppet holds from its owner's (their bits, in this order): his legs' pace, and E (his guard held up:
+## SwayCaster.guard_held).
+const KEYS := [&"move_left", &"move_right", &"move_forward", &"move_back", &"sprint", &"bend_guard"]
 
 ## The state's slots.
 const S_T := 0
@@ -30,9 +32,12 @@ const S_YAW := 4
 const S_PITCH := 5
 const S_KEYS := 6
 const S_RM := 7
+const S_AIM := 8
 
 var states: Array = []
 var shown_t := -INF
+## The point the owner's crosshair was on at the state shown (INF none).
+var aim := Vector3.INF
 
 
 ## Body `b`'s state now, at host time `t`.
@@ -47,7 +52,9 @@ static func capture(b: Node3D, t: float) -> Array:
 			if (c as PlayerControls).pressed(KEYS[i]):
 				keys |= 1 << i
 	var rm := RingMoves.of(b)
-	return [t, b.global_position, v, b.rotation.y, yaw, pitch, keys, rm.puppet_state() if rm != null else []]
+	var bc := BendCaster.of(b)
+	var aim_at := bc.aim_point() if bc != null and bc.valid() else Vector3.INF
+	return [t, b.global_position, v, b.rotation.y, yaw, pitch, keys, rm.puppet_state() if rm != null else [], aim_at]
 
 
 ## A state come in (its time first).
@@ -116,6 +123,7 @@ func apply(b: Node3D, at: float) -> bool:
 	var rm := RingMoves.of(b)
 	if rm != null:
 		rm.set_puppet_state(s0[S_RM] as Array, ry)
+	aim = s0[S_AIM] if s0.size() > S_AIM and s0[S_AIM] is Vector3 else Vector3.INF
 	return true
 
 

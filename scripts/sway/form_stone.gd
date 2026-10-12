@@ -117,6 +117,7 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	s.set_meta(&"surface", "stone")
 	s.set_meta(&"sway_stone", true)
 	s.add_to_group(GROUP)
+	NetSpells.tag(s)                              # (online: its name in its cast's run)
 	return s
 
 

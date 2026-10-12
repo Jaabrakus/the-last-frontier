@@ -3,7 +3,7 @@ extends Node
 ## THE RING ONLINE (docs/tidebreak/ring_netcode.md; the owner, 2026-10-11, after Spellbreak's community server kit: "we can copy
 ## to use for our community servers or player run servers", "make sure its the best code"): the session of a Tidebreak match
 ## played over the network, at /root/RingNet so it outlasts the ring's loading. Phase R1 a: the session, the people and
-## their slots, the clock, the bodies.
+## their slots, the clock, the bodies; R1 b: the casts (NetCasts) and the spells' words and hits (NetSpells).
 ##   the session   one machine hosts (ENet, PORT; host(port)), the others join it by address (join(address, port)); the
 ##                 menu's choice in `incoming`, or the user arg ring_net=host[:port] / ring_net=join:<address>[:port] (tools,
 ##                 tests). A dedicated server is a host with no fighter of its own (phase R3)
@@ -16,6 +16,11 @@ extends Node
 ##                 STATE_CHANNEL, relayed by the host); every other fighter is a PUPPET here: a FrontierPlayer like the
 ##                 player (no camera, keys or HUD), PUPPET_META its owner's peer, its RingMoves in puppet mode, put where its
 ##                 owner's body was NetBody.INTERP_S ago each physics frame before the bodies move (process_physics_priority)
+##   the casts     send_cast / send_lock (NetCasts: this machine's player's casts and lock, to every other machine: _cast,
+##                 _lock run them on his puppet there); send_word (the host's words about spells to every other machine:
+##                 _word, NetSpells.apply_word); send_hit (the host's effect on a body to its owner: _hit, NetSpells.apply_hit).
+##                 A puppet casts through a NetBendCaster (bound at its making) and wears its owner's loadout (his hello's
+##                 picks and style). net_id_of(body) / body_by_net_id(id): a body's name on the wire (its owner's peer)
 ##   the match     RingMode asks: human_at(team, slot) (a remote human holds that slot: no bot is made there),
 ##                 place_humans() (the puppets on the rules' books at their spawns), flipped() (this machine's side is the
 ##                 host's team 1: its ends swap); a roster change restarts the match on every machine
@@ -151,6 +156,7 @@ func host(port := PORT) -> Error:
 		return err
 	multiplayer.multiplayer_peer = peer
 	role = Role.HOST
+	NetSpells.net = self
 	clock.be_host()
 	roster = {1: _hello_of()}
 	roster[1]["team"] = 0
@@ -174,6 +180,7 @@ func _try_join() -> Error:
 		return err
 	multiplayer.multiplayer_peer = peer
 	role = Role.CLIENT
+	NetSpells.net = self
 	_say("Joining %s:%d ..." % [_join_to[0], _join_to[1]])
 	return OK
 
@@ -204,6 +211,9 @@ func _close() -> void:
 	_buffers.clear()
 	_join_to = []
 	role = Role.OFF
+	NetSpells.reset()
+	NetCasts.reset()
+	NetSpells.net = null
 	clock = NetClock.new()
 	if is_inside_tree():
 		multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
@@ -233,7 +243,9 @@ func _hello_of() -> Dictionary:
 		look = pa.look
 	else:
 		look = AppearanceStore.load_current()
-	return {"name": nm, "element": MatchSetup.element if MatchSetup.element in Bending.ELEMENTS else "earth", "look": look}
+	var el := MatchSetup.element if MatchSetup.element in Bending.ELEMENTS else "earth"
+	var worn := BendLoadout.worn(el)               # (his skill tree's picks and fighting style: his puppets wear them)
+	return {"name": nm, "element": el, "look": look, "picks": worn.picks, "style": String(worn.style)}
 
 
 func _on_connected() -> void:
@@ -264,7 +276,8 @@ func _hello(h: Dictionary) -> void:
 	if not is_host():
 		return
 	var id := multiplayer.get_remote_sender_id()
-	var e := {"name": String(h.get("name", "Player")), "element": String(h.get("element", "earth")), "look": h.get("look", {})}
+	var e := {"name": String(h.get("name", "Player")), "element": String(h.get("element", "earth")), "look": h.get("look", {}),
+			"picks": h.get("picks", []), "style": String(h.get("style", ""))}
 	var slot := _free_slot()
 	e["team"] = slot.x
 	e["slot"] = slot.y
@@ -337,6 +350,7 @@ func _sync_puppets() -> void:
 		return
 	if mode.player != null:
 		bodies[my_id()] = mode.player
+		NetCasts.watch(SwayCaster.of(mode.player))     # (its lock's course to the others: NetCasts)
 	for id: int in roster:
 		if id != my_id() and not _live(bodies.get(id)):
 			bodies[id] = _make_puppet(id)
@@ -365,6 +379,7 @@ func _make_puppet(id: int) -> FrontierPlayer:
 	mode.level.add_child(p)
 	p.no_death = true
 	SwayCaster.install_free(p)
+	NetBendCaster.new(SwayCaster.of(p)).bind()        # (his casts run here ask it: NetCasts)
 	Bending.of(p).element = String(e.get("element", "earth"))
 	_dress.call_deferred(p, e)
 	_buffers[id] = NetBody.new()
@@ -404,6 +419,16 @@ func owner_of(b: Node) -> int:
 	return my_id() if mode != null and b == mode.player else 0
 
 
+## Body `b`'s name on the wire (NetSpells.enc: its owner's peer; 0 none: not a fighter of the match online).
+func net_id_of(b: Node) -> int:
+	return owner_of(b)
+
+
+## The body named `id` on the wire here (null none).
+func body_by_net_id(id: int) -> Node3D:
+	return body_of(id) if id != 0 else null
+
+
 ## Every human of the match on the rules' books at his side's spawn (RingMode.next_round, after its own and its bots).
 func place_humans() -> void:
 	_sync_puppets()
@@ -420,6 +445,7 @@ func place_humans() -> void:
 		mode.make_whole(p)
 		RingLevel.place(p, mode.ring.spawn(mode.end_of_team(t), int(e.slot)))
 		Bending.of(p).element = String(e.get("element", "earth"))
+		BendLoadout.wear(p, e.get("picks", []) as Array, String(e.get("style", "")), String(e.get("element", "earth")))
 		mode.rules.add(p, t)
 
 
@@ -430,7 +456,7 @@ func _physics_process(delta: float) -> void:
 	if is_client():
 		_ping_t -= delta
 		if _ping_t <= 0.0:
-			_ping_t = PING_S
+			_ping_t = PING_S if clock.answers() >= NetClock.QUICK_N else NetClock.QUICK_S
 			_ping.rpc_id(1, NetClock.local())
 	var now := clock.now()
 	for id: int in bodies:
@@ -443,6 +469,9 @@ func _physics_process(delta: float) -> void:
 		buf.apply(p, now - NetBody.INTERP_S)
 		if p is FrontierPlayer:
 			(p as FrontierPlayer).fall_safe_m = 1e6      # (its owner's machine judges its falls)
+		var nbc := BendCaster.of(p) as NetBendCaster
+		if nbc != null:
+			nbc.streamed_aim = buf.aim                     # (his crosshair's point: what a cast of his asks after its run)
 	_send_t -= delta
 	if _send_t <= 0.0:
 		_send_t = 1.0 / SEND_HZ
@@ -468,6 +497,51 @@ func _ping(sent: float) -> void:
 @rpc("authority", "reliable")
 func _pong(sent: float, host_t: float) -> void:
 	clock.pong(sent, host_t)
+
+
+# ---------------------------------------------------------------- the casts (NetCasts, NetSpells)
+## This machine's player's cast `ev` to every other machine (NetCasts.end).
+func send_cast(ev: Dictionary) -> void:
+	if role != Role.OFF:
+		_cast.rpc(ev)
+
+
+## This machine's player's lock event `e` to every other machine (NetCasts.watch).
+func send_lock(e: Array) -> void:
+	if role != Role.OFF:
+		_lock.rpc(e)
+
+
+## The host's word `w` about spells to every other machine (NetSpells.word).
+func send_word(w: Array) -> void:
+	if is_host():
+		_word.rpc(w)
+
+
+## The host's effect `h` on a body to its owner, peer `peer` (NetSpells.forward).
+func send_hit(peer: int, h: Array) -> void:
+	if role != Role.OFF and peer != my_id():
+		_hit.rpc_id(peer, h)
+
+
+@rpc("any_peer", "reliable")
+func _cast(ev: Dictionary) -> void:
+	NetCasts.run(ev, multiplayer.get_remote_sender_id())
+
+
+@rpc("any_peer", "reliable")
+func _lock(e: Array) -> void:
+	NetCasts.lock_event(e, multiplayer.get_remote_sender_id())
+
+
+@rpc("authority", "reliable")
+func _word(w: Array) -> void:
+	NetSpells.apply_word(w)
+
+
+@rpc("authority", "reliable")
+func _hit(h: Array) -> void:
+	NetSpells.apply_hit(h)
 
 
 # ---------------------------------------------------------------- the tests' and tools' word

@@ -4,21 +4,27 @@ extends RefCounted
 ## it, so a body's states are placed in order, a cast's age is known, a hit is judged where its caster saw his target.
 ##   now()          seconds on the host's clock: the host's own monotonic time; a client's plus its measured offset
 ##   rtt            the round trip to the host (s; 0 on the host), its latency() half of it
-##   ping(), pong   a client asks the host's time once a second (RingNet sends and answers); each answer is a sample: the
-##                  offset is the host's time plus half the round trip less the time it came back, and the sample with the
-##                  shortest round trip of the last WINDOW wins (the one least bent by queueing); the offset moves to it at
-##                  once the first time, then eases (no jump of a body's history when a better sample comes)
+##   ping(), pong   a client asks the host's time (RingNet sends and answers: QUICK_N asks QUICK_S apart as it joins, then
+##                  one a second); each answer is a sample: the offset is the host's time plus half the round trip less the
+##                  time it came back, and the sample with the shortest round trip of the last WINDOW wins (the one least
+##                  bent by queueing; rtt is its round trip). The offset moves to it at once the first time and whenever it
+##                  lies further from it than that sample's own doubt (half its round trip: the old one was wrong, a first
+##                  answer slowed by the host's loading); else it eases (no jump of a body's history for a little better)
 ## Seconds are floats from Time.get_ticks_usec: one clock for everything here, never the wall clock.
 
 ## Samples kept (the last this many answers: ~8 s at one a second).
 const WINDOW := 8
 ## How far the offset moves toward a new best each sample (a share; the first sample sets it at once).
 const EASE := 0.35
+## As a client joins: this many asks this far apart (s), then one a second (RingNet).
+const QUICK_N := 6
+const QUICK_S := 0.2
 
 var rtt := 0.0
 var offset := 0.0
 var synced := false
 var _samples: Array[Vector2] = []          # (x: the round trip, y: the offset it gave)
+var _n := 0
 
 
 ## Seconds on this machine's own monotonic clock.
@@ -47,9 +53,15 @@ func pong(sent: float, host_t: float) -> void:
 	for s in _samples:
 		if s.x < best.x:
 			best = s
-	rtt = best.x if not synced else lerpf(rtt, best.x, EASE)
-	offset = best.y if not synced else lerpf(offset, best.y, EASE)
+	rtt = best.x
+	offset = best.y if not synced or absf(best.y - offset) > best.x * 0.5 else lerpf(offset, best.y, EASE)
 	synced = true
+	_n += 1
+
+
+## Answers had so far.
+func answers() -> int:
+	return _n
 
 
 ## The host's clock is this machine's (a host, a dedicated server, offline).

@@ -134,6 +134,9 @@ static func new_volley() -> int:
 
 ## The one way a hit lands (see the header): `n` hurt by `dmg` and knocked along `kv` by `by`, the same info on both (its
 ## own copy, a fresh hit_id). With the gate on the jab string's turn first (a Pop changes the knock, the tag and the stun).
+## Online (NetSpells, docs/tidebreak/ring_netcode.md "Hits"): decided by the host only (a ghost's hit is nothing); on a
+## puppet the hit itself goes to its owner, who takes it on his own body (take), and the hitter's side of it (his jab
+## string, his note of the hit) to the hitter's owner (hit_by).
 static func deliver(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s: float, kv: Vector3, info: Dictionary) -> void:
 	if n == null or not is_instance_valid(n):
 		return
@@ -141,11 +144,33 @@ static func deliver(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lo
 		by = null
 	if not BendStatus.can_take(n, by):
 		return
+	var gate := NetSpells.on_body(n)
+	if gate == NetSpells.SKIP:
+		return
 	var inf := info.duplicate()
 	_hit_n += 1
 	inf["hit_id"] = _hit_n
 	if stock() and bool(inf.get("jab", false)) and by != null:
 		kv = jab_hit(by, n, inf, kv, at)
+	if gate == NetSpells.FORWARD:
+		NetSpells.forward("hit", n, [dmg, at, dir, by, lock_s, kv, inf])
+	else:
+		take(n, dmg, at, dir, by, lock_s, kv, inf)
+	if by != null:
+		if NetSpells.owns(by):
+			_noted(by, n, inf)
+		else:
+			var bc0 := BendCaster.of(by)
+			NetSpells.to_attacker("hit_by", by, [n, inf, bc0.jab if bc0 != null else {}])
+
+
+## A hit on `n` taken on his own body (deliver's, or the host's word to his owner: NetSpells.apply_hit): hurt, knocked, his
+## lock told; logged.
+static func take(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_s: float, kv: Vector3, inf: Dictionary) -> void:
+	if n == null or not is_instance_valid(n):
+		return
+	if by != null and not is_instance_valid(by):
+		by = null
 	BendStatus.hurt(n, dmg, at, dir, by, lock_s, inf)
 	BendStatus.knock(n, kv, by, inf)
 	if hits_log.size() >= 64:
@@ -154,13 +179,36 @@ static func deliver(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lo
 	var vs := SwayCaster.of(n)
 	if vs != null:
 		vs.took_hit()                              # (the struck one's lock: Lightning's charge breaks, nothing else)
-	if by != null:
-		var sc := SwayCaster.of(by)
-		if sc != null:
-			sc.note_hit(n, inf)
-		var bc := BendCaster.of(by)
-		if bc != null:
-			bc.last_hit_at = BendStatus.now()
+
+
+## The hitter's side of a hit (deliver): his SwayCaster's note of it (landing lag, the jab step), his last hit's time.
+static func _noted(by: Node, n: Node, inf: Dictionary) -> void:
+	var sc := SwayCaster.of(by)
+	if sc != null:
+		sc.note_hit(n, inf)
+	var bc := BendCaster.of(by)
+	if bc != null:
+		bc.last_hit_at = BendStatus.now()
+
+
+## The host's word to hitter `by`'s owner that his hit on `n` (`inf`) landed (NetSpells.apply_hit): his jab string as the
+## host keeps it (`jab`: its count, its Pop; its times this machine's now), then his note of the hit (_noted).
+static func hit_by(by: Node, n: Node, inf: Dictionary, jab: Dictionary) -> void:
+	if by == null or not is_instance_valid(by):
+		return
+	var bc := BendCaster.of(by)
+	if bc != null and not jab.is_empty():
+		var st := bc.jab.duplicate()
+		for k: String in ["hits", "popped", "volley", "volleys", "pop_volley"]:
+			if jab.has(k):
+				st[k] = jab[k]
+		st["hit_last"] = true
+		st["at"] = BendStatus.now()
+		st["victim"] = n.get_instance_id() if n != null and is_instance_valid(n) else 0
+		bc.jab = st
+		if not bool(st.get("popped", false)) and int(st.get("hits", 0)) > 0:
+			bc.jab_step_until = float(inf.get("released_at", BendStatus.now())) + num("jab_step_s")   # (the step: as the host's)
+	_noted(by, n, inf)
 
 
 ## A knock along the class's set speed `mps` at `deg` up from the flat `flat` (a set launch's vector).
@@ -212,8 +260,10 @@ static func _hear_strings() -> void:
 		rr.string_ended.connect(cb)
 
 
-## A guard took `by`'s jab: the string back to step 1.
+## A guard took `by`'s jab: the string back to step 1 (online the host's word to his owner too: NetSpells).
 static func jab_guarded(by: Node) -> void:
+	if by != null and is_instance_valid(by) and not NetSpells.owns(by) and NetSpells.decides():
+		NetSpells.to_attacker("jab_guarded", by, [])
 	var bc := BendCaster.of(by)
 	if bc != null:
 		_reset(bc)

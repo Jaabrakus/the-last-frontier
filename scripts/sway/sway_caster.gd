@@ -419,6 +419,10 @@ var _cm_used := 1.0
 ## The last lock's start (BendStatus.now()) and its source, for the tests.
 var lock_began_at := -INF
 var _rooted_t := 0.0
+## Another machine's fighter online (RingNet's puppet, docs/tidebreak/ring_netcode.md): it never locks or casts by itself;
+## its owner's lock is played on it (net_lock: its state and signals, for its SwayPose) and his casts run through it
+## (NetCasts.run: net_pin, net_guard).
+var puppet := false
 
 
 ## The player's caster, made on first call (the level or the story calls it once; it is safe to call again).
@@ -509,6 +513,7 @@ func _ready() -> void:
 	floor_s = SwayMoves.motes_rule("floor_s", floor_s)
 	if player == null:
 		return
+	puppet = player.has_meta(RingNet.PUPPET_META)
 	if player.has_meta(&"sway_save"):
 		load_data(player.get_meta(&"sway_save"))
 		player.remove_meta(&"sway_save")
@@ -732,7 +737,7 @@ func drop_all() -> void:
 	_pending = {}
 	_out = {}
 	if _gzone != null and is_instance_valid(_gzone):
-		_gzone.end()
+		_gzone.end("drop")                        # (its owner's own: online on his machine at once, NetSpells.OWN_ENDS)
 	_gzone = null
 	FormEffects.drop_raised_of(player)
 	for i in 4:
@@ -980,19 +985,25 @@ func _r3_tick() -> void:
 	if _was_air != air:
 		_refresh_air_lock()
 	_was_air = air
-	if _gzone != null:
-		if not is_instance_valid(_gzone) or _gzone.is_queued_for_deletion():
-			_gzone = null
-		else:
-			var hold := float(BendR3.block("guard").get("hold_max_s", 2.5))
-			var e_down := _guard_down()
-			if e_down and _gzone.t < hold and _gzone.life_s >= _gzone.t:
-				_gzone.life_s = maxf(_gzone.life_s, minf(_gzone.t + 0.1, hold))
+	_hold_guard()
 	if _buf3 and not frozen():
 		var rm := RingMoves.of(player)
 		if rm == null or not rm.in_landing_lag():
 			_buf3 = false
 			key3_press()
+
+
+## The standing guard kept up while E is held (guard.hold_max_s at most; a puppet's by its owner's E: NetBody's keys).
+func _hold_guard() -> void:
+	if _gzone == null:
+		return
+	if not is_instance_valid(_gzone) or _gzone.is_queued_for_deletion():
+		_gzone = null
+		return
+	var hold := float(BendR3.block("guard").get("hold_max_s", 2.5))
+	var e_down := _guard_down()
+	if e_down and _gzone.t < hold and _gzone.life_s >= _gzone.t:
+		_gzone.life_s = maxf(_gzone.life_s, minf(_gzone.t + 0.1, hold))
 
 
 ## Only modes with explicit airborne timing are rebased at takeoff/landing. Preserve earned seconds, including any
@@ -1542,6 +1553,9 @@ static func give_arg(p: Node, kind: String) -> bool:
 # ---------------------------------------------------------------- each frame
 func _physics_process(dt: float) -> void:
 	if player == null or not is_instance_valid(player):
+		return
+	if puppet:
+		_hold_guard()                             # (a puppet's lock is its owner's, net_lock; its guard held by his E)
 		return
 	_tick_floor(dt)
 	_spell_hands()
@@ -3177,7 +3191,9 @@ func _apply_grown(m: String, t: Node3D, at: Vector3, grew_now: bool, rel := {}) 
 		bc.grown = grew_now
 	var keep := BendR3.release
 	BendR3.release = rel                          # (round 3: the hit info's air and release time are the release's)
+	var ev := NetCasts.begin(self, m, t, at, grew_now, rel)     # (online: the cast recorded and sent; {} offline)
 	SwayEffects.apply(self, m, t, at)
+	NetCasts.end(self, ev)
 	BendR3.release = keep
 	if bc != null:
 		bc.grown = false
@@ -3187,6 +3203,85 @@ func _apply_grown(m: String, t: Node3D, at: Vector3, grew_now: bool, rel := {}) 
 func _on_struck(m: String) -> void:
 	if not _pending.is_empty() and String(_pending.m) == m:
 		_land_pending()
+
+
+# ---------------------------------------------------------------- online: a puppet's (docs/tidebreak/ring_netcode.md)
+var _net_keep: Array = []
+
+
+## Its owner's cast of `m` at `mode` about to run through it (NetCasts.run): mode_of(m) is `mode` meanwhile (net_unpin after).
+func net_pin(m: String, mode: String) -> void:
+	_net_keep = [_pin_id, _pin_mode, _pinning]
+	_pin_id = m
+	_pin_mode = mode
+	_pinning = true
+
+
+func net_unpin() -> void:
+	if _net_keep.size() == 3:
+		_pin_id = String(_net_keep[0])
+		_pin_mode = String(_net_keep[1])
+		_pinning = bool(_net_keep[2])
+	_net_keep = []
+
+
+## Its owner's guard standing here (the zone his guard's cast made: NetCasts.run; null none), held up while his E is held
+## (guard_held: the guard key comes with his state, NetBody).
+func net_guard(z: BendZone) -> void:
+	_gzone = z
+
+
+## Its owner's lock going on (NetCasts.lock_event): ["start", m, mode, src], ["full", m], ["grew", m], ["cast", m],
+## ["broken", m, why], ["fizzled", m]: its state and its signals as his own SwayCaster's, so its SwayPose poses him and its
+## FormCast draws his circle at his feet as his machine does (the variation his: mode_of(m) while it runs; the lock's target
+## his own body: an element's lock is the caster's own). Nothing it does casts: his casts come as their own events.
+func net_lock(e: Array) -> void:
+	if e.is_empty() or not puppet:
+		return
+	var m := String(e[1]) if e.size() > 1 else ""
+	match String(e[0]):
+		"start":
+			state = State.LOCKING
+			move = m
+			target = player
+			lock_src = String(e[3]) if e.size() > 3 else SRC_AIM
+			_form_id = m
+			_form_mode = String(e[2]) if e.size() > 2 else ""
+			grown = false
+			fill = 0.0
+			lock_began_at = BendStatus.now()
+			lock_started.emit(m, player)
+		"full":
+			if state == State.LOCKING and move == m:
+				state = State.FULL
+				fill = 1.0
+				locked.emit(m, player)
+		"grew":
+			if state != State.IDLE and move == m:
+				grown = true
+				grew.emit(m)
+		"cast":
+			if move == m and state != State.IDLE:
+				cast.emit(m, player)                  # (its pose's release: the variation still the lock's)
+			_net_idle()
+		"broken":
+			if move == m and state != State.IDLE:
+				lock_broken.emit(m, player, String(e[2]) if e.size() > 2 else "")
+			_net_idle()
+		"fizzled":
+			if move == m and state != State.IDLE:
+				fizzled.emit(m, player)
+			_net_idle()
+
+
+func _net_idle() -> void:
+	state = State.IDLE
+	fill = 0.0
+	move = ""
+	target = null
+	grown = false
+	_form_id = ""
+	_form_mode = ""
 
 
 func _break(why: String) -> void:

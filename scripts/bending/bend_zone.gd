@@ -56,6 +56,12 @@ extends Node3D
 ## is a return (return_info: "<origin>.return", returned, ret_mult, origin_tag); a caught stone keeps its origin tag, and
 ## earth's Pop stone is thrown as itself (rock_jab/pop_stone, not a return). A jab a guard takes ends its sender's string.
 ## The fire wall's entry pop (once a body each entry_every_s) and its burn with no knock; walls' hits carry the cast's info.
+## ONLINE (NetSpells, docs/tidebreak/ring_netcode.md "Ghost mode"): named by its cast's run (NetSpells.tag); one the host makes
+## by a decision outside a cast (steam where water met fire, a parry's puddle) named in a run of its own and made on the
+## others by its word (NetSpells.spawned). Only the host decides what it does to bodies, bolts and stones (_every, _stones,
+## _wind_push, on_bolt, guard_take, cone_mult, lightning_back); a guard's result is told on every machine (the "guard" word:
+## report there), a body's share of it (a parry's cast reward, a whiff, Carried wind, a Wind Prison's catch) on its owner's
+## machine (NetSpells.here). An end that is not its own (its life, its owner gone) is the host's word on the others.
 
 const GROUP := &"bend_zones"
 const LIGHT := ["fire", "water", "ice", "air"]
@@ -151,10 +157,12 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	if p_kind == "puddle":
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)
+	NetSpells.tag(z)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(z)
 	var x := Vector3.UP.cross(z.way).normalized()
 	z.global_transform = Transform3D(Basis(x, Vector3.UP, z.way), at)
 	z._look()
+	NetSpells.spawned(z, "zone", [by, p_kind, at, spec, p_way])     # (the host's own decision: made on the others too)
 	return z
 
 
@@ -439,24 +447,26 @@ func _flames(look: Node3D) -> void:
 func _physics_process(dt: float) -> void:
 	t += dt
 	if owner_node == null or not is_instance_valid(owner_node):
-		end()                                  # (its caster gone: a bot freed between rounds takes its tornado, its fire wall with it)
+		end("owner")                           # (its caster gone: a bot freed between rounds takes its tornado, its fire wall with it)
 		return
 	if follow and owner_node != null and is_instance_valid(owner_node):
 		global_position = owner_node.global_position
 	if kind == "tornado":
 		global_position += way * speed * dt
 		global_position.y = FormEffects.ground_at(self, global_position).y      # (a deck's, not the terrain's under it)
+	var decides := NetSpells.decides()           # (online a ghost's zone decides nothing: the host's words)
 	_tick -= dt
 	if _tick <= 0.0:
 		_tick = 0.25
-		_every(0.25)
-	if kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard"]) \
-			or (r2 and BendR3.stock() and kind in ["redirect", "parry"]):
+		if decides:
+			_every(0.25)
+	if decides and (kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard"]) \
+			or (r2 and BendR3.stock() and kind in ["redirect", "parry"])):
 		_stones()
-	if kind == "wind_wall":
+	if kind == "wind_wall" and decides:
 		_wind_push()
 	if t >= life_s:
-		end()
+		end("life")
 
 
 ## A wind wall's push: whoever walks into it is pushed back the way he came (off its near face, WIND_WALL_KNOCK), once a
@@ -469,7 +479,7 @@ func _wind_push() -> void:
 		if not inside(n.global_position):
 			continue
 		var id := n.get_instance_id()
-		if prison_s > 0.0 and n is CharacterBody3D and not (n as CharacterBody3D).is_on_floor():
+		if prison_s > 0.0 and n is CharacterBody3D and _in_air(n as CharacterBody3D):
 			_imprison(n)
 			continue
 		if BendStatus.now() - float(_pushed.get(id, -INF)) < PUSH_EVERY_S:
@@ -621,7 +631,20 @@ func _imprison(n: Node3D) -> void:
 	if _caught.has(id):
 		return
 	_caught[id] = true
-	var held := BendStatus.float_up(n, 0.0, prison_s)
+	imprison(n, prison_s)
+
+
+## Whether `n` is in the air for a Wind Prison (a puppet online: its owner's word, RingMoves' puppet state).
+static func _in_air(n: CharacterBody3D) -> bool:
+	return not n.is_on_floor() if NetSpells.owns(n) else BendR3.airborne(n)
+
+
+## `n` caught in a Wind Prison for `s` (see _imprison): his float, his hitstun over it, his motion stopped, the bands round him.
+## Online his own machine's (NetSpells.here: the host's word to his owner).
+static func imprison(n: Node3D, s: float) -> void:
+	if n == null or not is_instance_valid(n) or not NetSpells.here(n, "imprison", [s]):
+		return
+	var held := BendStatus.float_up(n, 0.0, s)
 	if held <= 0.0:
 		return
 	var kn := BendKnock.of(n)
@@ -833,6 +856,7 @@ func _result(result: String, what: String, by: Node = null) -> void:
 	if result != "whiff":
 		results.append(result)
 	report(owner_node, result, what, element)
+	NetSpells.word(["guard", owner_node, result, what, element])     # (online: told on every machine, report there)
 	if result == "perfect" and what != "" and BendR3.stock():
 		BendStatus.parry_reward(owner_node, by)
 
@@ -858,6 +882,8 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 static func carry_wind(body: Node) -> void:
 	if body == null or not is_instance_valid(body) or BendPoses.element_of(body) != "air":
 		return
+	if not NetSpells.here(body, "carry", []):
+		return                                   # (online: his owner's, NetSpells)
 	body.set_meta(&"bend_carry_until", BendStatus.now() + float(Bending.passive("air").get("after_s", 0.8)))
 	if body is Node3D:
 		BendLooks.carried(body as Node3D)
@@ -992,7 +1018,7 @@ static func return_mult(s: Node) -> float:
 ## that gets through. A round-2 guard that handles it: perfect 0 (a Turn parts a Wave round him, a Parry eats a fire cone,
 ## a Wind Guard an air one: charging his Carried wind), late late_mult; else 1. `by`: the cone's caster.
 static func cone_mult(body: Node, cone_kind: String, by: Node = null) -> float:
-	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree() or not NetSpells.decides():
 		return 1.0
 	for z in body.get_tree().get_nodes_in_group(GROUP):
 		var bz := z as BendZone
@@ -1014,7 +1040,7 @@ static func cone_mult(body: Node, cone_kind: String, by: Node = null) -> float:
 ## Lightning striking `body`: his Parry within its first perfect_s sends it back (the only answer to lightning; spec §2.5).
 ## The parry zone that does, or null (it hits). `by`: the lightning's caster.
 static func lightning_back(body: Node, by: Node = null) -> BendZone:
-	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree() or not NetSpells.decides():
 		return null
 	for z in body.get_tree().get_nodes_in_group(GROUP):
 		var bz := z as BendZone
@@ -1251,12 +1277,14 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 			BendLooks.burst(s.global_position, "air", 18)
 
 
-func end() -> void:
+func end(why := "ended") -> void:
 	if is_queued_for_deletion():
 		return
-	if r2 and took == 0 and owner_node != null and is_instance_valid(owner_node):
+	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
+		return                                   # (a ghost's: the host's word ends it)
+	if r2 and took == 0 and owner_node != null and is_instance_valid(owner_node) and NetSpells.decides():
 		# (a guard that took nothing: the owner's next guard locks slower for a while; spec §2.5)
-		owner_node.set_meta(&"bend_whiff_until", BendStatus.now() + Bending.rule("whiff_s", 1.5))
+		whiffed(owner_node)
 		_result("whiff", "")
 	remove_from_group(GROUP)
 	for e in _fx:
@@ -1268,6 +1296,12 @@ func end() -> void:
 	queue_free()
 
 
+## A guard of `owner`'s took nothing (end): his next guard locks slower for a while (guard_lock_s). Online his own machine's.
+static func whiffed(owner: Node) -> void:
+	if owner != null and is_instance_valid(owner) and NetSpells.here(owner, "whiff", []):
+		owner.set_meta(&"bend_whiff_until", BendStatus.now() + Bending.rule("whiff_s", 1.5))
+
+
 # ---------------------------------------------------------------- round 3: every guard a shield (the % ring; AIR)
 ## What a round-2 guard of `body`'s does to a hit of kind `what` that is not a bolt or a flying stone (a cone, a Column or a
 ## Geyser, the Slam, the air hit, lightning: BendEffects) in the % ring (spec §2.5): {result ("perfect", "late", "" none),
@@ -1277,8 +1311,8 @@ func end() -> void:
 ## its sender's string. Read only with BendR3.stock() (the callers ask).
 static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> Dictionary:
 	var out := {"result": "", "mult": 1.0, "info": info, "zone": null}
-	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
-		return out
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree() or not NetSpells.decides():
+		return out                               # (online a ghost judges no guard: the host's words)
 	for z in body.get_tree().get_nodes_in_group(GROUP):
 		var bz := z as BendZone
 		if bz == null or not bz.r2 or bz.owner_node != body or bz.is_queued_for_deletion():

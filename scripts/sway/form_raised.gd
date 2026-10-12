@@ -142,6 +142,7 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 	# (round 4 LOOKS: your own wall or pillar between the camera and your head, or by the camera, drawn faded; it blocks
 	# all the same: OwnFade, form_matter's fade)
 	OwnFade.attach(r, [r.mesh_instance], AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
+	NetSpells.tag(r)                              # (online: its name in its cast's run; the host's wear on it a word)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
 	# (the Spellbreak effects, SbFx: visual only; keyed by the cast raising it, BendR3.cur, kept for its crumble)
@@ -277,9 +278,12 @@ func _crumbling(u: float) -> void:
 	global_transform = xf
 
 
-## Struck (Hit.deliver): a hit of at least hit_min counts, its matter thrown off; hits_max of them and it crumbles.
+## Struck (Hit.deliver): a hit of at least hit_min counts, its matter thrown off; hits_max of them and it crumbles. Online a
+## hit decided outside a cast's run is the host's (NetSpells.decide: his word "wall_hit" to the others).
 func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null, _part := "body") -> void:
 	if state == State.CRUMBLING or damage < hit_min:
+		return
+	if not NetSpells.decide(self, "wall_hit", [damage, point, dir]):
 		return
 	if has_meta(&"bend_brace"):
 		remove_meta(&"bend_brace")            # (mended or braced: this hit is taken free; round 2's Mend)

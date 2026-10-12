@@ -151,7 +151,7 @@ static func resolved(m: String, spec: Dictionary) -> Dictionary:
 
 static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, grew: bool) -> void:
 	var p := bc.body
-	if BendStatus.bound(p) and BendStatus.element_mode(p) and Bending.key_of(BendPoses.element_of(p), m) == DASH_KEY:
+	if bc.feet_bound() and BendStatus.element_mode(p) and Bending.key_of(BendPoses.element_of(p), m) == DASH_KEY:
 		# (a bind holds his feet: his dash key's moves (a dash, a Skate, a Surf, a Leap) go nowhere till it ends; the cast is
 		# spent as any other; BendStatus.bind)
 		_record(bc, {"do": "held", "mode": mode, "move": m})
@@ -161,7 +161,7 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 		# (the element's jab: the close poke, jab_max_m at most whatever its spec says; spec §2.1)
 		spec["range_m"] = minf(float(spec.range_m), Bending.rule("jab_max_m", 10.0))
 	var carried := false
-	if bool(spec.get("carry", false)) and BendStatus.until(p, &"bend_carry_until") > 0.0:
+	if bool(spec.get("carry", false)) and bc.carry_ready():
 		# (Carried wind: a hit straight out of a dash knocks harder; spent on this cast)
 		var k := float(Bending.passive("air").get("knock_mult", 1.15))
 		spec["knock_mps"] = float(spec.get("knock_mps", 0.0)) * k
@@ -230,7 +230,9 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 		"heal":
 			var rr := RingRules.current()
 			if m == "patch" and BendR3.on(p) and rr != null:
-				_cur["patched"] = rr.patch(p)         # (round 3, spec §8: the fresh pool taken back, never health)
+				if NetSpells.owns(p):
+					_cur["patched"] = rr.patch(p)     # (round 3, spec §8: the fresh pool taken back, never health; online
+				                                      # his own machine's: NetSpells)
 			else:
 				BendStatus.heal(p, float(spec.get("amount", 15.0)))
 			if bool(_cur.get("patched", false)):
@@ -239,7 +241,7 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 				BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
 		"cleanse":
 			for k: StringName in [&"bend_root", &"bend_slow"]:
-				if p.has_meta(k):
+				if p.has_meta(k) and NetSpells.owns(p):
 					p.set_meta(k, 0.0)
 					BendStatus._end_timed(p, k, 0.0 if k == &"bend_root" else BendStatus.SLOW_MPS)
 			BendLooks.burst(p.global_position + Vector3.UP, "water", 18)
@@ -337,6 +339,7 @@ static func bolts(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 		spec["steer_dps"] = float(pv.get("steer_dps", 45.0))
 		spec["steer_max_deg"] = float(pv.get("steer_max_deg", 15.0))
 		spec["steer_s"] = float(pv.get("steer_s", 0.25))
+	var nctx := NetSpells.ctx()                   # (online: a volley's later bolts named in its cast's run, NetSpells)
 	for i in n:
 		var fire := func() -> void:
 			if not bc.valid():
@@ -354,7 +357,10 @@ static func bolts(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 			var from: Vector3 = a2.from
 			if low:
 				from = Vector3(from.x, p.global_position.y + 0.45, from.z)
-			BendBolt.launch(p, from, dir, spec)
+			if every > 0.0 and i > 0:
+				NetSpells.with(nctx, func() -> void: BendBolt.launch(p, from, dir, spec))
+			else:
+				BendBolt.launch(p, from, dir, spec)
 		if every > 0.0 and i > 0:
 			p.get_tree().create_timer(every * i, false).timeout.connect(fire)
 		else:

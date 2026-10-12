@@ -115,6 +115,9 @@ func _default_facing() -> Vector3:
 func _physics_process(dt: float) -> void:
 	if body == null or _dead():
 		return
+	if not NetSpells.owns(body):
+		_puppet_tick(dt)                          # (online another machine's fighter: his motion is his machine's)
+		return
 	if body.has_meta(&"bend_slam_lift") and body.is_on_floor():
 		body.remove_meta(&"bend_slam_lift")       # (round 3: Down Gust's lift is once an airtime; landing gives it back)
 	if _carry_t > 0.0:
@@ -147,6 +150,24 @@ func _physics_process(dt: float) -> void:
 		if along < _run and flat.length() > 0.5:
 			body.velocity.x += fwd.x * (_run - along) * minf(1.0, dt * 8.0)
 			body.velocity.z += fwd.z * (_run - along) * minf(1.0, dt * 8.0)
+	if not active() and _fx != null and is_instance_valid(_fx):
+		BendLooks.stop_trail(_fx)
+		_fx = null
+
+
+## Online, another machine's fighter (RingNet's puppet: NetBody moves him as his machine does): only the looks run here, his
+## dash's end played when its time is up or he is down again (RingMoves' puppet state), never his motion, never his Carried
+## wind (his machine charges it).
+func _puppet_tick(dt: float) -> void:
+	_carry_t = maxf(_carry_t - dt, 0.0)
+	_fall_t = maxf(_fall_t - dt, 0.0)
+	_run_t = maxf(_run_t - dt, 0.0)
+	var rm := RingMoves.of(body)
+	if _dash == 2 and rm != null and rm.airborne():
+		_dash_left = true
+	if (_dash == 1 and _carry_t <= 0.0) or (_dash == 2 and _dash_left and rm != null and not rm.airborne()):
+		_dash = 0
+		SbFx.dash_ended(body)
 	if not active() and _fx != null and is_instance_valid(_fx):
 		BendLooks.stop_trail(_fx)
 		_fx = null

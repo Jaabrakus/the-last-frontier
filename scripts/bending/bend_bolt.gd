@@ -44,6 +44,12 @@ extends Node3D
 ## his bolts' way.
 ## ROUND 4 (READ): in a ring or a duel it sounds in flight (BendSounds.flight from its launch, its kind's loop following it;
 ## the floor wave's floor_run), let go at its end (its hit, the world, its range, a guard's catch: BendSounds.flight_end).
+## ONLINE (NetSpells, docs/tidebreak/ring_netcode.md "Ghost mode"): named by its cast's run (NetSpells.tag). On the host it
+## does all of the above and tells the others: an end that is not its own (its range, the lip, the world) as an "end" word,
+## any change a meeting made to it (a turn, a swing, a new kind, a fire it took, its numbers halved) as a "bolt" word with its
+## state (_net_check, each frame). On any other machine it is a GHOST: it flies and steers as ever, ends on the world and on a
+## raised wall as the host's will (seen at once), and passes bodies, stones, other bolts and zones untouched until the host's
+## word turns it (net_state) or ends it where the host's did (net_end: its ending's look there).
 
 signal struck(who: Node, dmg: float)
 signal ended(why: String)
@@ -188,6 +194,7 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		b.steer_max_deg = float(spec.get("steer_max_deg", 15.0))
 		b.steer_s = float(spec.get("steer_s", 0.25))
 	b.add_to_group(GROUP)
+	NetSpells.tag(b)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(b)
 	b.global_position = from
 	if b.floor_wave:
@@ -386,9 +393,11 @@ func _turn(dt: float) -> void:
 func _physics_process(dt: float) -> void:
 	if spent:
 		return
+	_net_check()
 	if _swing_t >= 0.0:
 		_swing(dt)
 		return
+	var ghost := not NetSpells.decides()
 	age += dt
 	_steer(dt)
 	velocity.y -= gravity * dt
@@ -414,19 +423,20 @@ func _physics_process(dt: float) -> void:
 		else:
 			deck_y = FormEffects.ground_at(self, nxt2).y
 		step = Vector3(step.x, deck_y - from.y, step.z)
-	# a teammate held in a bind or a float on its way is freed (BendStatus.rescue: it passes through him, as through allies)
-	_rescue_on(from, from + step)
-	# the others met on the way (bolts, zones)
-	_meet_bolts()
-	if spent:
-		return
-	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
-		if (z as BendZone).on_bolt(self) or spent:
-			if spent:
-				return
-	if _swing_t >= 0.0:
-		return                                # (a Turn took it: it swings from the next frame)
-	_near_miss()
+	if not ghost:
+		# a teammate held in a bind or a float on its way is freed (BendStatus.rescue: it passes through him, as through allies)
+		_rescue_on(from, from + step)
+		# the others met on the way (bolts, zones)
+		_meet_bolts()
+		if spent:
+			return
+		for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+			if (z as BendZone).on_bolt(self) or spent:
+				if spent:
+					return
+		if _swing_t >= 0.0:
+			return                            # (a Turn took it: it swings from the next frame)
+		_near_miss()
 	if floor_wave:
 		_wave_step(from, step)
 		if lip_end and not spent:
@@ -449,9 +459,10 @@ func _physics_process(dt: float) -> void:
 		_q.motion = Vector3.ZERO
 		var info := space.get_rest_info(_q)
 		var col := instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
-		global_position = from + step * frac[0]
-		_hit(col, at, Vector3(info.get("normal", -velocity.normalized())))
-		return
+		if not (ghost and _ghost_through(col, info)):
+			global_position = from + step * frac[0]
+			_hit(col, at, Vector3(info.get("normal", -velocity.normalized())))
+			return
 	global_position = from + step
 	travelled += step.length()
 	_face()
@@ -559,10 +570,10 @@ func _wave_step(from: Vector3, step: Vector3) -> void:
 				ex.append(info.rid)
 			else:
 				break
-		if kind == "stone":
+		if kind == "stone" and NetSpells.decides():
 			_heave_loose(from, flat, fwd, across, w)   # (earth's Fissure: the loose stones it runs under thrown on)
-		# whom it runs into: in its width, the feet low enough
-		for e in BendCaster.near(_by() if _by() != null else self, from, w * 0.5 + 1.5):
+		# whom it runs into: in its width, the feet low enough (online the host's to decide)
+		for e in (BendCaster.near(_by() if _by() != null else self, from, w * 0.5 + 1.5) if NetSpells.decides() else []):
 			var n: Node3D = e[0]
 			if n == _by() or not BendStatus.can_take(n, _by()):
 				continue
@@ -607,7 +618,7 @@ func _near_miss() -> void:
 ## Its caster's own bodies, left out of its flight: a fighter's hit parts too (NpcFighter.ray_exclude), so a bolt from a bot's
 ## chest does not strike the bot that sent it. Its caster's allies too (BendCaster.ally_rids: the ring's sides): it passes them.
 func _exclude() -> Array[RID]:
-	var ex: Array[RID] = []
+	var ex: Array[RID] = _ghost_ex.duplicate()
 	if caster == null or not is_instance_valid(caster):
 		return ex
 	if caster.has_method(&"ray_exclude"):
@@ -636,6 +647,11 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 	var by := _by()
 	var sbk := SbFx.key_of(info)
 	var sbo := {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}
+	if not NetSpells.decides():
+		# (a ghost: the world or a raised wall ends it here as on the host, its look at once; the wall's wear is the host's word)
+		_end_look("wall" if who is FormRaised else "world", at, n)
+		_finish("wall" if who is FormRaised else "world")
+		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)
 		if not SbFx.fire(by, sbk, "impact", sbo):
@@ -843,6 +859,14 @@ func redirect(dir: Vector3, by: Node3D) -> void:
 func end(why: String) -> void:
 	if spent:
 		return
+	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
+		return                                    # (a ghost's: the host's word ends it, net_end)
+	_finish(why)
+
+
+func _finish(why: String) -> void:
+	if spent:
+		return
 	spent = true
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
@@ -850,3 +874,114 @@ func end(why: String) -> void:
 	BendLooks.stop_trail(_fire_trail)
 	ended.emit(why)
 	queue_free()
+
+
+# ---------------------------------------------------------------- online (see the header's ONLINE)
+## The bodies, stones and props a ghost has passed (its flight's exclusions): the host's word decides what they did to it.
+var _ghost_ex: Array[RID] = []
+## Its state as last told (the host's): what a meeting changes, compared each frame.
+var _net_sig: Array = []
+
+
+## A ghost's flight meeting `col` (`info` the shape's rest info): true when it passes (a body, a stone, a prop: the host's
+## to decide), the thing's RID kept out of its flight from now; false: the world or a raised wall, it ends there.
+func _ghost_through(col: Node, info: Dictionary) -> bool:
+	var who := _taker(col)
+	if who is FormRaised:
+		return false
+	if who == null and not (col is RigidBody3D) and not (col is CharacterBody3D):
+		return false
+	if info.has("rid"):
+		_ghost_ex.append(info.rid)
+	return true
+
+
+## The host's: its state told when a meeting has changed it since it was last told (its caster, kind, fire, numbers, the
+## guards it met, a swing begun or over); its first frame only remembered (its cast told the others how it began).
+func _net_check() -> void:
+	if not NetSpells.online() or not NetSpells.decides() or NetSpells.id_of(self) == "":
+		return
+	var sig := [_by().get_instance_id() if _by() != null else 0, kind, burning, snappedf(damage, 0.01), snappedf(knock_mps, 0.01),
+			snappedf(up_mps, 0.01), guarded_by.size(), _swing_t >= 0.0, bool(info.get("returned", false))]
+	if _net_sig.is_empty():
+		_net_sig = sig
+		return
+	if sig == _net_sig:
+		return
+	_net_sig = sig
+	var sw: Array = []
+	if _swing_t >= 0.0:
+		sw = [_swing_by, _swing_s, _swing_r, _swing_k, kind]
+	NetSpells.word(["bolt", NetSpells.id_of(self), {"p": global_position, "v": velocity, "by": _by(), "kind": kind,
+			"burning": burning, "dmg": damage, "kn": knock_mps, "up": up_mps, "tr": travelled, "info": info, "sw": sw}])
+
+
+## The host's word on it (a ghost's): its state as the host's bolt has it now (_net_check's): a swing begun round its guard
+## (its look and its turn there, begin_swing), a swing over, a new kind, a fire taken, its place, way, numbers and caster.
+func net_state(d: Dictionary) -> void:
+	var sw: Array = d.get("sw", [])
+	if not sw.is_empty() and _swing_t < 0.0 and sw[0] is Node3D:
+		global_position = d.get("p", global_position)
+		begin_swing(sw[0] as Node3D, float(sw[1]), float(sw[2]), float(sw[3]), String(sw[4]))
+		return
+	if sw.is_empty() and _swing_t >= 0.0:
+		_swing_t = -1.0                           # (the host's swing is over: it leaves as his did)
+		_leave_look()
+	if String(d.get("kind", kind)) != kind:
+		become(String(d.kind))
+	if bool(d.get("burning", false)) and not burning:
+		burning = true
+		if _fire_trail == null:
+			_fire_trail = BendLooks.trail(self, "fire", radius)
+	var by: Variant = d.get("by")
+	if by is Node3D:
+		caster = by as Node3D
+	global_position = d.get("p", global_position)
+	velocity = d.get("v", velocity)
+	damage = float(d.get("dmg", damage))
+	knock_mps = float(d.get("kn", knock_mps))
+	up_mps = float(d.get("up", up_mps))
+	travelled = float(d.get("tr", travelled))
+	if d.get("info") is Dictionary:
+		info = d.info
+	_ghost_ex.clear()                             # (turned: whatever it passed it may meet again on its new way)
+	_face()
+
+
+## The host's word that it ended (a ghost's): put where the host's ended, its ending's look there, gone.
+func net_end(why: String, at: Vector3) -> void:
+	if spent:
+		return
+	global_position = at
+	_end_look(why, at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)
+	_finish(why)
+
+
+## The look of its ending `why` at `at` (`n` the face it met): a ghost's own ends and the host's words (the host played the
+## same where it decided).
+func _end_look(why: String, at: Vector3, n: Vector3) -> void:
+	match why:
+		"hit", "wall", "world":
+			if not SbFx.fire(_by(), SbFx.key_of(info), "impact", {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}):
+				BendLooks.burst(at, kind, 16 if why != "wall" else 14, n, 80.0, 3.5)
+			BendLooks.sound(kind, "hit", at, -3.0)
+		"steam":
+			BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
+			BendLooks.sound("steam", "hit", at)
+		"broken":
+			if not SbFx.fire(_by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": self}):
+				BendLooks.burst(at, "stone", 24)
+		"melted", "bubble":
+			BendLooks.burst(at, "water", 14)
+		"scattered":
+			BendLooks.burst(at, "water", 18, Vector3.UP, 180.0, 2.5)
+		"cancel", "stone", "blocked", "dropped":
+			BendLooks.burst(at, kind, 14)
+
+
+## A turned bolt's look as it leaves a swing (drawn back to its length: become's wrap).
+func _leave_look() -> void:
+	if _swing_became:
+		_swing_became = false
+		if _look != null and is_instance_valid(_look):
+			create_tween().tween_property(_look, ^"scale", Vector3.ONE, WRAP_OUT_S)

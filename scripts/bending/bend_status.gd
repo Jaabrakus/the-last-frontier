@@ -199,6 +199,8 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_
 		by = null                                # (its caster freed since: the blow is no one's)
 	if dmg <= 0.0 or not can_take(n, by):
 		return
+	if not NetSpells.here(n, "hurt", [dmg, at, dir, by, lock_s, info]):
+		return                                   # (online: the host's to decide, his owner's to take: NetSpells)
 	n.set_meta(HIT_LOCK_META, lock_s)
 	if stock_body(n):
 		# (the % ring: the hit is %, never health; its launch set at once, the knock that follows it this frame taken as done)
@@ -234,7 +236,11 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_
 static func knock(n: Node, v: Vector3, by: Node, info := {}) -> void:
 	if by != null and not is_instance_valid(by):
 		by = null
-	if v.length_squared() < 1e-4 or not can_take(n, by) or until(n, &"bend_anchor") > 0.0:
+	if v.length_squared() < 1e-4 or not can_take(n, by):
+		return
+	if not NetSpells.here(n, "knock", [v, by, info]):
+		return                                   # (online: NetSpells)
+	if until(n, &"bend_anchor") > 0.0:
 		return
 	if stock_body(n):
 		if _hit_this_frame(n, by, info):
@@ -298,6 +304,8 @@ static func until(n: Node, key: StringName) -> float:
 ## `n`'s feet held where it stands for `s` (the player's bend_speed_cap 0; a fighter's feet_held: it still thinks and casts).
 ## Never on one who casts as an element (held_off).
 static func root(n: Node, s: float) -> void:
+	if not NetSpells.here(n, "root", [s]):
+		return
 	if element_mode(n):
 		held_off += 1
 		return
@@ -407,6 +415,8 @@ static func rescue(n: Node, by: Node) -> bool:
 		return false
 	if not BendCaster.same_team(n, by):
 		return false
+	if not NetSpells.here(n, "rescue", [by]):
+		return false                             # (online: the host's to decide, his owner's to free: NetSpells)
 	var freed := false
 	if bound(n):
 		unbind(n)
@@ -479,13 +489,20 @@ static func float_cover(by: Node, at: Vector3, r := 3.0) -> float:
 ## each for one cast within window_s, spent by it (spend_cast_mult; SwayCaster._lock_time, NpcBending.begin). A guard's own
 ## lock never takes it.
 static func parry_reward(n: Node, by: Node) -> void:
-	var b := RingRules.stock_block("parry")
-	var k := float(b.get("k", 0.15))
-	var until := now() + float(b.get("window_s", 3.0))
+	var k := float(RingRules.stock_block("parry").get("k", 0.15))
 	if n != null and is_instance_valid(n):
-		n.set_meta(CAST_MULT_META, {"mult": 1.0 - k, "until": until})
+		give_cast_mult(n, 1.0 - k)
 	if by != null and is_instance_valid(by) and by != n and not BendCaster.same_team(n, by):
-		by.set_meta(CAST_MULT_META, {"mult": 1.0 + k, "until": until})
+		give_cast_mult(by, 1.0 + k)
+
+
+## `n`'s next cast within rules.json stock.parry.window_s locks in `mult` of its time (parry_reward's each side). Online the
+## body's owner keeps it (NetSpells: the host's word to him).
+static func give_cast_mult(n: Node, mult: float) -> void:
+	if n == null or not is_instance_valid(n) or not NetSpells.here(n, "cast_mult", [mult]):
+		return
+	var until := now() + float(RingRules.stock_block("parry").get("window_s", 3.0))
+	n.set_meta(CAST_MULT_META, {"mult": mult, "until": until})
 
 
 ## The share of its lock time `n`'s next cast takes now (1: none; parry_reward).
@@ -514,6 +531,8 @@ static func rescue_near(by: Node, at: Vector3, r: float) -> void:
 
 ## `n` slowed to SLOW_MPS for `s`. Never on one who casts as an element (held_off).
 static func slow(n: Node, s: float) -> void:
+	if not NetSpells.here(n, "slow", [s]):
+		return
 	if element_mode(n):
 		held_off += 1
 		return
@@ -556,14 +575,16 @@ static func clear_round(b: Node) -> void:
 			b.remove_meta(k)
 
 
-## The caster can't be knocked back for `s`.
+## The caster can't be knocked back for `s`. Online his own machine's (a puppet's is his owner's: NetSpells.owns).
 static func anchor(n: Node, s: float) -> void:
-	if n != null:
+	if n != null and NetSpells.owns(n):
 		n.set_meta(&"bend_anchor", now() + s)
 
 
-## A little health back (the player's, a fighter's), up to its most.
+## A little health back (the player's, a fighter's), up to its most. Online his own machine's (NetSpells.owns).
 static func heal(n: Node, amount: float) -> void:
+	if not NetSpells.owns(n):
+		return
 	if n is FrontierPlayer:
 		var p := n as FrontierPlayer
 		p.health = minf(p.health + amount, p.max_health)
