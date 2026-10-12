@@ -37,13 +37,14 @@ extends Node3D
 ##               owner, 2026-10-11): the same, and it turns to ice as it is caught (BendBolt.become), wraps round him and
 ##               leaves an ice lance along his aim; late, half gets through as every late Turn; fire: perfect, doused to
 ##               steam; a Wave on the beat parts round him (cone_mult). Stone and other air pass
-##   parry       fire of any shape (a bolt, the Kick's floor wave, the High Kick's crescent): perfect, straight back along
-##               his aim at once x perfect_mult (no dice: never a random side); ice: perfect, melted to a puddle; lightning:
-##               back along his aim only on a parry in its first perfect_s when it strikes (lightning_back), else it hits.
-##               Water, stone and air pass
-##   Wind Guard  air: perfect, bounced straight back along his aim x perfect_mult, and his Carried wind charged; stone: perfect,
-##               cushioned and dropped at his feet, a loose stone. Fire, water, ice and lightning pass. (The 2.5 s return
-##               shield is gone.)
+##   parry       fire of any shape (a bolt, the Kick's floor wave, the High Kick's crescent) and air (the owner, 2026-10-12,
+##               "Counter it": turned to fire as it is caught): perfect, it circles him once like a moon and leaves along his
+##               aim x perfect_mult (_moon_back; no dice: never a random side; a floor wave straight back along the floor at
+##               once); ice: perfect, melted to a puddle; lightning: back along his aim only on a parry in its first
+##               perfect_s when it strikes (lightning_back), else it hits. Water and stone pass
+##   Wind Guard  air and fire (the owner, 2026-10-12): perfect, it circles him once like a moon and leaves along his aim x
+##               perfect_mult, still what it was (_moon_back), and air charges his Carried wind; stone: perfect, cushioned
+##               and dropped at his feet, a loose stone. Water, ice and lightning pass. (The 2.5 s return shield is gone.)
 ## Each result is told: the owner's BendCaster.guarded(result, what), his meta bend_last_guard, the counts (counts), and
 ## its look and sound on the guarder only (BendLooks.guard_result; no cue on whoever sent it).
 ## Round 2's zones too: wind_wall (a standing wall of wind: light shots blown up and aside, stone and lightning pass, a body
@@ -83,6 +84,9 @@ const WIND_GUARD_S := 0.8
 ## A Turn's swing round the guard's waist (s) and its radius (m).
 const SWING_S := 0.3
 const SWING_R := 1.0
+## A Parry's and a Wind Guard's moon (_moon_back): one lap round the guard in this long (s), this far out (m).
+const MOON_S := 0.35
+const MOON_R := 1.25
 ## A body walking into a wind wall is pushed back at this (m/s), once each PUSH_EVERY_S.
 const WIND_WALL_KNOCK := 4.0
 const PUSH_EVERY_S := 0.5
@@ -997,7 +1001,13 @@ func _guard_bolt(b: BendBolt) -> bool:
 			if what == "fire" or (what == "stone" and b.heated):
 				# (a heated stone burns: a Parry takes it as fire, Kiln Stone)
 				if perfect:
-					_straight_back(b)
+					_moon_back(b)
+				else:
+					_late(b)
+			elif what == "air":
+				# (the owner, 2026-10-12: a Parry counters air too, turned to fire as it circles him)
+				if perfect:
+					_moon_back(b, "fire")
 				else:
 					_late(b)
 			elif what == "ice":
@@ -1015,8 +1025,14 @@ func _guard_bolt(b: BendBolt) -> bool:
 			if what == "air":
 				if perfect:
 					if not AirTalents.eye_catch(self, b):
-						_straight_back(b)                 # (Eye of the Gale's wearer, E held: it circles him first)
+						_moon_back(b)                     # (Eye of the Gale's wearer, E held: it circles him while held)
 					carry_wind(owner_node, AirTalents.guard_carry_s(owner_node))
+				else:
+					_late(b)
+			elif what == "fire":
+				# (the owner, 2026-10-12: a Wind Guard counters fire too, sent back as fire)
+				if perfect:
+					_moon_back(b)
 				else:
 					_late(b)
 			elif what == "stone":
@@ -1084,6 +1100,20 @@ func _late(b: BendBolt) -> void:
 
 ## Sent straight back along the guard's aim at once (the Parry's, the Wind Guard's bounce): his now, perfect_mult of its
 ## speed, damage and knock. A floor wave stays on the floor (its line the aim's yaw).
+## A perfect Parry's or Wind Guard's return (the owner, 2026-10-12: "when put parry i want it to loop around like a moon
+## before it fires back"; "Counter it"): it circles its guard once at the waist (BendBolt.begin_swing: MOON_S, MOON_R, as a
+## Turn's swing but wider) and leaves along his aim x perfect_mult, made `to_kind` as it is caught (a Parry's air: fire).
+## A wave along the deck cannot circle him: it goes back along the floor at once (_straight_back), made `to_kind` too.
+func _moon_back(b: BendBolt, to_kind := "") -> void:
+	if b.floor_wave or b.low:
+		if to_kind != "":
+			b.become(to_kind)
+		_straight_back(b)
+		return
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	b.begin_swing(owner_node, MOON_S, MOON_R, k, to_kind)
+
+
 func _straight_back(b: BendBolt) -> void:
 	var to := guard_aim(owner_node, b.global_position)
 	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))

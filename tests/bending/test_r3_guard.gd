@@ -4,7 +4,8 @@ extends SceneTree
 ## rule_set "stock", made the current one: the gate on). What gets through is read from BendR3's delivered hits (the info the
 ## % rules take): none is 0%, one with slide_only is the late half.
 ##   the shield  the four guards (Catch, Turn, Parry, Wind Guard) each met by a stone, a water, a fire, an air shot and the Air
-##               Lance (an air spear: water's Turn swings it back as ice, the owner's 2026-10-11; the Wind Guard bounces it) timed
+##               Lance (an air spear: water's Turn swings it back as ice, the owner's 2026-10-11; the Wind Guard bounces it; a
+##               Parry sends air and the Lance back as fire, a Wind Guard fire back, each circling once, 2026-10-12) timed
 ##               to arrive 0.2 s after it stands (perfect: nothing through; the reward only in the guard's own matrix cell, a
 ##               cell round 2 let pass stopped with none) and 0.6 s (late: half the knock through as a slide; earth's catch
 ##               of stone a full catch within its window); a cone (the Wave), a Column and a flying Spike the same
@@ -34,8 +35,11 @@ const SHOTS := {"earth": {"kind": "stone", "mps": 40.0, "damage": 20.0, "knock_m
 		"air_lance": {"kind": "air", "shape": "spear", "flight": "point_first", "mps": 40.0, "gravity": 0.0, "damage": 20.0,
 				"knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.18, "range_m": 30.0, "long": true}}
 ## The reward each guard gives in its own cells (round 2's matrix): the shot's element -> what becomes of the shot.
+## (2026-10-12, the owner: a Parry counters air too, as fire; a Wind Guard counters fire: each circles its guard once, the
+## moon, BendZone._moon_back)
 const REWARD := {"earth": {"earth": "caught"}, "water": {"water": "swing", "fire": "steam", "air_lance": "swing"},
-		"fire": {"fire": "back"}, "air": {"air": "back", "earth": "cushioned", "air_lance": "back"}}
+		"fire": {"fire": "back", "air": "back", "air_lance": "back"},
+		"air": {"air": "back", "earth": "cushioned", "air_lance": "back", "fire": "back"}}
 
 
 class FakeRules:
@@ -293,6 +297,9 @@ func _shield() -> void:
 			if el == "water" and se == "air_lance":
 				# (the Turn's Lance leaves as an ice lance, the turner's)
 				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "ice" and _last_bolt.caster == p
+			if el == "fire" and se in ["air", "air_lance"]:
+				# (a Parry's air leaves as fire, the parrier's)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "fire" and _last_bolt.caster == p
 			var ok_p := through.is_empty() and (pf[1] as Array).has("perfect") and rok
 			_expect(ok_p, "%s's guard, a %s shot on the beat: nothing through, %s (%s, %s)" % [el, se, reward if reward != "" else "no reward", pf[1], end])
 			var lt := await _met(el, se, 0.6)

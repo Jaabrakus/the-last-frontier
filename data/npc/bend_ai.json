@@ -49,8 +49,8 @@
   "zones": {
     "catch": {"role": "reaction", "answers": ["stone"], "cool_s": 1.2},
     "redirect": {"role": "reaction", "answers": ["water", "ice", "fire", "air_spear"], "cool_s": 1.5},
-    "parry": {"role": "reaction", "answers": ["fire", "lightning", "ice"], "cool_s": 1.5},
-    "air_shield": {"role": "reaction", "answers": ["air", "stone"], "cool_s": 1.5},
+    "parry": {"role": "reaction", "answers": ["fire", "lightning", "ice", "air"], "cool_s": 1.5},
+    "air_shield": {"role": "reaction", "answers": ["air", "stone", "fire"], "cool_s": 1.5},
     "fire_wall": {"role": "control", "range_m": [2.0, 9.0], "cool_s": 6.0}
   },
   "old": {

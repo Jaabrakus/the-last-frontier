@@ -14,7 +14,8 @@ extends SceneTree
 ##                      its beat 0.25 s (0.3); a bot wearing it, its shield raised its own way and a run ordered, walks at 1.5 m/s
 ##                      at most (NpcRingMind.shield_tick; not worn it stands)
 ##   Eye of the Gale    E held through a perfect Wind Guard: the bounced Slice circles him while E is held and leaves along his
-##                      aim when it is let go (x1.2); not worn, straight back at once; its Carried wind lasts 0.4 s (0.8); a bot
+##                      aim when it is let go (x1.2); not worn, it circles him once like a moon (BendZone.MOON_S, the owner
+##                      2026-10-12) and goes back; its Carried wind lasts 0.4 s (0.8); a bot
 ##                      wearing it (its own guard, raised through its lock) holds the Slice BOT_EYE_S and sends it at the player
 ##   Rebound            after a perfect Wind Guard his next Slice lock begins 40% full (not worn: empty), once; his held guard
 ##                      drops at 2.0 s (2.5); a bot wearing it takes the same head start after its own perfect guard
@@ -620,8 +621,10 @@ func _eye() -> void:
 	var w := await _bounce(0.3)
 	var w_full := await _bounce(2.0)
 	_wear([])
-	_expect(bool(c.perfect) and not bool(c.swing) and _near(float(c.left), 1.2, 0.02) and float(c.along) < 5.0,
-			"Eye of the Gale not worn: a perfect Wind Guard sends the Slice straight back along his aim at once (x%.2f, %.1f deg off)" % [c.left, c.along])
+	_expect(bool(c.perfect) and bool(c.swing) and absf(float(c.circled_s) - BendZone.MOON_S) < 0.07 and _near(float(c.left), 1.2, 0.02)
+			and float(c.along) < 5.0,
+			"Eye of the Gale not worn: a perfect Wind Guard circles the Slice once like a moon (%.2f s), then sends it along his aim (x%.2f, %.1f deg off)"
+			% [c.circled_s, c.left, c.along])
 	_expect(bool(w.perfect) and bool(w.swing) and float(w.circled_s) >= 0.25 and float(w.circled_s) <= 0.4 and float(w.near) < 2.5,
 			"Eye of the Gale: E held through the perfect guard, the Slice circles him (%.2f s, within %.1f m) till E is let go" % [w.circled_s, w.near])
 	_expect(_near(float(w.left), 1.2, 0.02) and float(w.along) < 5.0,
@@ -641,8 +644,10 @@ func _eye() -> void:
 	BendLoadout.clear(foe)
 	var bc: Dictionary = bres[""]
 	var bw: Dictionary = bres["air.guard.eye"]
-	_expect(bool(bc.perfect) and not bool(bc.swing) and bool(bc.back) and float(bc.along) < 10.0,
-			"Eye of the Gale not worn, a bot: its perfect Wind Guard sends the Slice straight back (%.1f deg off its line at him)" % bc.along)
+	_expect(bool(bc.perfect) and bool(bc.swing) and absf(float(bc.circled_s) - BendZone.MOON_S) < 0.07 and bool(bc.back)
+			and float(bc.along) < 10.0,
+			"Eye of the Gale not worn, a bot: its perfect Wind Guard circles the Slice once (%.2f s) and sends it back (%.1f deg off its line at him)"
+			% [bc.circled_s, bc.along])
 	_expect(bool(bw.perfect) and bool(bw.swing) and float(bw.circled_s) >= AirTalents.BOT_EYE_S.x - 0.05
 			and float(bw.circled_s) <= AirTalents.BOT_EYE_S.y + 0.05 and bool(bw.back) and float(bw.along) < 10.0,
 			"Eye of the Gale on a bot: the Slice circles it %.2f s, then leaves along its aim at him (%.1f deg off), its now"

@@ -12,10 +12,11 @@ extends SceneTree
 ##             guard's lock whiff_lock_s. The Air Lance (the Gust held long; the owner, 2026-10-11): on the beat it wraps
 ##             round him and turns to ice (its body made anew, drawn short on the circle), his, and leaves an ice lance along
 ##             his aim x1.2; late, half gets through and it stays air; a plain air bolt passes as before
-##   fire      Parry: fire on the beat straight back along the aim at once x1.2, no dice thrown; ice on the beat melts to a
-##             puddle; lightning back only on the beat; late, half; water passes
-##   air       Wind Guard: air on the beat bounced back x1.2 and Carried wind charged; stone on the beat cushioned and dropped
-##             loose, late half; fire passes
+##   fire      Parry: fire on the beat circles him once like a moon (the owner, 2026-10-12) and leaves along the aim x1.2, no
+##             dice thrown; air on the beat the same, turned to fire as it is caught; ice on the beat melts to a puddle;
+##             lightning back only on the beat; late, half; water passes
+##   air       Wind Guard: air on the beat circles him once and goes back x1.2, Carried wind charged; fire on the beat the
+##             same, still fire; stone on the beat cushioned and dropped loose, late half
 ##   the Kick  the floor wave strikes a man standing and misses one 0.7 m up; a wall stops it; its line and form the same at
 ##             any crosshair pitch; a jump 0.2 s before it reaches him clears it
 ##   High Kick its crescent clears a 2 m wall
@@ -232,6 +233,35 @@ func _lance_spec() -> Dictionary:
 ## A guard `kind` of `spec` made on the player now.
 func _guard(kind: String, spec: Dictionary) -> BendZone:
 	return BendZone.make(p, kind, p.global_position, spec, BendCaster.of(p).facing())
+
+
+## A shot of `spec` met on the beat by guard `kind`'s moon (BendZone._moon_back): [took it, circling him (his, swinging),
+## left along his aim x1.2 once the lap was over, no dice thrown, its kind as it left]; `kind_after` is what it should be
+## when caught.
+func _moon(kind: String, gspec: Dictionary, spec: Dictionary, kind_after: String) -> Array:
+	await _calm()
+	var z := _guard(kind, gspec)
+	await _secs(0.2)
+	var b := _shoot(spec, 4.0)
+	b.set_physics_process(false)
+	b.global_position = _chest() + (NpcSenses.chest_of(foe) - _chest()).normalized() * 1.5
+	var v0 := b.velocity.length()
+	seed(4242)
+	var r0 := randf()
+	seed(4242)
+	var acted := z.on_bolt(b)
+	var r1 := randf()
+	var circling: bool = acted and b.caster == p and b.swinging() and b.kind == kind_after
+	b.set_physics_process(true)
+	await _until(func() -> bool: return not is_instance_valid(b) or not b.swinging(), BendZone.MOON_S + 0.3)
+	await _ticks(2)
+	var left := false
+	var k := ""
+	if is_instance_valid(b) and not b.spent:
+		var aim := BendZone.guard_aim(p, b.global_position)
+		left = b.velocity.normalized().dot((aim - b.global_position).normalized()) > 0.97 and absf(b.velocity.length() - v0 * 1.2) < 0.05
+		k = b.kind
+	return [acted, circling, left, r0 == r1, k]
 
 
 ## The player's health lost to a shot of `spec` met by guard `kind` (none: "") made `wait` s before it arrives: [lost, zone,
@@ -480,24 +510,15 @@ func _fire() -> void:
 	var pspec := {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5}
 	var fire := {"kind": "fire", "mps": 32.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2, "range_m": 30.0}
 	var base := await _met("", {}, fire, 0.0)
-	# on the beat: straight back along the aim, at once, no dice
-	await _calm()
-	var z := _guard("parry", pspec)
-	await _secs(0.2)
-	var b := _shoot(fire, 4.0)
-	b.set_physics_process(false)
-	b.global_position = _chest() + (NpcSenses.chest_of(foe) - _chest()).normalized() * 1.5
-	var v0 := b.velocity.length()
-	seed(4242)
-	var r0 := randf()
-	seed(4242)
-	var acted := z.on_bolt(b)
-	var r1 := randf()
-	var aim := BendZone.guard_aim(p, b.global_position)
-	var back := b.velocity.normalized().dot((aim - b.global_position).normalized()) > 0.99 and absf(b.velocity.length() - v0 * 1.2) < 0.01
-	_expect(acted and back and b.caster == p and r0 == r1, "Parry on the beat: straight back along his aim x1.2, no dice thrown (%s %s %s)" % [acted, back, r0 == r1])
-	_perfect_ok = _perfect_ok and back
-	b.set_physics_process(true)
+	# on the beat: it circles him once like a moon (the owner, 2026-10-12), then leaves along the aim x1.2; no dice
+	var moon := await _moon("parry", pspec, fire, "fire")
+	_expect(moon[0] and moon[1] and moon[2] and moon[3], "Parry on the beat: it circles him once like a moon, then leaves along his aim x1.2, no dice thrown (%s)" % [moon])
+	_perfect_ok = _perfect_ok and moon[2]
+	# air too (the owner, 2026-10-12, "Counter it"): turned to fire as it is caught
+	var air := {"kind": "air", "mps": 28.0, "gravity": 0.0, "damage": 6.0, "knock_mps": 11.0, "radius_m": 0.35, "range_m": 30.0}
+	var turned := await _moon("parry", pspec, air, "fire")
+	_expect(turned[0] and turned[1] and turned[2] and turned[4] == "fire",
+			"Parry on the beat: air turned to fire, circled once and sent back along his aim x1.2 (%s)" % [turned])
 	var late := await _met("parry", pspec, fire, 0.6)
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
 	_expect(late[3] == ["late"] and half, "Parry late: half gets through (%.1f of %.1f)" % [late[0], base[0]])
@@ -537,10 +558,11 @@ func _air() -> void:
 	await _secs(0.2)
 	var b := _shoot(air, 2.8)
 	var v0 := b.velocity.length()
-	await _until(func() -> bool: return not is_instance_valid(b) or b.caster == p, 0.6)
+	# (it circles him once like a moon first, the owner 2026-10-12: x1.2 as it leaves)
+	await _until(func() -> bool: return not is_instance_valid(b) or (b.caster == p and not b.swinging()), 0.6 + BendZone.MOON_S)
 	var bounced := is_instance_valid(b) and b.caster == p and absf(b.velocity.length() - v0 * 1.2) < 0.2
 	_expect(bounced and z.results == ["perfect"] and BendStatus.until(p, &"bend_carry_until") > 0.0,
-			"Wind Guard on the beat: air bounced back x1.2, Carried wind charged (%s)" % [z.results])
+			"Wind Guard on the beat: air circled once and sent back x1.2, Carried wind charged (%s)" % [z.results])
 	_perfect_ok = _perfect_ok and bounced
 	var st := await _met("air_shield", gspec, STONE, 0.2)
 	var loose := get_nodes_in_group(FormStone.GROUP).any(func(n: Node) -> bool: return n.has_meta(FormStone.LOOSE_META))
@@ -550,8 +572,9 @@ func _air() -> void:
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
 	_expect(late[3] == ["late"] and half, "Wind Guard late on stone: half gets through (%.1f of %.1f)" % [late[0], base[0]])
 	_late_ok = _late_ok and half
-	var fire := await _met("air_shield", gspec, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(fire[0]) > 0.0 and fire[3].is_empty(), "Wind Guard lets fire pass (%.1f)" % fire[0])
+	# fire too (the owner, 2026-10-12): circled once and sent back, still fire
+	var fire := await _moon("air_shield", gspec, {"kind": "fire", "mps": 40.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, "fire")
+	_expect(fire[0] and fire[1] and fire[2] and fire[4] == "fire", "Wind Guard on the beat: fire circled once and sent back along his aim x1.2, still fire (%s)" % [fire])
 	await _calm("earth")
 
 

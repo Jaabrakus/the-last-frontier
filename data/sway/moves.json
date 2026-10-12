@@ -1507,10 +1507,10 @@
           "radius_m": 2.5,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["fire"],
+          "takes": ["fire", "air"],
           "handles": ["lightning", "ice"],
           "lightning": "perfect",
-          "return": "straight"
+          "return": "moon"
         },
         "redirect_lightning": {"do": "buff", "buff": "redirect_lightning", "kind": "lightning", "s": 1.0},
         "flare": {
@@ -1761,10 +1761,10 @@
           "life_s": 0.8,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["air"],
+          "takes": ["air", "fire"],
           "handles": ["stone"],
           "stone": "drop_on_perfect",
-          "return": "bounce"
+          "return": "moon"
         },
         "cyclone": {"do": "ring", "kind": "air", "radius_m": 5.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 3.5},
         "tornado": {
