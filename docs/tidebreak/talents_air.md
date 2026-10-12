@@ -15,6 +15,20 @@ game's own casts, locks, guards and hits.
 | Drift Guard (`air.guard.drift`) | walks at 1.5 m/s with his Wind Guard up (Classic: no walking); its beat 0.25 s (0.3) | `AirTalents.guard_walk` in `RingMoves._ground_physics`; `SwayCaster._root` and a bot's `shield_tick` let him walk |
 | Eye of the Gale (`air.guard.eye`) | E held through a perfect Wind Guard: the bounced air circles him (up to 0.6 s) and leaves along his aim (x1.2) when E is let go; the perfect guard's Carried wind 0.4 s (0.8) | `AirTalents.eye_catch` in `BendZone._guard_bolt` (BendBolt's swing, held by `swing_hold`); `carry_wind(body, s)` |
 | Rebound (`air.guard.rebound`) | his next Slice or Wind Ball begun within 1 s of a perfect Wind Guard starts its lock 40% full (once); his held guard drops at 2.0 s (2.5) | `AirTalents.on_guard` (BendZone.report), `start_fill` (SwayCaster._try_begin, NpcBending.begin); the tune path `rules:air_rules.guard.hold_max_s` |
+| Carry the Edge (`air.slice.carry_edge`) | a Slice let go on the Beat while Carried wind is charged is carried and leaves it charged; the Slice adds 10% (11) | `AirTalents.keeps_carry` in `BendEffects._apply` |
+| Carrying Wind (`air.gust.carrying`) | a Gust let go on the Beat takes the loose stones it crosses (anyone's) and throws them on 6 m along its way, each a pebble (`rock_jab/pebbles`: 5%, set knock 3; a stone bolt: a Catch holds it, walls stop it); the Gust's lock 0.5 s (0.45) | `AirTalents.on_wind_wave` (BendEffects.wind_wave), `carry_stones` (BendBolt's flight, `carries`) |
+| Peak Wind (`air.leap.peak_wind`) | a Leap let go on the Beat charges his Carried wind fresh at its top (no extra height); the Leap's lock 0.3 s (0.25) | `AirTalents.on_dash` (BendEffects.dash: `PeakWatch` on him) |
+
+The Beat (`skill_tree.json` "beat", the owner's yes): a held cast let go within 0.2 s after its lock fills; never a click,
+never a cast that goes by itself. Only a worn technique reads it (`AirTalents.beat_worn`): SwayCaster marks the release
+(`rel.beat`, BendR3.release), the cast's hit info carries `beat` (BendR3.info_for), a brief flash on his own hands. With no
+technique worn nothing of it exists (Classic's hit info has no `beat` key). Key 3 is always a click (it goes when full); a Beat
+wearer who holds key 3 through the full lock keeps it until he lets go (`SwayCaster._key3_beat_hold`), so a Leap can be let go
+on the Beat; tapped, key 3 is the click it always was. A bot wearing a Beat technique (a test's) lets a lock go on the Beat at
+its difficulty's `beat_rate` (bend_ai.json presets, else easy 0, normal 0.2, hard 0.5), within 0.2 s of its full lock.
+
+Two nodes that set the same number to the same value (Tailwind and Carry the Edge: the Slice's d 10; Full Sail and Carrying
+Wind: the Gust's lock 0.5) no longer refuse each other when worn together (`BendLoadout._fold`: a clash is two values).
 
 Notes:
 - Drift Guard: a direction pressed fresh while the guard is up is still the guard's Roll (RingMoves' ground dodge, as for

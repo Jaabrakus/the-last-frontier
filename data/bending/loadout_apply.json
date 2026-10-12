@@ -61,13 +61,19 @@
     "air.slice.tailwind": true,
     "air.guard.drift": true,
     "air.guard.eye": true,
-    "air.guard.rebound": true
+    "air.guard.rebound": true,
+    "air.slice.carry_edge": true,
+    "air.gust.carrying": true,
+    "air.leap.peak_wind": true
   },
   "behaviour": {
     "air.slice.tailwind": "AirTalents.on_hit (BendR3._noted: a Slice of his that lands charges his Carried wind)",
     "air.guard.drift": "AirTalents.guard_walk (RingMoves._ground_physics, SwayCaster._root, NpcRingMind.shield_tick: walking at 1.5 m/s with the Wind Guard up)",
     "air.guard.eye": "AirTalents.eye_catch (BendZone._guard_bolt: E held through a perfect bounce circles it, BendBolt.swing_hold), AirTalents.guard_carry_s (BendZone.carry_wind's length)",
-    "air.guard.rebound": "AirTalents.on_guard and start_fill (BendZone.report, SwayCaster._try_begin, NpcBending.begin: the next air_blast lock 40% full); hold_max_s by tune (SwayCaster._hold_guard, NpcRingMind.shield_tick)"
+    "air.guard.rebound": "AirTalents.on_guard and start_fill (BendZone.report, SwayCaster._try_begin, NpcBending.begin: the next air_blast lock 40% full); hold_max_s by tune (SwayCaster._hold_guard, NpcRingMind.shield_tick)",
+    "air.slice.carry_edge": "AirTalents.keeps_carry (BendEffects._apply: a Beat Slice keeps the Carried wind it used); the Beat: SwayCaster._cast, BendR3.info_for, NpcBending._release (AirTalents.beat_worn, bot_beat)",
+    "air.gust.carrying": "AirTalents.on_wind_wave and carry_stones (BendEffects.wind_wave, BendBolt._physics_process: a Beat Gust throws the loose stones it crosses on 6 m as pebbles)",
+    "air.leap.peak_wind": "AirTalents.on_dash (BendEffects.dash: a Beat Leap charges his Carried wind at its top, PeakWatch); key 3 held by a Beat wearer: SwayCaster._key3_beat_hold"
   },
   "live": [
     "air.ball.dense",
@@ -96,6 +102,9 @@
     "air.slice.tailwind",
     "air.guard.drift",
     "air.guard.eye",
-    "air.guard.rebound"],
+    "air.guard.rebound",
+    "air.slice.carry_edge",
+    "air.gust.carrying",
+    "air.leap.peak_wind"],
   "styles_live": ["boxing"]
 }

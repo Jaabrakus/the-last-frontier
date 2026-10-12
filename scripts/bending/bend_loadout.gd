@@ -546,7 +546,7 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 	return out
 
 
-## `src` folded into `into` (a number set twice is a clash: returns where, else "").
+## `src` folded into `into` (a number set twice to two values is a clash: returns where, else ""; the same value twice agrees).
 static func _fold(into: Dictionary, src: Dictionary) -> String:
 	for k: String in src:
 		if src[k] is Dictionary:
@@ -557,8 +557,8 @@ static func _fold(into: Dictionary, src: Dictionary) -> String:
 			var why := _fold(into[k], src[k])
 			if why != "":
 				return "%s.%s" % [k, why]
-		elif into.has(k):
-			return k
+		elif into.has(k) and not (str(into[k]) == str(src[k])):
+			return k                             # (two nodes that set the same number to the same value agree: no clash)
 		else:
 			into[k] = src[k]
 	return ""

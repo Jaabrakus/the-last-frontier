@@ -151,6 +151,8 @@ var _swing_became := false
 ## While valid, the swing goes on only as long as it says true (Eye of the Gale: the guarder's E held; AirTalents.eye_catch): let
 ## go, it leaves along his aim from where it is. Invalid (every Turn): the swing runs its time.
 var swing_hold := Callable()
+## Carrying Wind's Beat Gust (AirTalents.on_wind_wave): the loose stones it crosses are thrown on (AirTalents.carry_stones).
+var carries := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -442,6 +444,8 @@ func _physics_process(dt: float) -> void:
 		if _swing_t >= 0.0:
 			return                            # (a Turn took it: it swings from the next frame)
 		_near_miss()
+		if carries:
+			AirTalents.carry_stones(self, from, step)
 	if floor_wave:
 		_wave_step(from, step)
 		if lip_end and not spent:

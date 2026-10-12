@@ -16,6 +16,17 @@ extends RefCounted
 ##                                      starts its lock REBOUND_FILL full (once); his held guard's longest stand is the node's
 ##                                      rules:air_rules.guard.hold_max_s (BendLoadout.tune at SwayCaster._hold_guard and the bot's
 ##                                      shield_tick)
+## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
+## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
+## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
+## (BendR3.info_for); a flash on his own hands only (beat_flash). Key 3's moves are clicks: a Beat wearer holding 3 keeps the
+## lock till he lets go (SwayCaster._key3_beat_hold); tapped, it is the click it always was. A bot wearing one lets a lock go
+## on the Beat at its difficulty's beat_rate (bend_ai.json presets, else BOT_BEAT_RATE) within BEAT_S of its full lock.
+##   Carry the Edge (air.slice.carry_edge)  keeps_carry: a Beat Slice with Carried wind charged leaves it charged (BendEffects)
+##   Carrying Wind (air.gust.carrying)      on_wind_wave / carry_stones: a Beat Gust throws the loose stones it crosses on along
+##                                          its way CARRY_M as pebbles (rock_jab/pebbles: 5%, set knock 3; stone: a Catch holds
+##                                          them, walls stop them)
+##   Peak Wind (air.leap.peak_wind)         on_dash: a Beat Leap charges his Carried wind at its top (BendZone.carry_wind)
 
 const TAILWIND := "air.slice.tailwind"
 const DRIFT := "air.guard.drift"
@@ -30,6 +41,17 @@ const REBOUND_S := 1.0
 const REBOUND_FILL := 0.4
 ## Rebound: the meta of the perfect Wind Guard his next lock may still take the head start from (its time; spent by that lock).
 const REBOUND_META := &"air_rebound_at"
+const CARRY_EDGE := "air.slice.carry_edge"
+const CARRYING := "air.gust.carrying"
+const PEAK_WIND := "air.leap.peak_wind"
+## The Beat's window (s; skill_tree.json beat.window_s).
+const BEAT_S := 0.2
+## The techniques that read the Beat, by the move/mode their Beat cast is.
+const BEAT_TALENTS := {"air_blast/slice": CARRY_EDGE, "air_gust/gust": CARRYING, "air_jump/leap": PEAK_WIND}
+## A bot's share of its locks let go on the Beat by difficulty (the tree's proposal; a preset's beat_rate over it).
+const BOT_BEAT_RATE := {"easy": 0.0, "normal": 0.2, "hard": 0.5}
+## Carrying Wind: how far a loose stone the Gust takes is thrown on (m).
+const CARRY_M := 6.0
 
 
 # ---------------------------------------------------------------- Tailwind
@@ -110,3 +132,135 @@ static func start_fill(body: Node, m: String) -> float:
 	if not BendLoadout.wears(body, REBOUND) or BendStatus.now() - at > REBOUND_S:
 		return 0.0
 	return REBOUND_FILL
+
+
+# ---------------------------------------------------------------- the Beat
+## Whether `body` wears a technique that reads the Beat of move `m` at `mode` (BEAT_TALENTS).
+static func beat_worn(body: Node, m: String, mode: String) -> bool:
+	var id := String(BEAT_TALENTS.get("%s/%s" % [m, mode], ""))
+	return id != "" and BendLoadout.wears(body, id)
+
+
+## The Beat's cue: a brief glow on his own hands (nothing on anyone else, nothing on the HUD).
+static func beat_flash(body: Node) -> void:
+	if not (body is Node3D):
+		return
+	var b3 := body as Node3D
+	var at := b3.global_position + Vector3.UP * 1.2 - b3.global_basis.z * 0.35
+	var sc := SwayCaster.of(body)
+	if sc != null:
+		at = sc.hand_point()
+	BendLooks.burst(at, "air", 10, Vector3.UP, 180.0, 1.6, 0.14)
+
+
+## Whether a bot's release of `m` at `mode` now, `since_full` s after its lock filled, goes on the Beat: only a bot wearing
+## the technique (a test's: bots never wear loadouts in a match), within BEAT_S, at its difficulty's rate (its own dice).
+static func bot_beat(body: Node, m: String, mode: String, since_full: float, preset_name: String) -> bool:
+	if not beat_worn(body, m, mode) or since_full > BEAT_S:
+		return false
+	var pr := NpcBending.preset_of(preset_name)
+	var rate := float(pr.get("beat_rate", BOT_BEAT_RATE.get(preset_name, 0.2)))
+	if rate <= 0.0:
+		return false
+	return rate >= 1.0 or (body is NpcFighter and (body as NpcFighter).rng.randf() < rate)
+
+
+## The cast going now (BendR3.cur, its hit info) was let go on the Beat.
+static func on_beat(spec: Dictionary) -> bool:
+	return bool((spec.get("_info", {}) as Dictionary).get("beat", false))
+
+
+# ---------------------------------------------------------------- Carry the Edge
+## A carry spec's cast spends the Carried wind it used (BendEffects._apply), except a Beat Slice of a Carry the Edge wearer.
+static func keeps_carry(body: Node, m: String, mode: String, spec: Dictionary) -> bool:
+	return m == "air_blast" and mode == "slice" and on_beat(spec) and BendLoadout.wears(body, CARRY_EDGE)
+
+
+# ---------------------------------------------------------------- Carrying Wind
+## A wind wave just sent (BendEffects.wind_wave): a Beat Gust of a Carrying Wind wearer carries loose stones (BendBolt's
+## carries, carry_stones each frame of its flight).
+static func on_wind_wave(body: Node, b: BendBolt, spec: Dictionary) -> void:
+	if b == null or bool(spec.get("pull", false)) or not on_beat(spec) or not BendLoadout.wears(body, CARRYING):
+		return
+	if String((spec.get("_info", {}) as Dictionary).get("move", "")) != "air_gust":
+		return
+	b.carries = true
+
+
+## Carrying Wind (see the header): the loose stones lying in the wave's width on this step (whoever's: never one held, raised,
+## in flight or sinking) thrown on along its way CARRY_M, each a pebble of the Gust's caster. Once each.
+static func carry_stones(b: BendBolt, from: Vector3, step: Vector3) -> void:
+	var by := b._by()
+	if by == null or not b.is_inside_tree():
+		return
+	var flat := Vector3(step.x, 0.0, step.z)
+	if flat.length_squared() < 1e-8:
+		return
+	var fwd := flat.normalized()
+	var across := Vector3.UP.cross(fwd).normalized()
+	for s: Node in b.get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := s as FormStone
+		if st == null or st.is_queued_for_deletion() or st.state == FormStone.State.SINKING or GustLift.busy(st) \
+				or st.has_meta(&"bend_held_by") or st.has_meta(&"bend_raised_by") or st.has_meta(&"air_carried"):
+			continue
+		# (in the wave's reach on this step: its front included, so it takes the stone before the stone could stop it)
+		var l := st.global_position - from
+		var along := l.dot(fwd)
+		if along < -b.radius or along > flat.length() + b.radius + st.radius + 0.1 or absf(l.dot(across)) > b.radius + st.radius:
+			continue
+		if st.global_position.y > from.y + b.radius or st.global_position.y < from.y - b.radius - 1.0:
+			continue                                  # (not on the deck under the wave)
+		st.set_meta(&"air_carried", true)
+		pebble(by, st.global_position + Vector3.UP * maxf(st.radius, 0.1), fwd, st.radius)
+		BendLooks.burst(st.global_position, "stone", 8, Vector3.UP, 90.0, 2.5, 0.2)
+		st.queue_free()
+
+
+## A loose stone thrown on by `by`'s wind from `at` along `dir`: a pebble (rock_jab/pebbles' bolt, one of its own: its whole d),
+## CARRY_M far. The bolt.
+static func pebble(by: Node3D, at: Vector3, dir: Vector3, r: float) -> BendBolt:
+	var ps: Dictionary = (SwayMoves.move("rock_jab").get("bend", {}) as Dictionary).get("pebbles", {})
+	var info := {"tag": "rock_jab/pebbles", "move": "rock_jab", "mode": "pebbles", "from": at, "air": false,
+			"released_at": BendStatus.now(), "volley_n": 1, "carried_by_wind": true}
+	var spec := {"kind": "stone", "mps": float(ps.get("mps", 34.0)), "gravity": 0.0, "damage": float(ps.get("damage", 7.0)),
+			"knock_mps": float(ps.get("knock_mps", 2.0)), "up_mps": 1.0, "radius_m": clampf(r, 0.08, 0.2), "range_m": CARRY_M,
+			"weight": "light", "_lock_s": BendEffects.lock_of("rock_jab", "pebbles"), "_info": info}
+	return BendBolt.launch(by, at, dir, spec)
+
+
+# ---------------------------------------------------------------- Peak Wind
+## A dash just begun (BendEffects.dash): a Beat Leap of a Peak Wind wearer charges his Carried wind at its top (his rise
+## turned to a fall, PEAK_WATCH_S at most).
+static func on_dash(body: Node, spec: Dictionary) -> void:
+	var inf: Dictionary = spec.get("_info", {})
+	if String(inf.get("move", "")) != "air_jump" or not on_beat(spec) or not BendLoadout.wears(body, PEAK_WIND):
+		return
+	if not (body is CharacterBody3D) or not body.is_inside_tree():
+		return
+	var w := PeakWatch.new()
+	w.name = "AirPeakWatch"
+	body.add_child(w)
+
+
+## Peak Wind's watch on a Leap's wearer: his rise turned to a fall is the top (his Carried wind charged there), PEAK_WATCH_S at
+## most; it frees itself.
+class PeakWatch extends Node:
+	var rose := false
+	var t := 0.0
+
+	func _physics_process(dt: float) -> void:
+		t += dt
+		var cb := get_parent() as CharacterBody3D
+		if cb == null or t > AirTalents.PEAK_WATCH_S:
+			queue_free()
+			return
+		if cb.velocity.y > 0.5:
+			rose = true
+		elif rose and cb.velocity.y <= 0.0:
+			set_physics_process(false)
+			BendZone.carry_wind(cb)                   # (the top: his Carried wind, its spiral and whistle on him)
+			queue_free()
+
+
+## Peak Wind: the longest it watches a Leap for its top (s).
+const PEAK_WATCH_S := 2.0

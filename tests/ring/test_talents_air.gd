@@ -14,12 +14,21 @@ extends SceneTree
 ##                      aim when it is let go (x1.2); not worn, straight back at once; its Carried wind lasts 0.4 s (0.8)
 ##   Rebound            after a perfect Wind Guard his next Slice lock begins 40% full (not worn: empty), once; his held guard
 ##                      drops at 2.0 s (2.5); a bot wearing it takes the same head start
+##   the Beat           a held Slice let go within 0.2 s of its full lock is on the Beat (its hit info says so) only for a wearer
+##                      of a technique that reads it; let go later, or clicked, it is not; Classic's casts never carry it
+##   Carry the Edge     a Beat Slice with Carried wind charged is carried (x1.15) and leaves the wind charged; let go late, or not
+##                      worn, it spends it; a bot wearing it (beat_rate 1) keeps it too
+##   Carrying Wind      a Beat Gust takes a loose stone lying in its way and throws it on 6 m along its way, a pebble (+5%) at a
+##                      foe standing there; a Gust let go late, or not worn, leaves the stone lying
+##   Peak Wind          key 3 held through a Leap's full lock and let go on the Beat: his Carried wind charged fresh at the top
+##                      (as high a Leap as ever); key 3 tapped (a click), or not worn, no fresh charge at the top
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
 const NAME := "TALENTS AIR"
 const LIMIT_S := 600.0
-const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound"]
+const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
+		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -57,6 +66,7 @@ func _initialize() -> void:
 func _end() -> void:
 	Engine.time_scale = 1.0
 	Input.action_release(&"move_forward")
+	Input.action_release(&"weapon_3")
 	if sc != null and is_instance_valid(sc):
 		sc.held_override = null
 		sc.guard_override = null
@@ -247,6 +257,12 @@ func _run() -> void:
 		await _eye()
 	if _on("air.guard.rebound"):
 		await _rebound()
+	if _on("air.slice.carry_edge"):
+		await _carry_edge()
+	if _on("air.gust.carrying"):
+		await _carrying()
+	if _on("air.leap.peak_wind"):
+		await _peak_wind()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -513,3 +529,207 @@ func _rebound() -> void:
 	if foe.has_meta(AirTalents.REBOUND_META):
 		foe.remove_meta(AirTalents.REBOUND_META)
 	_expect(_near(bf, 0.4, 0.01) and bf0 < 0.01, "Rebound on a bot: its Slice lock after a perfect guard begins %.2f full (not worn %.2f)" % [bf, bf0])
+
+
+# ---------------------------------------------------------------- the Beat
+## The player's `m` at `md` locked through the aim's button (the crosshair where _aim holds it) and let go `after_full` s after
+## the lock filled (a negative: let go before full, a click); the cast's record once it landed (BendEffects.last_of) and
+## whether its hit info was on the Beat.
+func _held_cast(m: String, md: String, after_full: float) -> Dictionary:
+	sc.ready_spell(m)
+	sc.set_mode(m, md)
+	await _ticks(2)
+	var n0 := _casts
+	sc.held_override = true
+	if after_full < 0.0:
+		await _ticks(3)
+		sc.held_override = false                      # (a click: let go before full, it goes the moment it is)
+	var full := await _until(func() -> bool: return sc.state == SwayCaster.State.FULL or _casts > n0, 3.0)
+	if after_full >= 0.0:
+		await _secs(after_full)
+		sc.held_override = false
+	await _until(func() -> bool: return _casts > n0, 1.0)
+	await _secs(0.35)                                 # (its strike: the effect lands)
+	var rec := BendEffects.last_of(pc)
+	var inf: Dictionary = (rec.get("spec", {}) as Dictionary).get("_info", {})
+	return {"full": full < INF, "rec": rec, "beat": bool(inf.get("beat", false)), "has_beat": inf.has("beat")}
+
+
+var _casts := 0
+
+
+func _count_cast(_m: String, _md: String) -> void:
+	_casts += 1
+
+
+func _carry_edge() -> void:
+	if not sc.cast_released.is_connected(_count_cast):
+		sc.cast_released.connect(_count_cast)
+	var got := {}
+	for k: Array in [["", 0.0, "c"], ["air.slice.carry_edge", 0.0, "w"], ["air.slice.carry_edge", 0.4, "late"], ["air.slice.carry_edge", -1.0, "click"]]:
+		await _stage(8.0)
+		_wear([k[0]] if String(k[0]) != "" else [])
+		player.set_meta(&"bend_carry_until", BendStatus.now() + 3.0)     # (Carried wind charged, long enough for any release)
+		var r := await _held_cast("air_blast", "slice", float(k[1]))
+		var rec: Dictionary = r.rec
+		got[String(k[2])] = {"full": r.full, "beat": r.beat, "has_beat": r.has_beat, "carried": bool(rec.get("carried", false)),
+				"kept": BendStatus.until(player, &"bend_carry_until") > 0.0}
+		await _secs(0.6)
+	var c: Dictionary = got["c"]
+	var w: Dictionary = got["w"]
+	var late: Dictionary = got["late"]
+	var click: Dictionary = got["click"]
+	_expect(bool(c.full) and not bool(c.has_beat) and bool(c.carried) and not bool(c.kept),
+			"the Beat, not worn: a Slice let go at its full lock carries no Beat in its hit info; carried, it spends the wind")
+	_expect(bool(w.full) and bool(w.beat), "the Beat: a Carry the Edge wearer's Slice let go at its full lock is on the Beat")
+	_expect(not bool(late.beat) and not bool(click.beat), "the Beat: let go 0.4 s after full, or clicked, it is not (%s, %s)" % [late.beat, click.beat])
+	_expect(bool(w.carried) and bool(w.kept), "Carry the Edge: the Beat Slice is carried and leaves his Carried wind charged")
+	_expect(bool(late.carried) and not bool(late.kept) and bool(click.carried) and not bool(click.kept),
+			"Carry the Edge: a Slice let go late, or clicked, spends it as ever")
+	# a bot wearing it: its Slice let go at its full lock, on the Beat at beat_rate 1 (a test's)
+	await _stage(8.0)
+	_wear([])
+	BendLoadout.wear(foe, ["air.slice.carry_edge"], "", "air")
+	var pr := NpcBending.preset_of("normal")
+	pr["beat_rate"] = 1.0
+	var nb := foe.brain.bending
+	BendZone.carry_wind(foe)
+	nb.begin("air_blast", "slice")
+	nb.lock_t = nb.lock_s
+	nb._release()
+	var brec := BendEffects.last_of(BendCaster.of(foe))
+	var bkept := BendStatus.until(foe, &"bend_carry_until") > 0.0
+	BendLoadout.clear(foe)
+	BendZone.carry_wind(foe)
+	nb.begin("air_blast", "slice")
+	nb.lock_t = nb.lock_s
+	nb._release()
+	var bkept0 := BendStatus.until(foe, &"bend_carry_until") > 0.0
+	pr.erase("beat_rate")
+	_expect(bool(brec.get("carried", false)) and bkept and not bkept0,
+			"Carry the Edge on a bot: its Beat Slice keeps its Carried wind (not worn: spent)")
+	await _clear_air()
+
+
+## A loose stone lying on the deck at `at` (whoever's: the foe's here).
+## The bolts made while it listens: [kind, tag] each (_on_added).
+var _made: Array = []
+
+
+func _on_added(n: Node) -> void:
+	if n is BendBolt:
+		_made.append([(n as BendBolt).kind, String((n as BendBolt).info.get("tag", ""))])
+
+
+func _loose_stone(at: Vector3) -> FormStone:
+	var g := FormEffects.ground_at(player, at)
+	var s := FormStone.ball(current_scene, g, {"radius_m": 0.2, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0, "sink_s": 1.0}, 7, "stone")
+	s.state = FormStone.State.RESTING
+	s.base = Transform3D(Basis.IDENTITY, g + Vector3.UP * 0.22)
+	s.global_transform = s.base
+	s.freeze = false
+	FormStone.make_loose(s, foe)
+	return s
+
+
+func _carrying() -> void:
+	if not sc.cast_released.is_connected(_count_cast):
+		sc.cast_released.connect(_count_cast)
+	var got := {}
+	for k: Array in [["", 0.0, "c"], ["air.gust.carrying", 0.0, "w"], ["air.gust.carrying", 0.3, "late"]]:
+		await _stage(10.0)
+		_wear([k[0]] if String(k[0]) != "" else [])
+		var way := (foe.global_position - player.global_position)
+		way.y = 0.0
+		way = way.normalized()
+		var st := _loose_stone(player.global_position + way * 3.0)
+		foe.global_position = player.global_position + way * 8.0      # (the stone thrown on 6 m from 3 m: it reaches him)
+		foe.velocity = Vector3.ZERO
+		aim_at = NpcSenses.chest_of(foe)
+		rules.reset_pct(foe, 0.0)
+		await _secs(0.4)
+		_made.clear()
+		node_added.connect(_on_added)
+		var log0 := BendR3.hits_log.size()
+		var r := await _held_cast("air_gust", "gust", float(k[1]))
+		await _secs(0.8)
+		node_added.disconnect(_on_added)
+		var peb_kind := ""
+		for e0: Array in _made:
+			if String(e0[1]) == "rock_jab/pebbles":
+				peb_kind = String(e0[0])
+		var peb_hit := false
+		for i in range(mini(log0, BendR3.hits_log.size()), BendR3.hits_log.size()):
+			var e: Dictionary = BendR3.hits_log[i]
+			peb_hit = peb_hit or (e.get("n") == foe and e.get("by") == player and String(e.get("tag", "")) == "rock_jab/pebbles")
+		got[String(k[2])] = {"beat": r.beat, "taken": not is_instance_valid(st) or st.is_queued_for_deletion(), "pebble": peb_kind != "",
+				"kind": peb_kind, "pct": rules.pct_of(foe), "peb_hit": peb_hit}
+		if is_instance_valid(st):
+			st.queue_free()
+		await _secs(0.4)
+	var c: Dictionary = got["c"]
+	var w: Dictionary = got["w"]
+	var late: Dictionary = got["late"]
+	_expect(not bool(c.taken) and not bool(c.pebble), "Carrying Wind not worn: the Gust passes the loose stone, it lies where it was")
+	_expect(bool(w.beat) and bool(w.taken) and bool(w.pebble) and String(w.kind) == "stone",
+			"Carrying Wind: the Beat Gust takes the loose stone and throws it on, a stone (%s)" % w.kind)
+	var d := float(RingRules.class_of("rock_jab/pebbles").get("d", 5.0)) * RingRules.stock_num("pct_scale", 1.0)
+	_expect(bool(w.peb_hit) and float(w.pct) >= d - 0.01,
+			"Carrying Wind: the pebble reaches the foe 8 m off, a hit of his (rock_jab/pebbles: %.1f%%; +%.1f%% in all with the Gust's own)" % [d, w.pct])
+	_expect(not bool(late.beat) and not bool(late.taken), "Carrying Wind: a Gust let go 0.3 s after full leaves the stone lying")
+
+
+## The player leaps by key 3 (a second tap within key3_min_s: the Leap), key 3 held through the full lock and let go
+## `after_full` s after it (negative: tapped, a click): {beat, top_left (s of Carried wind as he turns to fall), rise (m)}.
+func _leap(after_full: float) -> Dictionary:
+	var y0 := player.global_position.y
+	Input.action_press(&"weapon_3")
+	sc.key3_press()
+	await _ticks(2)
+	sc.key3_press()                                   # (the second tap: the travel move, the Leap)
+	if after_full < 0.0:
+		await _ticks(2)
+		Input.action_release(&"weapon_3")
+	var full := await _until(func() -> bool: return sc.state == SwayCaster.State.FULL or not player.is_on_floor(), 2.0)
+	if after_full >= 0.0:
+		await _secs(after_full)
+		Input.action_release(&"weapon_3")
+	var res := {"full": full < INF, "beat": false, "top_left": -1.0, "rise": 0.0, "move": ""}
+	var rose := false
+	var t := 0.0
+	while t < 2.0:
+		await physics_frame
+		t += 1.0 / Engine.physics_ticks_per_second
+		var inf: Dictionary = (BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("_info", {})
+		if String(inf.get("move", "")) == "air_jump":
+			res.move = "air_jump"
+			res.beat = bool(inf.get("beat", false))
+		res.rise = maxf(float(res.rise), player.global_position.y - y0)
+		if player.velocity.y > 0.5:
+			rose = true
+		elif rose and player.velocity.y <= 0.0:
+			await physics_frame
+			res.top_left = BendStatus.until(player, &"bend_carry_until")
+			break
+	Input.action_release(&"weapon_3")
+	await _until(func() -> bool: return player.is_on_floor(), 3.0)
+	await _secs(0.5)
+	return res
+
+
+func _peak_wind() -> void:
+	var got := {}
+	for k: Array in [["", 0.0, "c"], ["air.leap.peak_wind", 0.0, "w"], ["air.leap.peak_wind", -1.0, "tap"]]:
+		await _stage(10.0)
+		aim_at = Vector3.INF
+		_wear([k[0]] if String(k[0]) != "" else [])
+		got[String(k[2])] = await _leap(float(k[1]))
+	var c: Dictionary = got["c"]
+	var w: Dictionary = got["w"]
+	var tap: Dictionary = got["tap"]
+	_expect(String(c.move) == "air_jump" and String(w.move) == "air_jump" and String(tap.move) == "air_jump",
+			"Peak Wind: key 3 tapped twice is the Leap (%s, %s, %s)" % [c.move, w.move, tap.move])
+	_expect(bool(w.beat) and not bool(c.beat) and not bool(tap.beat), "Peak Wind: key 3 held through the full lock and let go is a Beat Leap; tapped it is not")
+	_expect(_near(float(w.top_left), 0.8, 0.06) and float(c.top_left) < 0.7 and float(tap.top_left) < 0.7,
+			"Peak Wind: at the top of the Beat Leap his Carried wind is fresh (%.2f s left; Classic %.2f, tapped %.2f)" % [w.top_left, c.top_left, tap.top_left])
+	_expect(absf(float(w.rise) - float(c.rise)) < 0.15, "Peak Wind: the Leap rises as high as ever (%.2f m, Classic %.2f m)" % [w.rise, c.rise])

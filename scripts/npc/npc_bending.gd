@@ -1414,7 +1414,11 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
+	var keep_rel := BendR3.release
+	if AirTalents.bot_beat(me, id, md, lock_t - lock_s, _preset_name()):
+		BendR3.release = {"beat": true}              # (a bot wearing a Beat technique lets this one go on the Beat; a test's)
 	var ok := _cast(id, md, t)
+	BendR3.release = keep_rel
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0
