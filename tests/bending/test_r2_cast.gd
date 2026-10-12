@@ -352,7 +352,8 @@ func _mid_lock() -> void:
 	var early := casts.size()
 	var went := await _until(func() -> bool: return not casts.is_empty(), 1.0)
 	var wait := float(casts[0][2]) - at if not casts.is_empty() else INF
-	_expect(full and switched and absf(after - spent) < 0.02, "a same-key tap mid-lock: the other move, the time kept (%.2f -> %.2f s)" % [spent, after])
+	# (the time kept, up to the other move's own lock: a full Spike switched to the quicker Boulder is a full Boulder)
+	_expect(full and switched and absf(after - minf(spent, c.lock_s)) < 0.02, "a same-key tap mid-lock: the other move, the time kept (%.2f -> %.2f s)" % [spent, after])
 	_expect(early == 0 and went < INF and wait >= Bending.rule("switch_hold_s", 0.2) - 0.02 and String(casts[0][1]) == "cannonball",
 			"its release waits switch_hold_s (it went %.2f s after the switch, as %s)" % [wait, casts])
 	# a double tap mid-lock switches once

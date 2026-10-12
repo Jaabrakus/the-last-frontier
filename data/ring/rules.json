@@ -91,7 +91,7 @@
 			"water_whip/whip": {"d": 9.0, "base": 4.6, "growth": 11.6, "angle": 25},
 			"fire_blast/punch": {"d": 15.0, "base": 4.6, "growth": 11.5, "angle": 25},
 			"air_blast/slice": {"d": 11.0, "base": 3.4, "growth": 13.0, "angle": 25},
-			"stone_form/cannonball": {"d": 16.0, "base": 7.4, "growth": 11.5, "angle": 35},
+			"stone_form/cannonball": {"d": 13.0, "base": 7.4, "growth": 11.5, "angle": 35},
 			"ice/spear": {"d": 14.0, "base": 5.2, "growth": 11.0, "angle": 25},
 			"fire_blast/punch.grown": {"d": 20.0, "base": 5.8, "growth": 13.2, "angle": 30},
 			"stone_form/spike.grown": {"d": 18.5, "base": 7.2, "growth": 13.8, "angle": 32},

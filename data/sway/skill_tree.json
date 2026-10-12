@@ -619,8 +619,8 @@
        "world_gate": [
         "practised:stone_form"
        ],
-       "effect": "A bigger Boulder: 0.31 m (from 0.26) and 17% (from 16). It flies at 20 m/s (from 22) and its lock is 1.25 s (from 1.1).",
-       "plus": "bigger, adds 17%",
+       "effect": "A bigger Boulder: 0.31 m (from 0.26) and 14% (from 13). It flies at 27 m/s (from 30) and its lock is 0.9 s (from 0.8).",
+       "plus": "bigger, adds 14%",
        "minus": "slower flight and lock",
        "help": "A bigger Boulder, slower to throw.",
        "changes": [
@@ -631,25 +631,25 @@
         },
         {
          "path": "class:stone_form/cannonball+heavy.d",
-         "from": 16.0,
-         "to": 17.0,
+         "from": 13.0,
+         "to": 14.0,
          "base_tag": "stone_form/cannonball"
         },
         {
          "path": "move:stone_form.throw.hurl.cannonball.mps",
          "from": [
-          22.0,
-          22.0
+          30.0,
+          30.0
          ],
          "to": [
-          20.0,
-          20.0
+          27.0,
+          27.0
          ]
         },
         {
          "path": "move:stone_form.mode_lock_s.cannonball",
-         "from": 1.1,
-         "to": 1.25,
+         "from": 0.8,
+         "to": 0.9,
          "new_field": true,
          "from_path": "move:stone_form.lock_s"
         }
@@ -1840,7 +1840,7 @@
         "earth.set.sulphur",
         "expert:stone_form"
        ],
-       "effect": "The Boulder's roll leaves 3 puffs behind it (1.5 m, 2.5 s, at most 3% each). It adds 13% (from 16).",
+       "effect": "The Boulder's roll leaves 3 puffs behind it (1.5 m, 2.5 s, at most 3% each). It adds 10% (from 13).",
        "plus": "a trail of gas",
        "minus": "13% (from 16)",
        "help": "Your Boulder rolls a trail of gas puffs.",
@@ -1848,8 +1848,8 @@
        "changes": [
         {
          "path": "class:stone_form/cannonball+sulphur.d",
-         "from": 16.0,
-         "to": 13.0,
+         "from": 13.0,
+         "to": 10.0,
          "base_tag": "stone_form/cannonball"
         },
         {

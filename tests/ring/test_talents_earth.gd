@@ -21,7 +21,7 @@ extends SceneTree
 ##                     throws it on
 ##   Avalanche         the player's Boulder (FormEffects.apply, Stone Form's cast) landing on the deck breaks into three low
 ##                     rolling stones fanned 15 deg, one volley of 3 (Classic: none); rolled into the bot they add the Boulder's
-##                     16% between them, the first at base 5.9 and it alone knocks; the Boulder's own hit before it lands is
+##                     % (rules.json, 13) between them, the first at base 5.9 and it alone knocks; the Boulder's own hit before it lands is
 ##                     Classic's (base 7.4: the node's class is the stones', when avalanche); the bot's Catch holds one, the
 ##                     others drop at its feet as the player's loose stones; the bot wearing it: its Boulder breaks the same
 ##   Heave             the player's Column through his own lock (RMB held: held_override), let go 0.05 s after it fills: on the
@@ -562,11 +562,12 @@ func _return_to_sender() -> void:
 func _pebbles_at(id: String, p: Vector3) -> Array:
 	_wear(player, id)
 	await _clear_held(player)
-	await _aim_at(p)
+	await _aim_steady(p)                             # (the camera followed: from the deck 70 deg off to the bot is a big turn)
+	var before := FormStone.loose_of(player).duplicate()     # (only what this volley leaves: an earlier section's stone may lie on)
 	BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
 	var spread := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("spread_deg", -1.0))
 	await _secs(1.2)
-	var loose := FormStone.loose_of(player)
+	var loose := FormStone.loose_of(player).filter(func(s: Node) -> bool: return not before.has(s))
 	return [loose.size(), spread, loose[loose.size() - 1] if not loose.is_empty() else null]
 
 
@@ -581,6 +582,8 @@ func _kick_up() -> void:
 	_expect(int(w[0]) == 1 and _near(float(w[1]), 3.6) and st != null and st.global_position.distance_to(deck) < 2.5,
 			"Kick-Up: a volley that hits nobody leaves one loose stone of his where it landed (%d, %.2f m from the aim), spread %.1f deg"
 			% [w[0], st.global_position.distance_to(deck) if st != null else -1.0, w[1]])
+	await _settle(bot)                               # (on his feet: Return to Sender's last launch must not carry him off the volley)
+	rules.reset_pct(bot, 0.0)
 	await _bot_at(6.0)
 	var hit := await _pebbles_at(id, NpcSenses.chest_of(bot))
 	_expect(int(hit[0]) == 0, "Kick-Up: a volley that hits the bot leaves none (%d)" % hit[0])
@@ -705,8 +708,9 @@ func _avalanche() -> void:
 	var k := int(r[1])
 	var scale := RingRules.stock_num("pct_scale", 1.0)
 	var d := rules.pct_of(bot) - p0
-	_expect(k >= 1 and _near(d, 16.0 / 3.0 * float(k) * scale, 0.05),
-			"Avalanche: rolled into the bot, each of the %d stones that reach him adds a third of the Boulder's 16%% (%.2f%%)" % [k, d])
+	var bd := float(RingRules.class_of("stone_form/cannonball").d)      # (the Boulder's %, rules.json: 13 since 2026-10-12)
+	_expect(k >= 1 and _near(d, bd / 3.0 * float(k) * scale, 0.05),
+			"Avalanche: rolled into the bot, each of the %d stones that reach him adds a third of the Boulder's %.0f%% (%.2f%%)" % [k, bd, d])
 	# (the first stone's launch: the rules' own formula over the node's class, his Rooted base as the rules read it)
 	var w_el := RingRules.weight_of("earth")
 	var want := {}
@@ -715,7 +719,7 @@ func _avalanche() -> void:
 		cx["base"] = base
 		if bool(rooted[0]):
 			cx["base_mult"] = RingRules.stock_num("rooted_base", 0.85)
-		var v_full := RingRules.launch_v(cx, 16.0 * scale / 3.0, 16.0 * scale, w_el, 0.0, false)
+		var v_full := RingRules.launch_v(cx, bd * scale / 3.0, bd * scale, w_el, 0.0, false)
 		# (a knock under tumble_mps on the floor slides him: its upward part dropped, as on_hit sends it)
 		want[base] = v_full if v_full >= RingRules.stock_num("tumble_mps", 9.0) else v_full * cos(deg_to_rad(float(cls_b.get("angle", 30.0))))
 	_expect(knocks.size() == 1 and _near(float(knocks[0]), float(want[5.9]), 0.12) and absf(float(knocks[0]) - float(want[7.4])) > 0.5,
@@ -1541,9 +1545,10 @@ func _sulphur_twists() -> void:
 		bh[wid.size()] = st_b[0] if not st_b.is_empty() else -1.0
 		await _no_gas()
 		await _stage(-4.5, 1.5)
-	_expect(_near(float(bh[2]), 13.0 * scale, 0.02) and _near(float(bh[1]), 16.0 * scale, 0.02)
-			and _near(float(BendLoadout.hit_class(player, RingRules.class_of("stone_form/cannonball")).d), 13.0, 0.001),
-			"Sulphur Boulder: its hit on the bot adds %.2f%% (13%% x the pace; the set alone %.2f)" % [bh[2], bh[1]])
+	var sbd := float(RingRules.class_of("stone_form/cannonball").d)      # (the Boulder's own %; the node's is 3 below it)
+	_expect(_near(float(bh[2]), (sbd - 3.0) * scale, 0.02) and _near(float(bh[1]), sbd * scale, 0.02)
+			and _near(float(BendLoadout.hit_class(player, RingRules.class_of("stone_form/cannonball")).d), sbd - 3.0, 0.001),
+			"Sulphur Boulder: its hit on the bot adds %.2f%% (%.0f%% x the pace; the set alone %.2f)" % [bh[2], sbd - 3.0, bh[1]])
 	await _no_gas()
 	# Fuming Column: a 2 m plume where it rose, base 9.3
 	await _stage(-3.0, 3.0)

@@ -298,7 +298,7 @@
       "label": "Stone Form",
       "art": "form",
       "lock_s": 1.1,
-      "mode_lock_s": {"spike": 1.1, "cannonball": 1.1},
+      "mode_lock_s": {"spike": 1.1, "cannonball": 0.8},
       "mode_air_lock_s": {"spike": 0.6},
       "mode_air_moving_mult": {"spike": 1.0},
       "motes": 2,
@@ -339,7 +339,7 @@
         "knock_mps": {"spike": 3.0, "cannonball": 7.0},
         "hurl": {
           "spike": {"mps": [34.0, 34.0], "gravity": 3.0, "damage": [70.0, 70.0], "pierce": true},
-          "cannonball": {"mps": [22.0, 22.0], "gravity": 6.0, "damage": [80.0, 80.0], "roll": true}
+          "cannonball": {"mps": [30.0, 30.0], "gravity": 4.0, "damage": [80.0, 80.0], "roll": true}
         }
       },
       "looks": {

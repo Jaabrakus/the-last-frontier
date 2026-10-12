@@ -407,8 +407,9 @@ func _guard_checks() -> void:
 	var r12 := RingRules.return_class("stone_form/spike")
 	var r20 := RingRules.return_class("stone_form/spike", 2.0)
 	var big := RingRules.return_class("stone_form/cannonball")
+	var big_d := maxf(float(RingRules.class_of("stone_form/spike").d), float(RingRules.class_of("stone_form/cannonball").d)) * 1.2
 	var ret_ok := absf(float(r12.d) - 16.8) < 1e-3 and absf(float(r12.growth) - 14.64) < 1e-3 and absf(float(r20.d) - 22.4) < 1e-3 \
-			and absf(float(big.d) - 19.2) < 1e-3 and absf(RingRules.rally_mult(9, 0) - 1.6) < 1e-4 and absf(RingRules.rally_mult(1, 1) - 1.4) < 1e-4
+			and absf(float(big.d) - big_d) < 1e-3 and absf(RingRules.rally_mult(9, 0) - 1.6) < 1e-4 and absf(RingRules.rally_mult(1, 1) - 1.4) < 1e-4
 	_expect(ret_ok, "a return: the Spike's class (or the caught move's if higher) x1.2 on d and growth; the rally capped at x1.6")
 	await _fresh()
 	_hit(f, player, "stone_form/spike", {"returned": true, "origin_tag": "stone_form/spike"})
@@ -438,7 +439,8 @@ func _patch_checks() -> void:
 	await _until(func() -> bool: return player.is_on_floor() and not rules.stunned(player), 3.0)
 	await _secs(0.3)
 	var took2 := rules.patch(player)
-	_expect(absf(took2 - 10.0) < 0.05 and absf(rules.pct_of(player) - 6.0) < 0.05, "Patch takes at most 10%% (took %.2f of 16)" % took2)
+	var bd := float(RingRules.class_of("stone_form/cannonball").d)
+	_expect(absf(took2 - 10.0) < 0.05 and absf(rules.pct_of(player) - (bd - 10.0)) < 0.05, "Patch takes at most 10%% (took %.2f of %.0f)" % [took2, bd])
 	# refused while a foe is out (respawning), in sudden death, in the air
 	await _fresh()
 	_hit(player, f, "stone_form/spike")

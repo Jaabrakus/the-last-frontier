@@ -7,7 +7,7 @@ extends SceneTree
 ##   Open Hands        a return's rally step 0.08 (0.1)
 ##   Steady Point      Stone Form's release window 1.2 s (1.0); the Spike's lock x1.2/1.1
 ##   Swift Lance       the raised Spike hurled at 40 m/s (34)
-##   Heavy Boulder     the Boulder 0.31 m (0.26), hurled at 20 m/s (22), its lock x1.25/1.1
+##   Heavy Boulder     the Boulder 0.31 m (0.26), hurled at 27 m/s (30), its lock x0.9/0.8
 ##   Deep / Swift Roots    Rooted's knock share 0.8 / 0.92 (0.85) and its fill 1.1 / 1.3 (1.2), standing still on the deck
 ##   Patient Turn      the Turn's zone: perfect 0.36 s (0.3), a late guard's share 0.6 (0.5)
 ##   Reaching Parry    the Parry's zone: 3.0 m (2.5), perfect 0.25 s (0.3)
@@ -173,8 +173,8 @@ func _stones() -> void:
 			"Swift Lance: the Spike hurled at %.0f m/s (Classic %.0f)" % [got["earth.spike.swift_lance"].mps, c.mps])
 	var b0: Dictionary = got["boulder"]
 	var hb: Dictionary = got["earth.boulder.heavy"]
-	_expect(is_equal_approx(float(b0.rad), 0.26) and is_equal_approx(float(hb.rad), 0.31) and is_equal_approx(float(b0.mps), 22.0)
-			and is_equal_approx(float(hb.mps), 20.0) and absf(float(hb.lock) / float(b0.lock) - 1.25 / 1.1) < 0.01,
+	_expect(is_equal_approx(float(b0.rad), 0.26) and is_equal_approx(float(hb.rad), 0.31) and is_equal_approx(float(b0.mps), 30.0)
+			and is_equal_approx(float(hb.mps), 27.0) and absf(float(hb.lock) / float(b0.lock) - 0.9 / 0.8) < 0.01,
 			"Heavy Boulder: %.2f m at %.0f m/s, lock %.2f s (Classic %.2f m at %.0f m/s, %.2f s)" % [hb.rad, hb.mps, hb.lock, b0.rad, b0.mps, b0.lock])
 
 

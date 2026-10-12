@@ -106,7 +106,8 @@ func _reel(el: String) -> void:
 	var shots := _shots_of(el)
 	var pick := Array(String(args.get("pick", "")).split(",", false))
 	if not pick.is_empty():
-		shots = shots.filter(func(x: Dictionary) -> bool: return String(x.kind) in pick or String(x.get("id", "")) in pick)
+		shots = shots.filter(func(x: Dictionary) -> bool: return String(x.kind) in pick or String(x.get("id", "")) in pick \
+				or ("%s:%s" % [x.get("id", ""), x.get("mode", "")]) in pick)
 	var n := 0
 	for sh: Dictionary in shots:
 		await _stage(sh)
