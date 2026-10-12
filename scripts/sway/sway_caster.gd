@@ -2591,7 +2591,9 @@ func step_other() -> bool:
 	_switch_at = BendStatus.now()
 	_switch_hold_until = _switch_at + Bending.rule("switch_hold_s", 0.2)
 	if raised != null and is_instance_valid(raised):
+		var ev := NetCasts.begin(self, String(nxt.id), player, player.global_position, false, {}, "reshape")
 		raised = FormEffects.reshape_raised(raised, String(nxt.mode))
+		NetCasts.end(self, ev)
 	return true
 
 
@@ -2816,13 +2818,16 @@ func _raise_at_fill() -> void:
 	var at: Variant = spec_key(move, "raise_at_fill", null)
 	if at == null or fill < float(at):
 		return
+	var ev := NetCasts.begin(self, move, player, player.global_position, false, {}, "raise")   # (online: recorded and sent)
 	raised = FormEffects.raise_stone(self, move, mode_of(move))
+	NetCasts.end(self, ev)
 
 
 ## The stone raised by this lock let go loose (a lock called off, emptied by a hit, or E): FormEffects.drop_raised.
 func _drop_raised() -> void:
 	if raised != null and is_instance_valid(raised):
 		FormEffects.drop_raised(raised)
+		NetCasts.lock_note(self, ["drop", move])  # (online: his puppets drop theirs)
 	raised = null
 	FormEffects.drop_raised_of(player)        # (and any other this caster's body still holds up)
 
@@ -3259,7 +3264,11 @@ func net_lock(e: Array) -> void:
 		"grew":
 			if state != State.IDLE and move == m:
 				grown = true
+				if raised != null and is_instance_valid(raised):
+					FormEffects.grow_raised(raised, move, mode_of(move))   # (his raised stone swells as his did)
 				grew.emit(m)
+		"drop":
+			_drop_raised()
 		"cast":
 			if move == m and state != State.IDLE:
 				cast.emit(m, player)                  # (its pose's release: the variation still the lock's)
@@ -3267,10 +3276,12 @@ func net_lock(e: Array) -> void:
 		"broken":
 			if move == m and state != State.IDLE:
 				lock_broken.emit(m, player, String(e[2]) if e.size() > 2 else "")
+			_drop_raised()
 			_net_idle()
 		"fizzled":
 			if move == m and state != State.IDLE:
 				fizzled.emit(m, player)
+			_drop_raised()
 			_net_idle()
 
 

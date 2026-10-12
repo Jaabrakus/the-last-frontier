@@ -12,6 +12,9 @@ extends RefCounted
 ##               from the event, his SwayCaster pinned to its variation, the puppet stood where he stood while it runs), its
 ##               things named as on his machine. On the host it decides (hits, meetings: NetSpells); elsewhere a ghost. A
 ##               guard's zone is the puppet's held guard (SwayCaster._gzone: his guard hold pose while his E is held)
+##   raised      a Spike's or Boulder's stone raised at its lock's fill (SwayCaster._raise_at_fill) and turned by a switch
+##               (step_other) recorded and run the same way (kind "raise", "reshape": FormEffects.raise_stone, reshape_raised
+##               on the puppet); its grow and its drop are the lock's course (net_lock "grew", "drop", "broken", "fizzled")
 ##   the lock    the player's lock as it goes (SwayCaster's lock_started, lock_switched, locked, grew, cast, lock_broken, fizzled;
 ##               watch()) sent too (RingNet.send_lock); the puppet's SwayCaster plays it (SwayCaster.net_lock): its state
 ##               and its signals, so its SwayPose poses him as his own machine poses him
@@ -28,7 +31,7 @@ static var _watched := {}
 # ---------------------------------------------------------------- the player's own
 ## The cast of SwayCaster `sc` about to land (its move `m` on `t` at `at`; `grown`, `rel` its release: {air, at}): the
 ## recording begun, its event so far ({} offline, or not this machine's player).
-static func begin(sc: SwayCaster, m: String, t: Node3D, at: Vector3, grown: bool, rel: Dictionary) -> Dictionary:
+static func begin(sc: SwayCaster, m: String, t: Node3D, at: Vector3, grown: bool, rel: Dictionary, kind := "cast") -> Dictionary:
 	if not NetSpells.online() or sc == null or sc.puppet or sc.player == null or not sc.player.is_local:
 		return {}
 	var p := sc.player
@@ -37,7 +40,7 @@ static func begin(sc: SwayCaster, m: String, t: Node3D, at: Vector3, grown: bool
 		return {}
 	_seq += 1
 	var net := NetSpells.net
-	var ev := {"id": "%d:%d" % [net.my_id(), _seq], "m": m, "mode": sc.mode_of(m), "tier": sc.tier(m), "grown": grown,
+	var ev := {"id": "%d:%d" % [net.my_id(), _seq], "kind": kind, "m": m, "mode": sc.mode_of(m), "tier": sc.tier(m), "grown": grown,
 			"air": bool(rel.get("air", BendR3.airborne(p))), "rel_at": float(rel.get("at", BendStatus.now())),
 			"t": net.net_id_of(t), "at": at, "pos": p.global_position, "vel": p.velocity, "ry": p.rotation.y,
 			"yaw": p.yaw, "pitch": p.pitch, "seed": randi(), "src": sc.lock_src, "sent": net.clock.now(),
@@ -72,6 +75,11 @@ static func watch(sc: SwayCaster) -> void:
 	sc.cast.connect(func(m: String, _t: Node3D) -> void: _send_lock(sc, ["cast", m]))
 	sc.lock_broken.connect(func(m: String, _t: Node3D, why: String) -> void: _send_lock(sc, ["broken", m, why]))
 	sc.fizzled.connect(func(m: String, _t: Node3D) -> void: _send_lock(sc, ["fizzled", m]))
+
+
+## A note of SwayCaster `sc`'s lock beside its signals (["drop", m]: its raised stone let go): sent as its lock's course.
+static func lock_note(sc: SwayCaster, e: Array) -> void:
+	_send_lock(sc, e)
 
 
 static func _send_lock(sc: SwayCaster, e: Array) -> void:
@@ -112,7 +120,15 @@ static func run(ev: Dictionary, from: int) -> void:
 	if t == null:
 		t = p                                         # (no body: the move's own point (`at`) is what it reads)
 	var keep_ctx := NetSpells.run_begin(String(ev.get("id", "")))
-	SwayEffects.apply(sc, m, t, ev.get("at", p.global_position))
+	match String(ev.get("kind", "cast")):
+		"raise":
+			sc.raised = FormEffects.raise_stone(sc, m, mode)          # (his Spike or Boulder up before him, as on his machine)
+		"reshape":
+			if sc.raised != null and is_instance_valid(sc.raised):
+				sc.raised = FormEffects.reshape_raised(sc.raised, mode)
+		_:
+			SwayEffects.apply(sc, m, t, ev.get("at", p.global_position))
+			FormEffects.drop_raised_of(p)              # (a stone the cast did not throw lies loose, as his)
 	NetSpells.run_end(keep_ctx)
 	sc.net_unpin()
 	nbc.grown = false

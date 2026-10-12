@@ -524,6 +524,7 @@ func _heave_loose(from: Vector3, flat: Vector3, fwd: Vector3, across: Vector3, w
 		if absf(st.global_position.y - deck_y) > 1.2:
 			continue                                  # (not lying on this deck: under the lip, up on a wall)
 		BendEffects.crack_heave(by, st, info)
+		NetSpells.word(["heave", by, st, info])     # (online: the host's; the others throw it too)
 
 
 ## The floor wave's step (see the header): any wall across its foot stops it (a box at its height swept along); a body in

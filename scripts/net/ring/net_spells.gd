@@ -22,8 +22,9 @@ extends RefCounted
 ##                    host makes by a decision outside a cast (steam where two met, a puddle) is named in a decision run of
 ##                    its own, "h<seq>:<n>", and made on the others by its word (spawned()). find(id) a thing by its name
 ##   the host's words word(w) to every other machine, apply_word(w) there (inside a verdict): "end" a thing ended (BendBolt,
-##                    BendZone), "bolt" a bolt turned or changed (its state), "guard" a guard's result (BendZone.report on
-##                    every machine), "wall_hit" a raised wall worn, "zone" a zone made by a decision
+##                    BendZone, FormStone), "bolt" a bolt turned or changed (its state), "guard" a guard's result
+##                    (BendZone.report on every machine), "wall_hit" a raised wall worn, "zone" a zone made by a decision,
+##                    "stone" a stone's state (NetStones), "heave" a loose stone the Fissure threw (BendEffects.crack_heave)
 ##   hits             forward(op, n, args): the host's effect on a puppet sent to its owner; apply_hit(h) there runs it on
 ##                    his own body inside a verdict (BendR3.take, BendStatus' effects); "hit_by" and "jab_guarded" go to
 ##                    the attacker's owner (his jab string, SwayCaster.note_hit)
@@ -122,6 +123,19 @@ static func ctx() -> Dictionary:
 	return _ctx
 
 
+## Whether a run names what is made now (a cast's, a decision's, a word's).
+static func naming() -> bool:
+	return not _ctx.is_empty()
+
+
+## Spell thing `n` named `id` (a stone the host's word made here: NetStones.apply).
+static func name_as(n: Node, id: String) -> void:
+	if n == null or id == "":
+		return
+	n.set_meta(ID_META, id)
+	_things[id] = weakref(n)
+
+
 ## `f` called with `c` the run naming things (a cast's later part, made in its own run).
 static func with(c: Dictionary, f: Callable) -> Variant:
 	var keep := _ctx
@@ -208,6 +222,13 @@ static func apply_word(w: Array) -> void:
 				var keep := run_begin(String(a[1]))
 				BendZone.make(by, String(a[3]), a[4] as Vector3, a[5] as Dictionary, a[6] as Vector3)
 				run_end(keep)
+		"stone":
+			NetStones.apply(String(a[1]), a[2] as Dictionary)
+		"heave":
+			var hb := a[1] as Node
+			var hs := a[2] as FormStone
+			if hb != null and hs != null:
+				BendEffects.crack_heave(hb, hs, a[3] as Dictionary)
 	_verdict -= 1
 
 
@@ -218,6 +239,8 @@ static func _end(id: String, why: String, at: Vector3) -> void:
 		(n as BendBolt).net_end(why, at)
 	elif n is BendZone:
 		(n as BendZone).end()
+	elif n is FormStone:
+		NetStones.ended(n as FormStone, at)
 
 
 # ---------------------------------------------------------------- hits

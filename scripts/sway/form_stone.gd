@@ -8,6 +8,8 @@ extends RigidBody3D
 ##               rests on it, in the physics (mass_kg): Gust pushes it, it rolls
 ## Both are stones Gust lifts and hurls (GustLift; group GROUP, meta sway_stone). Each lies life_s untouched and then
 ## sinks back into the ground in sink_s; one lifted begins its time again where it comes to rest (rest_again()).
+## Online (NetStones): named as it is made; the host's physics rolls it and its state goes to the others, whose own stay still
+## and follow the host's word.
 ## Each looks like a stone of the ground it came out of (`matter`, FormMatter.rock_material: data/sway/moves.json
 ## stone_form.looks; the user, 2026-10-03: "okay the stone spike is cool okay it works but we need to work on the textures"):
 ## our own weathered fieldstone, its freshly broken faces lighter, the ground's stain on its foot.
@@ -117,7 +119,7 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	s.set_meta(&"surface", "stone")
 	s.set_meta(&"sway_stone", true)
 	s.add_to_group(GROUP)
-	NetSpells.tag(s)                              # (online: its name in its cast's run)
+	NetStones.made(s)                             # (online: named in its cast's run, or the host's decision's: NetStones)
 	return s
 
 
@@ -171,6 +173,7 @@ func rest_again() -> void:
 
 func _physics_process(dt: float) -> void:
 	_t += dt
+	NetStones.check(self, dt)                     # (online, the host's: its state told the others when it changes)
 	match state:
 		State.RISING:
 			var u := _t / maxf(rise_s, 0.01)
@@ -182,8 +185,8 @@ func _physics_process(dt: float) -> void:
 			if u >= 1.0:
 				state = State.RESTING
 				age = 0.0
-				if kind == "cannonball":
-					freeze = false              # (resting on the ground, in the physics: pushed, it rolls)
+				if kind == "cannonball" and NetSpells.decides():
+					freeze = false              # (resting on the ground, in the physics: pushed, it rolls; online the host's)
 					sleeping = false
 		State.RESTING:
 			age += dt
@@ -246,3 +249,7 @@ func sink() -> void:
 	if is_inside_tree():
 		GatherFx.fall_dust(get_tree().current_scene, global_position, radius * 2.0)
 		FormEffects.sfx("crumble", global_position, -6.0, 1.1)
+
+
+func _exit_tree() -> void:
+	NetStones.gone(self)                          # (online, the host's: its end told the others)

@@ -27,6 +27,10 @@ extends Node
 ## a man goes through him, not carrying him along on its point.
 ## Round 2: a burrower under the deck (meta bend_under_until) is flown over; two casters' stones meeting in the air, the
 ## heavier goes on and the lighter drops (_meet_lifts; equal ones both).
+## Online (NetStones, docs/tidebreak/ring_netcode.md "Stones"): a flight is run alike on every machine (its throw is in a
+## cast's run, or the host's word); only the host's strikes, meets another stone, slows on a man or bursts on him. A ghost's
+## flight passes bodies, lands and bursts on the world as the host's will, and is stopped by the host's word (net_stop: its
+## stone's place told; net_burst: it burst where the host's did). No machine but the host lets a stone roll.
 
 signal struck(who: Node, damage: float)
 signal landed(at: Vector3)
@@ -320,7 +324,8 @@ func _lead() -> Vector3:
 
 func _fly(dt: float) -> void:
 	_fly_t += dt
-	if _meet_lifts():
+	var ghost := not NetSpells.decides()
+	if not ghost and _meet_lifts():
 		return
 	var hd := _hurl_d()
 	velocity.y -= float(hd.get("gravity", 6.0)) * dt
@@ -359,6 +364,13 @@ func _fly(dt: float) -> void:
 			return
 		var who := FormSpikes.taker(col, caster)
 		var body := who is CharacterBody3D or who is NpcFighter or who is WildAnimal
+		if body and ghost:
+			# (a ghost's flight passes him: the host's strike and its word decide)
+			_except(who)
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
 		if body and BendStatus.until(who, &"bend_under_until") > 0.0:
 			# (a burrower under the deck: the stone passes over him; round 2's Burrow)
 			_except(who)
@@ -498,7 +510,7 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 			(stone as FormStone).rest_again()
 	else:
 		_place(p)
-		if _rb != null:
+		if _rb != null and NetSpells.decides():
 			_rb.freeze = false
 			_rb.freeze_mode = _mode
 			var v := velocity
@@ -620,7 +632,7 @@ func drop(fx := true) -> void:
 			if not SbFx.fire(by(), "stone_form/drop", "drop", {"at": stone.global_position, "el": "earth", "node": stone}):
 				GatherFx.fall_dust(scn, stone.global_position, radius * 2.0)
 			FormEffects.sfx("break", stone.global_position, 0.0, 0.9)
-		if _rb != null:
+		if _rb != null and NetSpells.decides():
 			_rb.freeze_mode = _mode
 			_rb.freeze = false
 			_rb.linear_velocity = Vector3.DOWN * 0.5
@@ -656,3 +668,23 @@ func _release_stone() -> void:
 func _exit_tree() -> void:
 	if phase == Phase.HELD:
 		drop(false)
+
+
+# ---------------------------------------------------------------- online (see the header)
+## The host's word that its flight is over (a ghost's): stopped where it is, nothing played (the stone's place is the word's).
+func net_stop() -> void:
+	if phase == Phase.DONE:
+		return
+	phase = Phase.DONE
+	SbFx.stop(self, "flight")
+	_release_stone()
+	if stone is FormStone and is_instance_valid(stone):
+		(stone as FormStone).rest_again()
+	queue_free()
+
+
+## The host's word that its stone burst at `at` (a ghost's): its burst played there, the stone gone.
+func net_burst(at: Vector3) -> void:
+	if phase == Phase.DONE:
+		return
+	_shatter(at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)

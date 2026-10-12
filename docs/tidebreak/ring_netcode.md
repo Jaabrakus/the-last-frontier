@@ -141,10 +141,18 @@ only (NetSpells.owns). Only the host may send hits (RingNet._hit is the authorit
 puppet's SwayCaster plays it (its state and signals: SwayPose poses him, FormCast draws his circle at his feet) and never
 locks by itself; his E comes with his state (NetBody's keys), so his guard stands held as long as he holds it.
 
-**Still to come in R1:** stones (FormStone, FormEffects.Throw, GustLift: catches, held stones, returns, loose stones, the
-Fissure's heave, a stone's place while it lies loose); body attacks decided by a joiner's own machine (a ledge attack, the
-Rise's hit: through the host to the victim's owner); the jab string's end on a victim's machine back to the hitter's
-(RingRules.string_ended); earth's Pop stone; the match mirror (R1 d); lag compensation (R1 e).
+**Stones** (NetStones). A stone a cast makes is made by its run on every machine (a kick-up, a raised Spike or Boulder: the
+lock's fill is recorded and run like a cast, "raise", and so is a switch's reshape; a chunk torn from a wall). One the host
+makes by a decision (a catch's held stone, a stone dropped loose, earth's Pop stone) is named in a run of its own and told in
+full. Only the host rolls stones: each named stone tells its state (shape, place, phase, its holder, its loose maker, its
+raiser by net id, its catch's numbers) when a decision changes it, while it rolls and when it rests; the others keep theirs
+still and follow. A flight (GustLift) is run alike everywhere (its throw is in a cast's run, or the host's "heave" word for
+the Fissure's): a ghost's passes bodies and bursts on the world, and the host's word stops it (the stone's state) or bursts
+it where the host's did (its "end"). A raised stone's grow and drop go with the lock's course.
+
+**Still to come in R1:** body attacks decided by a joiner's own machine (a ledge attack, the Rise's hit: through the host to
+the victim's owner); the jab string's end on a victim's machine back to the hitter's (RingRules.string_ended); the match
+mirror (R1 d); lag compensation (R1 e).
 
 ## Phases
 
