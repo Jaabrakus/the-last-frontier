@@ -99,6 +99,9 @@ const STEAM_S := 1.5
 ## STEAM_DRIFT_M toward the water's caster's aim over it), Mud Lash's smother (fire met is put out with no steam).
 const SPLASHDOWN := "water.lash.splashdown"
 const SPLASHDOWN_PUDDLE := {"radius_m": 1.2, "life_s": 6.0}
+## Stopped by a wall of a zone (BendZone.on_bolt: a Fire Wall or burning ground it put out, a Water Wall that drank it), not by
+## meeting another bolt in the air: Splashdown's "a wall" as a raised one is.
+var zone_wall := false
 const STEAMCRAFT := "water.lash.steamcraft"
 const STEAM_DRIFT_M := 3.0
 const MUD_LASH := "water.mud.lash"
@@ -901,7 +904,7 @@ func end(why: String) -> void:
 		return
 	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
 		return                                    # (a ghost's: the host's word ends it, net_end)
-	if why in ["hit", "wall", "world"] and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
+	if (why in ["hit", "wall", "world"] or zone_wall) and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
 		_splashdown()
 	_finish(why)
 
@@ -911,8 +914,9 @@ func is_lash() -> bool:
 	return kind == "water" and not bool(info.get("returned", false)) and String(info.get("tag", "")).get_slice(".", 0) == "water_whip/whip"
 
 
-## Splashdown: where the Lash stopped (a body, a wall, the deck) a puddle of its caster's on the deck under it (SPLASHDOWN_PUDDLE):
-## his water, a Geyser's source (BendZone puddle). None when the deck is far under (off the ring).
+## Splashdown: where the Lash stopped (a body, a wall raised or of a zone: zone_wall, the deck) a puddle of its caster's on the
+## deck under it (SPLASHDOWN_PUDDLE): his water, a Geyser's source (BendZone puddle). None when the deck is far under (off the
+## ring). A Lash ended in the air by another bolt (steam where it met fire) leaves none: no body, wall or deck stopped it.
 func _splashdown() -> void:
 	var by := _by()
 	if by == null or not is_inside_tree():

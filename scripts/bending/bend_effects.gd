@@ -808,6 +808,12 @@ const MOUND_D := {"width_m": 1.5, "height_m": 0.7, "thick_m": 1.5, "life_s": 3.0
 const MOUNDS_PER_CASTER := 2
 ## A mound's caster (instance id): its only mark (no bend_by: not his wall).
 const MOUND_META := &"bend_mound_by"
+## Whether `n` is a Mud Mound (a FormRaised of kind wall for its box, but low terrain: the tree's mound counts_as_wall false).
+## The readers that take any raised wall for one (a bot's wall on its line, the Shove's chunk) ask this first.
+static func is_mound(n: Object) -> bool:
+	return n != null and n.has_meta(MOUND_META)
+
+
 static func _mud_mound(p: Node3D, at: Vector3) -> FormRaised:
 	var wd: Dictionary = SwayMoves.move("earth_wall").get("wall", {})
 	var wn := FormMatter.numbers(wd, FormMatter.entry("earth_wall", "mud"), "mud")
@@ -1257,7 +1263,8 @@ static func _shove_pick(bc: BendCaster, spec: Dictionary) -> Node3D:
 			if n == null:
 				break
 			if n is FormRaised:
-				return n as Node3D if (n as FormRaised).is_up() else null
+				# (a Mud Mound is low terrain, no wall to tear a chunk from: as the deck, nothing to shove)
+				return n as Node3D if (n as FormRaised).is_up() and not is_mound(n) else null
 			if GustLift.is_stone(n):
 				var mine := p.get_instance_id()
 				var other := int(n.get_meta(&"bend_held_by", mine)) != mine or int(n.get_meta(&"bend_raised_by", mine)) != mine
@@ -1348,7 +1355,7 @@ static func _shove_target(c: Variant, a: Dictionary, r: float) -> Node3D:
 			for i in 4:
 				if n == null:
 					break
-				if n is FormRaised or GustLift.is_stone(n):
+				if (n is FormRaised and not is_mound(n)) or GustLift.is_stone(n):
 					return n as Node3D
 				n = n.get_parent()
 	var best: Node3D = null

@@ -11,12 +11,14 @@ extends SceneTree
 ##   Washout          (switched on here as it will be with the Sulphur set live) a gas cloud (the Sulphur set's interface: a
 ##                    BendZone of kind gas, made here) between them: the wearer's Splash and Lash wash it out and fly on to hit;
 ##                    not worn it stays; a bot's too; his Splash adds 3.5 for 4; anyone's Geyser rising in gas washes it
-##   Splashdown       the wearer's Lash on him (and into a wall) leaves a 1.2 m puddle of his for 6 s where it stopped, his
-##                    Geyser's source there (the grates out of the pools meanwhile); not worn none; a bot's own; Lash 8 for 9
+##   Splashdown       the wearer's Lash on him (and into a wall, and into a fire bot's Fire Wall it puts out) leaves a 1.2 m
+##                    puddle of his for 6 s where it stopped, his Geyser's source there (the grates out of the pools meanwhile);
+##                    met head-on in the air by fire, none; not worn none; a bot's own; Lash 8 for 9
 ##   Steamcraft       his Lash met head-on by fire: the steam is his, hangs 2.5 s and drifts 1.2 m a second toward his aim; not
 ##                    worn 1.5 s and still; a bot's drifts toward its foe
-##   Cleanse          (switched on as Washout) his Turn washes out a gas cloud 1 m off, not one 7 m off; not worn none; a bot's
-##                    too; the Turn's lock on the player's real E (0.24 s for 0.2) and a bot's x1.2
+##   Cleanse          (switched on as Washout) his Turn washes out a gas cloud 1 m off and one whose gas comes within 2.2 m of
+##                    him, not one whose gas begins 2.5 m off nor one 7 m off; not worn none; a bot's too; the Turn's lock on the
+##                    player's real E (0.24 s for 0.2) and a bot's x1.2
 ##   Whirl Turn       a perfect Turn on a water bolt: E held the water circles him 0.6 s, a tap 0.3 s; not worn 0.3 s; a late
 ##                    Turn lets 0.6 through (0.5); a bot holds it while its foe guards
 ##   Eddy             after a perfect Turn the Lash's real lock (key 1, the aim held) starts 0.4 full, 1.6 s after or not worn
@@ -42,8 +44,10 @@ extends SceneTree
 ##   Mudslide         (with the set) the Wave reaches 7.5 m (9), grown 10 m (12), and leaves a 2 m mud pool of his where it
 ##                    ends; its hits launch as its class says (8.6 for 7.5, grown 9.7 for 8.4); a bot's own pool
 ##   Mud Mound        (with the set) his Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose, never one of his walls: a
-##                    Kick's fire stops at it, a body stands on it, two at once, nobody's wall (no bend_by: Mend's target,
-##                    a bot's own wall); the Geyser launches as its class says (9.3 for 10.9); a bot's own
+##                    Kick's fire stops at it (both fighters on the deck 3 m either side; the same Kick once it is gone hits), a
+##                    body stands on it, two at once, nobody's wall (no bend_by: Mend's target, a bot's own wall), no wall to a
+##                    bot's line or a Shove's chunk (a real raised wall in its place is both); the Geyser launches as its class
+##                    says (9.3 for 10.9); a bot's own
 ##   Delta            (with the set) his mud lasts 6.5 s; in his own mud his locks fill x1.15 (another's or dry x1): the Lash's
 ##                    real lock 0.400 s for 0.467; a bot's tick takes the same
 ##   Mire             (with the set) the player's real 4 tapped twice readies it (the strip shows it); its lock (0.9 for the Ice
@@ -466,7 +470,55 @@ func _lash_puddle(who: Node3D, other: Node3D, wall := false) -> BendZone:
 	return pd
 
 
+## The player's Lash at the foe through the foe's Fire Wall (its own cast: placed toward him, 6 m on): {puddle (whether it left a
+## new one of his), at_wall (it lies where the wall stood), why (how the Lash ended), wall_out (the wall put out)}.
+func _lash_fire_wall() -> Dictionary:
+	await _face_off(10.0)
+	var before_w := _zones("fire_wall")
+	BendEffects.apply(fc, "fire_wall", "wall", SwayMoves.move("fire_wall").bend.wall)
+	var fw := _new_zone("fire_wall", before_w, foe)
+	var wat := fw.global_position if fw != null else Vector3.INF
+	var had := fw != null                            # (a freed zone reads as null after: had it, then not valid = put out)
+	await _secs(0.3)
+	var before := _zones("puddle")
+	var b := _cast(player, "water_whip", "whip")
+	var got := {"why": "" if b != null else "no lash"}
+	if b != null:
+		b.ended.connect(func(w: String) -> void: got["why"] = w)
+	await _secs(0.6)
+	var pd := _new_zone("puddle", before, player)
+	var out := {"puddle": pd != null, "why": String(got.why), "wall_out": had and (not is_instance_valid(fw) or fw.is_queued_for_deletion()),
+			"at_wall": pd != null and Vector2(pd.global_position.x - wat.x, pd.global_position.z - wat.z).length() < 1.5}
+	if fw != null and is_instance_valid(fw):
+		fw.end()
+	if pd != null and is_instance_valid(pd):
+		pd.end()
+	await _ticks(2)
+	return out
+
+
+## A Lash of the player's met head-on in the air by a fire bolt (_steam_of): whether it left a puddle of his.
+func _lash_met_in_air() -> bool:
+	var before := _zones("puddle")
+	await _steam_of(player, foe)
+	var pd := _new_zone("puddle", before, player)
+	var made := pd != null
+	if made:
+		pd.end()
+	return made
+
+
 func _splashdown() -> void:
+	_wear(player, ["water.lash.splashdown"])
+	var fwr: Dictionary = await _lash_fire_wall()
+	var air := await _lash_met_in_air()
+	_wear(player, [])
+	var fwc: Dictionary = await _lash_fire_wall()
+	_expect(bool(fwr.puddle) and bool(fwr.at_wall) and fwr.why == "steam" and bool(fwr.wall_out) and not bool(fwc.puddle)
+			and fwc.why == "steam",
+			"Splashdown: the wearer's Lash stopped by a Fire Wall (it puts it out: %s, ended %s) leaves its puddle where the wall stood (%s); not worn none (%s, ended %s)"
+			% [fwr.wall_out, fwr.why, fwr.at_wall, fwc.puddle, fwc.why])
+	_expect(not air, "Splashdown: a Lash met head-on in the air by fire (no body, wall or deck stopped it) leaves no puddle")
 	_wear(player, ["water.lash.splashdown"])
 	var pd := await _lash_puddle(player, foe)
 	var on_him := pd != null and Vector2(pd.global_position.x - _lash_at.x, pd.global_position.z - _lash_at.z).length() < 1.5
@@ -560,16 +612,25 @@ func _clear_whiff(n: Node) -> void:
 		n.remove_meta(&"bend_whiff_until")
 
 
-## The Turn of `who`'s (BendEffects.apply) with a gas cloud of the other's 1 m off him and one 7 m off: [near washed, far washed].
+## The Turn of `who`'s (BendEffects.apply) with gas clouds of the other's round him: one he stands in (1 m off, 2.5 m round), one
+## 7 m off, one 1.5 m round 3.4 m off (its gas from 1.9 m: within the Turn's 2.2 m) and one 1.5 m round 4 m off (its gas from
+## 2.5 m: past it): [near, far, edge, out] each whether it was washed out.
 func _turn_gas(who: Node3D, other: Node3D) -> Array:
 	await _face_off(10.0)
+	var to := other.global_position - who.global_position
+	to.y = 0.0
+	to = to.normalized()
 	var near := _gas(other, who.global_position + Vector3(1.0, 0.0, 0.0))
 	var far := _gas(other, who.global_position + Vector3(-7.0, 0.0, 0.0), 1.5)
+	var edge := _gas(other, who.global_position + to * 3.4, 1.5)
+	var past := _gas(other, who.global_position + Vector3(4.0, 0.0, 0.0), 1.5)
 	await _ticks(2)
 	BendEffects.apply(BendCaster.of(who), "water_redirect", "redirect", SwayMoves.move("water_redirect").bend.redirect)
 	await _ticks(6)
-	var out := [not is_instance_valid(near) or near.is_queued_for_deletion(), not is_instance_valid(far) or far.is_queued_for_deletion()]
-	for g: BendZone in [near, far]:
+	var out := []
+	for g: BendZone in [near, far, edge, past]:
+		out.append(not is_instance_valid(g) or g.is_queued_for_deletion())
+	for g: BendZone in [near, far, edge, past]:
 		if is_instance_valid(g):
 			g.end()
 	await _secs(1.0)
@@ -605,8 +666,10 @@ func _cleanse() -> void:
 	var w: Array = await _turn_gas(player, foe)
 	_wear(player, [])
 	var c: Array = await _turn_gas(player, foe)
-	_expect(bool(w[0]) and not bool(w[1]) and not bool(c[0]) and not bool(c[1]),
-			"Cleanse: the wearer's Turn washes out the gas in its reach, not the cloud 7 m off; not worn none (%s, %s)" % [w, c])
+	_expect(bool(w[0]) and not bool(w[1]) and not (true in c),
+			"Cleanse: the wearer's Turn washes out the gas he stands in, not the cloud 7 m off; not worn none (%s, %s)" % [w, c])
+	_expect(bool(w[2]) and not bool(w[3]),
+			"Cleanse: within 2.2 m of him: a cloud with gas 1.9 m off washed, one whose gas begins 2.5 m off left ([edge %s, past %s])" % [w[2], w[3]])
 	_wear(foe, ["water.turn.cleanse"])
 	var b: Array = await _turn_gas(foe, player)
 	_wear(foe, [])
@@ -1402,6 +1465,87 @@ func _mounds(by: Node) -> Array:
 	return out
 
 
+## Whether any Mud Mound (anyone's, crumbling too) is still in the scene.
+func _any_mound() -> bool:
+	for n in get_nodes_in_group(FormRaised.GROUP):
+		if BendEffects.is_mound(n) and not n.is_queued_for_deletion():
+			return true
+	return false
+
+
+## The deck's long way (RingArena's local x: room on both sides of where the fighters start).
+func _deck_x() -> Vector3:
+	var ar := RingArena.find(self)
+	var x := ar.global_basis.x if ar != null else Vector3.RIGHT
+	x.y = 0.0
+	return x.normalized()
+
+
+## The foe set 3 m on one side of `at` along the deck and the player 3 m on the other, still, no knock left, facing each other:
+## whether both stand on the deck (within half a second).
+func _place_across(at: Vector3) -> bool:
+	var x := _deck_x()
+	for b: CharacterBody3D in [player, foe]:
+		var kn := BendKnock.peek(b)
+		if kn != null:
+			kn.reset()
+			kn.stun_t = 0.0
+		b.velocity = Vector3.ZERO
+	foe.global_position = Vector3(at.x, home.y, at.z) + x * 3.0
+	player.global_position = Vector3(at.x, home.y, at.z) - x * 3.0
+	foe.look_at(Vector3(player.global_position.x, foe.global_position.y, player.global_position.z), Vector3.UP)
+	for i in 30:
+		await physics_frame
+		if player.is_on_floor() and foe.is_on_floor():
+			return true
+	return false
+
+
+## The player's crosshair on point `q` (his camera's yaw and pitch): [whether his aim's ray meets `thing` first, what earth's
+## Shove would take there (BendEffects._shove_pick: a raised wall's chunk or a stone; null nothing)]. His aim back on the foe after.
+func _shove_on(q: Vector3, thing: Node) -> Array:
+	aim_on = null
+	for i in 6:                                      # (the camera orbits him as he turns: a few frames to settle on `q`)
+		var d := (q - player.camera.global_position).normalized()
+		player.yaw = atan2(-d.x, -d.z)
+		player.pitch = asin(clampf(d.y, -1.0, 1.0)) * pitch_sign
+		await _ticks(1)
+	var ray := pc.aim_ray()
+	var from: Vector3 = ray[0]
+	var dir: Vector3 = ray[1]
+	var h := player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from,
+			from + dir.normalized() * 20.0, 0xFFFFFFFF, pc.exclude()))
+	var met := false
+	var n: Node = h.collider as Node if not h.is_empty() else null
+	for i in 4:
+		if n == null:
+			break
+		if n == thing:
+			met = true
+			break
+		n = n.get_parent()
+	var got: Node3D = BendEffects._shove_pick(pc, {"range_m": 20.0})
+	aim_on = foe
+	return [met, got]
+
+
+## The foe's Kick (its floor wave of fire) at the player across `at` (_place_across): {pct (what it added to him), why (how the
+## floor wave ended: hit, wall ...), floored (both on the deck as it was cast)}.
+func _kick_over(at: Vector3) -> Dictionary:
+	var floored: bool = await _place_across(at)
+	RingRules.current().reset_pct(player, 0.0)
+	var before := _bolts(foe)
+	BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
+	var b := _new_bolt(foe, before)
+	var got := {"why": "" if b != null else "no wave"}
+	if b != null:
+		b.ended.connect(func(w: String) -> void: got["why"] = w)
+	await _secs(0.8)
+	var out := {"pct": RingRules.current().pct_of(player), "why": String(got.why), "floored": floored}
+	RingRules.current().reset_pct(player, 0.0)
+	return out
+
+
 func _mud_mound() -> void:
 	var mm := ["water.set.mud", "water.mud.mound"]
 	_wear(player, mm)
@@ -1411,24 +1555,29 @@ func _mud_mound() -> void:
 	await _secs(0.8)
 	var ms := _mounds(player)
 	var m: FormRaised = ms[0] if not ms.is_empty() else null
+	var mat := m.global_position if m != null else home
 	var ok := m != null and m.matter == "mud" and _near(m.size.x, 1.5) and _near(m.size.y, 0.7) and _near(m.life_s, 3.0) \
 			and not m.has_meta(&"wall_n") and Vector2(m.global_position.x - at.x, m.global_position.z - at.z).length() < 1.0
 	_expect(ok, "Mud Mound: the wearer's Geyser leaves a low mud mound 1.5 m across, 0.7 m high, for 3 s where it rose, never one of his walls (%s)"
 			% ["%s %.1f x %.1f, %.1f s" % [m.matter, m.size.x, m.size.y, m.life_s] if m != null else "none"])
 	_expect(m != null and not m.has_meta(&"bend_by") and not FormEffects.own(pc, m),
 			"Mud Mound: nobody's raised wall (no bend_by: Mend never targets it, a bot's own wall, Brace and the lessons never count it)")
-	# floor fire stops at it: the foe's Kick at the player with the mound between them
-	if m != null:
-		player.global_position = m.global_position + (m.global_position - foe.global_position).normalized() * 3.0
-		player.velocity = Vector3.ZERO
-		foe.look_at(Vector3(player.global_position.x, foe.global_position.y, player.global_position.z), Vector3.UP)
-		RingRules.current().reset_pct(player, 0.0)
-		await _ticks(2)
-		BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
-		await _secs(0.8)
-	var kick_pct := RingRules.current().pct_of(player)
-	RingRules.current().reset_pct(player, 0.0)
-	_expect(m != null and is_zero_approx(kick_pct), "Mud Mound: a Kick's floor fire stops at the mound (+%.1f%%)" % kick_pct)
+	# never a wall to a bot: a fire bot does not take its High Kick's arc over a mound on its line (an Earth Wall there it does)
+	var nb: NpcBending = foe.brain.bending if foe.brain != null else null
+	var arc_mound := false
+	var shove_m: Array = [false, null]
+	if m != null and nb != null:
+		await _place_across(mat)
+		arc_mound = nb._wall_on_line(player)
+		shove_m = await _shove_on(mat + Vector3.UP * 0.45, m)
+	_expect(m != null and nb != null and not arc_mound, "Mud Mound: a bot sees no wall on its line for the mound (its High Kick's arc not owed)")
+	_expect(bool(shove_m[0]) and shove_m[1] == null,
+			"Mud Mound: a Shove's crosshair on the mound (its aim's ray meets it: %s) finds no wall to tear a chunk from" % shove_m[0])
+	# floor fire stops at it: the foe's Kick at the player with the mound between them, both on the deck 3 m from it; the same
+	# Kick from the same spots once it is gone (the control) hits
+	var kick: Dictionary = await _kick_over(mat)
+	_expect(m != null and bool(kick.floored) and is_zero_approx(float(kick.pct)) and String(kick.why) == "wall",
+			"Mud Mound: a Kick's floor fire stops at the mound, both fighters on the deck (+%.1f%%, the wave's end %s)" % [float(kick.pct), kick.why])
 	# anyone can jump onto it: the foe stood on its top stays there
 	if m != null and is_instance_valid(m):
 		foe.global_position = m.global_position + Vector3.UP * 1.0
@@ -1438,6 +1587,26 @@ func _mud_mound() -> void:
 	_expect(on_top, "Mud Mound: a body set on it stands on its top (%.2f m up)" % [foe.global_position.y - (m.global_position.y if m != null and is_instance_valid(m) else 0.0)])
 	await _secs(2.5)
 	_expect(_mounds(player).is_empty(), "Mud Mound: gone after its 3 s")
+	for i in 120:
+		if not _any_mound():
+			break                                    # (its crumble over: nothing of it left on the deck)
+		await physics_frame
+	var ctl: Dictionary = await _kick_over(mat)
+	_expect(not _any_mound() and bool(ctl.floored) and float(ctl.pct) > 0.0 and String(ctl.why) == "hit",
+			"Mud Mound's control: the same Kick from the same spots with no mound hits (+%.1f%%, the wave's end %s)" % [float(ctl.pct), ctl.why])
+	if nb != null:
+		await _place_across(mat)
+		var dx := _deck_x()
+		var wl := FormRaised.raise(current_scene, "wall", Transform3D(Basis(Vector3.UP.cross(dx).normalized(), Vector3.UP, dx),
+				FormEffects.ground_at(player, mat)), {"width_m": 1.5, "height_m": 2.0, "thick_m": 0.6, "life_s": 2.0, "rise_s": 0.01})
+		await _ticks(4)
+		var arc_wall := nb._wall_on_line(player)
+		var shove_w: Array = await _shove_on(mat + Vector3.UP * 0.45, wl)
+		wl.crumble("test")
+		_expect(arc_wall and bool(shove_w[0]) and shove_w[1] == wl,
+				"Mud Mound: a real raised wall in its place is still one (a bot's wall on its line %s, the Shove's chunk %s): the checks above are real noes"
+				% [arc_wall, shove_w[1] == wl])
+		await _secs(1.6)
 	# two of his at once (one face-off: it clears the deck)
 	await _face_off(8.0)
 	var foe0 := foe.global_position

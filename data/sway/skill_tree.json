@@ -3431,7 +3431,7 @@
        "world_gate": [
         "practised:flow"
        ],
-       "effect": "Skate leaves 4 puddles (from 3) that last 7.2 s (from 6), but it travels at 10.8 m/s (from 12).",
+       "effect": "Skate leaves 4 puddles along its slide that last 7.2 s (today's Skate leaves none), but it travels at 10.8 m/s (from 12).",
        "plus": "more puddles",
        "minus": "travel -10%",
        "help": "Skate leaves more puddles; it slides a little shorter.",

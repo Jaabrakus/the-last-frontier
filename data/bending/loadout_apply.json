@@ -77,7 +77,7 @@
   },
   "behaviour": {
     "water.splash.washout": "BendZone.on_bolt gas (washes), BendZone.wash; the gas zone is the Sulphur set's (earth): its switch waits for earth.set.sulphur; everyone's Geyser washes gas too (BendEffects._wash_gas)",
-    "water.lash.splashdown": "BendBolt.end, _splashdown (a puddle where the Lash stops)",
+    "water.lash.splashdown": "BendBolt.end, _splashdown (a puddle where the Lash stops: a body, a raised wall, a zone's wall (BendBolt.zone_wall, BendZone.on_bolt fire_wall / water_wall), the deck)",
     "water.lash.steamcraft": "BendBolt.meet, BendBolt.steam (life, drift), BendZone steam drift",
     "water.turn.cleanse": "BendZone._every redirect (gas washed in its reach); its switch waits for earth.set.sulphur",
     "water.turn.whirl": "BendZone._guard_bolt redirect, BendBolt.begin_swing / _swing, BendZone.whirl_held",
@@ -89,7 +89,7 @@
     "water.set.mud": "BendZone.make (his puddles mud pools), _mud_every (fire walls 2 s and the pool dried, seams quenched, rolling stones stopped), on_bolt mud (floor fire dies), mud_life",
     "water.mud.lash": "BendBolt.meet (fire smothered, no steam), BendBolt.launch (clods); its numbers over the set's",
     "water.mud.mudslide": "BendEffects._wave_talents (a 2 m mud pool where the cone ends)",
-    "water.mud.mound": "BendEffects.spout, _mud_mound (a low mud mound, 2 at once, never a wall: MOUND_META, no bend_by)",
+    "water.mud.mound": "BendEffects.spout, _mud_mound (a low mud mound, 2 at once, never a wall: MOUND_META, no bend_by; BendEffects.is_mound for the readers of any raised wall: NpcBending._wall_on_line, the Shove's pick)",
     "water.mud.delta": "SwayCaster.passive_fill, BendZone.in_own_mud / home_fill, NpcBending.tick; set:mud.pool_life_s",
     "water.mud.mire": "a new mode on water_shield (4 tapped twice): BendLoadout.modes_added / new_spec (new:mire.spec), SwayCaster.modes_of / spec_of, Bending.other_move, FormEffects.apply, BendCast.cast, BendEffects.zone, BendZone.make (MIRE_META), BendPoses.pick (pose_as), NpcBending options (foe_floor_fire)"
   },

@@ -244,9 +244,9 @@ of `test_loadout_review.gd` still passes).
 | --- | --- | --- |
 | Thick Ice | switched on: his Ice Wall takes 4 hits, rises in 0.8 s (a wall raised and shot with ice in the test) | `BendEffects._wall` (as before) |
 | Washout | (waits for the Sulphur set) his Splash and Lash wash out a gas cloud they fly through and fly on; Splash 3.5% | `BendZone.on_bolt` gas, `BendZone.washes`, `BendZone.wash` |
-| Splashdown | where his Lash stops (on a body, a wall, the deck) a 1.2 m puddle of his for 6 s, a Geyser source; Lash 8% | `BendBolt.end` |
+| Splashdown | where his Lash stops (on a body, a raised wall, a zone's wall: a Fire Wall it puts out, a Water Wall that drinks it, the deck) a 1.2 m puddle of his for 6 s, a Geyser source; met head-on in the air by fire, none; Lash 8% | `BendBolt.end` (`zone_wall`, set by `BendZone.on_bolt`) |
 | Steamcraft | steam his water makes with fire is his, hangs 2.5 s and drifts 3 m toward his aim; Lash 8% | `BendBolt.meet`, `BendBolt.steam`, `BendZone` steam drift |
-| Cleanse | (waits for the Sulphur set) while his Turn stands a gas cloud reaching into its 2.2 m is washed out (not an ally's); Turn lock 0.24 s | `BendZone._every` redirect |
+| Cleanse | (waits for the Sulphur set) while his Turn stands, its perfect part and its late part alike (the node's "perfect or late"; its change: "a standing Turn ends gas zones within its radius"), a cloud with gas within 2.2 m of him is washed out (a cloud is one zone: one whose gas begins past 2.2 m stays; not an ally's); Turn lock 0.24 s | `BendZone._every` redirect |
 | Whirl Turn | E held through a perfect Turn: the water circles him up to 0.6 s, let go it leaves along his aim; late 60% | `BendZone._guard_bolt`, `BendBolt._swing`, `BendZone.whirl_held` |
 | Eddy | his Lash or Spear begun within 1.2 s of a perfect Turn starts 40% full; his Turn's beat 0.25 s | `BendZone.report`, `eddy_fill`, `SwayCaster._try_begin`, `NpcBending.begin` |
 | Pooling Wave | his Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends; Wave base 6.8 (grown 7.6) | `BendEffects._wave_talents` |
@@ -256,7 +256,7 @@ of `test_loadout_review.gd` still passes).
 | Mud (set) | his puddles (Downpour, Splashdown, Pooling Wave, Wet Trail, Mudslide) are mud pools of his for 8 s, still sources, 4 at once: a floor wave of fire dies in one, a fire wall over one burns 2 s and dries it in 1 s, a magma seam over one is quenched, a rolling stone stops; nobody is slowed; Splash 25.2, Lash 30.6 m/s | `BendZone.make`, `_mud_every`, `on_bolt` mud |
 | Mud Lash | (with the set) Lash 28 m/s, adds 10%, base 5.3; fire it meets is smothered, no steam; clods off it | `BendBolt.meet`, `BendBolt.launch` |
 | Mudslide | (with the set) Wave base 8.6 (grown 9.7), reach 7.5 m (10); a 2 m mud pool of his where it ends | `BendEffects._wave_talents` |
-| Mud Mound | (with the set) the Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose (a FormRaised of mud marked `bend_mound_by`, never `bend_by`: nobody's wall for Mend, a bot, Brace, the lessons or max_walls; two at once): floor fire stops at it, anyone can stand on it; Geyser base 9.3 | `BendEffects.spout`, `_mud_mound` |
+| Mud Mound | (with the set) the Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose (a FormRaised of mud marked `bend_mound_by`, never `bend_by`: nobody's wall for Mend, a bot, Brace, the lessons or max_walls; two at once; never a wall where any raised wall would be one: a bot's wall on its line, a Shove's chunk, `BendEffects.is_mound`): floor fire stops at it, anyone can stand on it; Geyser base 9.3 | `BendEffects.spout`, `_mud_mound` |
 | Delta | (with the set) his locks fill x1.15 standing in his own mud (a bot's tick too); his mud pools last 6.5 s | `SwayCaster.passive_fill`, `BendZone.in_own_mud`, `home_fill`, `NpcBending.tick` |
 | Mire | (with the set) a new skill on 4 tapped twice (the strip and the wheel show it): lock 0.9 s (the Ice Wall's 0.85), a 3 m mud pool of his for 8 s (Delta's 6.5) placed where he aims, 2-6 m like a wall, cast with the Ice Wall's pose, on the deck only; one of his at a time (a second dries the first), never one of the set's four pools; what his mud does (floor fire dies in it, his Geyser's source, Wellspring's and Delta's water); his Ice Wall rises in 0.8 s | `BendLoadout.modes_added` / `new_spec`, `SwayCaster.modes_of` / `spec_of`, `Bending.other_move`, `FormEffects.apply`, `BendCast.cast`, `BendEffects.zone`, `BendZone.make` (`MIRE_META`), `BendPoses.pick` |
 
@@ -303,8 +303,11 @@ had a node that requires others overwrite every number already worn, and an equa
 earth's); a behaviour talent may set spec keys no Classic code reads (the Skate's puddles).
 
 The Mud set's other counters are built against the other lanes' interfaces: a magma seam is a `BendZone` of kind `seam` (fire's
-Magma set): over mud it ends "quenched" (its own code should leave no stone for that end); Live Water's grounding (fire's Forked
-Lightning) is not built here. Rolling stones: a FormStone rolling into his mud stops (the open world's; in the % ring a hurled
+Magma set): over mud it ends "quenched", no stone (fire's lane, tb/talents-fire-p2, does the same from the seam's side,
+`FireTalents.seam_water`: after the merge both act on one seam with one outcome, one of them redundant). Live Water's grounding:
+Live Water is fire's Forked Lightning's (`FireTalents.struck`, fire's lane), whose fork reaches only zones of kind puddle and steam
+and water bolts; a mud pool is kind mud, so it is never made live: grounded by construction once merged, nothing to build here (no
+branch has Live Water before that merge). Rolling stones: a FormStone rolling into his mud stops (the open world's; in the % ring a hurled
 stone shatters where it lands), and so does a stone bolt rolling along the deck (a low stone bolt: earth's Avalanche, built in its
 lane; `BendZone.on_bolt` mud, 2026-10-12); Classic has neither in a ring. What the set does in a ring match today: his puddles are mud pools for 8 s
 (the Downpour's, Splashdown's, Pooling Wave's, Mudslide's, Mire's, Wet Trail's: Classic's Skate leaves none, so the text's "from
@@ -317,6 +320,11 @@ and the ride keeps the knock's carry in his velocity, `BendMotion._ride_step`); 
 wait for the Sulphur set; the Geyser washes gas; Wet Trail's puddles spread along the slide; the Mud Mound is nobody's wall; the
 tree's stacking replaces the first pass's fold; the test checks each launch against the formula with the node's own numbers, reads
 the Cleanse and Wellspring locks from the player's real E and key 5, plays Mudslide grown, hits a rider and wears picks together.
+Second fix pass (same branch): Splashdown's puddle where a zone's wall stops the Lash (a Fire Wall it puts out, a Water Wall), none
+where it meets fire in the air; Cleanse's 2.2 m measured from him (a cloud with gas within it), checked against a cloud just inside
+and one just past; the Mud Mound is no wall to a bot's wall-on-line reader or a Shove (`BendEffects.is_mound`), and its floor-fire
+check now stands both fighters on the deck either side of it with a no-mound control (the Kick ends at the mound, +0%; with it gone
+the same Kick hits, about +13%) and a real raised wall in its place as the readers' control.
 
 Mire (water.mud.mire) is a NEW MODE a worn talent adds (the tree's new skills on empty double taps, the owner's yes): its spec
 cannot go into moves.json (the Classic fingerprint lists every bend spec), so it is the node's own change `new:mire.spec`

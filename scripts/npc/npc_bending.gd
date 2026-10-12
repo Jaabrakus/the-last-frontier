@@ -1058,7 +1058,8 @@ func _wall_on_line(t: Node3D) -> bool:
 	var b := t.global_position + Vector3.UP
 	for w in me.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var fr := w as FormRaised
-		if fr != null and fr.is_up() and fr.kind == "wall":
+		if fr != null and fr.is_up() and fr.kind == "wall" and not BendEffects.is_mound(fr):
+			# (a Mud Mound is low terrain, 0.7 m: shots at the chest pass over it, so no arc is owed to it)
 			var q := fr.global_position + Vector3.UP
 			if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 1.2 + fr.size.x * 0.5:
 				return true

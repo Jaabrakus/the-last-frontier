@@ -581,13 +581,16 @@ func _every(dt: float) -> void:
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
 	_inside_was = now_in
 	if kind == "redirect" and r2 and BendLoadout.wears(owner_node, "water.turn.cleanse"):
-		# (Cleanse, a skill tree enhance: while its wearer's Turn stands, a gas cloud reaching into its radius is washed out; an
-		# ally's is left)
+		# (Cleanse, a skill tree enhance: "Your Turn, perfect or late, clears gas within 2.2 m of you": while his Turn stands, its
+		# perfect part and its late part alike (the change's "a standing Turn ends gas zones within its radius"), a cloud with
+		# gas inside its radius (2.2 m) of him is washed out, a cloud being one zone; an ally's is left)
+		var me := owner_node.global_position if is_instance_valid(owner_node) else global_position
 		for z in get_tree().get_nodes_in_group(GROUP):
 			var g := z as BendZone
-			if g != null and g.kind == "gas" and not (g.owner_node != null and is_instance_valid(g.owner_node)
-					and BendCaster.same_team(g.owner_node, owner_node)) \
-					and Vector2(g.global_position.x - global_position.x, g.global_position.z - global_position.z).length() <= radius + g.radius:
+			if g != null and g.kind == "gas" and not g.is_queued_for_deletion() and not (g.owner_node != null
+					and is_instance_valid(g.owner_node) and BendCaster.same_team(g.owner_node, owner_node)) \
+					and absf(g.global_position.y - me.y) < 3.0 \
+					and Vector2(g.global_position.x - me.x, g.global_position.z - me.z).length() < radius + g.radius:
 				g.wash()
 	if kind == "mud":
 		_mud_every()
@@ -627,6 +630,7 @@ func on_bolt(b: BendBolt) -> bool:
 				b.end("steam")
 				return true
 			if b.kind == "water":
+				b.zone_wall = true                # (stopped at a wall: Splashdown's puddle, BendBolt.end)
 				b.end("drunk")
 				return true
 		"air_shield":
@@ -641,6 +645,7 @@ func on_bolt(b: BendBolt) -> bool:
 			if b.kind == "water":
 				if not SbFx.fire(owner_node, SbFx.key_of(info), "put_out", {"at": global_position, "dir": way}):
 					BendLooks.burst(global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
+				b.zone_wall = true                # (stopped at the fire it put out: Splashdown's puddle, BendBolt.end)
 				b.end("steam")
 				end()
 				return true
