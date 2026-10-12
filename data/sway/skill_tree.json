@@ -985,7 +985,8 @@
          "from": 10.3,
          "to": 11.3,
          "base_tag": "earth_shove/column",
-         "note": "only a Column let go on the Beat"
+         "note": "only a Column let go on the Beat",
+         "when": "beat"
         },
         {
          "path": "new",

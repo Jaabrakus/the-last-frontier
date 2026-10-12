@@ -19,6 +19,9 @@ extends SceneTree
 ##                     rolling stones fanned 15 deg, one volley of 3 (Classic: none); rolled into the bot they add the Boulder's
 ##                     16% between them, the first at base 5.9; the bot's Catch holds one, the others drop at its feet as the
 ##                     player's loose stones; the bot wearing it: its Boulder breaks the same
+##   Heave             the player's Column through his own lock (RMB held: held_override), let go 0.05 s after it fills: on the
+##                     Beat, the bot launched harder (base 11.3: W x 1 more than 0.4 s after, which is Classic's 10.3); its lock
+##                     x1.7/1.6; the bot wearing it lets go on the Beat and launches the player harder
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -167,6 +170,7 @@ func _run() -> void:
 	await _return_to_sender()
 	await _kick_up()
 	await _avalanche()
+	await _heave()
 	_end()
 
 
@@ -573,3 +577,83 @@ func _avalanche() -> void:
 ## The deck `dist` m from the player on the line to the bot.
 func _deck_on_line(dist: float) -> Vector3:
 	return _deck_off(dist, 0.0)
+
+
+# ---------------------------------------------------------------- Heave
+## The speed `n` is launched at by a hit of tag `tag` within `s` seconds (RingRules.launched), -1 none.
+func _launch_of(n: Node3D, tag: String, s: float) -> float:
+	var got := [-1.0]
+	var cb := func(b: Node3D, v: Vector3, _st: float, _by: Node, t: String) -> void:
+		if b == n and t.begins_with(tag) and got[0] < 0.0:
+			got[0] = v.length()
+	rules.launched.connect(cb)
+	await _secs(s)
+	rules.launched.disconnect(cb)
+	return float(got[0])
+
+
+## The player's Column through his own lock (RMB held: held_override, Fissure's key at its Column), let go `after_s` after the
+## lock filled, his crosshair on the bot's feet: [the bot's launch speed, a Beat cast, the lock's time (s)].
+func _column_after(id: String, after_s: float) -> Array:
+	_wear(player, id)
+	await _stage(-3.0, 3.0)
+	rules.reset_pct(bot, 0.0)
+	sc.ready_spell("earth_shove")
+	sc.set_mode("earth_shove", "column")
+	await _aim_at(bot.global_position + Vector3.UP * 0.05)
+	var beat0 := sc.beat_at
+	var t0 := BendStatus.now()
+	sc.held_override = true
+	for i in 600:
+		await _ticks(1)
+		if sc.state == SwayCaster.State.FULL:
+			break
+	var lock_s := BendStatus.now() - t0
+	await _secs(after_s)
+	sc.held_override = false
+	var v := await _launch_of(bot, "earth_shove/column", 1.5)
+	return [v, sc.beat_at > beat0, lock_s]
+
+
+func _heave() -> void:
+	var id := "earth.column.heave"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Heave is live, its code built (%s)" % BendLoadout.why_not(id))
+	_expect(BendLoadout.beat_paid(_worn_body(id)) and not BendLoadout.beat_paid(_worn_body("")), "Heave pays on the Beat; nothing worn, the Beat does nothing")
+	var c := await _column_after("", 0.05)
+	var hb := await _column_after(id, 0.05)
+	var hl := await _column_after(id, 0.4)
+	var w := RingRules.weight_of("earth")
+	_expect(float(c[0]) > 0.0 and not bool(c[1]), "Classic: a Column let go 0.05 s after its lock fills launches the bot (%.2f m/s), no Beat" % c[0])
+	_expect(bool(hb[1]) and float(hb[0]) - float(hl[0]) > 0.5 * w and float(hb[0]) - float(hl[0]) < 1.2 * w,
+			"Heave: let go on the Beat it launches harder (%.2f m/s, %.2f 0.4 s after: base 11.3 from 10.3, W %.2f)" % [hb[0], hl[0], w])
+	_expect(not bool(hl[1]) and _near(float(hl[0]), float(c[0]), 0.05), "Heave: let go 0.4 s after, past the Beat: as Classic (%.2f, %.2f)" % [hl[0], c[0]])
+	_expect(_near(float(hb[2]) / float(c[2]), 1.7 / 1.6, 0.03), "Heave: its Column's lock %.2f s (Classic %.2f: x1.7/1.6)" % [hb[2], c[2]])
+	sc.held_override = null
+	_wear(player, "")
+	# the bot wearing it: its own lock, let go when it fills, on the Beat: the player launched harder
+	var nb: NpcBending = bot.brain.bending
+	var vs := {}
+	for wid: String in ["", id]:
+		_wear(bot, wid)
+		await _stage(-3.0, 3.0)
+		rules.reset_pct(player, 0.0)
+		var b0 := nb.beat_at
+		bot.held = false
+		nb.begin("earth_shove", "column")
+		var v := await _launch_of(player, "earth_shove/column", 3.5)
+		bot.held = true
+		vs[wid] = [v, nb.beat_at > b0]
+		await _secs(1.0)
+	_expect(not bool(vs[""][1]) and bool(vs[id][1]) and float(vs[id][0]) - float(vs[""][0]) > 0.5 * w,
+			"Heave on the bot: its Column let go on the Beat launches the player harder (%.2f m/s, Classic's %.2f)" % [vs[id][0], vs[""][0]])
+	_wear(bot, "")
+
+
+## A body made to wear `id` (a stand-in for the checks of what a wearer's overlay says).
+func _worn_body(id: String) -> Node3D:
+	var n := Node3D.new()
+	root.add_child(n)
+	n.queue_free()
+	if id != "":
+		BendLoadout.wear(n, [id], "", "earth")
+	return n
