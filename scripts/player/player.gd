@@ -1357,7 +1357,9 @@ func _ring_move(delta: float) -> bool:
 	var flat := Vector2(own.x, own.z).length()
 	var has_input := input.length_squared() > 0.0 and ring_moves.mode == ""
 	is_walking = false
-	is_sprinting = bool(it.get("sprint", false)) and input.y < -0.1 and is_on_floor() and not is_crouching
+	# (no sprint in the ring, the owner 2026-10-11: Shift + a direction is the movement spells' key, and a sprint would break
+	# their lock, SwayCaster's "sprint"; the move reel 2026-10-12 found Shift + W did nothing)
+	is_sprinting = false
 	target_speed = flat if has_input else 0.0
 	wish_local = Vector2(input.x, -input.y).limit_length(1.0) * flat if has_input else Vector2.ZERO
 	local_move = Vector2(own.dot(global_basis.x), own.dot(-global_basis.z))

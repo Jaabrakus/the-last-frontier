@@ -4,7 +4,7 @@ extends SceneTree
 ## picked: no sprint in the ring). Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, fire against water, the foe
 ## held), the player's controls driven (PlayerControls.set_held, as a duel AI's):
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_shift_moves.gd -- [rules=stock|zones]
-##   the chord    Shift held, then a direction: key 3's movement spell (SwayCaster.last_key3 "dash"); a direction held, then
+##   the chord    Shift held, then a direction (W too: no sprint breaks it): key 3's movement spell (the crosshair on the foe too) (SwayCaster.last_key3 "dash"); a direction held, then
 ##                Shift: the same; Shift alone, a direction alone, Shift + Space, the guard held + Shift + a direction:
 ##                never key 3; in the air Shift + a direction: the air dodge (last_key3 "dodge")
 ##   no sprint    Shift and W held 2 s: the run's speed (movement.json physics.run), never the old sprint's
@@ -119,11 +119,54 @@ func _run() -> void:
 	ctl = PlayerControls.new(false)
 	p.controls = ctl
 	await _rest()
+	# (the crosshair on the foe's chest, as in a fight: key 3's move still goes, by the keys held; the move reel, 2026-10-12)
+	var foe := RingMode.find(self).foe
+	var ar := RingArena.find(self)
+	for e: Array in [[p, -3.0], [foe, 3.0]]:                 # (both mid-deck again: the cases above walked him to an edge)
+		var b: CharacterBody3D = e[0]
+		b.global_position = ar.center() + ar.axis() * float(e[1]) + Vector3.UP * 0.05
+		b.velocity = Vector3.ZERO
+	await _ticks(20)
+	var pitch_sign := 1.0
+	p.pitch = 0.3
+	await _ticks(3)
+	pitch_sign = 1.0 if (-p.camera.global_basis.z).y > 0.0 else -1.0
+	var aim := func() -> void:
+		var d := (foe.global_position + Vector3.UP * 1.1 - p.camera.global_position).normalized()
+		p.yaw = atan2(-d.x, -d.z)
+		p.pitch = asin(clampf(d.y, -1.0, 1.0)) * pitch_sign
+	for i in 12:
+		aim.call()
+		await physics_frame
+	var x0 := p.global_position
+	var on_foe: bool = c._query().get("node") == foe
+	# (the crosshair kept on him through the press, as a player's mouse stays on his foe)
+	ctl.set_held(&"sprint", true)
+	for i in 2:
+		aim.call()
+		await physics_frame
+	ctl.set_held(&"move_left", true)
+	for i in 4:
+		aim.call()
+		await physics_frame
+	var said_foe := c.last_key3
+	var going := c.state != SwayCaster.State.IDLE or not c._dash.is_empty()
+	await _ticks(30)
+	var moved := Vector2(p.global_position.x - x0.x, p.global_position.z - x0.z).length()
+	_expect(on_foe and said_foe == "dash" and going,
+			"the crosshair on the foe, Shift + A: key 3's move still goes (on him %s, %s, %.1f m)" % [on_foe, said_foe, moved])
+	await _rest()
 	# ---- the chord, both orders
 	_expect(await _press([&"sprint", &"move_left"]) == "dash", "Shift, then A: key 3's movement spell (%s)" % c.last_key3)
 	await _rest()
+	var lb0 := c.last_break
+	_expect(await _press([&"sprint", &"move_forward"], 2, 8) == "dash" and c.last_break != "sprint",
+			"Shift, then W: key 3's movement spell, never broken as a sprint (%s, last break %s)" % [c.last_key3, c.last_break])
+	c.last_break = lb0
+	await _rest()
 	_expect(await _press([&"move_right", &"sprint"], 6) == "dash", "D held, then Shift: key 3's movement spell (%s)" % c.last_key3)
 	await _rest()
+
 	# ---- never key 3
 	_expect(await _press([&"sprint"], 2, 20) == "", "Shift alone: nothing (%s)" % c.last_key3)
 	await _rest()
