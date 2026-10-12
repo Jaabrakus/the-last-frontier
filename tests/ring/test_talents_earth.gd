@@ -1635,6 +1635,47 @@ func _reactions() -> void:
 	_expect(BendGas.make(player, bot.global_position, "cloud") == null and BendGas.gas_of().is_empty(), "Classic: no gas, nothing for a reaction to touch")
 	rules.reset_pct(player, 0.0)
 	rules.reset_pct(bot, 0.0)
+	await _seams()
+
+
+## Magma seams (the fire lane's Magma set: a BendZone of kind "seam", low on the deck; wired here by its kind alone, a stand-in
+## seam made as its maker makes one): a stone of a Kiln Stone wearer's skimming over one comes out heated (not worn: plain); a
+## gas cloud over one is lit, the seam's owner the lighter.
+func _seams() -> void:
+	await _stage(-4.5, 4.5)
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var seam_spec := {"radius_m": 1.05, "width_m": 1.5, "thick_m": 1.5, "height_m": 0.3, "life_s": 3.0}
+	var heat := {}
+	for wid: String in ["", BendZone.KILN_STONE]:
+		_wear(player, wid)
+		var sm := BendZone.make(bot, "seam", FormEffects.ground_at(player, player.global_position + way * 3.0), seam_spec, way)
+		var from := FormEffects.ground_at(player, player.global_position + way * 1.0) + Vector3.UP * 0.25
+		var b := BendBolt.launch(player, from, way, {"kind": "stone", "mps": 20.0, "damage": 5.0, "knock_mps": 0.0, "up_mps": 0.0,
+				"radius_m": 0.12, "range_m": 5.0})
+		var hot := false
+		for i in 20:
+			await _ticks(1)
+			if is_instance_valid(b) and b.heated:
+				hot = true
+		heat[wid] = hot
+		if is_instance_valid(sm):
+			sm.end("test")
+		await _secs(0.3)
+	_expect(bool(heat[BendZone.KILN_STONE]) and not bool(heat[""]), "Kiln Stone: his stone skimming over a magma seam comes out heated (not worn: plain)")
+	_wear(player, "")
+	_wear_all(player, [BendGas.SET])
+	await _no_gas()
+	var zg := BendGas.make(player, player.global_position + way * 3.0, "cloud")
+	var sm2 := BendZone.make(bot, "seam", zg.global_position + way.cross(Vector3.UP) * 1.5, seam_spec, way)
+	var lit: Array = await _pct_over(player, 0.8, BendGas.IGNITE_TAG)
+	_expect(not is_instance_valid(zg) and bool(lit[1]), "the set's gas: a magma seam under his cloud lights it (the seam's owner's burst launches him)")
+	if is_instance_valid(sm2):
+		sm2.end("test")
+	_wear(player, "")
+	await _no_gas()
+	rules.reset_pct(player, 0.0)
 
 
 # ---------------------------------------------------------------- earth's talents worn together (pass 2)

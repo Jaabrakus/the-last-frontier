@@ -269,7 +269,9 @@ lights it and a Wind Wall on one carries it off its face once (`BendGas.every`, 
 a cloud charges it (Live Gas: half the strike's % on everyone inside, % only, the gas stays: `BendGas.live` from
 `BendEffects._strike`); the burst reaches 1.5x the cloud's round; wind carries a cloud 4 m (was 3); IGNITED! is called out at
 the callouts' own spot (`data/ring/callouts.json` `ignited`, a RingHighlights moment). Every hook asks `BendGas.live_n > 0`
-first, so Classic (no gas ever) is untouched. Not built: magma seams heating a Kiln Stone (the Magma set is another lane's).
+first, so Classic (no gas ever) is untouched. Magma seams (the fire lane's Magma set, zone kind `seam`, not in this branch)
+are wired by their kind alone (`BendZone.KILN_FIRES`): a seam heats a Kiln Stone skimming over it and lights gas over it; the
+earth test plays it with a stand-in seam made as the fire lane's maker makes one.
 
 ## Earth's behaviour talents (pass 2, 2026-10-11): the Sulphur Vent, and new skills for every element
 

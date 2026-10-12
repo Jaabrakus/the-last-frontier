@@ -1351,12 +1351,14 @@ func _stones() -> void:
 
 ## Earth's Kiln Stone (data/sway/skill_tree.json earth.stone.kiln_stone; the owner, 2026-10-11: "make sure all the talents work"):
 ## a stone of its wearer's (a bolt: Pebbles, the Fissure's crack; a hurled Spike, Boulder or caught stone: GustLift) that passes
-## through fire (KILN_FIRES: any Fire Wall or burning ground, whoever's) comes out heated until it lands: a fire trail, its launch
-## base x KILN_MULT for him (BendLoadout.hit_class, info.heated). A heated stone counts as fire for the guards: a Parry on the
-## beat sends it back, a Turn douses it to a plain stone. (Magma seams: the Magma set, not built in this branch.)
+## through fire (KILN_FIRES: any Fire Wall, burning ground or magma seam, whoever's) comes out heated until it lands: a fire
+## trail, its launch base x KILN_MULT for him (BendLoadout.hit_class, info.heated). A heated stone counts as fire for the guards:
+## a Parry on the beat sends it back, a Turn douses it to a plain stone. A magma seam is the fire lane's Magma set's zone kind
+## "seam" (FireTalents, another branch: wired here by its kind alone; a seam is low on the deck, so a stone rolling or skimming
+## over it is heated, one flying at chest height is not). The same fires light Sulphur's gas (BendGas.every).
 const KILN_STONE := "earth.stone.kiln_stone"
 const KILN_MULT := 1.15
-const KILN_FIRES := ["fire_wall", "burn"]
+const KILN_FIRES := ["fire_wall", "burn", "seam"]
 
 
 ## A heated flying stone parried on the beat (Kiln Stone): straight back along the guard's aim, perfect_mult faster, his now (a
