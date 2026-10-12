@@ -41,7 +41,15 @@ extends SceneTree
 ##                     13%; Fuming Column: a 2 m plume where it rose, base 9.3; Brimstone Wall: 3 hits, shot down a cloud on
 ##                     the shooter's side; Flint Pebbles: his pebbles light his own gas (his burst), never the bot's; his clouds
 ##                     2.5 s; Sulphur Heart: his clouds 2 m, his locks fill x1.15 in his own gas (the bot's too)
-## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
+##   Sulphur Vent      (pass 2; worn with the set) not worn (Classic, the set alone): 4 has one move, a double tap readies the
+##                     wall again; worn: 4 tapped twice (the hotbar's own taps) readies it, named on the bar, the wall's pose,
+##                     lock 0.9 s (1.6); cast through his own lock: a 3 m cloud for 4 s where he aims (2 m at the nearest, 6
+##                     at the farthest), on the bot 6% at most, no knock, never on him; one at a time (his other gas stays);
+##                     fire lights it; his Earth Wall rises in 0.8 s (0.7); a bot wearing it has it as an option, locks it
+##                     0.9 s, places it on the player in a real fight, and never while its gas stands on him (a bot wearing
+##                     nothing has no vent)
+## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass. A user arg only=<part> (after --: thick_wall,
+## juggle, ..., sulphur_twists, vent) plays that part alone, for a quick look; the gate runs them all.
 
 const NAME := "TALENTS EARTH"
 const BendGas := preload("res://scripts/bending/bend_gas.gd")
@@ -185,18 +193,15 @@ func _run() -> void:
 	await _ticks(3)
 	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
 	player.pitch = 0.0
-	await _thick_wall()
-	await _juggle()
-	await _return_to_sender()
-	await _kick_up()
-	await _avalanche()
-	await _heave()
-	await _kiln_stone()
-	await _rubble()
-	await _quarry()
-	await _reinforce()
-	await _sulphur_set()
-	await _sulphur_twists()
+	var parts: Array[Callable] = [_thick_wall, _juggle, _return_to_sender, _kick_up, _avalanche, _heave, _kiln_stone, _rubble, _quarry,
+			_reinforce, _sulphur_set, _sulphur_twists, _vent]
+	var only := ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("only="):
+			only = a.substr(5)
+	for part: Callable in parts:
+		if only == "" or String(part.get_method()).trim_prefix("_") == only:
+			await part.call()
 	_end()
 
 
@@ -1335,3 +1340,201 @@ func _worn_body(id: String) -> Node3D:
 	if id != "":
 		BendLoadout.wear(n, [id], "", "earth")
 	return n
+
+
+# ---------------------------------------------------------------- Sulphur Vent (pass 2)
+## The player's key 4 tapped twice on the hotbar (its own taps, two frames apart): Earth Wall's mode after ("readied ..." when
+## another move is readied, "no hotbar").
+func _tap4_twice() -> String:
+	var hb := Hotbar.find(player)
+	if hb == null:
+		return "no hotbar"
+	hb._key_tap(3)
+	await _ticks(2)
+	hb._key_tap(3)
+	await _ticks(2)
+	return sc.base_mode_of("earth_wall") if sc.readied_spell == "earth_wall" else "readied " + sc.readied_spell
+
+
+## The player's readied Earth Wall at its mode now, cast through his own lock (RMB held: held_override) with his crosshair on
+## deck point `p`, let go 0.05 s after it fills: [the lock's time (s; -1 it never filled), his vents after, the place his
+## crosshair gave as he let go (FormEffects.place_point: 2-6 m)].
+func _vent_cast(p: Vector3) -> Array:
+	await _aim_at(p + Vector3.UP * 0.05)
+	sc.held_override = true
+	var ls := -1.0
+	for i in 600:
+		await _ticks(1)
+		if sc.state == SwayCaster.State.FULL:
+			ls = sc.lock_s
+			break
+	await _secs(0.05)
+	var at := FormEffects.place_point(pc, {"min_m": 2.0, "max_m": 6.0})
+	sc.held_override = false
+	await _ticks(2)
+	sc.held_override = null
+	await _secs(0.3)
+	return [ls, _gas_kind(player, "vent"), at]
+
+
+## Flat metres between `a` and `b`.
+func _flat(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
+
+
+func _vent() -> void:
+	var S := BendGas.SET
+	var V := BendGas.VENT
+	var key4: Array = Bending.keys("earth")[3]
+	var scale := RingRules.stock_num("pct_scale", 1.0)
+	_expect(BendLoadout.why_not(V) == "" and V in BendLoadout.behaviour(), "Sulphur Vent is live with the set, its code built (%s)" % BendLoadout.why_not(V))
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	# not worn (Classic, the set alone): 4 has one move; a double tap readies the wall again; no vent mode to set
+	for wid: Array in [[], [S]]:
+		_wear_all(player, wid)
+		var md := await _tap4_twice()
+		_expect(sc.my_modes("earth_wall") == ["wall"] and Bending.other_move(key4, "earth_wall", "wall", player).is_empty() and md == "wall"
+				and not sc.set_mode("earth_wall", "vent") and BendLoadout.talent_spec(player, "earth_wall", "vent").is_empty(),
+				"%s: 4 has one move, tapped twice the wall again, no vent (%s, %s)" % ["the set alone" if wid.size() == 1 else "Classic", sc.my_modes("earth_wall"), md])
+	var w0 := await _wall_of(player, 3.0)
+	var rise0 := w0.rise_s if w0 != null else -1.0
+	if w0 != null:
+		w0.crumble("time")
+	await _secs(1.6)
+	# worn: 4 tapped twice readies it, named, the wall's pose, its own lock
+	_wear_all(player, [S, V])
+	var other := Bending.other_move(key4, "earth_wall", "wall", player)
+	var tapped := await _tap4_twice()
+	_expect(String(other.get("mode", "")) == "vent" and tapped == "vent" and sc.my_modes("earth_wall") == ["wall", "vent"],
+			"Sulphur Vent: 4 tapped twice readies it (the hotbar's own taps: %s)" % tapped)
+	_expect(SwayCaster.mode_label("earth_wall", "vent") == "Sulphur Vent" and sc.spell_label("earth_wall").contains("Sulphur Vent"),
+			"Sulphur Vent: named on the bar (%s)" % sc.spell_label("earth_wall"))
+	var pv := BendPoses.pick("earth_wall", "vent", "earth", player)
+	_expect(not pv.is_empty() and pv == BendPoses.pick("earth_wall", "wall", "earth", player), "Sulphur Vent: cast with the Earth Wall's own pose (%s)" % pv.get("clip", "-"))
+	var lv := sc._lock_time("earth_wall", null, 0.0, 0.0)
+	sc.set_mode("earth_wall", "wall")
+	var lw := sc._lock_time("earth_wall", null, 0.0, 0.0)
+	_expect(_near(lv / lw, 0.9 / 1.6, 0.002), "Sulphur Vent: its lock 0.9 s against the wall's 1.6 (%.3f, %.3f)" % [lv, lw])
+	# cast through his own lock: a 3 m cloud for 4 s where he aims, 2-6 m off (on the deck's long axis: a place near a side is
+	# kept wall_lip_clear_m inside its lip, as a wall's is)
+	await _tap4_twice()
+	var aim1 := _deck_off(4.0, 0.0)
+	var r1: Array = await _vent_cast(aim1)
+	var v1: BendZone = (r1[1] as Array)[0] if (r1[1] as Array).size() == 1 else null
+	var d1 := _flat(v1.global_position, r1[2]) if v1 != null else -1.0
+	var a1 := _flat(v1.global_position, aim1) if v1 != null else -1.0
+	_expect(v1 != null and _near(v1.radius, 3.0, 0.01) and _near(v1.life_s, 4.0, 0.01) and d1 < 0.2 and a1 < 1.5 and _near(float(r1[0]), lv, 0.02),
+			"Sulphur Vent: cast through his own lock (%.2f s), a 3 m cloud for 4 s where his crosshair is as he lets go (%.2f m; %.2f m from the point aimed at)" % [r1[0], d1, a1])
+	# one at a time: a second vent ends the first; his other gas stays; aimed 10 m off it opens 6 m off
+	var cloud := BendGas.make(player, _deck_off(5.0, -70.0), "cloud")
+	sc.set_mode("earth_wall", "vent")
+	var r2: Array = await _vent_cast(_deck_off(10.0, -25.0))
+	var v2: BendZone = (r2[1] as Array)[0] if (r2[1] as Array).size() == 1 else null
+	_expect(v2 != null and v2 != v1 and (v1 == null or not is_instance_valid(v1) or v1.is_queued_for_deletion()) and is_instance_valid(cloud),
+			"Sulphur Vent: one at a time (a new one ends the old, %d standing); his other cloud stays" % (r2[1] as Array).size())
+	var d2 := _flat(v2.global_position, player.global_position) if v2 != null else -1.0
+	_expect(_near(d2, 6.0, 0.35), "Sulphur Vent: aimed 10 m off it opens 6 m off at the farthest (%.2f)" % d2)
+	await _no_gas()
+	# nearest 2 m: the cloud over him; his own gas never hurts him
+	rules.reset_pct(player, 0.0)
+	sc.set_mode("earth_wall", "vent")
+	var r3: Array = await _vent_cast(_deck_off(1.0, 0.0))
+	var v3: BendZone = (r3[1] as Array)[0] if (r3[1] as Array).size() == 1 else null
+	var p_self: Array = await _pct_over(player, 2.0)
+	var d3 := _flat(v3.global_position, player.global_position) if v3 != null else -1.0
+	_expect(v3 != null and _near(d3, 2.0, 0.35) and v3.inside(player.global_position) and _near(float(p_self[0]), 0.0, 0.001),
+			"Sulphur Vent: aimed 1 m off it opens 2 m off at the nearest, over him, and never hurts him (%.2f m, %.2f%%)" % [d3, p_self[0]])
+	await _no_gas()
+	# on the bot: 1% x the pace each 0.5 s, 6% at most (its 4 s would give 8), no knock, no slow
+	await _stage(-2.0, 2.0)
+	rules.reset_pct(bot, 0.0)
+	var launched := [false]
+	var cb := func(b: Node3D, _v: Vector3, _st: float, _by: Node, _t: String) -> void:
+		if b == bot:
+			launched[0] = true
+	rules.launched.connect(cb)
+	sc.set_mode("earth_wall", "vent")
+	var r4: Array = await _vent_cast(bot.global_position)
+	await _secs(4.4)
+	rules.launched.disconnect(cb)
+	_expect((r4[1] as Array).size() == 1 and _near(rules.pct_of(bot), 6.0 * scale, 0.02) and not bool(launched[0]) and BendStatus.until(bot, &"bend_slow") <= 0.0,
+			"Sulphur Vent: on the bot %.2f%% over its life (6 x the pace at most), no knock, no slow" % rules.pct_of(bot))
+	await _no_gas()
+	# fire lights it (it is the set's gas): the burst launches the bot in it
+	await _stage(-2.0, 2.0)
+	sc.set_mode("earth_wall", "vent")
+	var r5: Array = await _vent_cast(bot.global_position)
+	var v5: BendZone = (r5[1] as Array)[0] if (r5[1] as Array).size() == 1 else null
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	if v5 != null:
+		# (across the cloud 1.5 m short of the bot: through the gas, never into him)
+		_bolt_across(player, "fire", v5.global_position - way.normalized() * 1.5, way.normalized().cross(Vector3.UP))
+	var ig: Array = await _pct_over(bot, 0.6, BendGas.IGNITE_TAG)
+	_expect((r5[1] as Array).size() == 1 and not is_instance_valid(v5) and bool(ig[1]), "Sulphur Vent: fire through it lights it, the burst launches the bot")
+	await _no_gas()
+	# his Earth Wall rises in 0.8 s (Classic 0.7)
+	await _stage(-4.5, 4.5)
+	var w1 := await _wall_of(player, 3.0)
+	var rise1 := w1.rise_s if w1 != null else -1.0
+	_expect(_near(rise1, 0.8) and _near(rise0, 0.7), "Sulphur Vent: his Earth Wall rises in %.1f s (Classic %.1f)" % [rise1, rise0])
+	if w1 != null:
+		w1.crumble("time")
+	await _secs(1.6)
+	sc.set_mode("earth_wall", "wall")
+	_wear(player, "")
+	_expect(sc.my_modes("earth_wall") == ["wall"] and sc.base_mode_of("earth_wall") == "wall", "Sulphur Vent taken off: 4 has its one move again")
+	rules.reset_pct(bot, 0.0)
+	await _vent_bot()
+
+
+## The bot and the Vent: a bot wearing nothing has none; one wearing it has it as an option, locks it 0.9 s, places it on the
+## player in a real fight, and its gate keeps it from venting where its gas already stands on him.
+func _vent_bot() -> void:
+	var S := BendGas.SET
+	var V := BendGas.VENT
+	var nb: NpcBending = bot.brain.bending
+	_wear(bot, "")
+	nb._talent_options()
+	var none := nb._option("earth_wall/vent").is_empty()
+	_wear_all(bot, [S, V])
+	nb._talent_options()
+	var o := nb._option("earth_wall/vent")
+	_expect(none and not o.is_empty() and String((o.get("hint", {}) as Dictionary).get("role", "")) == "control" and String(o.get("do", "")) == "zone"
+			and not bool(o.get("old", true)),
+			"Sulphur Vent on the bot: worn, it is one of its options (control, a zone); a bot wearing nothing has none")
+	var bl := NpcBending.lock_for("earth_wall", "vent", "normal", 0.0, bot) / NpcBending.lock_for("earth_wall", "wall", "normal", 0.0, bot)
+	_expect(_near(bl, 0.9 / 1.6, 0.002), "Sulphur Vent on the bot: its lock 0.9 s against its wall's 1.6 (x%.3f)" % bl)
+	# its gate: not while its gas stands on him
+	await _stage(-3.0, 3.0)
+	var free_ok := nb._when("foe_not_gassed", player, 6.0)
+	var g := BendGas.make(bot, player.global_position, "cloud")
+	var gassed_ok := nb._when("foe_not_gassed", player, 6.0)
+	if g != null:
+		g.end("test")
+	await _no_gas()
+	_expect(free_ok and not gassed_ok, "Sulphur Vent on the bot: not while its gas already stands on him")
+	# a real fight: let go, it vents him (the player stands still, his % kept low)
+	await _stage(-3.5, 3.5)
+	var n0 := int(nb.casts_by.get("earth_wall/vent", 0))
+	var on_him := -1.0
+	bot.held = false
+	for i in 200:
+		await _secs(0.1)
+		if i % 10 == 0:
+			rules.reset_pct(player, 0.0)
+		var vs := _gas_kind(bot, "vent")
+		if not vs.is_empty():
+			on_him = _flat((vs[0] as Node3D).global_position, player.global_position)
+			break
+	bot.held = true
+	await _secs(0.3)
+	var nv := int(nb.casts_by.get("earth_wall/vent", 0)) - n0
+	_expect(nv >= 1 and on_him >= 0.0 and on_him <= 3.0, "Sulphur Vent on the bot: in a fight it places its vent on the player (%.1f m from him, %d cast)" % [on_him, nv])
+	_wear(bot, "")
+	nb._talent_options()
+	_expect(nb._option("earth_wall/vent").is_empty(), "Sulphur Vent off the bot: its options are its kit's again")
+	await _no_gas()
+	rules.reset_pct(player, 0.0)
+	rules.reset_pct(bot, 0.0)

@@ -613,6 +613,13 @@ static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
 			at = FormEffects.place_point(c, spec.get("place", {}))
 			way = FormEffects.way_to(c, at)
 	var zk := String(spec.get("zone", "bubble"))
+	if zk == "gas":
+		# (Sulphur's gas from a cast, a worn new skill's (the Sulphur Vent): BendGas makes it, one vent of his at a time, his
+		# other clouds kept)
+		var gz: BendZone = BendZone.BendGas.vent(p, at, spec)
+		_cur["zone"] = gz
+		_cur["zone_kind"] = zk
+		return gz
 	if bool(spec.get("one_at_a_time", false)) or (zk in ["fire_wall", "wind_wall"] and BendStatus.element_mode(p)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var old := z as BendZone

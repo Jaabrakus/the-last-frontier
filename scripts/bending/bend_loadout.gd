@@ -843,3 +843,85 @@ static func wall_numbers(body: Object, kind: String, base: Dictionary, matter: S
 		for k: String in (mats as Dictionary)[matter]:
 			entry[k] = (mats as Dictionary)[matter][k]
 	return FormMatter.numbers(b, entry, matter)
+
+
+# ---------------------------------------------------------------- the new skills (a worn talent's own mode of a move)
+## THE NEW SKILLS (2026-10-11, the owner's yes to the tree's draft: new skills on the empty double taps): a node of kind
+## new_skill (its slot: key, tap twice, on <move>) adds a mode of its move for its wearer alone. Its spec is moves.json
+## <move>.talent_bend.<mode>: a bend spec with `talent` (the node's id: only its wearer casts it), its own `lock_s`, `label` (its
+## name on the bar) and `pose_as` (the move's mode whose pose it is cast with). Never in the move's modes or bend, so the Classic
+## fingerprint, the static kit (SwayCaster.modes_of: the HUD's key words, the quick spell, the radial wheel, Bending.first_of) and
+## every bot of a normal match never see it; built once for every element (any move's talent_bend, any node). The seams ask here
+## with the body, and a body that wears nothing answers each with one meta lookup:
+##   modes_for(body, id, base)          SwayCaster.my_modes, Bending.other_move (4 tapped twice, a wheel step), BodyBendCaster
+##                                      .mode_of, a bot's options (NpcBending._build_options: talent_pairs)
+##   talent_spec(body, m, mode)         SwayCaster.spec_of, FormEffects.apply, BendCast.cast (the player's cast and a bot's)
+##   talent_lock(body, m, mode, base)   SwayCaster._lock_time, NpcBending.lock_for
+##   pose_mode(body, m, mode)           BendPoses.pick (the body's pose)
+##   talent_label(m, mode)              SwayCaster.mode_label's fallback
+## The first: earth's Sulphur Vent (earth.sulphur.vent: earth_wall.talent_bend.vent, BendGas.vent).
+static func talent_modes(body: Object, id: String) -> Array:
+	if not _wears(body):
+		return []
+	var tb: Variant = SwayMoves.move(id).get("talent_bend")
+	if not (tb is Dictionary):
+		return []
+	var out: Array = []
+	for md: String in (tb as Dictionary):
+		var s: Variant = (tb as Dictionary)[md]
+		if not md.begins_with("_") and s is Dictionary and wears(body, String((s as Dictionary).get("talent", ""))):
+			out.append(md)
+	return out
+
+
+## Move `id`'s ring modes for `body`: `base` (null: SwayCaster.modes_of(id), the move's) and the modes his worn talents add after
+## them (`base` itself, never a copy, when he adds none: Classic reads the very array it read before).
+static func modes_for(body: Object, id: String, base: Variant = null) -> Array:
+	var ms: Array = base as Array if base is Array else SwayCaster.modes_of(id)
+	var ex := talent_modes(body, id)
+	return ms if ex.is_empty() else ms + ex
+
+
+## Every [move, mode] of element `el`'s keys a worn talent of `body`'s adds ([] Classic): a bot's own options.
+static func talent_pairs(body: Object, el: String) -> Array:
+	var out: Array = []
+	if not _wears(body):
+		return out
+	for key: Variant in Bending.keys(el):
+		for id: Variant in (key as Array):
+			for md: String in talent_modes(body, String(id)):
+				out.append([String(id), md])
+	return out
+
+
+## The spec of move `m`'s talent mode `mode` when `body` wears its node ({} else: Classic, another mode, not worn). Shared and
+## read-only (BendEffects.apply copies it before it reads it).
+static func talent_spec(body: Object, m: String, mode: String) -> Dictionary:
+	if not _wears(body) or mode == "":
+		return {}
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if not (tb is Dictionary) or not ((tb as Dictionary).get(mode) is Dictionary):
+		return {}
+	var s: Dictionary = (tb as Dictionary)[mode]
+	return s if wears(body, String(s.get("talent", ""))) else {}
+
+
+## A worn talent mode's own lock (its spec's lock_s; the caller's stretch, tier and lock_mult still apply), else `base`.
+static func talent_lock(body: Object, m: String, mode: String, base: float) -> float:
+	var s := talent_spec(body, m, mode)
+	return float(s.get("lock_s", base)) if not s.is_empty() else base
+
+
+## The mode whose cast pose a worn talent mode plays (its spec's pose_as: one of the move's own), else `mode`.
+static func pose_mode(body: Object, m: String, mode: String) -> String:
+	var s := talent_spec(body, m, mode)
+	return String(s.get("pose_as", mode)) if not s.is_empty() else mode
+
+
+## A talent mode's name (its spec's label: "Sulphur Vent"), else `mode` (SwayCaster.mode_label's fallback: no body asked, a
+## name is no number).
+static func talent_label(m: String, mode: String) -> String:
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if tb is Dictionary and (tb as Dictionary).get(mode) is Dictionary:
+		return String(((tb as Dictionary)[mode] as Dictionary).get("label", mode))
+	return mode

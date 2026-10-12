@@ -17,9 +17,15 @@ extends RefCounted
 ##                moves' reactions are not built in this pass.)
 ##   the sources  the set: his Boulder's end (a cloud where it bursts) and a stone clash with a foe's (a cloud where they met);
 ##                Sulphur Spike: a puff where his Spike stops; Sulphur Boulder: three puffs along its flight; Fuming Column:
-##                a plume where his pillar rose; Brimstone Wall: a cloud 1 m out on the shooter's side of his wall shot down
+##                a plume where his pillar rose; Brimstone Wall: a cloud 1 m out on the shooter's side of his wall shot down;
+##                Sulphur Vent: a new skill (4 tapped twice: moves.json earth_wall.talent_bend.vent, BendLoadout's new skills),
+##                the deck cracked where he aims (2-6 m, placed like a wall) breathing a cloud of the spec's 3 m for 4 s (one
+##                gas cloud's cap, 6%; his set's cloud rules are the set's clouds', the vent's numbers its own); one vent of
+##                his at a time (his old one ends, his other gas stays); it counts among his zones_per_caster
 ##   home ground  Sulphur Heart: standing in his own gas his locks fill x HEART_MULT (the higher of it and Rooted; never times)
-##   the bots     a bot standing in a foe's gas steps out of it (way_out, as smoke's rule asks: NpcBending._move)
+##   the bots     a bot standing in a foe's gas steps out of it (way_out, as smoke's rule asks: NpcBending._move); a bot
+##                wearing the Vent places it on its foe (its spec's ai hint, NpcBending.hint_of: control, 1-8.5 m (6 m out and
+##                3 m round), on him on the deck, not while its gas already stands on him: in_gas_of)
 ## Loaded by its path (preload), no class name: a class new to the project is unknown to a run of a checkout the editor has not
 ## scanned (the FissureFx lesson, 2026-10-11).
 
@@ -204,6 +210,48 @@ static func carry(z: BendZone, way: Vector3, mover: Node3D) -> void:
 	z.set_meta(&"gas_carried", true)
 	var tw := z.create_tween()
 	tw.tween_property(z, "global_position", to, CARRY_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Whether `body` stands in a gas zone of `by`'s.
+static func in_gas_of(body: Node3D, by: Node) -> bool:
+	if live_n <= 0 or body == null or not is_instance_valid(body):
+		return false
+	for z: BendZone in gas_of(by):
+		if z.inside(body.global_position):
+			return true
+	return false
+
+
+## The Sulphur Vent (see the header): `by`'s vent cast at `at` (BendEffects.zone, its spec a zone of kind gas placed like a
+## wall): his old vent ends, the deck cracks there and breathes a cloud of `spec`'s radius_m and life_s. Null when he does not
+## wear it (or a ghost online: the host's).
+static func vent(by: Node3D, at: Vector3, spec: Dictionary) -> BendZone:
+	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, VENT):
+		return null
+	for old: BendZone in gas_of(by):
+		if String(old.get_meta(&"gas_kind", "")) == "vent":
+			old.end("capped")
+	var z := make(by, at, "vent", float(spec.get("radius_m", 3.0)), float(spec.get("life_s", 4.0)), num("cap_per_cloud_pct", 6.0))
+	if z != null:
+		_vent_look(z)
+	return z
+
+
+## The vent's own look over the cloud's haze (BendGas.look): the deck cracked at its mouth for its life, a puff of dust as it
+## opens, a crack of stone heard, and a column of thicker yellow-green puffs bubbling up from its middle. On the deck only.
+static func _vent_look(z: BendZone) -> void:
+	BendSounds.play(&"earth_cast_crack", z.global_position, -2.0)
+	if not BendLooks.live() or not z.is_inside_tree():
+		return
+	var pool := ToonFxPool.of(z.get_tree().current_scene)
+	if pool != null:
+		pool.mark("cracks", z.global_position, Vector3.UP, 1.8, z.life_s + 0.6)
+		pool.shoot("puff_dust", z.global_position + Vector3.UP * 0.1, 12, Vector3.UP, 70.0, Vector2(0.5, 1.4), Vector2(0.3, 0.6),
+				0.7, Vector3.ZERO, 1.5, {"r": 0.6})
+	var g := BendLooks.emitter(z, "smoke", Vector3(0.35, 0.1, 0.35), 26, 1.3, 1.6, 0.55)
+	if g != null:
+		(g.process_material as ParticleProcessMaterial).color = COLOR.darkened(0.12)
+		g.position = Vector3.UP * 0.15
 
 
 ## Whether `body` stands in a gas zone of his own.

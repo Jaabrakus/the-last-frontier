@@ -64,6 +64,10 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if bd.has(mode):
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
+	var ts := BendLoadout.talent_spec(c.player, m, mode)
+	if not ts.is_empty():
+		BendEffects.apply(c, m, mode, ts, t, at)         # (a worn new skill's own mode: the Sulphur Vent)
+		return
 	var keep := BendR3.cur
 	var bc0 := BendCaster.of(c.player)
 	var grew := bc0 != null and bc0.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary

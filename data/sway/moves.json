@@ -271,6 +271,11 @@
       "bend": {
         "column": {"do": "column", "kind": "stone", "range_m": 20.0, "radius_m": 1.3, "up_mps": 11.0, "damage": 10.0},
         "shell": {"do": "shell", "kind": "stone", "life_s": 3.0}
+      },
+      "_talent_bend": "A worn skill tree new skill's own mode of this move (BendLoadout's new skills; the owner 2026-10-11: new skills on the empty double taps, yes): its bend spec, its lock (lock_s), its name (label), the mode whose pose it is cast with (pose_as), the node whose wearer alone casts it (talent) and a bot's hint for it (ai: NpcBending.hint_of, over data/npc/bend_ai.json's). Never in modes or bend: Classic, the Classic fingerprint and every bot of a normal match never have it. vent: the Sulphur Vent (earth.sulphur.vent; BendGas.vent), 4 tapped twice.",
+      "talent_bend": {
+        "vent": {"do": "zone", "zone": "gas", "kind": "stone", "at": "place", "place": {"min_m": 2.0, "max_m": 6.0}, "radius_m": 3.0, "life_s": 4.0, "one_at_a_time": true, "lock_s": 0.9, "label": "Sulphur Vent", "pose_as": "wall", "talent": "earth.sulphur.vent",
+          "ai": {"role": "control", "range_m": [1.0, 8.5], "cool_s": 6.0, "when": ["foe_not_gassed", "foe_grounded"]}}
       }
     },
     "stone_form": {

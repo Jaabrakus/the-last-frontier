@@ -73,7 +73,8 @@
     "earth.sulphur.fuming_column": true,
     "earth.sulphur.brimstone_wall": true,
     "earth.sulphur.flint_pebbles": true,
-    "earth.sulphur.heart": true
+    "earth.sulphur.heart": true,
+    "earth.sulphur.vent": true
   },
   "behaviour": {
     "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)",
@@ -91,7 +92,8 @@
     "earth.sulphur.fuming_column": "BendEffects.column (a plume where the pillar rose: BendGas.make); class base per wearer",
     "earth.sulphur.brimstone_wall": "FormRaised.crumble / _brimstone (shot down: a cloud 1 m out on the shooter's side); wall hits per wearer (wall_numbers)",
     "earth.sulphur.flint_pebbles": "BendGas.react (his Pebbles light his own gas: ignite, his); set:sulphur.cloud_life_s per wearer (BendGas.num)",
-    "earth.sulphur.heart": "BendGas.home_mult (SwayCaster.passive_fill, NpcBending lock fill: x1.15 in his own gas, the higher with Rooted); set:sulphur.cloud_radius_m per wearer (BendGas.num)"
+    "earth.sulphur.heart": "BendGas.home_mult (SwayCaster.passive_fill, NpcBending lock fill: x1.15 in his own gas, the higher with Rooted); set:sulphur.cloud_radius_m per wearer (BendGas.num)",
+    "earth.sulphur.vent": "a new skill, 4 tapped twice: earth_wall's talent mode vent (moves.json earth_wall.talent_bend.vent) through BendLoadout's new skills (modes_for: SwayCaster.my_modes, Bending.other_move, the hotbar's double tap; talent_spec: FormEffects.apply, BendCast.cast; talent_lock: SwayCaster._lock_time, NpcBending.lock_for; pose_mode: BendPoses.pick; talent_label); BendEffects.zone hands a gas zone to BendGas.vent (one at a time); a bot's option (NpcBending._build_options: talent_pairs, its spec's ai hint); rise_s per wearer (wall_numbers)"
   },
   "live": [
     "air.ball.dense",
@@ -116,6 +118,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce", "earth.set.sulphur", "earth.sulphur.spike", "earth.sulphur.boulder", "earth.sulphur.fuming_column", "earth.sulphur.brimstone_wall", "earth.sulphur.flint_pebbles", "earth.sulphur.heart"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce", "earth.set.sulphur", "earth.sulphur.spike", "earth.sulphur.boulder", "earth.sulphur.fuming_column", "earth.sulphur.brimstone_wall", "earth.sulphur.flint_pebbles", "earth.sulphur.heart", "earth.sulphur.vent"],
   "styles_live": ["boxing"]
 }

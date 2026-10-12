@@ -368,6 +368,7 @@ static func has_spec(m: String, mode: String) -> bool:
 ## body, for its fighting style (null: the element's own).
 static func pick(m: String, mode: String, element: String, body: Node = null) -> Dictionary:
 	if body != null:
+		mode = BendLoadout.pose_mode(body, m, mode)      # (a worn new skill's mode cast with its move's own pose; else mode)
 		var np := _node_pick(body, m, mode)
 		if not np.is_empty():
 			return np

@@ -263,8 +263,35 @@ glow on the caster's own hands (`BendLooks.beat_flash`). Classic: nothing, not e
 beside a node's own new code, and a modeless move's lock (Mend). `test_loadout_apply.gd` wears a node with the nodes it
 requires, reads a Beat class on a Beat hit and a `default_from`'s default.
 
-**Not built (next pass): the Sulphur Vent** (a new skill on key 4 tapped twice). It needs a per-body mode the key's double
-tap reaches (`Bending.other_move` and `SwayCaster.step_other` are per element, not per wearer), its spec kept out of
-`moves.json` (the Classic fingerprint enumerates every bend key as a mode), its pose and a bot option. The water, fire and air
-lanes' new skills on empty double taps need the same seam: build it once. Also not built: lightning's Live Gas and the
-reactions of cone moves (Breath, the Wave) on gas; magma seams heating a Kiln Stone (the Magma set).
+Not built: lightning's Live Gas and the reactions of cone moves (Breath, the Wave) on gas; magma seams heating a Kiln Stone
+(the Magma set).
+
+## Earth's behaviour talents (pass 2, 2026-10-11): the Sulphur Vent, and new skills for every element
+
+Branch `tb/talents-earth-p2`. **Sulphur Vent** (`earth.sulphur.vent`, worn with the set): 4 tapped twice readies it; the deck
+cracks where his crosshair is (2-6 m, placed like a wall) and breathes a 3 m cloud for 4 s (the set's gas: one cloud's cap,
+6%, its ticks and reactions; his own never hurts him); lock 0.9 s; one vent of his at a time (his other gas stays). Trade: his
+Earth Wall rises in 0.8 s. Its spec is `moves.json` `earth_wall.talent_bend.vent`; `BendEffects.zone` hands a gas zone to
+`BendGas.vent`. The vent's numbers are its own (Flint Pebbles' 2.5 s and Sulphur Heart's 2 m are the set's clouds').
+`tests/ring/test_talents_earth.gd` plays it (the hotbar's own double tap, the player's real lock, the bot in a fight).
+
+**New skills on the empty double taps, built once** (`BendLoadout`, the end of the file; the owner's yes to the draft). A
+node of kind `new_skill` adds a mode of its move for its wearer alone. Its spec lives in `moves.json`
+`<move>.talent_bend.<mode>`: a bend spec plus `talent` (the node id), `lock_s`, `label`, `pose_as` and `ai` (a bot's hint over
+`bend_ai.json`'s). Never in `modes` or `bend`, so the static kit (`SwayCaster.modes_of`), the Classic fingerprint and every bot
+of a normal match never see it. Seams, each answered with one meta lookup for a body that wears nothing:
+
+| Seam | Callers |
+|---|---|
+| `modes_for(body, id, base)` | `SwayCaster.my_modes`, `Bending.other_move(key, id, mode, body)` (the hotbar's double tap and wheel step, `SwayCaster.step_other` and `_dash_switch`), `BodyBendCaster.mode_of` |
+| `talent_pairs(body, el)` | `NpcBending._build_options` (rebuilt by `_talent_options` when what the bot wears changes) |
+| `talent_spec(body, m, mode)` | `SwayCaster.spec_of`, `FormEffects.apply`, `BendCast.cast` |
+| `talent_lock(body, m, mode, base)` | `SwayCaster._lock_time`, `NpcBending.lock_for` |
+| `pose_mode(body, m, mode)` | `BendPoses.pick` |
+| `talent_label(m, mode)` | `SwayCaster.mode_label`'s fallback |
+
+The air lane's Dust Cloud (`AirTalents.extra_modes`, `talent_spec`, ... over the same `moves.json` `talent_bend` layout) and
+the fire lane's Cauterize (`FireTalents.modes_for`, its spec in code) built their own copies of this seam at the same call
+sites. Merging, keep these generic lines: they read any move's `talent_bend` whose `talent` is worn, so Dust Cloud works
+through them as it is (its spec already has `talent`), and Cauterize once its spec moves to `patch.talent_bend.cauterize`.
+`kit_words.key_moves` and the radial wheel still show the static kit (no body to ask).

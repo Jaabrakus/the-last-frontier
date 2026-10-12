@@ -147,6 +147,9 @@ var element := "earth"
 ## Every option: {id, mode, key "id/mode", spec, do, hint, water, knock, old, grow (its spec grows), guard (its element's
 ## guard), jab}.
 var options: Array[Dictionary] = []
+## The worn new skills' [move, mode] its options were built with (BendLoadout.talent_pairs: a test's bot wearing one; [] Classic,
+## every bot of a normal match).
+var _talent_built: Array = []
 ## The lock: the move locking ("" none), its mode, whether it is held to grow, how full (0..1), its time and how long it has
 ## filled.
 var casting := ""
@@ -403,10 +406,12 @@ func _build_options() -> void:
 	options.clear()
 	var gd := guard_of(element)
 	var jb := jab_of(element)
-	for pr: Array in pairs_of(element):
+	for pr: Array in pairs_of(element) + _talent_built:
 		var id := String(pr[0])
 		var md := String(pr[1])
 		var spec := spec_of(id, md)
+		if spec.is_empty():
+			spec = BendLoadout.talent_spec(me, id, md)     # (a worn new skill's own mode: its talent_bend spec; Classic {})
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
 				"do": String(spec.get("do", "old")),
 				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary \
@@ -445,6 +450,10 @@ static func hint_of(id: String, md: String, spec: Dictionary) -> Dictionary:
 	var mv: Dictionary = ((d.get("moves", {}) as Dictionary).get(id, {}) as Dictionary).get(md, {})
 	for k: String in mv:
 		h[k] = mv[k]
+	var ta: Variant = spec.get("ai")
+	if ta is Dictionary:
+		for k: String in (ta as Dictionary):
+			h[k] = ta[k]                           # (a worn new skill's own hint, in its talent_bend spec: the Sulphur Vent's)
 	if not h.has("role"):
 		h["role"] = "offence"
 	return h
@@ -477,6 +486,7 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 	else:
 		if mlk.has(md):
 			base = float(mlk[md])
+		base = BendLoadout.talent_lock(who, id, md, base)  # (a worn new skill's own lock: the Sulphur Vent's; else base)
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
 	var stretch := 1.0
 	if not self_cast(id, md):
@@ -701,7 +711,17 @@ func _forced() -> Dictionary:
 	return {}
 
 
+## Its options built again when what it wears adds or drops a new skill's mode (BendLoadout.talent_pairs: a test's bot; a bot
+## of a normal match wears nothing and never rebuilds).
+func _talent_options() -> void:
+	var tp := BendLoadout.talent_pairs(me, element)
+	if tp != _talent_built:
+		_talent_built = tp
+		_build_options()
+
+
 func _choose(t: Node3D, d: float) -> Dictionary:
+	_talent_options()
 	var f := _forced()
 	if not f.is_empty():
 		return f
@@ -827,6 +847,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 			return edge_fn.is_valid() and _room(-_way(t)) < 4.0
 		"ice_near":
 			return _ice_near(8.0)
+		"foe_not_gassed":
+			return not BendZone.BendGas.in_gas_of(t, me)   # (no vent where its own gas already stands on him)
 	return false
 
 
