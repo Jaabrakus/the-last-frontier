@@ -27,6 +27,9 @@ extends SceneTree
 ##   Second Wind        his Patch begun within 0.8 s of a dash's end (a real Slip) locks 1.25 s, later 1.6 (1.5); a bot's too
 ##   Dragon Fire        his Gust through his fire mate's Fire Wall sends one fire front on (not worn: none; a foe's wall: none,
 ##                      it takes the flame as ever); the front strikes a foe it runs into for 6% (the node's class, his alone)
+##   Dust Cloud         not worn, 4 has one move; worn, 4 tapped twice readies it (the hotbar's own taps), named, the Wind
+##                      Wall's pose, lock 0.9 s; cast through the real lock: a 3 m cloud for 2.5 s 2-6 m off where he aims, hiding
+##                      him from the foe; a new one ends the old; his Wind Wall 3.5 s (4); a bot wearing it casts it (BendCast)
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
@@ -34,7 +37,7 @@ const NAME := "TALENTS AIR"
 const LIMIT_S := 600.0
 const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
 		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind", "air.slip.near_miss", "air.patch.second_wind",
-		"air.gust.dragon_fire"]
+		"air.gust.dragon_fire", "air.slot.dust"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -275,6 +278,8 @@ func _run() -> void:
 		await _second_wind()
 	if _on("air.gust.dragon_fire"):
 		await _dragon_fire()
+	if _on("air.slot.dust"):
+		await _dust()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -901,3 +906,87 @@ func _dragon_fire() -> void:
 	_expect(BendLoadout.worn_class(foe, AirTalents.FRONT_TAG).is_empty() and RingRules.class_of(AirTalents.FRONT_TAG).is_empty(),
 			"Dragon Fire: the front's class is the wearer's alone (none in the data, none for a body that wears nothing)")
 	_wear([])
+
+
+# ---------------------------------------------------------------- Dust Cloud
+## The player's dust zones standing now.
+func _dusts(by: Node) -> Array:
+	var out: Array = []
+	for z in get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "dust" and bz.owner_node == by and not bz.is_queued_for_deletion():
+			out.append(bz)
+	return out
+
+
+func _dust() -> void:
+	if not sc.cast_released.is_connected(_count_cast):
+		sc.cast_released.connect(_count_cast)
+	var hb := Hotbar.find(player)
+	var key4: Array = Bending.keys("air")[3]
+	# not worn: 4 has one move, a double tap is nothing new
+	await _stage(10.0)
+	_wear([])
+	_expect(sc.my_modes("air_wall") == ["wall"] and Bending.other_move(key4, "air_wall", "wall", player).is_empty(),
+			"Dust Cloud not worn: the Wind Wall's key has one move (%s)" % [sc.my_modes("air_wall")])
+	var w0 := _wall_life()
+	# worn: 4 tapped twice readies the Dust Cloud
+	_wear(["air.slot.dust"])
+	var other := Bending.other_move(key4, "air_wall", "wall", player)
+	var tapped := ""
+	if hb != null:
+		hb._key_tap(3)
+		await _ticks(2)
+		hb._key_tap(3)
+		await _ticks(2)
+		tapped = sc.base_mode_of("air_wall")
+	_expect(String(other.get("mode", "")) == "dust" and (hb == null or (sc.readied_spell == "air_wall" and tapped == "dust")),
+			"Dust Cloud: 4 tapped twice readies it (%s, %s)" % [other, tapped])
+	_expect(SwayCaster.mode_label("air_wall", "dust") == "Dust Cloud" and sc.spell_label("air_wall").contains("Dust"),
+			"Dust Cloud: named on the bar (%s)" % sc.spell_label("air_wall"))
+	_expect(BendPoses.pick("air_wall", "dust", "air", player) == BendPoses.pick("air_wall", "wall", "air", player),
+			"Dust Cloud: cast with the Wind Wall's own pose")
+	# cast through the real lock (the aim's button held to full, let go)
+	sc.set_mode("air_wall", "dust")
+	var lock_d := sc._lock_time("air_wall", null, 0.0, 0.0)
+	sc.set_mode("air_wall", "wall")
+	var lock_w := sc._lock_time("air_wall", null, 0.0, 0.0)
+	_expect(_near(lock_d / lock_w, 0.9 / 0.8, 0.002), "Dust Cloud: its lock 0.9 s (%.3f; the Wind Wall's %.3f)" % [lock_d, lock_w])
+	await _held_cast("air_wall", "dust", 0.05)
+	var dz := _dusts(player)
+	var z: BendZone = dz[0] if dz.size() == 1 else null
+	var off := Vector2(z.global_position.x - player.global_position.x, z.global_position.z - player.global_position.z).length() if z != null else -1.0
+	_expect(z != null and _near(z.radius, 3.0) and _near(z.life_s, 2.5) and off >= 1.9 and off <= 6.1,
+			"Dust Cloud: a 3 m dust cloud for 2.5 s placed %.1f m off where he aims (2-6 m, never round him)" % off)
+	_expect(NpcBendCaster.hidden(foe, player), "Dust Cloud: it hides him from the foe behind it (a bot's aim scatters there)")
+	await _held_cast("air_wall", "dust", 0.05)
+	await _ticks(3)
+	_expect(_dusts(player).size() == 1 and (z == null or not is_instance_valid(z) or z.is_queued_for_deletion() or z.life_s <= z.t + 0.6),
+			"Dust Cloud: a new one ends his old one (%d standing)" % _dusts(player).size())
+	var w1 := _wall_life()
+	_expect(_near(w0, 4.0) and _near(w1, 3.5), "Dust Cloud: his Wind Wall stands %.1f s (Classic %.1f)" % [w1, w0])
+	sc.set_mode("air_wall", "wall")
+	_wear([])
+	_expect(sc.my_modes("air_wall") == ["wall"] and sc.base_mode_of("air_wall") == "wall", "Dust Cloud taken off: the key has its one move again")
+	# a bot wearing it casts it through its own path (BendCast)
+	BendLoadout.wear(foe, ["air.slot.dust"], "", "air")
+	var ok := BendCast.cast(BendCaster.of(foe), "air_wall", "dust", player, player.global_position)
+	var fd := _dusts(foe).size()
+	BendLoadout.clear(foe)
+	var ok0 := BendCast.cast(BendCaster.of(foe), "air_wall", "dust", player, player.global_position)
+	_expect(ok and fd == 1 and not ok0, "Dust Cloud on a bot: it casts it through its own path (not worn: nothing)")
+	await _clear_air()
+
+
+## The player's Wind Wall's life now (cast through BendEffects, as his release does).
+func _wall_life() -> float:
+	var known := {}
+	for z in get_nodes_in_group(BendZone.GROUP):
+		known[z.get_instance_id()] = true
+	BendEffects.apply(pc, "air_wall", "wall", (SwayMoves.move("air_wall").bend as Dictionary).wall)
+	var life := -1.0
+	for z in get_nodes_in_group(BendZone.GROUP):
+		if not known.has(z.get_instance_id()) and (z as BendZone).kind == "wind_wall":
+			life = (z as BendZone).life_s
+			(z as BendZone).queue_free()
+	return life

@@ -21,6 +21,7 @@ game's own casts, locks, guards and hits.
 | Dragon Fire (`air.gust.dragon_fire`) | his Gust through an ally's Fire Wall (or Breath, while its flame is in its smoke: 0.5 s) carries the flame 6 m on as a fire front (a fire floor wave of his: 6%, set knock 6, its own class `air_gust/gust+fire_front`); team only; the Gust adds 9% (10) | `AirTalents.through_ally_fire` / `fire_front` in `BendZone.on_bolt` (before an ally's zone lets it pass); `BendLoadout.worn_class` in `RingRules.on_hit` |
 | Near Miss (`air.slip.near_miss`) | a near miss in his Slip counts within 1.44 m (1.2); his Slip 8.5 m/s (9.5) | `AirTalents.near_m` in `BendBolt._near_miss` (tune path `rules:passives.air.near_m`) |
 | Second Wind (`air.patch.second_wind`) | his Patch begun within 0.8 s of a dash's end locks 1.25 s, any other time 1.6 s (1.5) | `AirTalents.patch_lock` in `SwayCaster._lock_time` and `NpcBending.lock_for` (a bot: as a share of its own Patch lock) |
+| Dust Cloud (`air.slot.dust`) | a new skill on 4 tapped twice: a 3 m dust cloud where he aims (2-6 m, placed like a wall) for 2.5 s that hides as smoke does, one at a time, lock 0.9 s; his Wind Wall stands 3.5 s (4) | a talent mode `air_wall/dust` (moves.json `air_wall.talent_bend.dust`, never in `modes` or `bend`: the Classic fingerprint reads those): `AirTalents.extra_modes` (SwayCaster.my_modes), `modes_for` (Bending.other_move, the hotbar's double tap), `talent_spec` (SwayCaster.spec_of, FormEffects.apply, BendCast.cast), `talent_lock`, `pose_mode` (BendPoses.pick: the Wind Wall's pose), `label` |
 
 The Beat (`skill_tree.json` "beat", the owner's yes): a held cast let go within 0.2 s after its lock fills; never a click,
 never a cast that goes by itself. Only a worn technique reads it (`AirTalents.beat_worn`): SwayCaster marks the release
@@ -34,6 +35,8 @@ Two nodes that set the same number to the same value (Tailwind and Carry the Edg
 Wind: the Gust's lock 0.5) no longer refuse each other when worn together (`BendLoadout._fold`: a clash is two values).
 
 Notes:
+- A bot can cast a worn new skill through its own path (BendCast.cast), but no bot mind picks Dust Cloud (bots never wear
+  loadouts in a match; a mind that places dust is for when they do).
 - Second Wind's quick lock has its own path in the tree (`new:patch.after_dash_lock_s`, from `stock:patch.lock_s`): its two
   Patch locks were the one number `stock:patch.lock_s` set twice, which a node may not do (2026-10-11).
 - Near Miss and Second Wind change tune paths only, but needed the seam code, so they are listed in `behaviour` too (that is

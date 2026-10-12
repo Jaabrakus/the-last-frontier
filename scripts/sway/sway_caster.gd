@@ -814,7 +814,7 @@ func key3_press() -> bool:
 ## Key 3's lock turned to the key's other move (a second tap within key3_min_s), the time kept; its pose shown
 ## switch_hold_s before it may go, and never before key3_min_s from the first press.
 func _dash_switch(key: Array) -> void:
-	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")))
+	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")), player)
 	if nxt.is_empty():
 		return
 	var spent := fill * lock_s
@@ -1219,7 +1219,10 @@ static func world_modes_of(id: String) -> Array:
 
 ## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
 func my_modes(id: String) -> Array:
-	return modes_of(id) if elem() else world_modes_of(id)
+	if not elem():
+		return world_modes_of(id)
+	var ex: Array = AirTalents.extra_modes(player, id)        # (a worn new skill's own mode: Dust Cloud's; Classic none)
+	return modes_of(id) if ex.is_empty() else modes_of(id) + ex
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
@@ -1291,7 +1294,7 @@ func step_mode(dir: int) -> String:
 
 
 static func mode_label(id: String, m: String) -> String:
-	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
+	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, AirTalents.label(id, m)))
 
 
 ## Mode `m`'s name in the open world ("world_mode_labels" where it has its own: "boulder", "free"), else mode_label.
@@ -2453,6 +2456,7 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
+	base = AirTalents.talent_lock(player, m, mode_of(m), base)  # (a worn new skill's own lock; Classic base)
 	if not holds_stone(m, t):
 		base = BendLoadout.lock(player, m, mode_of(m), base)      # (a worn loadout's own lock for this mode; Classic: base)
 	if r3() and airborne():
@@ -2480,6 +2484,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 func spec_of(m: String) -> Dictionary:
 	var b: Variant = SwayMoves.move(m).get("bend", {})
 	var s: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	if not (s is Dictionary) or (s as Dictionary).is_empty():
+		s = AirTalents.talent_spec(player, m, mode_of(m))   # (a worn new skill's mode; Classic {})
 	return s if s is Dictionary else {}
 
 
@@ -2597,7 +2603,7 @@ func step_other() -> bool:
 	var k := Bending.key_of(el, move)
 	if k < 0:
 		return false
-	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move))
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move), player)
 	if nxt.is_empty():
 		return false
 	var keep := [readied_spell, String(modes.get(String(nxt.id), ""))]

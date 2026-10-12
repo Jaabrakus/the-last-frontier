@@ -618,7 +618,7 @@ func _near_miss() -> void:
 	var base := float(Bending.passive("air").get("near_m", 1.2))
 	for e in BendCaster.near(_by(), global_position, base * AirTalents.NEAR_QUERY_K):
 		var n: Node3D = e[0]
-		var near_m := AirTalents.near_m(n, base)        # (his own: Near Miss worn; Classic the passive's)
+		var near_m: float = AirTalents.near_m(n, base)        # (his own: Near Miss worn; Classic the passive's)
 		if float(e[1]) > near_m or BendStatus.until(n, &"bend_slip_until") <= 0.0 or _missed.has(n.get_instance_id()):
 			continue
 		if (NpcSenses.chest_of(n) - global_position).length() > near_m + 0.6:

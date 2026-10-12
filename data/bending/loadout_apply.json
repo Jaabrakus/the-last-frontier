@@ -67,7 +67,8 @@
     "air.leap.peak_wind": true,
     "air.slip.near_miss": true,
     "air.patch.second_wind": true,
-    "air.gust.dragon_fire": true
+    "air.gust.dragon_fire": true,
+    "air.slot.dust": true
   },
   "behaviour": {
     "air.slice.tailwind": "AirTalents.on_hit (BendR3._noted: a Slice of his that lands charges his Carried wind)",
@@ -79,7 +80,8 @@
     "air.leap.peak_wind": "AirTalents.on_dash (BendEffects.dash: a Beat Leap charges his Carried wind at its top, PeakWatch); key 3 held by a Beat wearer: SwayCaster._key3_beat_hold",
     "air.slip.near_miss": "AirTalents.near_m (BendBolt._near_miss: the tune path rules:passives.air.near_m per body); its Slip speed is a spec number",
     "air.patch.second_wind": "AirTalents.patch_lock (SwayCaster._lock_time, NpcBending.lock_for: 1.25 s within 0.8 s of a dash's end, new:patch.after_dash_lock_s; else stock:patch.lock_s 1.6)",
-    "air.gust.dragon_fire": "AirTalents.through_ally_fire and fire_front (BendZone.on_bolt: his Gust through an ally's Fire Wall or Breath sends a fire front 6 m on); its class by BendLoadout.worn_class (RingRules.on_hit)"
+    "air.gust.dragon_fire": "AirTalents.through_ally_fire and fire_front (BendZone.on_bolt: his Gust through an ally's Fire Wall or Breath sends a fire front 6 m on); its class by BendLoadout.worn_class (RingRules.on_hit)",
+    "air.slot.dust": "AirTalents talent mode air_wall/dust (moves.json air_wall.talent_bend.dust): extra_modes and modes_for (SwayCaster.my_modes, Bending.other_move: 4 tapped twice), talent_spec (SwayCaster.spec_of, FormEffects.apply, BendCast.cast), talent_lock, pose_mode, label"
   },
   "live": [
     "air.ball.dense",
@@ -114,6 +116,7 @@
     "air.leap.peak_wind",
     "air.slip.near_miss",
     "air.patch.second_wind",
-    "air.gust.dragon_fire"],
+    "air.gust.dragon_fire",
+    "air.slot.dust"],
   "styles_live": ["boxing"]
 }

@@ -24,6 +24,12 @@ extends RefCounted
 ##                                      in the smoke, BREATH_HOT_S) carries the flame on FRONT_M as a fire front (a fire floor
 ##                                      wave of his: FRONT_TAG, 6%, set knock 6); team only (BendZone.on_bolt, before the same
 ##                                      team's pass); a foe's fire wall still lends his air its flame (today's rule)
+##   Dust Cloud (air.slot.dust)         a new skill, 4 tapped twice (the Wind Wall's key had one move): talent mode air_wall/dust
+##                                      (moves.json air_wall.talent_bend.dust: a 3 m dust cloud placed 2-6 m off for 2.5 s, one
+##                                      at a time, lock 0.9 s; it hides as smoke does). extra_modes / modes_for (SwayCaster.
+##                                      my_modes, Bending.other_move), talent_spec (spec_of, FormEffects.apply, BendCast.cast),
+##                                      talent_lock (SwayCaster._lock_time, NpcBending.lock_for), pose_mode (BendPoses.pick:
+##                                      the Wind Wall's pose), label
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
@@ -61,6 +67,10 @@ const BOT_BEAT_RATE := {"easy": 0.0, "normal": 0.2, "hard": 0.5}
 ## Carrying Wind: how far a loose stone the Gust takes is thrown on (m).
 const CARRY_M := 6.0
 const NEAR_MISS := "air.slip.near_miss"
+const DUST := "air.slot.dust"
+## The new skills a worn talent adds as a mode of a move on an empty double tap: id -> [move, mode] (their specs: moves.json
+## <move>.talent_bend).
+const TALENT_MODES := {"air.slot.dust": ["air_wall", "dust"]}
 const DRAGON_FIRE := "air.gust.dragon_fire"
 ## Dragon Fire: the front's tag (its whole class the node's: class:air_gust/gust+fire_front, BendLoadout.worn_class), how far it
 ## runs (m), and how long an ally's Breath stays fire in its smoke (s: the flame's own warm moment, fx_looks smoke warm_s).
@@ -335,3 +345,53 @@ static func fire_front(by: Node3D, at: Vector3, way: Vector3) -> BendBolt:
 	BendLooks.burst(g + Vector3.UP * 0.8, "fire", 22, flat + Vector3.UP * 0.3, 70.0, 5.0, 0.3)
 	BendSounds.play(&"fire_crackle", g, 0.0)
 	return BendBolt.launch(by, g + flat * 0.4, flat, spec)
+
+
+# ---------------------------------------------------------------- new skills (a worn talent's own mode of a move)
+## The modes of move `id` only `body`'s worn talents add (TALENT_MODES; [] for Classic, one meta lookup).
+static func extra_modes(body: Object, id: String) -> Array:
+	if body == null or not is_instance_valid(body) or not (body is Node) or not (body as Node).has_meta(BendLoadout.PICKS_META):
+		return []
+	var out: Array = []
+	for tid: String in TALENT_MODES:
+		var tm: Array = TALENT_MODES[tid]
+		if String(tm[0]) == id and BendLoadout.wears(body, tid):
+			out.append(String(tm[1]))
+	return out
+
+
+## Move `id`'s ring modes for `body` (SwayCaster.modes_of and his worn talents' own; a null body: the move's).
+static func modes_for(body: Object, id: String) -> Array:
+	var ex: Array = extra_modes(body, id)
+	return SwayCaster.modes_of(id) if ex.is_empty() else SwayCaster.modes_of(id) + ex
+
+
+## The spec of move `m`'s talent mode `mode` when `body` wears its talent (moves.json <m>.talent_bend; {} else).
+static func talent_spec(body: Object, m: String, mode: String) -> Dictionary:
+	if body == null or not is_instance_valid(body) or not (body is Node) or not (body as Node).has_meta(BendLoadout.PICKS_META):
+		return {}
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if not (tb is Dictionary) or not ((tb as Dictionary).get(mode) is Dictionary):
+		return {}
+	var s: Dictionary = (tb as Dictionary)[mode]
+	return s if BendLoadout.wears(body, String(s.get("talent", ""))) else {}
+
+
+## A worn talent mode's own lock (its spec's lock_s), else `base`.
+static func talent_lock(body: Object, m: String, mode: String, base: float) -> float:
+	var s := talent_spec(body, m, mode)
+	return float(s.get("lock_s", base)) if not s.is_empty() else base
+
+
+## The mode whose pose a worn talent mode is cast with (its spec's pose_as: the move's own), else `mode`.
+static func pose_mode(body: Object, m: String, mode: String) -> String:
+	var s := talent_spec(body, m, mode)
+	return String(s.get("pose_as", mode)) if not s.is_empty() else mode
+
+
+## A talent mode's name (its spec's label), else `mode` (SwayCaster.mode_label's fallback).
+static func label(m: String, mode: String) -> String:
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if tb is Dictionary and (tb as Dictionary).get(mode) is Dictionary:
+		return String(((tb as Dictionary)[mode] as Dictionary).get("label", mode))
+	return mode
