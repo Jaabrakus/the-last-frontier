@@ -301,7 +301,10 @@ static func _style_pick(st: String, m: String, mode: String, element: String) ->
 ## A worn twist's own pose for move `m` at `mode` (BendLoadout.pose_of: a node's pose change, the Lightning Pistol's
 ## frontier-pistol-lightning), filled as any pick; {} when the body wears none for it or its clip is not usable. Before the
 ## fighting style's: the twist is the move's own choice, the style its look.
-static func _node_pick(body: Node, m: String, mode: String) -> Dictionary:
+static func _node_pick(body: Node, m: String, mode: String, element := "") -> Dictionary:
+	var pa := String(BendLoadout.new_mode(body, m, mode).get("pose_as", ""))
+	if pa != "" and pa != mode:
+		return pick(m, pa, element, body)       # (a new mode a worn talent adds, cast with another mode's pose: Mire, the Ice Wall's)
 	var nm := BendLoadout.pose_of(body, m, mode)
 	if nm == "" or not usable(nm):
 		return {}
@@ -369,7 +372,7 @@ static func has_spec(m: String, mode: String) -> bool:
 static func pick(m: String, mode: String, element: String, body: Node = null) -> Dictionary:
 	if body != null:
 		mode = BendLoadout.pose_mode(body, m, mode)      # (a worn new skill's mode cast with its move's own pose; else mode)
-		var np := _node_pick(body, m, mode)
+		var np := _node_pick(body, m, mode, element)
 		if not np.is_empty():
 			return np
 		var st := style_of(body, element)

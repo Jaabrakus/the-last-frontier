@@ -65,8 +65,10 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
 	var ts := BendLoadout.talent_spec(c.player, m, mode)
+	if ts.is_empty():
+		ts = BendLoadout.new_spec(c.player, m, mode)     # (a new mode a worn talent adds through the tree: Mire)
 	if not ts.is_empty():
-		BendEffects.apply(c, m, mode, ts, t, at)         # (a worn new skill's own mode: the Sulphur Vent)
+		BendEffects.apply(c, m, mode, ts, t, at)         # (a worn new skill's own mode: the Sulphur Vent, Mire)
 		return
 	var keep := BendR3.cur
 	var bc0 := BendCaster.of(c.player)

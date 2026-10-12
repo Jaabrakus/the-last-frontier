@@ -165,8 +165,8 @@ static func tick(z: BendZone, n: Node3D) -> void:
 		rr.add_pct(n, d * RingRules.stock_num("pct_scale", 1.0), by, TICK_TAG)
 
 
-## Bolt `b` passing through gas zone `z` (BendZone.on_bolt, before its own rules): fire lights it, water washes it, wind
-## carries it; the owner's own Pebbles light it with Flint Pebbles. True when it acted (the bolt goes on).
+## Bolt `b` passing through gas zone `z` (BendZone.on_bolt, before its own rules): fire lights it, a Washout wearer's Splash or
+## Lash washes it, wind carries it; the owner's own Pebbles light it with Flint Pebbles. True when it acted (the bolt goes on).
 static func react(z: BendZone, b: BendBolt) -> bool:
 	if z.is_queued_for_deletion() or bool(z.get_meta(&"gas_reacted_%d" % b.get_instance_id(), false)):
 		return false
@@ -177,7 +177,12 @@ static func react(z: BendZone, b: BendBolt) -> bool:
 		ignite(z, by, b.global_position)
 		return true
 	if b.kind == "water":
-		wash(z)
+		# (water washes it: the Wave and the Geyser everyone's (BendEffects._wash_gas); a bolt only a Washout wearer's Splash and
+		# Lash (BendZone.washes, the tree's water.splash.washout: "the Wave and Geyser already do, for everyone"); any other
+		# water bolt flies through)
+		if not BendZone.washes(b):
+			return false
+		z.wash()
 		return true
 	if b.kind == "air":
 		z.set_meta(&"gas_reacted_%d" % b.get_instance_id(), true)

@@ -3435,7 +3435,7 @@
        "world_gate": [
         "practised:flow"
        ],
-       "effect": "Skate leaves 4 puddles (from 3) that last 7.2 s (from 6), but it travels at 10.8 m/s (from 12).",
+       "effect": "Skate leaves 4 puddles along its slide that last 7.2 s (today's Skate leaves none), but it travels at 10.8 m/s (from 12).",
        "plus": "more puddles",
        "minus": "travel -10%",
        "help": "Skate leaves more puddles; it slides a little shorter.",
@@ -3884,16 +3884,21 @@
        "help": "Patch is quicker standing in your own water.",
        "changes": [
         {
-         "path": "stock:patch.lock_s",
+         "path": "new:patch.lock_wet_s",
          "from": 1.5,
          "to": 1.25,
-         "note": "in the wearer's own puddle or at a grate"
+         "note": "in the wearer's own puddle or at a grate (Patch's ring lock, moves.json patch.ring_lock_s; was stock:patch.lock_s, which no code reads, twice: 2026-10-11)"
         },
         {
-         "path": "stock:patch.lock_s",
+         "path": "new:patch.lock_dry_s",
          "from": 1.5,
          "to": 1.6,
          "note": "anywhere else"
+        },
+        {
+         "path": "new",
+         "what": "Patch's ring lock by where the wearer stands as it begins: his own puddle or a grate, else",
+         "where": "SwayCaster._lock_time patch, BendZone.in_own_water, NpcBending.lock_for"
         }
        ],
        "visual": {
@@ -4209,7 +4214,45 @@
         {
          "path": "new",
          "what": "water_shield bend 'mire': do zone, zone mud, at place (2-6 m), radius 3, life 8, lock 0.9, one at a time",
-         "where": "moves.json (new spec), BendZone mud, SwayCaster.modes_of (per body)"
+         "where": "new:mire.spec below (not moves.json: the Classic fingerprint lists every bend spec there), BendLoadout.modes_added / new_spec, SwayCaster.modes_of (per body), BendZone mud (MIRE_META)"
+        },
+        {
+         "path": "new:mire.spec",
+         "from": null,
+         "to": {
+          "move": "water_shield",
+          "mode": "mire",
+          "label": "Mire",
+          "lock_s": 0.9,
+          "pose_as": "ice_wall",
+          "bend": {
+           "do": "zone",
+           "zone": "mud",
+           "kind": "water",
+           "at": "place",
+           "mire": true,
+           "wall_key": true,
+           "place": {
+            "min_m": 2.0,
+            "max_m": 6.0
+           },
+           "radius_m": 3.0,
+           "life_s": 8.0,
+           "ai": {
+            "role": "control",
+            "range_m": [
+             4.0,
+             14.0
+            ],
+            "cool_s": 9.0,
+            "weight": 2.5,
+            "when": [
+             "foe_floor_fire"
+            ]
+           }
+          }
+         },
+         "note": "the new mode itself, the wearer's alone (BendLoadout's new modes): its bend spec, its lock (0.9 s, the move's 0.85 for the Ice Wall), the Ice Wall's pose; life_s is his mud's (Delta's 6.5 over the set's 8); ai is a bot's hint (a wearer lays it against a foe whose kit has floor fire)"
         },
         {
          "path": "move:earth_wall.wall.rise_s",

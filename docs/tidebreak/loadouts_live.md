@@ -13,8 +13,8 @@ Built 10 October 2026 for the Character Advancement window's phases B1 and B2 (`
 | Earth: Lie Low (`earth.burrow.lie_low`) | yes | Burrow stones pass over 0.30 s to 0.36 s, travel 14 to 12.6 m/s |
 | Fire: Quick Step (`fire.step.quick`) | yes | Step lock 0.20 s to 0.16 s, forward/back/side carry 10 / 9 / 7 m/s to 9 / 8.1 / 6.3 m/s |
 | Earth: Thick Wall (`earth.wall.thick`) | built and tested, **switched off** | Earth Wall 4 hits to 5, 3.0 m wide to 2.5 m; the soak's bots never raise a wall, so the fairness gate could not see it (see the soak) |
-| Water: Thick Ice (`water.wall.thick_ice`) | built and tested, **switched off** | Ice Wall 3 hits to 4, rises in 0.7 s to 0.8 s; same reason |
-| Water: Wet Trail (`water.skate.wet_trail`) | **no, refused** | its plus is `puddles.count` 3 to 4 and `puddles.life_s` 6 to 7.2, and nothing in the game reads them: the Skate leaves no puddles today. Only its minus (travel 12 to 10.8 m/s) could apply, which would be a pure nerf, so the whole node is refused until the Skate makes puddles |
+| Water: Thick Ice (`water.wall.thick_ice`) | **switched on** since 2026-10-11 (played in a ring by `tests/ring/test_talents_water.gd`, a bot wearing it raising it; still not soaked: the soak's bots never wall) | Ice Wall 3 hits to 4, rises in 0.7 s to 0.8 s |
+| Water: Wet Trail (`water.skate.wet_trail`) | **live** since 2026-10-11 | its plus is `puddles.count` 3 to 4 and `puddles.life_s` 6 to 7.2: the Skate's puddles are made for its wearer alone (`BendEffects._wet_trail`; Classic's Skate still leaves none, the 3 is the data's dormant count); its minus travel 12 to 10.8 m/s |
 | Earth: Steady Point | no, out of the set | needs new fields (`sputter_s`, `release_s`) |
 | Capoeira, every style that is not `animated` | never | Capoeira is parked; `BendLoadout.style_ok` also checks the element and the library |
 | Every other node, the twists, techniques, new skills, sets, levers | no | phase B3 (needs gameplay code) |
@@ -128,8 +128,8 @@ The `root` key of a Boxing pick is the element's (the kick and high kick root th
 `data/bending/loadout_apply.json`:
 
 - `enabled` (master): `false` and no node number and no style applies anywhere.
-- `nodes.<id>`: `false` takes that node out; it then reads as the move's own numbers. Absent counts as on. To turn Thick Wall or Thick Ice on, set it to `true` (the test forces every node on for its own checks).
-- `live`: the ids that may apply at all (the seven resolvable ones; five are on, the two walls are `false` in `nodes`). `water.skate.wet_trail` is not in it.
+- `nodes.<id>`: `false` takes that node out; it then reads as the move's own numbers. Absent counts as on. A node id in place of `true` (2026-10-12) turns it on while that node is live (`BendLoadout.why_not` "waits for ...", the window's dot the same): Washout and Cleanse wait for `earth.set.sulphur`, the only maker of the gas they wash (the test forces every node on for its own checks).
+- `live`: the ids that may apply at all (the plan's resolvable ones and every talent built since: the tuning, class, bind and behaviour talents).
 - `styles_live`: `["boxing"]`. Empty and no style plays.
 - `classic_style`: see "How a loadout becomes live" step 4.
 
@@ -156,7 +156,7 @@ The `root` key of a Boxing pick is the element's (the kick and high kick root th
 What this says:
 
 - **Live and passing (5):** Keen Edge, Dense Ball (after the extension), Full Sail, Lie Low, Quick Step; the air set and the earth set together are within the gate too. None wins or loses clearly: no node is too strong or a trap in bot mirrors. Lie Low sits on the 0.60 limit, but the Burrow is cast about 4 times a game and the interval is wide.
-- **Switched off (2): Thick Wall and Thick Ice.** The bots never raise an Earth Wall or an Ice Wall in these matches (0 casts in 30 earth and 60 water games; they only answer a held stone with one), so the games they play are Classic's: the water baseline with nothing worn gave exactly the node's games (9 of 30, 78/67 lives, 3605/3755 casts), and the earth baseline gave 18 of 30 against the node's 17. The numbers apply and are tested end to end (the test builds the walls); but the gate cannot see them, so their 0.567 and 0.383 are the instrument's noise and not evidence either way. Thick Ice failed the gate at 60 games by that noise; Thick Wall passed it by it. Unverified is treated as not live: both are `false` in `nodes` (still in `live`, so `BendLoadout.why_not` says "switched off"). Flip them to `true` once a duel, a scripted match or a bot that walls has measured them.
+- **Switched off (2) by this soak: Thick Wall and Thick Ice** (both switched on again on 2026-10-11 after their ring tests, still unsoaked). The bots never raise an Earth Wall or an Ice Wall in these matches (0 casts in 30 earth and 60 water games; they only answer a held stone with one), so the games they play are Classic's: the water baseline with nothing worn gave exactly the node's games (9 of 30, 78/67 lives, 3605/3755 casts), and the earth baseline gave 18 of 30 against the node's 17. The numbers apply and are tested end to end (the test builds the walls); but the gate cannot see them, so their 0.567 and 0.383 are the instrument's noise and not evidence either way. Thick Ice failed the gate at 60 games by that noise; Thick Wall passed it by it. Unverified is treated as not live: both are `false` in `nodes` (still in `live`, so `BendLoadout.why_not` says "switched off"). Flip them to `true` once a duel, a scripted match or a bot that walls has measured them.
 - **How strict the gate is.** A fair node falls outside 0.40-0.60 at 30 games about 27% of the time and outside 0.45-0.55 at 60 games about 45% of the time (standard deviation 0.09 and 0.065), and the unworn baselines themselves read 0.600 and 0.300. Read the table as "nothing clearly wrong", not as a measurement of strength. The same configurations in a first pass (the foe kept between games, before the harness fix below) read 0.500 / 0.500 / 0.367 / 0.400 (air: Keen Edge, Dense Ball, Full Sail, the three), 0.600 / 0.633 / 0.433 (earth: Lie Low, Thick Wall, both), 0.600 (Thick Ice) and 0.500 (Quick Step).
 - **Anomalies.** No bot crashed or stalled in any of the 330 games of the final pass (the longest game was 488 s of game time; each takes about 11 s of wall time headless, more when the machine is busy). No side was ever without casts, no self ring-out, and the loadout was found on the wearer at every check (59 of 59 per row, never missing, never on the other side). Three harness findings: (1) the first pass kept the same foe between the games of a run; its stale knock credit and old mind produced `NpcRingMind._on_landed` errors on a freed bot (29 in the Quick Step row only), so the soak now drops the foe between games (no errors since); (2) one Full Sail row was void: another task's menu script had a parse error while the run started (106 SCRIPT ERRORs, every ring script failed to compile), and it was re-run whole; (3) the simulation is not bit-for-bit repeatable for earth (stones are physics bodies), so the same seed does not replay an earth game exactly; water without a node cast replays exactly.
 
@@ -166,7 +166,7 @@ What this says:
 1. Classic plays nothing: a class picked with Classic worn is not played (`classic_style` false). The plan's text reads the class from `AdvancementStore.style_of`, which includes that case; the brief's rule that Classic plays exactly as today won. One flag to change it.
 2. A hit's cost stays the move's data lock (above). A talent that shortens the wearer's lock does not shorten what a blow costs the victim, and one that lengthens it (Full Sail) does not lengthen it.
 3. Quick Step's lock change is scoped to the Step mode (`move:footwork.lock_s` names the move; the node is the Step's).
-4. Skate's Wet Trail is refused (its puddles are made by nothing), the two walls are switched off (unexercised), see above.
+4. (2026-10-10) Skate's Wet Trail was refused (its puddles were made by nothing), the two walls switched off (unexercised), see above. All three are on since 2026-10-11 (the water and earth talents passes).
 5. Boxing is timed as the element's pick at pick time (`BendPoses._timed_as`) rather than by writing retimed numbers into `style_poses.json`: it cannot drift from Classic if the element's clips change, and no clip or library was edited. Where Boxing has no pose, or the element has none, the element's clip plays (the tier clip when the element has none).
 6. A script run does not read the save (see "How a loadout becomes live").
 7. Files touched outside the list, each by a few lines and only where a number or a clip is read: `scripts/sway/sway_pose.gd` (the body into the pick and the stance, `end_s` and the warp), `scripts/sway/sway_caster.gd` (`_lock_time`, `guard_hold_clip`), `scripts/sway/form_effects.gd` (`earth_wall`, `tree_wall`), `scripts/npc/npc_bending.gd` (`lock_for` takes the body, the bot's `_wall`), `data/bending/style_poses.json` (its doc line only). Planning estimates in `npc_ring_mind.gd` and `ring_practice.gd` were left alone.
@@ -361,3 +361,106 @@ Branch `tb/talents-earth-fix` (from `tb/talents-earth-p2`). What changed, all fo
 multiplied, a set twist's final) and refuses the tree's `excludes` (earth p2): pairs another lane's test expected refused will
 stack. `class_beat` became `class_when` (a flag layer over it). `beat_paid` takes the cast's move and mode; called with the
 body alone it still answers "pays on any held cast".
+
+## Water's talents (11 October 2026, the talents pass, lane water)
+
+The owner, 2026-10-11: "we need to make sure all the talents work and they work in game right". Each is worn by one fighter alone,
+read where the game does the thing (BendLoadout.wears, its own numbers through tune or new_class), and played in a real 1v1 %
+ring by `tests/ring/test_talents_water.gd` worn, not worn and on a bot. Classic never reaches any of it (the golden fingerprint
+of `test_loadout_review.gd` still passes).
+
+| Talent | What the wearer gets | Where |
+| --- | --- | --- |
+| Thick Ice | switched on: his Ice Wall takes 4 hits, rises in 0.8 s (a wall raised and shot with ice in the test) | `BendEffects._wall` (as before) |
+| Washout | (waits for the Sulphur set) his Splash and Lash wash out a gas cloud they fly through and fly on; Splash 3.5% | `BendZone.on_bolt` gas, `BendZone.washes`, `BendZone.wash` |
+| Splashdown | where his Lash stops (on a body, a raised wall, a zone's wall: a Fire Wall it puts out, a Water Wall that drinks it, the deck) a 1.2 m puddle of his for 6 s, a Geyser source; met head-on in the air by fire, none; Lash 8% | `BendBolt.end` (`zone_wall`, set by `BendZone.on_bolt`) |
+| Steamcraft | steam his water makes with fire is his, hangs 2.5 s and drifts 3 m toward his aim; Lash 8% | `BendBolt.meet`, `BendBolt.steam`, `BendZone` steam drift |
+| Cleanse | (waits for the Sulphur set) while his Turn stands, its perfect part and its late part alike (the node's "perfect or late"; its change: "a standing Turn ends gas zones within its radius"), a cloud with gas within 2.2 m of him is washed out (a cloud is one zone: one whose gas begins past 2.2 m stays; not an ally's); Turn lock 0.24 s | `BendZone._every` redirect |
+| Whirl Turn | E held through a perfect Turn: the water circles him up to 0.6 s, let go it leaves along his aim; late 60% | `BendZone._guard_bolt`, `BendBolt._swing`, `BendZone.whirl_held` |
+| Eddy | his Lash or Spear begun within 1.2 s of a perfect Turn starts 40% full; his Turn's beat 0.25 s | `BendZone.report`, `eddy_fill`, `SwayCaster._try_begin`, `NpcBending.begin` |
+| Pooling Wave | his Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends; Wave base 6.8 (grown 7.6) | `BendEffects._wave_talents` |
+| Ride the Wave | his Wave let go on the Beat (held, let go within 0.2 s of the click) carries him 3 m on behind the water, deck only, the Beat's flash on his own hands; a hit during the ride ends it (knocked as anyone); Wave lock 0.65 s | `SwayCaster._cast` (BendR3.release beat), `BendEffects._wave_talents`, `BendMotion.ride` / `_ride_step` |
+| Wet Trail | his Skate leaves 4 puddles of his for 7.2 s spread along its slide (one each 0.9 m slid, the last no later than where it stops) and travels 10.8 m/s | `BendEffects.dash`, `_wet_trail` |
+| Wellspring | Patch's ring lock 1.25 s in his own puddle or at a grate, 1.6 s anywhere else (as it begins) | `SwayCaster._lock_time`, `BendZone.in_own_water`, `NpcBending.lock_for` |
+| Mud (set) | his puddles (Downpour, Splashdown, Pooling Wave, Wet Trail, Mudslide) are mud pools of his for 8 s, still sources, 4 at once: a floor wave of fire dies in one, a fire wall over one burns 2 s and dries it in 1 s, a magma seam over one is quenched, a rolling stone stops; nobody is slowed; Splash 25.2, Lash 30.6 m/s | `BendZone.make`, `_mud_every`, `on_bolt` mud |
+| Mud Lash | (with the set) Lash 28 m/s, adds 10%, base 5.3; fire it meets is smothered, no steam; clods off it | `BendBolt.meet`, `BendBolt.launch` |
+| Mudslide | (with the set) Wave base 8.6 (grown 9.7), reach 7.5 m (10); a 2 m mud pool of his where it ends | `BendEffects._wave_talents` |
+| Mud Mound | (with the set) the Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose (a FormRaised of mud marked `bend_mound_by`, never `bend_by`: nobody's wall for Mend, a bot, Brace, the lessons or max_walls; two at once; never a wall where any raised wall would be one: a bot's wall on its line, a Shove's chunk, `BendEffects.is_mound`): floor fire stops at it, anyone can stand on it; Geyser base 9.3 | `BendEffects.spout`, `_mud_mound` |
+| Delta | (with the set) his locks fill x1.15 standing in his own mud (a bot's tick too); his mud pools last 6.5 s | `SwayCaster.passive_fill`, `BendZone.in_own_mud`, `home_fill`, `NpcBending.tick` |
+| Mire | (with the set) a new skill on 4 tapped twice (the strip and the wheel show it): lock 0.9 s (the Ice Wall's 0.85), a 3 m mud pool of his for 8 s (Delta's 6.5) placed where he aims, 2-6 m like a wall, cast with the Ice Wall's pose, on the deck only; one of his at a time (a second dries the first), never one of the set's four pools; what his mud does (floor fire dies in it, his Geyser's source, Wellspring's and Delta's water); his Ice Wall rises in 0.8 s | `BendLoadout.modes_added` / `new_spec`, `SwayCaster.modes_of` / `spec_of`, `Bending.other_move`, `FormEffects.apply`, `BendCast.cast`, `BendEffects.zone`, `BendZone.make` (`MIRE_META`), `BendPoses.pick` |
+
+Bots (never worn in a normal match): a bot wearing Whirl Turn holds the swing while the foe it aims at stands guarding and sends
+it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; a bot wearing Ride the Wave lets its Wave go on the Beat
+when its foe is further than 4.5 m and the deck has room ahead (NpcBending._on_beat); a bot's Patch lock takes Wellspring's share;
+a bot wearing Mire has it among its options (built again when what it wears changes) and lays one 4-14 m from a foe whose kit has
+floor fire (fire's Kick), never against another, once in 9 s at most (its spec's own `ai` hint, `foe_floor_fire`); the rest are its
+casts' own.
+
+The Beat (skill_tree.json beat, the owner's yes): SwayCaster marks a cast held and let go within `BendLoadout.beat_s()` (the
+tree's 0.2 s) of its click (never a click, a guard, key 3, Patch or a cast that goes by itself) as `beat` in `BendR3.release`
+while it lands (its hits' info too), and only for a wearer of a technique it pays (`BendLoadout.beat_paid`: Ride the Wave), so a
+Classic cast never carries it. Its cue is the tree's: a click and a brief flash on his own hands (`BendLooks.beat_flash`, the same
+as earth's lane) where it pays (the ride), with Ride's foam at his feet. A bot wearing it takes the Beat at its difficulty's
+`beat_rate` (bend_ai.json presets: easy 0, normal 0.2, hard 0.5, the tree's beat.bots). Online the beat is the caster's machine's
+(the ride is his own motion).
+
+Data fixed: Wellspring's two changes both named `stock:patch.lock_s` (a number no code reads, and one path twice can't be two
+numbers): they are now `new:patch.lock_wet_s` (1.5 to 1.25) and `new:patch.lock_dry_s` (1.5 to 1.6), Patch's ring lock
+(moves.json patch.ring_lock_s), with a `new` entry for the where-he-stands rule. Wet Trail is no longer refused: the Skate's
+puddles are made for its wearer only (Classic's Skate still leaves none).
+
+Washout and Cleanse act on gas, the Sulphur set's matter (earth's skill set, built in earth's lane, tb/talents-earth-p2): they are
+built against its interface, a `BendZone` of kind `gas` (round, `ROUND_NEW`). Their switch in loadout_apply.json names
+`earth.set.sulphur` (2026-10-12): with no Sulphur set live a match never holds gas, so they are refused whole (no trade with
+nothing to wash); once it is live they are too. Gas then comes only from a Sulphur wearer: online, against a human who wears it
+(bots wear no loadout). The test switches them on and makes stand-in clouds. The Washed Ground synergy's base (the tree: "a Wave
+or a Geyser washes out the gas it passes", for everyone): the Geyser here (`BendEffects._wash_gas`), the Wave's cone in earth's
+lane (`BendGas.cone`). **Merge note:** earth's `BendGas.react` washes gas with any water bolt, everyone's Splash and Lash: that
+makes Washout's plus everyone's. Per the tree its water branch should wash only when `BendZone.washes(b)` (Washout's wearer's
+Splash and Lash), else let the bolt fly on through. Cleanse's "draws on the dormant water_redirect cleanse" is the tree's source
+note (each twist names the dormant mode it draws on); what is built is the gas wash its effect states. The dormant spec's own
+effect (BendEffects "cleanse": a root and a slow cleared on the caster) is not cast: in the % ring a root is a bind, and lifting
+one is not in the node.
+
+BendLoadout, for these: picks worn together follow the tree's stacking (skill_tree.json same_answer_gate.stacking; 2026-10-12, the
+same `_fold_n` / `_stack` / `_excluded` as earth's lane): two that change one number the same way from the same base multiply their
+ratios (Splashdown and Steamcraft both worn: the Lash adds 9 x 8/9 x 8/9 = 7.1%, both trades paid), a set twist's number is final
+(Mud Lash's 28 m/s over the Mud set's 30.6, Mire's 0.8 s rise beside Thick Ice's), the other way is refused (Drench's 6.5 and
+Mudslide's 8.6 Wave base: the later pick applies nothing), and the tree's excludes refuse a pick either way. (The first water pass
+had a node that requires others overwrite every number already worn, and an equal number set twice pass as one: both gone.) A
+`set:<set>.<key>` change of a behaviour talent is read from skill_tree.json skill_sets (Delta's mud life; `set_rule(set, key)` as
+earth's); a behaviour talent may set spec keys no Classic code reads (the Skate's puddles).
+
+The Mud set's other counters are built against the other lanes' interfaces: a magma seam is a `BendZone` of kind `seam` (fire's
+Magma set): over mud it ends "quenched", no stone (fire's lane, tb/talents-fire-p2, does the same from the seam's side,
+`FireTalents.seam_water`: after the merge both act on one seam with one outcome, one of them redundant). Live Water's grounding:
+Live Water is fire's Forked Lightning's (`FireTalents.struck`, fire's lane), whose fork reaches only zones of kind puddle and steam
+and water bolts; a mud pool is kind mud, so it is never made live: grounded by construction once merged, nothing to build here (no
+branch has Live Water before that merge). Rolling stones: a FormStone rolling into his mud stops (the open world's; in the % ring a hurled
+stone shatters where it lands), and so does a stone bolt rolling along the deck (a low stone bolt: earth's Avalanche, built in its
+lane; `BendZone.on_bolt` mud, 2026-10-12); Classic has neither in a ring. What the set does in a ring match today: his puddles are mud pools for 8 s
+(the Downpour's, Splashdown's, Pooling Wave's, Mudslide's, Mire's, Wet Trail's: Classic's Skate leaves none, so the text's "from
+Skate" holds only with Wet Trail worn), a Kick's floor fire dies in one, a Fire Wall over one burns 2 s and dries it, 4 pools at
+most, Splash and Lash 10% slower.
+
+The fix pass (2026-10-12, tb/talents-water-fix): Ride the Wave no longer eats a knock (the ride kept the body's velocity as its own
+every frame, so a hit's launch was taken out twice: a sideways 8 m/s hit 3 frames in moved him 0.02 m; now a knock ends the ride
+and the ride keeps the knock's carry in his velocity, `BendMotion._ride_step`); the Beat flag and cue as above; Washout and Cleanse
+wait for the Sulphur set; the Geyser washes gas; Wet Trail's puddles spread along the slide; the Mud Mound is nobody's wall; the
+tree's stacking replaces the first pass's fold; the test checks each launch against the formula with the node's own numbers, reads
+the Cleanse and Wellspring locks from the player's real E and key 5, plays Mudslide grown, hits a rider and wears picks together.
+Second fix pass (same branch): Splashdown's puddle where a zone's wall stops the Lash (a Fire Wall it puts out, a Water Wall), none
+where it meets fire in the air; Cleanse's 2.2 m measured from him (a cloud with gas within it), checked against a cloud just inside
+and one just past; the Mud Mound is no wall to a bot's wall-on-line reader or a Shove (`BendEffects.is_mound`), and its floor-fire
+check now stands both fighters on the deck either side of it with a no-mound control (the Kick ends at the mound, +0%; with it gone
+the same Kick hits, about +13%) and a real raised wall in its place as the readers' control.
+
+Mire (water.mud.mire) is a NEW MODE a worn talent adds (the tree's new skills on empty double taps, the owner's yes): its spec
+cannot go into moves.json (the Classic fingerprint lists every bend spec), so it is the node's own change `new:mire.spec`
+{move, mode, label, lock_s, pose_as, bend}. BendLoadout reads it for the wearer alone: `modes_added(body, m)` (SwayCaster.modes_of
+and Bending.other_move take an optional body: the keys, the strip, the wheel and a bot's options see the mode; with no body or
+nothing worn the same array as before), `new_spec(body, m, mode)` where a cast reads its spec (SwayCaster.spec_of and needs_ground,
+FormEffects.apply, BendCast.cast, NpcBending.spec_of), its lock_s in the lock part (SwayCaster._lock_time and NpcBending.lock_for
+as any node's lock), pose_as (BendPoses.pick: the Ice Wall's clip) and its label (SwayCaster.mode_label). Not worn, 4 tapped twice
+is the Ice Wall as ever. Its "Skate" source has nothing to act on in a ring match: no Skate reads a water source there. Online:
+a remote player's loadout is not on his puppet (the older limit), so a joiner's Mire is not made on the host yet.

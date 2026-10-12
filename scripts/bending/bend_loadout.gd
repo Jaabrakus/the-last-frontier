@@ -35,6 +35,8 @@ extends RefCounted
 ##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node). Picks worn together follow
 ##       the tree (2026-10-11, earth p2): its excludes refuse a pick either way; two that change one number the same way from
 ##       the same base multiply their ratios, a set twist's number final (overlay_for: _fold_n, _stack); the other way is refused.
+##       A node whose switch (loadout_apply.json nodes) names another node is live only while that one is: a behaviour talent
+##       that only acts on matter that node makes (Washout's and Cleanse's gas, earth's Sulphur set's), else its trade alone.
 ## Classic (nothing worn) is no meta at all: every reader asks `overlay_of(body)` first and gets {} (the same dictionaries it
 ## read before), so a body that wears nothing reads exactly today's numbers. A hit's cost (the `_lock_s` a blow carries, the
 ## victim's lock set-back) stays the move's own data lock: a talent changes its wearer's lock, never what a blow costs whom it hits.
@@ -44,6 +46,8 @@ extends RefCounted
 ##   overlay_of(body), picks_of(body), style_meta(body), clear(body)
 ##   spec(body, m, mode, spec), lock(body, m, mode, base), wall_numbers(body, kind, base, matter), hit_class(body, cls)
 ##                                 the readers' seams
+##   modes_added(body, m), new_mode(body, m, mode), new_spec(body, m, mode), new_mode_label(m, mode)
+##                                 a new mode a worn behaviour talent adds (its "new:<what>.spec": Mire on water's 4)
 ##   enabled(), live_ids(), live_styles(), why_not(id), resolve(id), style_ok(style, element)
 ## Tests: `config_override` is merged over the file, `read_store_in_scripts` lets a script run read the store.
 
@@ -109,6 +113,7 @@ static var _resolved: Dictionary = {}            ## id -> resolve()
 static var _lib_exists: Dictionary = {}          ## library path -> whether the file is there (asked once)
 static var _ok_memo: Dictionary = {}             ## style -> element -> style_ok, made under _ok_memo_cfg
 static var _ok_memo_cfg: Variant = null          ## the config_override the memo was made under
+static var _new_labels: Dictionary = {}          ## "move/mode" -> a new mode's label (new_mode_label)
 
 
 # ---------------------------------------------------------------- the switches
@@ -140,6 +145,7 @@ static func reload_data() -> void:
 	_lib_exists = {}
 	_ok_memo = {}
 	_ok_memo_cfg = null
+	_new_labels = {}
 
 
 ## The master switch (data/bending/loadout_apply.json "enabled"): off, no style and no number applies.
@@ -159,7 +165,14 @@ static func _why_not(id: String, depth: int) -> String:
 		return "the master switch is off"
 	if not id in (c.get("live", []) as Array):
 		return "not in the live list"
-	if not bool((c.get("nodes", {}) as Dictionary).get(id, true)):
+	var sw: Variant = (c.get("nodes", {}) as Dictionary).get(id, true)
+	if sw is String:
+		# (a node's switch that names another node: on while that node is live. A behaviour talent that only acts on matter
+		# that node makes (Washout's and Cleanse's gas: earth's Sulphur set) would be its trade alone in a match without it)
+		var ws := _why_not(String(sw), depth + 1) if depth < 4 else "too deep"
+		if ws != "":
+			return "waits for %s (%s)" % [String(sw), ws]
+	elif not bool(sw):
 		return "switched off"
 	var r := resolve(id)
 	if not bool(r.ok):
@@ -356,13 +369,35 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		return _take_class(out, n, path, rest, from, to)
 	if path in TUNE_PATHS:
 		return _take_tune(out, path, from, to)
+	if kind == "set":
+		# (set:<set>.<key>: a skill set's own rule, skill_tree.json skill_sets.<set>.zone, read by a behaviour talent's code through
+		# tune(body, path, base): Delta's shorter mud pools)
+		if not String(n.get("id", "")) in behaviour():
+			return "%s: new behaviour not built" % path
+		var cur_s: Variant = set_rule(rest.get_slice(".", 0), rest.get_slice(".", 1))
+		if cur_s == null or not _same_shape_num(cur_s, from) or not _same_shape_num(from, to, true):
+			return "%s: the data holds %s, the node says from %s" % [path, str(cur_s), str(from)]
+		return _put_n(out, "tune", [path], to, from)
 	if kind == "new" or path == "new":
 		# (a behaviour talent's own code: only once it is built, its id in `behaviour`)
 		if not String(n.get("id", "")) in behaviour():
 			return "%s: new behaviour not built" % path
 		if path == "new" or to == null:
 			return ""
-		return _put(out.tune as Dictionary, [path], to)
+		if to is Dictionary and (to as Dictionary).get("bend") is Dictionary:
+			# (a new mode the node adds to a move, its spec and its lock: modes_added)
+			var nm := to as Dictionary
+			var nmv := String(nm.get("move", ""))
+			var nmd := String(nm.get("mode", ""))
+			if nmv == "" or nmd == "" or SwayMoves.move(nmv).is_empty():
+				return "%s: a new mode of no move" % path
+			if (SwayMoves.move(nmv).get("bend", {}) as Dictionary).has(nmd) or nmd in (SwayMoves.move(nmv).get("modes", []) as Array):
+				return "%s: %s/%s is a mode the move has" % [path, nmv, nmd]
+			if nm.get("lock_s") is float or nm.get("lock_s") is int:
+				var why_l := _put(out.lock as Dictionary, ["%s/%s" % [nmv, nmd]], float(nm.lock_s))
+				if why_l != "":
+					return why_l
+		return _put_n(out, "tune", [path], to, from)
 	# (a spec key Classic does not have, from none: NEW_SPEC_KEYS only, which the code reads as off when absent)
 	var new_key := kind == "spec" and from == null and path.get_slice(".", path.get_slice_count(".") - 1) in NEW_SPEC_KEYS
 	if not (to is float or to is int) or not (new_key or from is float or from is int):
@@ -385,7 +420,7 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 				return "%s: the data holds %s, the node says from none" % [path, str(cur)]
 		elif cur == null or not is_equal_approx(float(cur), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-		if not _consumed(mv, mode, sub):
+		if not _consumed(mv, mode, sub) and not String(n.get("id", "")) in behaviour():
 			return "%s: no code reads this number" % path
 		return _put_n(out, "spec", ["%s/%s" % [mv, mode]] + sub, to, from)
 	if kind != "move":
@@ -576,8 +611,8 @@ static func _counts_with(n: Dictionary, tag: String, to: Variant) -> bool:
 
 
 ## Whether game code reads spec key path `sub` of move `mv` at `mode` for the wearer's own cast (BendEffects.apply merges the
-## overlay in before anything reads the spec). The Skate's puddles are in the data but nothing makes them: the node that sets
-## them is refused (its other change alone would be a pure slowdown).
+## overlay in before anything reads the spec). The Skate's puddles are in the data but Classic's Skate makes none: only a built
+## behaviour talent's own code reads them (Wet Trail's, BendEffects._wet_trail: _take lets a node in `behaviour` through).
 static func _consumed(_mv: String, _mode: String, sub: Array) -> bool:
 	return String(sub[0]) != "puddles"
 
@@ -940,6 +975,61 @@ static func wears(body: Object, id: String) -> bool:
 	return _wears(body) and id in picks_of(body)
 
 
+## A NEW MODE (a new skill on an empty double tap, the tree's answer yes: Mire on water's 4, water_shield's "mire"): a behaviour
+## talent's change "new:<what>.spec" holds {move, mode, label, lock_s, pose_as, bend} (never moves.json: the Classic fingerprint
+## lists every bend spec there). For its wearer alone: modes_added (SwayCaster.modes_of with a body: the keys, the strip, the
+## wheel, a bot's options), new_spec (the cast: SwayCaster.spec_of, FormEffects.apply, BendCast.cast, NpcBending.spec_of), its
+## lock_s in the lock part (lock()), pose_as the mode whose pose it is cast with (BendPoses.pick), label its name
+## (new_mode_label: SwayCaster.mode_label). Classic (nothing worn): none of it, no copy made.
+static func modes_added(body: Object, m: String) -> Array:
+	var out: Array = []
+	if not _wears(body):
+		return out
+	for e: Dictionary in _new_modes(body):
+		if String(e.get("move", "")) == m and not String(e.get("mode", "")) in out:
+			out.append(String(e.get("mode", "")))
+	return out
+
+
+## The new mode `mode` of move `m` that `body` wears ({move, mode, label, lock_s, pose_as, bend}; {} none).
+static func new_mode(body: Object, m: String, mode: String) -> Dictionary:
+	if not _wears(body) or mode == "":
+		return {}
+	for e: Dictionary in _new_modes(body):
+		if String(e.get("move", "")) == m and String(e.get("mode", "")) == mode:
+			return e
+	return {}
+
+
+## The bend spec of the new mode `mode` of move `m` that `body` wears ({} none: Classic, or a mode moves.json has).
+static func new_spec(body: Object, m: String, mode: String) -> Dictionary:
+	var b: Variant = new_mode(body, m, mode).get("bend")
+	return b as Dictionary if b is Dictionary else {}
+
+
+static func _new_modes(body: Object) -> Array:
+	var out: Array = []
+	var t: Variant = overlay_of(body).get("tune")
+	if t is Dictionary:
+		for k: String in t:
+			if k.begins_with("new:") and k.ends_with(".spec") and t[k] is Dictionary and (t[k] as Dictionary).get("bend") is Dictionary:
+				out.append(t[k])
+	return out
+
+
+## The name of the new mode `mode` of move `m` a built behaviour talent adds ("" none): read once from the tree.
+static func new_mode_label(m: String, mode: String) -> String:
+	if _new_labels.is_empty():
+		_new_labels["_read"] = ""
+		for id: String in behaviour():
+			for c: Variant in (_node(id).get("changes", []) as Array):
+				var to: Variant = (c as Dictionary).get("to") if c is Dictionary else null
+				if to is Dictionary and (to as Dictionary).get("bend") is Dictionary:
+					var td := to as Dictionary
+					_new_labels["%s/%s" % [String(td.get("move", "")), String(td.get("mode", ""))]] = String(td.get("label", ""))
+	return String(_new_labels.get("%s/%s" % [m, mode], ""))
+
+
 ## A whole class a worn behaviour talent adds ("<tag>+<variant>" as its change names it; {} none).
 static func new_class(body: Object, key: String) -> Dictionary:
 	if not _wears(body):
@@ -1020,10 +1110,14 @@ static func talent_modes(body: Object, id: String) -> Array:
 
 
 ## Move `id`'s ring modes for `body`: `base` (null: SwayCaster.modes_of(id), the move's) and the modes his worn talents add after
-## them (`base` itself, never a copy, when he adds none: Classic reads the very array it read before).
+## them: a moves.json talent_bend mode (talent_modes: the Sulphur Vent) and a mode the tree's node itself adds (modes_added:
+## Mire) (`base` itself, never a copy, when he adds none: Classic reads the very array it read before).
 static func modes_for(body: Object, id: String, base: Variant = null) -> Array:
 	var ms: Array = base as Array if base is Array else SwayCaster.modes_of(id)
 	var ex := talent_modes(body, id)
+	for md: String in modes_added(body, id):
+		if not md in ex and not md in ms:
+			ex.append(md)
 	return ms if ex.is_empty() else ms + ex
 
 
@@ -1034,8 +1128,9 @@ static func talent_pairs(body: Object, el: String) -> Array:
 		return out
 	for key: Variant in Bending.keys(el):
 		for id: Variant in (key as Array):
-			for md: String in talent_modes(body, String(id)):
-				out.append([String(id), md])
+			for md: String in talent_modes(body, String(id)) + modes_added(body, String(id)):
+				if not [String(id), md] in out:
+					out.append([String(id), md])
 	return out
 
 

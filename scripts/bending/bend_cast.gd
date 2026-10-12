@@ -42,8 +42,10 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 		BendEffects.apply(bc, id, mode, bd[mode], t, at)
 		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
 	var ts := BendLoadout.talent_spec(bc.body, id, mode)
+	if ts.is_empty():
+		ts = BendLoadout.new_spec(bc.body, id, mode)     # (a new mode a worn talent adds through the tree: Mire)
 	if not ts.is_empty():
-		BendEffects.apply(bc, id, mode, ts, t, at)       # (a worn new skill's own mode: the Sulphur Vent; a bot's, a test's)
+		BendEffects.apply(bc, id, mode, ts, t, at)       # (a worn new skill's own mode: the Sulphur Vent, Mire; a bot's, a test's)
 		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
 	var made: Object = null
 	var keep := BendR3.cur

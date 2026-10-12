@@ -154,15 +154,14 @@ func _run() -> void:
 	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
 	_expect("earth.wall.thick" in live and BendLoadout.why_not("earth.wall.thick") == "",
 			"Thick Wall is on (2026-10-11: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down) (%s)" % BendLoadout.why_not("earth.wall.thick"))
-	_expect(not "water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "switched off",
-			"the Ice Wall the soak could not exercise is switched off in the json (%s)" % BendLoadout.why_not("water.wall.thick_ice"))
+	_expect("water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "",
+			"Thick Ice is switched on (2026-10-11: tests/ring/test_talents_water.gd raises the wall and shoots it) (%s)" % BendLoadout.why_not("water.wall.thick_ice"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
 	var all_on := {}
 	for id1: String in _live_all():
 		all_on[id1] = true
-	_expect(not "water.skate.wet_trail" in live and not bool(BendLoadout.resolve("water.skate.wet_trail").ok)
-			and String(BendLoadout.resolve("water.skate.wet_trail").why).contains("puddles"),
-			"Skate's Wet Trail is refused: its puddles are in the data and nothing makes them (%s)" % BendLoadout.resolve("water.skate.wet_trail").why)
+	_expect("water.skate.wet_trail" in live and bool(BendLoadout.resolve("water.skate.wet_trail").ok),
+			"Skate's Wet Trail is live: the Skate's puddles are made for its wearer alone (2026-10-11, BendEffects._wet_trail) (%s)" % BendLoadout.why_not("water.skate.wet_trail"))
 	_expect("earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") == "",
 			"Earth's Steady Point is live (2026-10-11: its release and sputter read per wearer, its own Spike lock)")
 	_expect(BendLoadout.live_styles() == ["boxing"], "the live styles are Boxing only (%s)" % [BendLoadout.live_styles()])
@@ -193,10 +192,11 @@ func _run() -> void:
 		var el := id.get_slice(".", 0)
 		var w := _body()
 		var bot := _body()
-		# (a node that requires another, a skill set's twist, is worn with it: alone it applies nothing)
-		var with: Array = ((n.get("requires", []) as Array) if n.get("requires") is Array else []) + [id]
-		var ov := BendLoadout.wear(w, with, "", el)
-		_expect((ov.ids as Array) == with and BendLoadout.picks_of(w) == with and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
+		# (a node worn with the nodes it requires, as a loadout must: a Mud set twist with the Mud set; its own numbers over theirs)
+		var picks: Array = [id] + BendLoadout._requires(id)
+		var ov := BendLoadout.wear(w, picks, "", el)
+		_expect((ov.ids as Array).size() == picks.size() and (ov.ids as Array).has(id) and BendLoadout.picks_of(w).size() == picks.size()
+				and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
 			var rest := path.get_slice(":", 1)
@@ -372,12 +372,21 @@ func _run() -> void:
 			"two nodes that change one number the same way stack, their ratios multiplied (%.2f; %s)" % [float(BendLoadout.spec(wx, "air_blast", "slice", base_slice).mps), ovs.refused])
 	BendLoadout.config_override = {"nodes": all_on}
 	BendLoadout.reload_data()
-	# a node that requires one that is not live (Mud Lash: the Mud set makes mud, not numbers) is not live itself, and a pick worn
-	# without the node it requires applies nothing
-	BendLoadout.config_override = {"live": LIVE + ["water.mud.lash", "water.set.mud"], "nodes": all_on}
-	_expect(bool(BendLoadout.resolve("water.mud.lash").ok) and not bool(BendLoadout.resolve("water.set.mud").ok)
+	# a node that requires one that is not live (Mud Lash with the Mud set switched off; since 2026-10-11 the set is built: its mud
+	# is BendZone's) is not live itself, and a pick worn without the node it requires applies nothing
+	var mud_off := all_on.duplicate()
+	mud_off["water.set.mud"] = false
+	BendLoadout.config_override = {"live": _live_all() + ["water.mud.lash", "water.set.mud"], "nodes": mud_off}
+	_expect(bool(BendLoadout.resolve("water.mud.lash").ok) and bool(BendLoadout.resolve("water.set.mud").ok)
 			and BendLoadout.why_not("water.mud.lash").begins_with("needs water.set.mud"),
-			"Mud Lash's numbers resolve, but it needs the Mud set, which is not live (%s)" % BendLoadout.why_not("water.mud.lash"))
+			"Mud Lash's numbers resolve, but it needs the Mud set, which is switched off (%s)" % BendLoadout.why_not("water.mud.lash"))
+	var ml := BendLoadout.overlay_for(["water.mud.lash"], "water")
+	_expect((ml.ids as Array).is_empty(), "Mud Lash worn without the Mud set applies nothing (%s)" % [ml.refused])
+	BendLoadout.config_override = {"nodes": all_on}
+	var mud_both := BendLoadout.overlay_for(["water.mud.lash", "water.set.mud"], "water")
+	_expect((mud_both.ids as Array).size() == 2 and _near(((mud_both.spec as Dictionary).get("water_whip/whip", {}) as Dictionary).get("mps"), 28.0)
+			and _near(((mud_both.spec as Dictionary).get("water_jet/splash", {}) as Dictionary).get("mps"), 25.2),
+			"Mud Lash worn with the Mud set (in either order): its 28 m/s over the set's heavier water, the Splash the set's 25.2 (%s)" % [mud_both.spec])
 	BendLoadout._node("air.slice.keen")
 	t = BendLoadout._tree
 	t["air.test_needs"] = {"id": "air.test_needs", "kind": "enhance", "ring_legal": true, "mode": "slice", "requires": ["air.ball.dense"],

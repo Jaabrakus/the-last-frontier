@@ -107,17 +107,16 @@ static func first_of(key: Array) -> Dictionary:
 
 
 ## The key's other move from `id` at `mode` (a double tap, a wheel step; spec §2.2): a two-id key its partner at its first
-## mode, a one-id key its other mode (the first two of its modes); {} when there is none (a single-mode one-id key). `body`:
-## whose key (his worn new skill's own mode is his single-mode key's other: BendLoadout.modes_for; null the kit's).
-static func other_move(key: Array, id: String, mode: String, body: Node = null) -> Dictionary:
+## mode, a one-id key its other mode (the first two of its modes); {} when there is none (a single-mode one-id key). `body`: the
+## caster's, whose worn talents may add a mode (SwayCaster.modes_of: the Sulphur Vent on earth's 4, Mire on water's 4; null or
+## Classic, the kit's).
+static func other_move(key: Array, id: String, mode: String, body: Object = null) -> Dictionary:
 	if key.size() >= 2:
 		var other := String(key[1]) if String(key[0]) == id else String(key[0])
 		var ms := SwayCaster.modes_of(other)
 		return {"id": other, "mode": String(ms[0]) if not ms.is_empty() else ""}
 	if key.size() == 1:
-		var ms := SwayCaster.modes_of(String(key[0]))
-		if body != null:
-			ms = BendLoadout.modes_for(body, String(key[0]), ms)     # (a worn new skill's mode on its key: the Sulphur Vent)
+		var ms := SwayCaster.modes_of(String(key[0]), body)
 		if ms.size() < 2:
 			return {}
 		var nxt := String(ms[1]) if mode == String(ms[0]) else String(ms[0])

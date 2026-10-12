@@ -62,8 +62,8 @@ static func _first_mode(id: String) -> String:
 
 ## Key `i` (0-based) of element `el`: its moves, the first then the one a second tap readies ([{id, mode}], one or two).
 ## `body` (the player's, for his own strip and wheel): a one-move key's second is the mode a worn talent adds on its empty
-## double tap (BendLoadout.modes_for: the Sulphur Vent on earth's 4); null or wearing nothing, the static kit.
-static func key_moves(el: String, i: int, body: Node = null) -> Array:
+## double tap (SwayCaster.modes_of: the Sulphur Vent on earth's 4, Mire on water's 4); null or wearing nothing, the static kit.
+static func key_moves(el: String, i: int, body: Object = null) -> Array:
 	var keys := Bending.keys(el)
 	if i < 0 or i >= keys.size():
 		return []
@@ -73,7 +73,7 @@ static func key_moves(el: String, i: int, body: Node = null) -> Array:
 	if k.is_empty():
 		return []
 	var id := String(k[0])
-	var ms := BendLoadout.modes_for(body, id) if body != null else SwayCaster.modes_of(id)
+	var ms := SwayCaster.modes_of(id, body)
 	if ms.size() >= 2:
 		return [{"id": id, "mode": String(ms[0])}, {"id": id, "mode": String(ms[1])}]
 	return [{"id": id, "mode": _first_mode(id)}]

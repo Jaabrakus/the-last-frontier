@@ -234,6 +234,8 @@ const SRC_GUARD := "guard"
 const SRC_DASH := "dash"
 ## Round 3: the shortest lock the jab step leaves (s).
 const MIN_LOCK_S := 0.05
+## Water's Wellspring (a skill tree enhance): Patch's ring lock by where its wearer stands (_lock_time).
+const WELLSPRING := "water.patch.wellspring"
 ## The control schemes' data (MatchSetup.schemes_data; see the header's schemes).
 const SCHEMES_DATA := "res://data/bending/schemes.json"
 ## The set key's line with nothing readied (the quick spell as it stays).
@@ -901,11 +903,13 @@ func frozen() -> bool:
 ## Terrain and restorative moves need the caster grounded. A hotbar key is not a terrain rule: Fire Breath shares the
 ## wall key but is an aimed attack. Keep the Form wall/Lift/mend and explicit ground effects grounded, while projectiles,
 ## cones, held attacks, guards and the Slam retain their existing airborne behavior. The caller gates this to round 3.
-static func needs_ground(m: String, mode: String) -> bool:
+static func needs_ground(m: String, mode: String, body: Object = null) -> bool:
 	if m in ["earth_wall", "pillar", "mend", "patch", "fire_wall"]:
 		return true
 	var modes: Dictionary = SwayMoves.move(m).get("bend", {})
 	var spec: Dictionary = modes.get(mode, {})
+	if spec.is_empty() and body != null:
+		spec = BendLoadout.new_spec(body, m, mode)    # (a new mode a worn talent adds: Mire, on the wall's key)
 	return bool(spec.get("wall_key", false)) or String(spec.get("do", "")) in [
 			"ice_wall", "wind_wall", "column", "ramp", "shell", "spout", "draw", "freeze_water", "heal"]
 
@@ -920,7 +924,7 @@ func _cast_wait() -> bool:
 	var rm := RingMoves.of(player)
 	if rm != null and not rm.can_cast():
 		return true
-	return move != "" and needs_ground(move, mode_of(move)) and airborne()
+	return move != "" and needs_ground(move, mode_of(move), player) and airborne()
 
 
 ## The key (0-based) holding move `m` for the player's element (-1 none).
@@ -1208,9 +1212,14 @@ func keeps_weapon(id: String) -> bool:
 
 
 # ---------------------------------------------------------------- modes
-## Move `id`'s modes as the ring's kits offer them (moves.json "modes": the element's keys, Bending, the HUD, the bots).
-static func modes_of(id: String) -> Array:
-	return SwayMoves.move(id).get("modes", [])
+## Move `id`'s modes as the ring's kits offer them (moves.json "modes": the element's keys, Bending, the HUD, the bots). `body`:
+## with the new modes the talents it wears add after them (BendLoadout.modes_for: the Sulphur Vent on earth's 4, Mire on water's
+## 4; Classic the same array).
+static func modes_of(id: String, body: Object = null) -> Array:
+	var ms: Array = SwayMoves.move(id).get("modes", [])
+	if body == null:
+		return ms
+	return BendLoadout.modes_for(body, id, ms)
 
 
 ## Move `id`'s modes in the open world: "world_modes" where round 2's kits offer fewer of a spell the open world shares
@@ -1223,7 +1232,7 @@ static func world_modes_of(id: String) -> Array:
 
 ## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
 func my_modes(id: String) -> Array:
-	return BendLoadout.modes_for(player, id, modes_of(id)) if elem() else world_modes_of(id)   # (a worn new skill's mode too)
+	return modes_of(id, player) if elem() else world_modes_of(id)    # (a worn new skill's mode too: modes_of with a body)
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
@@ -1295,7 +1304,12 @@ func step_mode(dir: int) -> String:
 
 
 static func mode_label(id: String, m: String) -> String:
-	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, BendLoadout.talent_label(id, m)))
+	var ls: Dictionary = SwayMoves.move(id).get("mode_labels", {})
+	if not ls.has(m):
+		var nl := BendLoadout.new_mode_label(id, m)       # (a new mode a skill tree talent adds: "Mire")
+		if nl != "":
+			return nl
+	return String(ls.get(m, BendLoadout.talent_label(id, m)))     # (a talent_bend mode's own: "Sulphur Vent")
 
 
 ## Mode `m`'s name in the open world ("world_mode_labels" where it has its own: "boulder", "free"), else mode_label.
@@ -1913,6 +1927,8 @@ func _root() -> void:
 	var on := pose != null and is_instance_valid(pose) and pose.rooting() and not player.is_dead
 	if on and r3() and airborne():
 		on = false                                # (round 3: casting never stops the fall; a pose's root ignored airborne)
+	if on and _riding():
+		on = false                                # (Ride the Wave, a skill tree technique: the ride carries him out of the root)
 	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up():
 		on = true                                 # (round 3: no walking while the guard is up)
 	if on:
@@ -1921,6 +1937,12 @@ func _root() -> void:
 	elif rooted and player.drag_speed_cap == ROOT_CAP:
 		player.drag_speed_cap = INF
 	rooted = on
+
+
+## Carried by a ride now (BendMotion.ride: Ride the Wave); false with no BendMotion on him.
+func _riding() -> bool:
+	var bm := player.get_node_or_null(^"BendMotion") as BendMotion
+	return bm != null and bm.riding()
 
 
 var _plant_acc := -1.0
@@ -2344,6 +2366,8 @@ func _try_begin(q: Dictionary) -> void:
 		_r3_form(m)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
+	if elem() and lock_src != SRC_GUARD:
+		fill = BendZone.eddy_fill(player, m)      # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:
@@ -2451,6 +2475,9 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
 		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+		if BendLoadout.wears(player, WELLSPRING):
+			# (Wellspring, a skill tree enhance: quicker standing in his own water, slower anywhere else)
+			base = BendLoadout.tune_f(player, "new:patch.lock_wet_s" if BendZone.in_own_water(player) else "new:patch.lock_dry_s", base)
 	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
 	var cm := BendStatus.cast_mult(player) if elem() else 1.0
 	_cm_used = cm
@@ -2466,9 +2493,14 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 ## Move `m`'s bend spec at its mode now ({} none: an old mode, a scripted lock).
 func spec_of(m: String) -> Dictionary:
 	var b: Variant = SwayMoves.move(m).get("bend", {})
-	var s: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	var md := mode_of(m)
+	var s: Variant = (b as Dictionary).get(md, {}) if b is Dictionary else {}
 	if not (s is Dictionary) or (s as Dictionary).is_empty():
-		s = BendLoadout.talent_spec(player, m, mode_of(m))   # (a worn new skill's own mode; Classic {})
+		s = BendLoadout.talent_spec(player, m, md)       # (a worn new skill's own mode: the Sulphur Vent; Classic {})
+		if (s as Dictionary).is_empty():
+			var ns := BendLoadout.new_spec(player, m, md)  # (a new mode a worn talent adds through the tree: Mire; Classic {})
+			if not ns.is_empty():
+				return ns
 	return s if s is Dictionary else {}
 
 
@@ -2733,8 +2765,11 @@ func _moving_mult(m: String) -> float:
 
 ## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.
 func passive_fill() -> float:
-	# (Sulphur Heart: in his own gas his locks fill faster, the higher of it and Rooted, never times: BendGas.home_mult)
+	# (Sulphur Heart: in his own gas his locks fill faster; Delta, the Mud set's home ground: in his own mud; the higher of them
+	# and Rooted, never times: BendGas.home_mult, BendZone.DELTA_FILL)
 	var home := BendZone.BendGas.home_mult(player) if elem() else 1.0
+	if elem() and BendLoadout.wears(player, BendZone.DELTA) and BendZone.in_own_mud(player):
+		home = maxf(home, BendZone.DELTA_FILL)
 	if not elem() or quick_element() != "earth" or not player.is_on_floor():
 		return home
 	var pv := Bending.passive("earth")
@@ -2759,7 +2794,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 	if state == State.LOCKING:
 		if not on:
 			return                            # (the grace: the ring flickers and waits)
-		if r3() and needs_ground(move, mode_of(move)) and airborne():
+		if r3() and needs_ground(move, mode_of(move), player) and airborne():
 			return                                # (terrain spells wait for the ground, the fill kept)
 		var rate := 1.0 / lock_s
 		var hs := _hspeed()
@@ -2773,7 +2808,11 @@ func _hold(dt: float, q: Dictionary) -> void:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:
 				_rooted_t = 0.6
-				BendLooks.rooted_dust(player)      # (Rooted: a faint dust at his own feet while it helps)
+				if quick_element() == "earth":
+					BendLooks.rooted_dust(player)  # (Rooted: a faint dust at his own feet while it helps)
+				else:
+					# (Delta's home ground: ripples at his feet in his own mud)
+					BendLooks.burst(player.global_position + Vector3.UP * 0.05, "water", 6, Vector3.UP, 80.0, 0.8, 0.15)
 		fill = minf(fill + rate * dt, 1.0)
 		_raise_at_fill()
 		_charge_level()

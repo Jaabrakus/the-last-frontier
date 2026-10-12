@@ -582,7 +582,7 @@ func _stock_column(out: Dictionary, i: int, el: String) -> void:
 				out.icon_id = "dodge"
 				out.icon_mode = el
 			3, 4:
-				if SwayCaster.needs_ground(String(out.id), String(out.mode)):
+				if SwayCaster.needs_ground(String(out.id), String(out.mode), player):
 					out.grey = true
 					out.sub = String(sw("lands", "lands"))
 					out.tap = ""

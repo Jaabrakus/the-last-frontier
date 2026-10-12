@@ -165,8 +165,9 @@ func blocks_fire() -> bool:
 # --- open, pick, ready ------------------------------------------------------------------------------------------
 
 ## The element's key moves: each key's first move and its second (a tap twice), key by key (Patch and Mend on 5 last). `body`
-## (the player's): a worn talent's mode on an empty double tap too (KitWords.key_moves); null, the static kit.
-static func items_for(el: String, body: Node = null) -> Array:
+## (the player's): a worn talent's mode on an empty double tap too (KitWords.key_moves: the Sulphur Vent, Mire); null, the
+## static kit.
+static func items_for(el: String, body: Object = null) -> Array:
 	var out: Array = []
 	for i in Bending.keys(el).size():
 		for m: Dictionary in KitWords.key_moves(el, i, body):
@@ -209,7 +210,7 @@ func ready_item(i: int) -> bool:
 	if not p.hotbar.ready_skill(id):
 		return false
 	var md := String(items[i].get("mode", ""))
-	if md != "" and md in SwayCaster.modes_of(id):
+	if md != "" and md in SwayCaster.modes_of(id, p):
 		caster.set_mode(id, md)
 	return caster.readied_spell == id
 

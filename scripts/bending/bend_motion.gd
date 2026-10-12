@@ -77,7 +77,31 @@ func _dash_end() -> void:
 
 
 func active() -> bool:
-	return _carry_t > 0.0 or _fall_t > 0.0 or _run_t > 0.0
+	return _carry_t > 0.0 or _fall_t > 0.0 or _run_t > 0.0 or _ride_t > 0.0
+
+
+## Carried by a ride now (SwayCaster lifts a cast pose's root meanwhile).
+func riding() -> bool:
+	return _ride_t > 0.0
+
+
+## A ride (Ride the Wave, a skill tree technique): carried `m` m along `dir` (flat) over `s` s on top of his own way, then his own
+## speed again (no carry eased on after it). Foam at his feet meanwhile. A knock's carry (BendKnock: kv, kept apart from his own
+## way) is never his own way: the ride keeps it in his velocity as the knock left it (applied), so his controller takes out and
+## adds back exactly the knock; a knock taken during the ride ends it there (the hit sets his motion as anyone's: _ride_step).
+var _ride := Vector3.ZERO
+var _ride_t := 0.0
+var _ride_keep := Vector3.ZERO
+var _ride_from := -INF
+func ride(dir: Vector3, m: float, s: float) -> void:
+	var flat := Vector3(dir.x, 0.0, dir.z).normalized()
+	var kn := BendKnock.peek(body)
+	var own := kn.base_of(body.velocity) if kn != null else body.velocity     # (his own way: a knock's carry left out)
+	_ride_keep = Vector3(own.x, 0.0, own.z)
+	_ride = flat * m / maxf(s, 0.01)
+	_ride_t = maxf(s, 0.01)
+	_ride_from = BendStatus.now()
+	_trail("water")
 
 
 ## A dash's speed being carried now (the player's legs' clip speed does not cap it meanwhile: FrontierPlayer).
@@ -126,6 +150,8 @@ func _physics_process(dt: float) -> void:
 		if flat.length() < _carry.length():
 			body.velocity.x = _carry.x
 			body.velocity.z = _carry.z
+	if _ride_t > 0.0:
+		_ride_step(dt)
 	if _dash == 1 and _carry_t <= 0.0:
 		_dash_end()
 	elif _dash == 2:
@@ -155,6 +181,26 @@ func _physics_process(dt: float) -> void:
 		_fx = null
 
 
+## The ride's frame: its own share on top of his own way (whatever his easing did since: its distance exact), the knock's carry
+## in his velocity kept as it was (BendKnock.applied: his controller takes that out and adds the decayed carry back, as for
+## anyone); his own way again at its end. A knock since it began ends it at once, his velocity left as the knock set it (the
+## ring's RingMoves._on_knocked: his own run gone, the launch his motion), the ride's share with it.
+func _ride_step(dt: float) -> void:
+	var kn := BendKnock.peek(body)
+	if kn != null and kn.last_knock_at >= _ride_from - 1e-6:
+		_ride_t = 0.0                             # (hit while riding: the hit's motion, not the ride's)
+		return
+	var ap := kn.applied if kn != null else Vector3.ZERO
+	var step := minf(dt, _ride_t)
+	_ride_t -= dt
+	body.velocity.x = _ride_keep.x + _ride.x * step / dt + ap.x
+	body.velocity.z = _ride_keep.z + _ride.z * step / dt + ap.z
+	if _ride_t <= 0.0:
+		_ride_t = 0.0
+		body.velocity.x = _ride_keep.x + ap.x
+		body.velocity.z = _ride_keep.z + ap.z
+
+
 ## Online, another machine's fighter (RingNet's puppet: NetBody moves him as his machine does): only the looks run here, his
 ## dash's end played when its time is up or he is down again (RingMoves' puppet state), never his motion, never his Carried
 ## wind (his machine charges it).
@@ -162,6 +208,7 @@ func _puppet_tick(dt: float) -> void:
 	_carry_t = maxf(_carry_t - dt, 0.0)
 	_fall_t = maxf(_fall_t - dt, 0.0)
 	_run_t = maxf(_run_t - dt, 0.0)
+	_ride_t = maxf(_ride_t - dt, 0.0)            # (a ride's foam ends on time: his machine moves him)
 	var rm := RingMoves.of(body)
 	if _dash == 2 and rm != null and rm.airborne():
 		_dash_left = true

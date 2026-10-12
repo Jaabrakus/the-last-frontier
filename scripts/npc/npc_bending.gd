@@ -241,6 +241,9 @@ var _pad: NpcPad = null
 var _held_seen := false
 ## Round 4: the lock under way has been in the air (its landing: the Slam called off, the air hit back into the jab).
 var _air_seen := false
+## The loadout its options were built for (BendLoadout.overlay_of: a test may put one on it after it was made): built again when
+## it changes (a worn talent's new mode, Mire). A bot in a normal match wears none: built once, as ever.
+var _ov_built: Dictionary = {}
 
 
 func _init(b: NpcBrain) -> void:
@@ -364,17 +367,22 @@ static func bend_cast() -> Script:
 	return _bend_cast
 
 
-static func spec_of(id: String, md: String) -> Dictionary:
+static func spec_of(id: String, md: String, body: Object = null) -> Dictionary:
 	var b: Variant = SwayMoves.move(id).get("bend", {})
-	return ((b as Dictionary).get(md, {}) as Dictionary) if b is Dictionary else {}
+	var s: Dictionary = ((b as Dictionary).get(md, {}) as Dictionary) if b is Dictionary else {}
+	if s.is_empty() and body != null:
+		var ts := BendLoadout.talent_spec(body, id, md)    # (a worn new skill's own mode: its talent_bend spec, the Sulphur Vent)
+		return ts if not ts.is_empty() else BendLoadout.new_spec(body, id, md)     # (a new mode a worn talent adds: Mire; Classic {})
+	return s
 
 
-## Every (move, mode) of `el`'s kit: its keys (Bending.keys: 1-5, Patch and Mend with them), its guard and its jab.
-static func pairs_of(el: String) -> Array:
+## Every (move, mode) of `el`'s kit: its keys (Bending.keys: 1-5, Patch and Mend with them), its guard and its jab. `body`: with
+## the new modes its worn talents add (SwayCaster.modes_of: Mire).
+static func pairs_of(el: String, body: Object = null) -> Array:
 	var out: Array = []
 	for pair in Bending.keys(el):
 		for id: String in pair:
-			var ms := SwayCaster.modes_of(id)
+			var ms := SwayCaster.modes_of(id, body)
 			if ms.is_empty():
 				out.append([id, ""])
 			for md: String in ms:
@@ -404,14 +412,13 @@ static func rule(k: String) -> float:
 
 func _build_options() -> void:
 	options.clear()
+	_ov_built = BendLoadout.overlay_of(me)
 	var gd := guard_of(element)
 	var jb := jab_of(element)
-	for pr: Array in pairs_of(element) + _talent_built:
+	for pr: Array in pairs_of(element, me):
 		var id := String(pr[0])
 		var md := String(pr[1])
-		var spec := spec_of(id, md)
-		if spec.is_empty():
-			spec = BendLoadout.talent_spec(me, id, md)     # (a worn new skill's own mode: its talent_bend spec; Classic {})
+		var spec := spec_of(id, md, me)                  # (a worn talent's own mode too: the Sulphur Vent, Mire; Classic as ever)
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
 				"do": String(spec.get("do", "old")),
 				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary \
@@ -419,6 +426,13 @@ func _build_options() -> void:
 				"guard": pr == gd, "jab": pr == jb}
 		o["hint"] = hint_of(id, md, spec)
 		options.append(o)
+
+
+## Its options built again when what it wears changed since they were (a talent's new mode; nothing worn: never).
+func _sync_options() -> void:
+	var ov := BendLoadout.overlay_of(me)
+	if not is_same(ov, _ov_built) and not (ov.is_empty() and _ov_built.is_empty()):
+		_build_options()
 
 
 ## What bend_ai.json says of (id, md): its do's defaults (a zone's by its kind; an unknown do or 'throw' as 'bolt'), the old
@@ -488,6 +502,11 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 			base = float(mlk[md])
 		base = BendLoadout.talent_lock(who, id, md, base)  # (a worn new skill's own lock: the Sulphur Vent's; else base)
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
+	if id == "patch" and BendLoadout.wears(who, SwayCaster.WELLSPRING):
+		# (Wellspring: the player's ring lock by where he stands, as a share of its own ring_lock_s, on the bot's)
+		var ring_b := float(d.get("ring_lock_s", 1.5))
+		base *= BendLoadout.tune_f(who, "new:patch.lock_wet_s" if BendZone.in_own_water(who as Node3D) else "new:patch.lock_dry_s",
+				ring_b) / maxf(ring_b, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -560,6 +579,7 @@ func think(dt: float) -> void:
 	var t := brain.target
 	if not NpcSenses.can_fight(t):
 		return
+	_sync_options()
 	if stock() and mind().think(dt):
 		return                                     # (round 3: every state but NEUTRAL and PRESSURE is the mind's)
 	if casting != "" or _follow > 0.0 or me.busy():
@@ -637,7 +657,8 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		lock_t += dt * BendZone.BendGas.home_mult(me)    # (Sulphur Heart worn: faster in its own gas; else x1)
+		# (Sulphur Heart worn: faster in its own gas; Delta: in its own mud; the higher, else x1)
+		lock_t += dt * maxf(BendZone.BendGas.home_mult(me), BendZone.home_fill(me))
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -835,6 +856,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 			return BendStatus.until(t, &"bend_root") > 0.0
 		"foe_airborne":
 			return t is CharacterBody3D and not (t as CharacterBody3D).is_on_floor()
+		"foe_floor_fire":
+			return _floor_fire(BendPoses.element_of(t) if t != null and is_instance_valid(t) else "")
 		"foe_grounded":
 			return not (t is CharacterBody3D) or (t as CharacterBody3D).is_on_floor()
 		"foe_up_or_walled":
@@ -1087,7 +1110,8 @@ func _wall_on_line(t: Node3D) -> bool:
 	var b := t.global_position + Vector3.UP
 	for w in me.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var fr := w as FormRaised
-		if fr != null and fr.is_up() and fr.kind == "wall":
+		if fr != null and fr.is_up() and fr.kind == "wall" and not BendEffects.is_mound(fr):
+			# (a Mud Mound is low terrain, 0.7 m: shots at the chest pass over it, so no arc is owed to it)
 			var q := fr.global_position + Vector3.UP
 			if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 1.2 + fr.size.x * 0.5:
 				return true
@@ -1361,6 +1385,7 @@ static func _caster_body(c: Variant) -> Node:
 # ---------------------------------------------------------------- the lock and the release
 ## The lock of (id, md) begun (its time: lock_for; its pose; its circle).
 func begin(id: String, md: String) -> void:
+	_sync_options()
 	if casting != "":
 		_cancel()
 	var t := brain.target
@@ -1416,6 +1441,8 @@ func begin(id: String, md: String) -> void:
 	# this lock's cast, _release)
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
+	if not bool(o.get("guard", false)):
+		lock_t = lock_s * BendZone.eddy_fill(me, id)     # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1523,10 +1550,21 @@ func _release() -> void:
 	_after_cast(o, before)
 
 
+## Whether a bot lets (id, md) go on the Beat (BendLoadout.beat_s: the player's timing rule) now: only for a technique it wears
+## that pays it, when it helps. Ride the Wave: its Wave rides it in RIDE_M behind the water when the foe is further off than that
+## and the deck has room ahead. Nothing worn (every normal match's bot), never.
+func _on_beat(id: String, md: String, t: Node3D) -> bool:
+	if id == "wave" and md == "push" and BendLoadout.wears(me, BendEffects.RIDE):
+		# (as a player's hand, not every time: its difficulty's beat_rate, bend_ai.json presets, the tree's beat.bots)
+		return t != null and is_instance_valid(t) and _flat_d(t) > BendEffects.RIDE_M + 1.5 \
+				and _room(_way(t)) > BendEffects.RIDE_M + 1.5 and me.rng.randf() < float(preset().get("beat_rate", 0.2))
+	return false
+
+
 ## Casts (id, md) now through the one path: BendCast.cast when it is there; a bend spec through BendEffects with its caster;
 ## else its own way for spike, wall and gust push (FALLBACK). False: nothing came of it (no water, nothing to work on).
 func _cast(id: String, md: String, t: Node3D) -> bool:
-	var spec := spec_of(id, md)
+	var spec := spec_of(id, md, me)
 	var at := _cast_point(id, md, t)
 	if id == "mend":
 		t = _own_wall(true, 6.0)                    # (Mend works on its own worn piece, never on the man it fights)
@@ -1986,6 +2024,17 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 		goal2 = mind().centre_goal(goal2)          # (round 3: high on its own %, it keeps further from its end)
 	me.face_lock = tp
 	me.go(_clamp(goal2), NpcFighter.RUN_SPEED * 0.75, 0.4, true)
+
+
+## Whether element `el`'s kit holds a floor wave of fire (fire's Kick: what mud stops; Mire's when).
+static func _floor_fire(el: String) -> bool:
+	if el == "":
+		return false
+	for pr: Array in pairs_of(el):
+		var s := spec_of(String(pr[0]), String(pr[1]))
+		if String(s.get("do", "")) == "floor_wave" and String(s.get("kind", "")) == "fire":
+			return true
+	return false
 
 
 func _clamp(p: Vector3) -> Vector3:

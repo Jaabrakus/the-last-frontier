@@ -541,7 +541,10 @@ static func is_live(id: String) -> bool:
 	if not id in (c.get("live", []) as Array):
 		return false
 	var nodes: Variant = c.get("nodes", {})
-	return bool((nodes as Dictionary).get(id, true)) if nodes is Dictionary else true
+	var sw: Variant = (nodes as Dictionary).get(id, true) if nodes is Dictionary else true
+	if sw is String:
+		return String(sw) != id and is_live(String(sw))     # (a switch naming another node: on while that one is, BendLoadout)
+	return bool(sw)
 
 
 ## Whether a worn loadout plays this class's clips in a match (Boxing today: animation only).
