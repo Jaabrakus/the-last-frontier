@@ -1219,14 +1219,14 @@ func _open_match() -> void:
 	for f: String in MatchSetup.FORMATS:
 		fmt_opts.append({"text": String(((MatchSetup.data().get("formats", {}) as Dictionary).get(f, {}) as Dictionary).get("label", f)),
 				"value": f, "name": "Format_" + f})
-	var frm := BroadcastUI.segments(fmt_opts, maxi(MatchSetup.FORMATS.find(MatchSetup.format), 0), 16, 9.0)
+	var frm := BroadcastUI.segments(fmt_opts, maxi(MatchSetup.FORMATS.find(MatchSetup.format), 0), 20, 11.0)
 	frm.name = "Format"
 	for i in frm.chips.size():
 		(frm.chips[i] as Control).tooltip_text = MatchSetup.menu_word("format_line_" + String(MatchSetup.FORMATS[i]))
 	frm.picked.connect(func(i: int) -> void:
 		MatchSetup.format = String(MatchSetup.FORMATS[i])
 		_paint_setup())
-	BroadcastUI.put(mc, frm, Rect2(232, 10, 238, 30))
+	BroadcastUI.put(mc, frm, Rect2(196, 6, 278, 36))
 	# you against them
 	var vs := Control.new()
 	vs.name = "Versus"

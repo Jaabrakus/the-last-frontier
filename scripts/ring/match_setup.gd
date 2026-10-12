@@ -337,9 +337,9 @@ static func _kept(key: String, def: Variant) -> Variant:
 
 # --- Quick match and practice: the menu's entry points ------------------------------------------------------------
 
-## Quick match (the main menu's): the last setup (load()), your last element, the opponent's element drawn at random (from
-## `rng`, a test's; else a fresh one), a match (not a practice). The menu then plays it as Begin does; the kept setup's own
-## opponent is left as it was (save() while quick). Returns the drawn element.
+## Quick match (the main menu's): the last setup (load()), your last element and team size (1v1, 2v2, 4v4), the opponent's
+## element drawn at random (from `rng`, a test's; else a fresh one), a match (not a practice). The menu then plays it as Begin
+## does; the kept setup's own opponent is left as it was (save() while quick). Returns the drawn element.
 static func quick_match(rng: RandomNumberGenerator = null) -> String:
 	MatchSetup.load()
 	var r := rng
@@ -349,8 +349,7 @@ static func quick_match(rng: RandomNumberGenerator = null) -> String:
 	var el := String(Bending.ELEMENTS[r.randi_range(0, Bending.ELEMENTS.size() - 1)])
 	foes = [el]
 	kind = "match"
-	format = "1v1"
-	quick = true
+	quick = true                                 # (the team size the setup last kept: 1v1, 2v2 or 4v4; the owner, 2026-10-11)
 	return el
 
 
@@ -360,7 +359,11 @@ static func quick_line() -> String:
 	var length := rounds_label(rounds_to_win)
 	if rule_set() == "stock":
 		length = rounds_label(2) if games() >= 3 else String(screens().get("one_game", "one game"))
-	return String(screens().get("quick_line", "%s against a random opponent  ·  %s  ·  %s")) % [label(element), difficulty, length]
+	var line := String(screens().get("quick_line", "%s against a random opponent  ·  %s  ·  %s")) % [label(element), difficulty, length]
+	if team_size() > 1:
+		var fm: Dictionary = (data().get("formats", {}) as Dictionary).get(format, {})
+		line = String(fm.get("label", format)) + "  ·  " + line
+	return line
 
 
 ## The next Begin plays a practice against a dummy of element `foe_el` (ANY drawn by lot) standing, blocking or throwing
