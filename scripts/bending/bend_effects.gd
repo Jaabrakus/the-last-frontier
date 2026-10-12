@@ -456,6 +456,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var bz := z as BendZone
+			if bz.kind == "snow" and bool(spec.get("melt", false)):
+				AirTalents.breath_melt(p, bz, flat, r, deg)  # (a Breath into a Blizzard melts it out; a worn talent's snow only)
 			var to := bz.global_position - p.global_position
 			if to.length() > r + 2.0:
 				continue

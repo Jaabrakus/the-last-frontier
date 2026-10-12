@@ -11,7 +11,8 @@ extends RefCounted
 ##   Eye of the Gale (air.guard.eye)    eye_catch: a perfect Wind Guard bounce with E still held circles him (BendBolt's swing,
 ##                                      held by swing_hold) up to EYE_S and leaves along his aim when E is let go (x perfect_mult
 ##                                      as the bounce); guard_carry_s: the Carried wind a perfect Wind Guard gives lasts the node's
-##                                      new:air_shield.perfect_carry_s (0.4 s)
+##                                      new:air_shield.perfect_carry_s (0.4 s). A bot wearing it (a test's) holds each catch
+##                                      BOT_EYE_S of its own choosing, then sends it along its aim at its foe
 ##   Rebound (air.guard.rebound)        start_fill: his next Slice or Wind Ball begun within REBOUND_S of a perfect Wind Guard
 ##                                      starts its lock REBOUND_FILL full (once); his held guard's longest stand is the node's
 ##                                      rules:air_rules.guard.hold_max_s (BendLoadout.tune at SwayCaster._hold_guard and the bot's
@@ -34,7 +35,9 @@ extends RefCounted
 ##                                      turns a puddle or a grate it crosses into crust (freeze_pool, make_crust: a snow
 ##                                      FormRaised ridge CRUST_W x CRUST_H for CRUST_S, CRUST_CAP of his at once; floor waves and
 ##                                      rolling stones stop at it, anyone can jump it, never slippery); a frozen grate is out of
-##                                      Bending.POOLS (no source) till its crust goes; steam it crosses falls as snow and clears;
+##                                      Bending.POOLS (no source) till its crust goes, however it goes (the round's reset frees
+##                                      it: CrustWatch._exit_tree); only while the bolt is still his (frost_step: sent back or
+##                                      turned, it freezes nothing); steam it crosses falls as snow and clears;
 ##                                      his Wind Wall drops water and ice as shards (wall_shards, BendZone.on_bolt); fire melts a
 ##                                      crust (melt_crust in BendBolt._hit, a Breath's BendEffects.melt, a Fire Wall or burning
 ##                                      ground on it: CrustWatch) back into its puddle (a grate's back into the grate); his Wind
@@ -50,7 +53,8 @@ extends RefCounted
 ##                                      2.5 m snow column 2-10 m off where he aims, 3 s, one at a time, lock 0.9 s); snow_every
 ##                                      (BendZone._every of kind snow): it freezes water in it, a foe inside gains 1% each 0.5 s
 ##                                      (the node's matter/cold, no knock, no hurt; 6% at most), fire on it melts it out in 1 s
-##                                      (melt_snow; a fire bolt through it: BendZone.on_bolt); it hides both ways (snow in
+##                                      (melt_snow; a fire bolt through it: BendZone.on_bolt; a Breath into it: breath_melt
+##                                      from BendEffects.cone; a Fire Wall or burning ground on it); it hides both ways (snow in
 ##                                      NpcBendCaster.HIDING); his Wind Wall 15% shorter (wall_life_k, BendEffects' wind_wall)
 ##   Whiteout (air.frost.whiteout)      home_fill (SwayCaster._hold, NpcBending's lock): his locks fill x1.15 standing on his
 ##                                      own crust or in his own Blizzard; Patch 1.7 s (patch_lock)
@@ -62,14 +66,17 @@ extends RefCounted
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
-## (BendR3.info_for); a flash on his own hands only (beat_flash). Key 3's moves are clicks: a Beat wearer holding 3 keeps the
-## lock till he lets go (SwayCaster._key3_beat_hold); tapped, it is the click it always was. A bot wearing one lets a lock go
-## on the Beat at its difficulty's beat_rate (bend_ai.json presets, else BOT_BEAT_RATE) within BEAT_S of its full lock.
+## (BendR3.info_for); a flash on his own hands only (beat_flash). Key 3's moves are clicks and stay so (the Leap goes the
+## moment its lock is full, held or tapped, as ever): its Beat is read from the let go instead (key3_cast, key3_let_go):
+## key 3 still held as the Leap goes and let go within BEAT_S of the full lock is on the Beat; tapped (let go before full), or
+## held on past the window, it is not. A bot wearing one lets a lock go on the Beat at its difficulty's beat_rate
+## (bend_ai.json presets, else BOT_BEAT_RATE) within BEAT_S of its full lock.
 ##   Carry the Edge (air.slice.carry_edge)  keeps_carry: a Beat Slice with Carried wind charged leaves it charged (BendEffects)
 ##   Carrying Wind (air.gust.carrying)      on_wind_wave / carry_stones: a Beat Gust throws the loose stones it crosses on along
 ##                                          its way CARRY_M as pebbles (rock_jab/pebbles: 5%, set knock 3; stone: a Catch holds
 ##                                          them, walls stop them)
-##   Peak Wind (air.leap.peak_wind)         on_dash: a Beat Leap charges his Carried wind at its top (BendZone.carry_wind)
+##   Peak Wind (air.leap.peak_wind)         on_dash: a Beat Leap charges his Carried wind at its top (BendZone.carry_wind);
+##                                          the Leap itself is Classic's (it goes at its full lock, as high as ever)
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const TAILWIND := "air.slice.tailwind"
@@ -92,8 +99,10 @@ const REBOUND_META := &"air_rebound_at"
 const CARRY_EDGE := "air.slice.carry_edge"
 const CARRYING := "air.gust.carrying"
 const PEAK_WIND := "air.leap.peak_wind"
-## The Beat's window (s; skill_tree.json beat.window_s).
+## The Beat's window (s; skill_tree.json beat.window_s), and the clock's slack in it (s: a let go on the window's last frame
+## counts).
 const BEAT_S := 0.2
+const BEAT_EPS := 1e-4
 ## The techniques that read the Beat, by the move/mode their Beat cast is.
 const BEAT_TALENTS := {"air_blast/slice": CARRY_EDGE, "air_gust/gust": CARRYING, "air_jump/leap": PEAK_WIND}
 ## A bot's share of its locks let go on the Beat by difficulty (the tree's proposal; a preset's beat_rate over it).
@@ -176,6 +185,17 @@ static func guard_walk(body: Node, target: Vector3) -> Vector3:
 	return target.limit_length(DRIFT_MPS)
 
 
+## Whether a direction key pressed now by `body` (moving at `vel`) with his guard up steers his walk instead of rolling
+## (RingMoves._try_ground_dodge): a Drift Guard wearer (the player's keys: a bot's roll is its own press) already walking with
+## it up (DRIFT_STEER_MPS). Standing under his guard, a key pressed is the guard's Roll, as for everyone.
+static func drift_steers(body: Node, vel: Vector3) -> bool:
+	return body is FrontierPlayer and Vector2(vel.x, vel.z).length() > DRIFT_STEER_MPS and drifts(body)
+
+
+## Drift Guard: how fast he must already walk under his guard for a key pressed to steer it (m/s).
+const DRIFT_STEER_MPS := 0.5
+
+
 # ---------------------------------------------------------------- Eye of the Gale
 ## Whether `body` holds his guard now: the player's E (SwayCaster._guard_down; a puppet's by its owner's keys), a bot's held
 ## shield (NpcRingMind.shield: up while what it guards against still comes).
@@ -194,16 +214,40 @@ static func guard_held(body: Node) -> bool:
 
 ## A perfect Wind Guard bounce of air bolt `b` by guard `z` (BendZone._guard_bolt): for an Eye of the Gale wearer still holding
 ## his guard, it circles him (BendBolt.begin_swing, held by swing_hold) and leaves along his aim as E is let go or at EYE_S, x
-## perfect_mult as the bounce. True when it took it (else the bounce goes straight back, today's).
+## perfect_mult as the bounce. A bot wearing it (a test's: bots never wear loadouts in a match) has no E: it holds every catch
+## a moment of its own choosing (bot_eye_s) and sends it along its aim at its foe. True when it took it (else the bounce goes
+## straight back, today's).
 static func eye_catch(z: BendZone, b: BendBolt) -> bool:
 	var owner := z.owner_node
-	if not BendLoadout.wears(owner, EYE) or not guard_held(owner) or b.floor_wave:
+	if not BendLoadout.wears(owner, EYE) or b.floor_wave:
 		return false
+	var hold: Callable
+	if SwayCaster.of(owner) != null:
+		if not guard_held(owner):
+			return false
+		hold = guard_held.bind(owner)
+	else:
+		hold = _held_till.bind(BendStatus.now() + bot_eye_s(owner))
 	var k := BendLoadout.tune_f(owner, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
 	b.begin_swing(owner, EYE_S, BendZone.SWING_R, k)
-	b.swing_hold = guard_held.bind(owner)
+	b.swing_hold = hold
 	b.info["ret_mult"] = k
 	return true
+
+
+## How long a bot wearing Eye of the Gale holds a caught shot (s): BOT_EYE_S, by its own dice (never its foe's timing twice).
+static func bot_eye_s(body: Node) -> float:
+	var u := (body as NpcFighter).rng.randf() if body is NpcFighter else 0.5
+	return lerpf(BOT_EYE_S.x, BOT_EYE_S.y, u)
+
+
+## Eye of the Gale: a bot's hold (true till `until`).
+static func _held_till(until: float) -> bool:
+	return BendStatus.now() < until
+
+
+## Eye of the Gale: the shortest and longest a bot holds a caught shot (s; inside EYE_S).
+const BOT_EYE_S := Vector2(0.2, 0.45)
 
 
 ## How long the Carried wind a perfect Wind Guard of `body`'s gives lasts (s; -1 the passive's own: BendZone.carry_wind).
@@ -283,13 +327,24 @@ static func on_wind_wave(body: Node, b: BendBolt, spec: Dictionary) -> void:
 	if String((spec.get("_info", {}) as Dictionary).get("move", "")) != "air_gust":
 		return
 	b.carries = true
+	b.set_meta(CARRY_BY_META, body.get_instance_id())
 
 
-## Carrying Wind (see the header): the loose stones lying in the wave's width on this step (whoever's: never one held, raised,
-## in flight or sinking) thrown on along its way CARRY_M, each a pebble of the Gust's caster. Once each.
+## Carrying Wind: the meta of the Beat Gust's own caster (instance id): sent back or turned, it is someone else's and carries
+## nothing more.
+const CARRY_BY_META := &"air_carry_by"
+
+
+## Carrying Wind (see the header): the loose stones lying in the wave's width on this step (whoever's loose stone: FormStone's
+## LOOSE_META; never one held, raised, in flight or sinking) thrown on along its way CARRY_M, each a pebble of the Gust's
+## caster. Once each. Only while the Gust is still its own caster's (sent back or turned, it carries nothing more).
 static func carry_stones(b: BendBolt, from: Vector3, step: Vector3) -> void:
 	var by := b._by()
 	if by == null or not b.is_inside_tree():
+		return
+	if by.get_instance_id() != int(b.get_meta(CARRY_BY_META, 0)) or bool(b.info.get("returned", false)) \
+			or not BendLoadout.wears(by, CARRYING):
+		b.carries = false                             # (someone else's now: a guard's return, a Turn, Eye of the Gale)
 		return
 	var flat := Vector3(step.x, 0.0, step.z)
 	if flat.length_squared() < 1e-8:
@@ -299,6 +354,7 @@ static func carry_stones(b: BendBolt, from: Vector3, step: Vector3) -> void:
 	for s: Node in b.get_tree().get_nodes_in_group(FormStone.GROUP):
 		var st := s as FormStone
 		if st == null or st.is_queued_for_deletion() or st.state == FormStone.State.SINKING or GustLift.busy(st) \
+				or not st.has_meta(FormStone.LOOSE_META) \
 				or st.has_meta(&"bend_held_by") or st.has_meta(&"bend_raised_by") or st.has_meta(&"air_carried"):
 			continue
 		# (in the wave's reach on this step: its front included, so it takes the stone before the stone could stop it)
@@ -328,36 +384,95 @@ static func pebble(by: Node3D, at: Vector3, dir: Vector3, r: float) -> BendBolt:
 
 # ---------------------------------------------------------------- Peak Wind
 ## A dash just begun (BendEffects.dash): a Beat Leap of a Peak Wind wearer charges his Carried wind at its top (his rise
-## turned to a fall, PEAK_WATCH_S at most).
+## turned to a fall, PEAK_WATCH_S at most). A bot's Leap is on the Beat by its release (on_beat); the player's key 3 is a
+## click, so his Leap goes at its full lock as ever and its Beat is his let go (key3_cast, key3_let_go: K3_META), known
+## before the top (the Leap rises longer than BEAT_S).
 static func on_dash(body: Node, spec: Dictionary) -> void:
 	var inf: Dictionary = spec.get("_info", {})
-	if String(inf.get("move", "")) != "air_jump" or not on_beat(spec) or not BendLoadout.wears(body, PEAK_WIND):
+	if String(inf.get("move", "")) != "air_jump" or not BendLoadout.wears(body, PEAK_WIND):
 		return
 	if not (body is CharacterBody3D) or not body.is_inside_tree():
 		return
+	var beat := 1 if on_beat(spec) else 0
+	if beat == 0:
+		var k3: Variant = body.get_meta(K3_META, {})
+		if not (k3 is Dictionary) or BendStatus.now() - float((k3 as Dictionary).get("at", -INF)) > K3_FRESH_S:
+			return                                    # (no Beat on its way: a tapped key 3, or a cast that went by itself)
+	var old := body.get_node_or_null(^"AirPeakWatch")
+	if old != null:
+		old.name = "AirPeakWatchOld"
+		old.queue_free()
 	var w := PeakWatch.new()
 	w.name = "AirPeakWatch"
+	w.beat = beat
 	body.add_child(w)
 
 
-## Peak Wind's watch on a Leap's wearer: his rise turned to a fall is the top (his Carried wind charged there), PEAK_WATCH_S at
-## most; it frees itself.
+## Key 3's Beat (Peak Wind), noted on the wearer: {s: 0 his let go still to come, 1 on the Beat, -1 not; at: when the Leap
+## went}. Set by key3_cast, settled by key3_let_go, read by the Leap's PeakWatch (and gone with it).
+const K3_META := &"air_k3_beat"
+## How old a key-3 note may be when its Leap's dash begins (s: the pose's strike between the cast and the dash).
+const K3_FRESH_S := 0.6
+
+
+## The player's key-3 cast of move `m` at `mode` going now at its full lock (SwayCaster._cast: a click, as ever), key 3 `held`
+## still: for a wearer of a technique that reads its Beat, his let go is to be read (K3_META pending; true); else no note.
+static func key3_cast(body: Node, m: String, mode: String, held: bool) -> bool:
+	if body == null:
+		return false
+	if body.has_meta(K3_META):
+		body.remove_meta(K3_META)
+	if not held or not beat_worn(body, m, mode):
+		return false
+	body.set_meta(K3_META, {"s": 0, "at": BendStatus.now()})
+	return true
+
+
+## Key 3 let go (or held on past the window: `since_full` > BEAT_S) `since_full` s after the full lock of the key-3 cast it
+## went with (SwayCaster): on the Beat within BEAT_S (the flash on his hands), else not.
+static func key3_let_go(body: Node, since_full: float) -> void:
+	var k3: Variant = body.get_meta(K3_META, {}) if body != null else {}
+	if not (k3 is Dictionary) or int((k3 as Dictionary).get("s", -1)) != 0:
+		return
+	var on := since_full <= BEAT_S + BEAT_EPS
+	(k3 as Dictionary)["s"] = 1 if on else -1
+	if on:
+		beat_flash(body)
+
+
+## Peak Wind's watch on a Leap's wearer: his rise turned to a fall is the top (his Carried wind charged there, once the Leap is
+## known to be on the Beat: `beat` 1, or his key-3 note's), PEAK_WATCH_S at most; it frees itself (and the note).
 class PeakWatch extends Node:
 	var rose := false
+	var top := false
 	var t := 0.0
+	## 1 on the Beat (a bot's release), 0 read from his key-3 note (K3_META).
+	var beat := 0
 
 	func _physics_process(dt: float) -> void:
 		t += dt
 		var cb := get_parent() as CharacterBody3D
-		if cb == null or t > AirTalents.PEAK_WATCH_S:
-			queue_free()
+		var b := beat
+		if beat == 0 and cb != null:
+			var k3: Variant = cb.get_meta(AirTalents.K3_META, {})
+			b = int((k3 as Dictionary).get("s", -1)) if k3 is Dictionary else -1
+		if cb == null or t > AirTalents.PEAK_WATCH_S or b < 0:
+			_done()
 			return
 		if cb.velocity.y > 0.5:
 			rose = true
 		elif rose and cb.velocity.y <= 0.0:
-			set_physics_process(false)
+			top = true
+		if top and b > 0:
 			BendZone.carry_wind(cb)                   # (the top: his Carried wind, its spiral and whistle on him)
-			queue_free()
+			_done()
+
+	func _done() -> void:
+		set_physics_process(false)
+		var cb := get_parent()
+		if beat == 0 and cb != null and cb.has_meta(AirTalents.K3_META):
+			cb.remove_meta(AirTalents.K3_META)
+		queue_free()
 
 
 ## Peak Wind: the longest it watches a Leap for its top (s).
@@ -479,6 +594,9 @@ static func frost_step(b: BendBolt, from: Vector3, step: Vector3) -> void:
 	var by := b._by()
 	if by == null or not b.is_inside_tree():
 		return
+	if bool(b.info.get("returned", false)) or not BendLoadout.wears(by, FROSTWIND):
+		b.frosts = false                              # (someone else's now: a guard's return, a Turn, Eye of the Gale)
+		return
 	var to := from + step
 	var flat := Vector3(step.x, 0.0, step.z)
 	var way := flat.normalized() if flat.length_squared() > 1e-8 else -by.global_basis.z
@@ -507,7 +625,8 @@ static func _flat_dist(p: Vector3, a: Vector3, b: Vector3) -> float:
 
 
 ## Pool `pool` (a puddle zone, or a grate: Bending.POOLS) frozen by `by`'s wind into a crust across `way`: a puddle is gone
-## into it (fire melts it back), a grate is no water source while it stands (out of POOLS, back as it ends).
+## into it (fire melts it back), a grate is no water source while it stands (out of POOLS, its FROZEN_META the crust's
+## instance id; back however the crust goes: crumbled, melted, capped, or freed by the round's reset: CrustWatch).
 static func freeze_pool(by: Node3D, pool: Node3D, way: Vector3) -> FormRaised:
 	var at := FormEffects.ground_at(by, pool.global_position)
 	var src := {"kind": "grate", "node": pool}
@@ -516,9 +635,12 @@ static func freeze_pool(by: Node3D, pool: Node3D, way: Vector3) -> FormRaised:
 		src = {"kind": "puddle", "owner": pz.owner_node, "radius": pz.radius, "life": maxf(pz.life_s - pz.t, 2.0)}
 		pz.end("frozen")
 	else:
-		pool.set_meta(FROZEN_META, true)
+		pool.set_meta(FROZEN_META, 0)
 		pool.remove_from_group(Bending.POOLS)
-	return make_crust(by, at, way, CRUST_S, src)
+	var r := make_crust(by, at, way, CRUST_S, src)
+	if not (pool is BendZone):
+		pool.set_meta(FROZEN_META, r.get_instance_id())
+	return r
 
 
 ## A frost crust of `by`'s at `at` (its foot) lying across `way`: a low ice ridge CRUST_W long, CRUST_H high, `life` s (a snow
@@ -593,14 +715,35 @@ static func wall_shards(z: BendZone, b: BendBolt) -> bool:
 
 
 ## A crust's own watch (a child of its FormRaised): fire standing on it (a Fire Wall, burning ground) melts it; as it goes,
-## a grate it froze is a water source again, and a puddle it froze comes back when fire melted it.
+## a grate it froze is a water source again (also when the crust is freed without crumbling: the round's reset,
+## RingArena.clear_dropped, frees every raised piece; _exit_tree), and a puddle it froze comes back when fire melted it.
 class CrustWatch extends Node:
 	var src := {}
 	var by: Node3D
 	var _t := 0.0
+	var _crust_id := 0
+	var _thawed := false
 
 	func _ready() -> void:
+		_crust_id = get_parent().get_instance_id()
 		(get_parent() as FormRaised).crumbled.connect(_gone)
+
+	func _exit_tree() -> void:
+		_thaw()
+
+	## The grate it froze a water source again (once; only while the grate is still this crust's).
+	func _thaw() -> void:
+		if _thawed:
+			return
+		_thawed = true
+		var g: Variant = src.get("node")
+		if String(src.get("kind", "")) != "grate" or not (g is Node) or not is_instance_valid(g):
+			return
+		var gn := g as Node
+		if not gn.has_meta(AirTalents.FROZEN_META) or int(gn.get_meta(AirTalents.FROZEN_META)) not in [0, _crust_id]:
+			return
+		gn.remove_meta(AirTalents.FROZEN_META)
+		gn.add_to_group(Bending.POOLS)                   # (its water a source again)
 
 	func _physics_process(dt: float) -> void:
 		_t -= dt
@@ -619,10 +762,7 @@ class CrustWatch extends Node:
 				return
 
 	func _gone(r: FormRaised, why: String) -> void:
-		var g: Variant = src.get("node")
-		if String(src.get("kind", "")) == "grate" and g is Node and is_instance_valid(g):
-			(g as Node).remove_meta(AirTalents.FROZEN_META)
-			(g as Node).add_to_group(Bending.POOLS)        # (its water a source again)
+		_thaw()
 		if why == "melted":
 			BendLooks.burst(r.global_position + Vector3.UP * 0.2, "water", 22)
 			var own: Variant = src.get("owner")
@@ -728,6 +868,26 @@ static func snow_every(z: BendZone) -> void:
 		inf["from"] = n.global_position
 		BendR3.deliver(n, 1.0, n.global_position + Vector3.UP, Vector3.DOWN, by, -1.0, Vector3.ZERO, inf)
 	z.set_meta(&"air_cold", ticks)
+
+
+## A Breath (BendEffects.cone with melt) of `p`'s along `flat`, `r` m and `deg` wide, reaching Blizzard `z` (its column within
+## the cone): fire on it, it melts out in SNOW_MELT_S (melt_snow). True when it reached it.
+static func breath_melt(p: Node3D, z: BendZone, flat: Vector3, r: float, deg: float) -> bool:
+	if z == null or z.kind != "snow" or z.is_queued_for_deletion() or not NetSpells.decides():
+		return false
+	var to := z.global_position - p.global_position
+	to.y = 0.0
+	var d := to.length()
+	if d > r + z.radius:
+		return false
+	var fl := Vector3(flat.x, 0.0, flat.z)
+	if d > z.radius and fl.length_squared() > 1e-6:
+		# (outside the column: its near side within the cone's half angle)
+		var half := deg_to_rad(deg * 0.5) + asin(clampf(z.radius / d, 0.0, 1.0))
+		if to.normalized().angle_to(fl.normalized()) > half:
+			return false
+	melt_snow(z)
+	return true
 
 
 ## Fire on a Blizzard: it melts out in SNOW_MELT_S (once).

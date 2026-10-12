@@ -773,6 +773,8 @@ func _try_ground_dodge() -> bool:
 	var pad_dir := _v3("dodge_dir")
 	var roll := fresh.length() > 0.1 or (_b("dodge") and pad_dir.length() > 0.1)
 	var duck := _b("fast_fall") or (_b("dodge") and pad_dir.length() <= 0.1)
+	if roll and not _b("dodge") and AirTalents.drift_steers(body, _o) and _guard_zone():
+		roll = false                             # (Drift Guard's wearer walking with his guard up: a key pressed steers the walk)
 	if not roll and not duck:
 		return false
 	if not _guard_ok():

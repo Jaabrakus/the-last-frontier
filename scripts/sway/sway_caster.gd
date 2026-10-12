@@ -1561,6 +1561,7 @@ func _physics_process(dt: float) -> void:
 		_hold_guard()                             # (a puppet's lock is its owner's, net_lock; its guard held by his E)
 		return
 	_tick_floor(dt)
+	_key3_beat_watch()                            # (a Beat wearer's key-3 let go after his Leap went; Classic nothing)
 	_spell_hands()
 	_sync_meta()
 	_root()
@@ -1777,21 +1778,25 @@ func _click_runs_on() -> bool:
 	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false))
 
 
-## The cast going now is a held one let go (the let-go branch, or key 3 held past full by a Beat wearer): the Beat may count.
+## The cast going now is a held one let go (the let-go branch): the Beat may count.
 var _let_go := false
-## Key 3 was held at the full lock by a Beat wearer (_key3_beat_hold): its let go is a held cast's.
-var _key3_held_full := false
+## Key 3's Beat (Peak Wind's Leap; AirTalents.beat_worn): key 3 is a click and stays one (its move goes the moment the lock is
+## full, held or tapped, as ever), so a wearer who still holds key 3 as it goes has his let go read: when its lock filled
+## (-INF: nothing to read; Classic never sets it). _key3_beat_watch settles it (AirTalents.key3_let_go).
+var _k3_full_at := -INF
 
 
-## Key 3 still held on a move whose Beat a worn technique reads (Peak Wind's Leap; AirTalents.beat_worn): its lock waits for
-## the let go instead of going at full as a click. Tapped, it is the click it always was; Classic never holds.
-func _key3_beat_hold() -> bool:
-	if lock_src != SRC_DASH or player.controls == null or not AirTalents.beat_worn(player, move, mode_of(move)):
-		return false
-	var down := player.controls.pressed(&"weapon_3")
-	if down and state == State.FULL:
-		_key3_held_full = true
-	return down
+## Each frame: key 3 let go after its Beat-read cast went (or held on past the Beat's window): AirTalents.key3_let_go.
+func _key3_beat_watch() -> void:
+	if _k3_full_at == -INF:
+		return
+	var since := BendStatus.now() - _k3_full_at
+	if player.controls == null or not player.controls.pressed(&"weapon_3"):
+		AirTalents.key3_let_go(player, since)
+		_k3_full_at = -INF
+	elif since > AirTalents.BEAT_S + AirTalents.BEAT_EPS:
+		AirTalents.key3_let_go(player, INF)       # (held on past the window: not on the Beat)
+		_k3_full_at = -INF
 
 
 ## The lock's button pressed (true the frame it goes down) and how long it has been held (_press_t: the click's test). A
@@ -2405,7 +2410,6 @@ func _r3_form(m: String) -> void:
 ## hands.
 func _began() -> void:
 	_queued = false
-	_key3_held_full = false
 	_air_charge_extra = 0.0
 	_air_keep_full_timer = false
 	grown = false
@@ -2798,11 +2802,9 @@ func _hold(dt: float, q: Dictionary) -> void:
 	else:
 		full_t += dt
 		_charge_level()
-		if _queued and not _key3_beat_hold():
+		if _queued:
 			if BendStatus.now() >= _switch_hold_until and not _cast_wait():
-				_let_go = _key3_held_full          # (key 3 held past full by a Beat wearer, let go now: a held cast)
 				_cast()                       # (a click, or a let go while a switch's pose showed: it goes now)
-				_let_go = false
 			return
 		var rw := release_window()
 		if elem() and grows(move):
@@ -2971,7 +2973,7 @@ func _full() -> void:
 		_begin_hold()
 	elif r3() and (lock_src == SRC_GUARD or move == "patch") and not _cast_wait():
 		_cast()                                   # (round 3: the guard stands when its lock fills; Patch goes at full)
-	elif _queued and BendStatus.now() >= _switch_hold_until and not _cast_wait() and not _key3_beat_hold():
+	elif _queued and BendStatus.now() >= _switch_hold_until and not _cast_wait():
 		_cast()                                   # (a click: the move goes the moment its lock is full)
 
 
@@ -3135,7 +3137,10 @@ func _cast() -> void:
 	if r3_on and _let_go and full_t <= AirTalents.BEAT_S and AirTalents.beat_worn(player, m, String(pin[1])):
 		rel["beat"] = true                        # (the Beat: let go within beat window_s of the full lock; only a worn technique's)
 		AirTalents.beat_flash(player)
-	_key3_held_full = false
+	if r3_on and src == SRC_DASH and player.controls != null and state == State.FULL:
+		# (key 3 is a click: a Beat wearer still holding it as its move goes has his let go read, _key3_beat_watch; Classic none)
+		_k3_full_at = BendStatus.now() - full_t if AirTalents.key3_cast(player, m, String(pin[1]),
+				player.controls.pressed(&"weapon_3")) else -INF
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

@@ -1037,7 +1037,7 @@ func _wall_on_line(t: Node3D) -> bool:
 	var b := t.global_position + Vector3.UP
 	for w in me.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var fr := w as FormRaised
-		if fr != null and fr.is_up() and fr.kind == "wall":
+		if fr != null and fr.is_up() and fr.kind == "wall" and not AirTalents.is_crust(fr):   # (a 0.4 m frost crust is no wall)
 			var q := fr.global_position + Vector3.UP
 			if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 1.2 + fr.size.x * 0.5:
 				return true
@@ -1332,8 +1332,6 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
-	lock_t = lock_s * AirTalents.start_fill(me, id)   # (Rebound's head start after a perfect Wind Guard; Classic 0)
-	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
@@ -1366,6 +1364,8 @@ func begin(id: String, md: String) -> void:
 	# this lock's cast, _release)
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
+	lock_t = lock_s * AirTalents.start_fill(me, id)   # (Rebound's head start after a perfect Wind Guard: a share of the whole
+	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)     # lock, the guard's cast reward in it; Classic 0)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
