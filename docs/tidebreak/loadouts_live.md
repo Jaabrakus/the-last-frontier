@@ -233,14 +233,26 @@ of it: every seam asks `FireTalents.any(body)` (one meta lookup) first.
 | Magma (the set) | where the Kick's or the Axe Kick's wave dies (range, a wall) a 1.5 m seam for 3 s: matter/magma, 4% at most, two at once; water on it leaves a loose obsidian stone of his; a zone of kind mud quenches it; waves 16 / 14.2 m/s | `BendBolt._finish`, `BendZone` seam (`FireTalents.seam`, `seam_bolt`, `seam_water`) |
 | Lava Kick / Magma Fist / Magma Landing / Forge | the Kick's last 4 m one seam / a seam where the grown Punch lands / a 2 m seam where the Jets land / x1.15 fill on his own seam, seams 2.5 s | the same, `BendMotion._dash_end`, `FireTalents.fill_mult`, tune `set:magma.seam_life_s` |
 | Cauterize | Patch's key tapped twice: Cauterize (2% cost no Patch takes back, then up to 12% of the fresh pool back, gas within 1.5 m ends), lock 1.2 s; his Patch 1.7 s | `FireTalents.modes_for` (`Bending.other_move`, `SwayCaster.my_modes`), `BendEffects` heal, `RingRules.patch(b, max)` / `add_pct_kept` |
+| Flashfire (pass 2) | gas he lights bursts bigger: 8% and a set 8 m/s at 45 deg (6 and 6), 1 m past the cloud's edge; the burst is his whoever made the gas; his Embers 6% (7); a bot wearing it wants its Embers x2 at a foe standing in gas | `FireTalents.ignite` (lit by `gas_bolt` from `BendZone.on_bolt`, `gas_cone` from `BendEffects.cone`, `gas_every` from a gas cloud's `BendZone._every`), rules.json `reaction/ignited_gas` through `BendLoadout.hit_class`, `NpcBending._choose` (`FireTalents.bot_weight`) |
 
 The floor fire and the seams are `BendZone` MATTER (a zone with a `tick_tag`): % only through rules.json `matter/burn` and
 `matter/magma` (`no_flinch`, and `no_hurt`: `BendR3.take` and `BendStatus.hurt` skip the struck one's lock, so no set-back
 and no Lightning-charge break), one tick each 0.5 s from all the matter a body stands in, capped per zone (3% a patch or line,
 4% a seam), never to its owner or his side, and floor fire is jumped (feet more than 0.45 m over it). The Lava Kick node's
 class change was written against the Kick's old base (5.8); its `from` is today's 9.5 and its `to` 10.5 (the node's +10%).
-Flashfire is not built: its partner, the Sulphur set's gas and its ignite reaction (`reaction/ignited_gas`), is earth's and not
-in this branch.
+
+Flashfire (pass 2) is built against the Sulphur set's interface: gas is earth's matter, a `BendZone` of kind `gas`, round, its
+radius the cloud's (the water lane's Washout and Cleanse use the same). Earth's set is not built in fire's lane, so the set's
+"fire lights it" is built here from fire's side, for anyone's fire (the tree's reaction rules), and earth's clouds need only be
+that zone: a fire bolt (or an air bolt carrying a fire wall's flame) inside a cloud, a fire cone reaching one, or a fire wall,
+floor fire, a scald or a seam touching one burns it at once (`FireTalents.ignite`): the cloud is gone and everyone within its
+radius whom the lighter may hit takes rules.json `reaction/ignited_gas` (6%, a set 6 m/s at 45 deg, away from its middle).
+Whoever lights it owns it (the % and the hit are his; never on him or his side), it stales as the move that lit it (the hit's
+`stale_as`, a two-line addition to `RingRules.on_hit` that Classic never sends), and it is called out IGNITED! at the callout
+spot (`data/ring/callouts.json` `ignited`, `RingHighlights.moment`). Lightning charging gas, wind carrying it and water washing
+it (the set's other counters) are not built here. Until earth's lane makes gas in a match, only Flashfire's trade (Embers 6%)
+shows in one; the test makes the clouds itself. When the earth lane builds Sulphur it should make its clouds this zone and
+not build a second ignite.
 
 ## Tests and commands
 

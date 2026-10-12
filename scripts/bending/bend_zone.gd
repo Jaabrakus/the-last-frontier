@@ -550,6 +550,8 @@ func _every(dt: float) -> void:
 	_inside_was = now_in
 	if kind == "seam":
 		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
+	if kind == "gas":
+		FireTalents.gas_every(self)                # (a fire wall, floor fire or a seam touching the cloud lights it)
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -567,6 +569,10 @@ func on_bolt(b: BendBolt) -> bool:
 		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
 	if kind == "seam" and b.kind == "water" and not b.spent:
 		FireTalents.seam_bolt(self, b)               # (water on a Magma seam cools it to obsidian)
+	if kind == "gas" and not b.spent:
+		FireTalents.gas_bolt(self, b)                # (fire lights gas, anyone's: the Ignited Sulphur burst, the bolt's caster's)
+		if is_queued_for_deletion():
+			return false                             # (burnt: the bolt flies on)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false

@@ -764,6 +764,8 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 			w *= float(cb.get("bonus", 2.0))        # (round 3: the string table's true strings instead, NpcRingMind)
 		if stock():
 			w *= mind().weight(o, t, d)
+		if FireTalents.any(me):
+			w *= FireTalents.bot_weight(me, o, t)   # (a worn talent's own reason: Flashfire's Embers at a foe in gas)
 		w *= me.rng.randf_range(0.7, 1.3)
 		if w > best_w:
 			best_w = w

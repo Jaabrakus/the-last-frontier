@@ -1199,8 +1199,10 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var d := float(cls.get("d", 0.0))
 	if untagged:
 		d = curve_d(float(info.get("dmg", 0.0)))
+	# (a reaction stales as the move that set it off, info stale_as: the skill tree's reaction rules; Classic sends none)
+	var stale_tag := String(info.get("stale_as", cls.tag))
 	if first and not returned and not untagged and by != null and not stale_off:
-		var copies := stale_count(by, String(cls.tag))
+		var copies := stale_count(by, stale_tag)
 		stale_k = 1.0 - minf(sub_num("stale", "step", 0.08) * float(copies), sub_num("stale", "max", 0.4))
 	d *= stale_k * stock_num("pct_scale", 1.0)
 	# (a late guard's half; an untagged hit's damage and knock came already halved by the guard that let it through)
@@ -1303,7 +1305,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	# the stale queue (landed, unguarded, never a return; a volley once)
 	if by != null and not returned and not late and not untagged:
 		var q: Array = _stale.get(by.get_instance_id(), [])
-		q.append(String(cls.tag))
+		q.append(stale_tag)
 		while q.size() > int(sub_num("stale", "n", 6.0)):
 			q.pop_front()
 		_stale[by.get_instance_id()] = q

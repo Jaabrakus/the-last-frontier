@@ -18,6 +18,9 @@ extends RefCounted
 ##                                 SwayCaster._moving_mult), Dancing Feet (x1.15 for 0.6 s after a Step ends; its x0.9 the same
 ##                                 tune path)
 ##   cast(bc, m, mode, spec, a)    a cast made (BendEffects._apply, after its effect): Ignite Step's burn line, the Step's mark
+##   gas_bolt, gas_cone, gas_every fire meeting a gas cloud (the Sulphur set's, earth's; BendZone kind "gas"): it burns, the
+##                                 lighter's (ignite: rules.json reaction/ignited_gas); Flashfire's bigger burst. Only gas ever
+##                                 reaches these, and only a worn Sulphur makes gas: Classic never does
 ## A lock's head start is never a whole lock (the tree's lock contract: "never a zero lock"): at most HEAD_MAX.
 
 const HEAD_META := &"talent_head_start"          ## {move: {fill, until}}: the next lock of that move starts that full
@@ -646,3 +649,146 @@ static func storm_back(who: Node, spec: Dictionary, info: Dictionary, r: float) 
 		var binfo := BendZone.return_info(info, who, bfrom, k)
 		BendR3.deliver(who2, float(spec.get("damage", 50.0)) * k, end2, bdir, who, float(spec.get("_lock_s", -1.0)),
 				Vector3(bdir.x, 0.0, bdir.z).normalized() * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0, binfo)
+
+
+# ---------------------------------------------------------------- gas lit by fire (the Ignited Sulphur burst; Flashfire)
+## Gas is the Sulphur set's matter (earth's skill set, skill_tree.json skill_sets.sulphur, built in earth's lane): a BendZone of kind
+## "gas", round, its radius the cloud's. The set's "fire lights it" is built here, from fire's side, so Flashfire has its burst
+## to change and earth's clouds need nothing more than to be that zone: fire meeting a cloud (a fire bolt, or an air bolt that
+## took a fire wall's flame, inside it: BendZone.on_bolt; a fire cone reaching it: BendEffects.cone; a fire wall, floor fire, a
+## scald or a seam touching it: the cloud's BendZone._every) burns it at once (ignite). Classic never meets gas: only a worn
+## Sulphur makes it.
+const GAS_KIND := "gas"
+const IGNITE_TAG := "reaction/ignited_gas"
+## Flashfire (fire.embers.flashfire): the burst of gas its wearer lights reaches this much farther (its class 8 and 8 is the node's
+## class change, BendLoadout.hit_class; its Embers' 6 the same).
+const FLASH_M := 1.0
+const LIT_META := &"talent_gas_lit"
+## The fire zones that light a cloud they touch.
+const LIGHTING_ZONES := ["fire_wall", "burn", "seam", "scald"]
+
+
+## Whether `q` is inside gas cloud `gas` (round: its radius flat, from a metre under its floor to 3.5 m over it).
+static func in_gas(gas: BendZone, q: Vector3) -> bool:
+	var l := gas.global_position
+	return Vector2(q.x - l.x, q.z - l.z).length() <= gas.radius and q.y - l.y > -1.0 and q.y - l.y < 3.5
+
+
+## The burst of gas cloud `gas` lit by `lighter`'s fire (`lit_by`: the tag of the move whose fire lit it, "" none): the cloud is
+## gone, and everyone within its radius (FLASH_M more when the lighter wears Flashfire) whom the lighter may hit takes
+## rules.json reaction/ignited_gas (6%, a set 6 m/s at 45 deg; Flashfire's 8 and 8 for its wearer), knocked away from its middle.
+## Whoever lights it owns it, whoever made the gas: the hit is his (never on him or his side), and it stales as the move that lit
+## it (info stale_as, RingRules.on_hit). It never stacks: two clouds are two bursts. The host's (NetSpells.decides). How many it
+## hit, or -1 when nothing burned (no lighter, a cloud already lit).
+static func ignite(gas: BendZone, lighter: Node3D, lit_by := "") -> int:
+	if gas == null or not is_instance_valid(gas) or gas.kind != GAS_KIND or gas.is_queued_for_deletion() or gas.has_meta(LIT_META):
+		return -1
+	if lighter == null or not is_instance_valid(lighter) or not lighter.is_inside_tree() or not NetSpells.decides():
+		return -1
+	gas.set_meta(LIT_META, true)
+	var at := gas.global_position
+	var r := gas.radius + (FLASH_M if wears(lighter, "fire.embers.flashfire") else 0.0)
+	gas.end("ignited")
+	# (its look: the cloud bursting into flame out to its reach, a flash at its heart; its sound; nothing drawn on anyone)
+	BendLooks.burst(at + Vector3.UP * 1.0, "fire", 44, Vector3.UP, 180.0, r * 2.6, 0.55, false)
+	for i in 6:
+		var rim := at + Vector3.FORWARD.rotated(Vector3.UP, TAU * float(i) / 6.0) * r * 0.75 + Vector3.UP * 0.4
+		BendLooks.burst(rim, "fire", 10, Vector3.UP, 70.0, 3.0, 0.4, false)
+	if BendLooks.live():
+		var pool := BendLooks._pool()
+		if pool != null:
+			pool.play("flash", Transform3D(Basis.IDENTITY, at + Vector3.UP * 1.0), 0.2, 0.5, r * 0.8, Color(1.0, 0.62, 0.22),
+					Color(1.0, 0.95, 0.7))
+	BendLooks.sound("fire", "hit", at + Vector3.UP, 3.0)
+	var cls := BendLoadout.hit_class(lighter, RingRules.class_of(IGNITE_TAG))
+	var d := float(cls.get("d", 6.0))
+	var mps := float(cls.get("base", 6.0))
+	var deg := float(cls.get("angle", 45.0))
+	var n_hit := 0
+	for e in BendCaster.near(lighter, at, r + 0.6):
+		var n: Node3D = e[0]
+		var q := n.global_position
+		if Vector2(q.x - at.x, q.z - at.z).length() > r + 0.3 or absf(q.y - at.y) > 3.0:
+			continue
+		var out := Vector3(q.x - at.x, 0.0, q.z - at.z)
+		if out.length_squared() < 1e-4:
+			out = Vector3(q.x - lighter.global_position.x, 0.0, q.z - lighter.global_position.z)
+		out = out.normalized() if out.length_squared() > 1e-4 else Vector3.FORWARD
+		var info := {"tag": IGNITE_TAG, "move": lit_by.get_slice("/", 0), "from": at, "dir": out, "burst": true, "reaction": "ignited"}
+		if lit_by != "":
+			info["stale_as"] = lit_by
+		BendR3.deliver(n, d, q + Vector3.UP * 0.9, out, lighter, -1.0, BendR3.set_v(out, mps, deg), info)
+		n_hit += 1
+	# (the reaction called out at the callout spot: IGNITED!, data/ring/callouts.json)
+	var hl := RingHighlights.find(lighter.get_tree())
+	if hl != null:
+		hl.moment.emit("ignited", lighter, {"at": at, "hit": n_hit})
+	return n_hit
+
+
+## Bolt `b` inside gas cloud `gas` (BendZone.on_bolt, each frame): fire (or an air bolt carrying a fire wall's flame) lights it,
+## the bolt's caster the lighter; it flies on.
+static func gas_bolt(gas: BendZone, b: BendBolt) -> void:
+	if b.spent or not (b.kind == "fire" or b.burning) or not in_gas(gas, b.global_position):
+		return
+	ignite(gas, b._by(), String(b.info.get("tag", "")))
+
+
+## A fire cone of `p`'s (BendEffects.cone: the Breath, a jab's flame) along `flat`, `r` m and `deg` wide: each gas cloud it reaches
+## burns, his.
+static func gas_cone(p: Node3D, flat: Vector3, r: float, deg: float, lit_by: String) -> void:
+	if p == null or not is_instance_valid(p) or not p.is_inside_tree():
+		return
+	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var g := z as BendZone
+		if g == null or g.kind != GAS_KIND or g.is_queued_for_deletion():
+			continue
+		var to := Vector3(g.global_position.x - p.global_position.x, 0.0, g.global_position.z - p.global_position.z)
+		if to.length() > r + g.radius:
+			continue
+		if to.length() > g.radius and deg < 360.0 and rad_to_deg(Vector3(flat.x, 0.0, flat.z).normalized().angle_to(to.normalized())) \
+				> deg * 0.5 + rad_to_deg(asin(clampf(g.radius / to.length(), 0.0, 1.0))):
+			continue                                  # (beside the cone: the cloud's edge outside its angle)
+		ignite(g, p, lit_by)
+
+
+## Gas cloud `gas`'s own look round (its _every, the host's): a fire wall, floor fire, a scald or a seam touching it lights it,
+## that fire's owner the lighter.
+static func gas_every(gas: BendZone) -> void:
+	if gas.is_queued_for_deletion() or not NetSpells.decides():
+		return
+	for o in gas.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var oz := o as BendZone
+		if oz == null or oz == gas or oz.is_queued_for_deletion() or not oz.kind in LIGHTING_ZONES:
+			continue
+		if _touches(gas, oz):
+			# (a fire wall's cast tag; a talent's floor fire carries its tick class, no move's: it stales as itself)
+			var lit_by := String(oz.info.get("tag", "")) if oz.tick_tag == "" and oz.info.get("tag") is String else ""
+			ignite(gas, oz.owner_node, lit_by)
+			return
+
+
+## Whether fire zone `z` (a box, or round) reaches into gas cloud `gas`, flat.
+static func _touches(gas: BendZone, z: BendZone) -> bool:
+	var c := gas.global_position
+	if z.round_zone:
+		return Vector2(z.global_position.x - c.x, z.global_position.z - c.z).length() <= gas.radius + z.radius
+	var l := z.global_transform.affine_inverse() * c
+	var nearest := Vector2(clampf(l.x, -z.size.x * 0.5, z.size.x * 0.5), clampf(l.z, -z.size.z * 0.5, z.size.z * 0.5))
+	return Vector2(l.x, l.z).distance_to(nearest) <= gas.radius and absf(l.y) < 3.5
+
+
+## A bot's own reason to want option `o` more (NpcBending._choose; 1.0 none): a worn Flashfire throws its Embers at a foe `t`
+## standing in gas (any cloud: whoever lights it owns it), x FLASH_BOT.
+const FLASH_BOT := 2.0
+
+
+static func bot_weight(me: Node, o: Dictionary, t: Node3D) -> float:
+	if String(o.get("key", "")) != "fire_jab/embers" or t == null or not is_instance_valid(t) or not t.is_inside_tree() \
+			or not wears(me, "fire.embers.flashfire"):
+		return 1.0
+	for z in t.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var g := z as BendZone
+		if g != null and g.kind == GAS_KIND and not g.is_queued_for_deletion() and in_gas(g, t.global_position):
+			return FLASH_BOT
+	return 1.0

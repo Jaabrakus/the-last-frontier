@@ -465,6 +465,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 				bz.end()
 		if bool(spec.get("melt", false)):
 			melt(p, p.global_position + flat * r * 0.5, r * 0.7)
+	if kind == "fire":
+		FireTalents.gas_cone(p, flat, r, deg, String(info.get("tag", "")))   # (fire lights the gas it reaches: earth's Sulphur only)
 	if float(spec.get("smoke_s", 0.0)) > 0.0 and not ring:
 		# (Breath: the smoke where it burned, a screen a bot cannot see through)
 		var at := FormEffects.ground_at(p, p.global_position + flat * r * 0.6)

@@ -34,6 +34,12 @@ extends SceneTree
 ##   Cauterize         Patch's key tapped twice readies Cauterize (Classic: Patch again); a real Cauterize with 20% fresh
 ##                     leaves 10% (2% cost, 12% back), with 6% fresh leaves 2% (the cost is never taken back); its lock 1.2 s,
 ##                     his Patch's 1.7 s (Classic 1.5 s)
+##   Flashfire         gas (the Sulphur set's cloud, earth's: a round BendZone of kind gas, made here as earth's lane will
+##                     make it) lit by fire burns (anyone's fire: the set's rule): a real Embers cast through a cloud round the
+##                     foe bursts it, the burst his: 8% and a set 8 m/s (Classic 6 and 6); 1 m farther (a foe 3 m from a 2.5 m
+##                     cloud's middle burnt only worn); never on the lighter standing in it; whoever made the gas, the lighter
+##                     owns it; it stales as the Embers; his Embers 6% (7); the Breath and a fire wall light it too, water does
+##                     not; a bot wearing it lights the player's gas bigger and wants its Embers at a foe in gas
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
@@ -41,8 +47,8 @@ const BUILT := ["fire.parry.hot_hands", "fire.punch.rhythm", "fire.kick.chain", 
 		"fire.passive.dancing_feet", "fire.passive.hot_feet", "fire.fireball.blazing", "fire.highkick.crescent_burn",
 		"fire.step.ignite", "fire.breath.scald", "fire.wall.curved", "fire.lightning.forked", "fire.parry.hold_storm",
 		"fire.set.magma", "fire.magma.fist", "fire.magma.lava_kick", "fire.magma.landing", "fire.magma.forge",
-		"fire.slot.cauterize"]
-const WATCHDOG_S := 400.0
+		"fire.slot.cauterize", "fire.embers.flashfire"]
+const WATCHDOG_S := 460.0
 
 var checks := 0
 var fails: Array[String] = []
@@ -153,22 +159,15 @@ func _run() -> void:
 		var r := BendLoadout.resolve(id)
 		_expect(bool(r.ok) and BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(),
 				"%s resolves whole and is live (%s)" % [id, String(r.why) if not bool(r.ok) else BendLoadout.why_not(id)])
-	await _hot_hands()
-	await _rhythm()
-	await _chain()
-	await _grounded()
-	await _feet()
-	await _bot()
-	await _crescent()
-	await _ignite()
-	await _blazing()
-	await _scald()
-	await _curved()
-	await _forked()
-	await _hold_storm()
-	await _magma()
-	await _magma_nodes()
-	await _cauterize()
+	# (a user arg only=<part> plays that part alone, e.g. only=flashfire: a quicker run while working on one talent)
+	var only := ""
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("only="):
+			only = a.substr(5)
+	for part: String in ["hot_hands", "rhythm", "chain", "grounded", "feet", "bot", "crescent", "ignite", "blazing", "scald",
+			"curved", "forked", "hold_storm", "magma", "magma_nodes", "cauterize", "flashfire"]:
+		if only == "" or only == part:
+			await call("_" + part)
 	_end()
 
 
@@ -1081,3 +1080,259 @@ func _bot() -> void:
 	BendLoadout.clear(foe)
 	_expect(is_equal_approx(hf, 0.9) and is_equal_approx(FireTalents.fill_mult(foe, false), 1.0),
 			"a bot wearing Hot Feet: its fill standing still x%.2f (Classic x%.2f)" % [hf, FireTalents.fill_mult(foe, false)])
+
+
+# ---------------------------------------------------------------- Flashfire (fire lighting gas)
+var _dealt: Array = []                 ## [by, on, tag, %]: each % a hit added (RingRules.pct_dealt, its tag the rules' last_tag)
+var _launch: Array = []                ## [on, launch v, by, tag] (RingRules.launched)
+
+
+## A gas cloud of `owner`'s, `r` m round, on the deck under `at`: the Sulphur set's matter as earth's lane makes it (a round
+## BendZone of kind gas; earth's set is not built in fire's lane). It lasts 6 s (the set's cloud 3 s): the test's time to cast.
+func _gas(owner: Node3D, at: Vector3, r := 2.5) -> BendZone:
+	return BendZone.make(owner, "gas", FormEffects.ground_at(owner, at), {"radius_m": r, "round": true, "life_s": 6.0}, Vector3.FORWARD)
+
+
+## The player turned to face `at` (his yaw: the camera's and the crosshair's).
+func _face(at: Vector3) -> void:
+	var f := Vector3(at.x - p.global_position.x, 0.0, at.z - p.global_position.z).normalized()
+	p.yaw = atan2(-f.x, -f.z)
+	p.rotation.y = p.yaw
+
+
+## The player's Embers as his cast makes them (his worn numbers, the cast's info and volley: BendEffects.apply's) from his chest,
+## level, toward `to`, through the game's own volley (BendEffects.bolts): the test's aim, not the crosshair's.
+func _embers_at(to: Vector3) -> void:
+	var spec: Dictionary = ((SwayMoves.move("fire_jab").bend as Dictionary).embers as Dictionary).duplicate(true)
+	spec = BendLoadout.spec(p, "fire_jab", "embers", spec)
+	var info := BendR3.info_for(bc, "fire_jab", "embers", false, spec)
+	info["volley_id"] = BendR3.new_volley()
+	info["volley_n"] = int(spec.count)
+	spec["_info"] = info
+	spec["_lock_s"] = BendEffects.lock_of("fire_jab", "embers")
+	var from := p.global_position + Vector3.UP * 1.3
+	var dir := Vector3(to.x - from.x, 0.0, to.z - from.z).normalized()
+	BendEffects.bolts(bc, {"from": from, "dir": dir, "flat": dir, "point": from + dir * 10.0, "target": null}, spec)
+
+
+## The burst's share on `on` since record indices `d0` (_dealt) and `l0` (_launch): [its %, its launch's flat speed (-1 none), by].
+func _burst_on(on: Node, d0: int, l0: int) -> Array:
+	var pct := 0.0
+	var by: Node = null
+	for e: Array in _dealt.slice(d0):
+		if e[1] == on and String(e[2]) == FireTalents.IGNITE_TAG:
+			pct += float(e[3])
+			by = e[0]
+	var v := -1.0
+	for e: Array in _launch.slice(l0):
+		if e[0] == on and String(e[3]) == FireTalents.IGNITE_TAG:
+			v = Vector2((e[1] as Vector3).x, (e[1] as Vector3).z).length()
+	return [pct, v, by]
+
+
+func _burnt(g: Variant) -> bool:
+	return not is_instance_valid(g) or (g as Node).is_queued_for_deletion()
+
+
+func _flashfire() -> void:
+	var rr := RingRules.current()
+	rr.pct_dealt.connect(func(by: Node, b: Node3D, delta: float) -> void:
+		_dealt.append([by, b, String(rr._sk(b).get("last_tag", "")), delta]))
+	rr.launched.connect(func(b: Node3D, v: Vector3, _s: float, by: Node, tag: String) -> void: _launch.append([b, v, by, tag]))
+	var moments: Array = []
+	var hl := RingHighlights.find(self)
+	if hl != null:
+		hl.moment.connect(func(kind: String, body: Node, _i: Dictionary) -> void: moments.append([kind, body]))
+	var scale := RingRules.stock_num("pct_scale", 1.0)
+	var k45 := cos(deg_to_rad(45.0))
+	var home := _foe_at
+	var ff_id := "fire.embers.flashfire"
+	# a real Embers (the quick key, his crosshair on the foe 5.5 m before him) through a 2.5 m cloud of the foe's round the foe
+	# (the quick key's spell is fire's own jab, Embers, for this run only: the settings file may hold another, never written)
+	var q_was: Variant = c._quick.get("fire")
+	c._quick["fire"] = {"id": "fire_jab", "mode": "embers"}
+	var real := {}
+	for id: String in ["", ff_id]:
+		await _calm()
+		_wear(id)
+		rr._stale.clear()
+		var fwd := -p.global_basis.z
+		fwd.y = 0.0
+		_foe_at = p.global_position + fwd.normalized() * 5.5
+		await _ticks(2)
+		_face(_foe_at)
+		await _ticks(2)
+		var gas := _gas(foe, _foe_at)
+		var d0 := _dealt.size()
+		var l0 := _launch.size()
+		var m0 := moments.size()
+		var n0 := casts.size()
+		c.quick_override = true
+		await _until(func() -> bool: return c.state == SwayCaster.State.FULL or casts.size() > n0, 1.5)
+		c.quick_override = false
+		var cast_ok := await _until(func() -> bool: return casts.size() > n0, 1.0) < INF
+		await _secs(0.6)
+		var b := _burst_on(foe, d0, l0)
+		var called: bool = moments.slice(m0).any(func(m: Array) -> bool: return m[0] == "ignited" and m[1] == p)
+		real[id] = {"cast": cast_ok and String(casts[-1][0]) == "fire_jab", "lit": _burnt(gas) and called, "pct": b[0], "v": b[1],
+				"by": b[2], "called": called}
+		c.quick_override = null
+	if q_was is Dictionary:
+		c._quick["fire"] = q_was
+	else:
+		c._quick.erase("fire")
+	var r0: Dictionary = real[""]
+	var r1: Dictionary = real[ff_id]
+	_expect(bool(r0.cast) and bool(r1.cast) and bool(r0.lit) and bool(r1.lit),
+			"Embers (the quick key) through a gas cloud round the foe: real casts, and the cloud burns, worn and not (fire lights gas)")
+	_expect(absf(float(r1.pct) - 8.0 * scale) < 0.05 and absf(float(r0.pct) - 6.0 * scale) < 0.05,
+			"Flashfire: the burst adds %.2f%% to the foe in it (Classic %.2f%%; 8 and 6 x pct_scale)" % [r1.pct, r0.pct])
+	_expect(absf(float(r1.v) - 8.0 * k45) < 0.05 and absf(float(r0.v) - 6.0 * k45) < 0.05,
+			"Flashfire: the burst knocks him a set 8 m/s at 45 deg (flat %.2f; Classic 6: %.2f)" % [r1.v, r0.v])
+	_expect(r1.by == p and r0.by == p and bool(r1.called) and bool(r0.called),
+			"the burst is the lighter's though the gas was the foe's, and called out IGNITED! (%s, %s)" % [str(r1.by), str(r0.by)])
+	# 1 m farther: the foe 3 m from the middle of a 2.5 m cloud (outside it), the Embers through its middle and on past him
+	var reach := {}
+	for id: String in ["", ff_id]:
+		await _calm()
+		_wear(id)
+		rr._stale.clear()
+		var fwd := -p.global_basis.z
+		fwd.y = 0.0
+		fwd = fwd.normalized()
+		var mid := p.global_position + fwd * 5.0
+		_foe_at = mid + fwd.cross(Vector3.UP).normalized() * 3.0
+		await _ticks(2)
+		var gas := _gas(foe, mid)
+		var d0 := _dealt.size()
+		var l0 := _launch.size()
+		var t0 := BendStatus.now()
+		_embers_at(mid + Vector3.UP * 1.3)
+		await _secs(0.6)
+		var b := _burst_on(foe, d0, l0)
+		var embers_on := BendR3.hits_log.filter(func(h: Dictionary) -> bool: return (h.n == foe and float(h.at) >= t0
+				and String(h.tag) == "fire_jab/embers")).size()
+		reach[id] = {"lit": _burnt(gas), "pct": b[0], "embers": embers_on, "stale_e": rr.stale_count(p, "fire_jab/embers"),
+				"stale_r": rr.stale_count(p, FireTalents.IGNITE_TAG)}
+	var e0: Dictionary = reach[""]
+	var e1: Dictionary = reach[ff_id]
+	_expect(bool(e0.lit) and bool(e1.lit) and int(e0.embers) == 0 and int(e1.embers) == 0 and float(e0.pct) < 0.01
+			and absf(float(e1.pct) - 8.0 * scale) < 0.05,
+			"Flashfire: 1 m farther: a foe 3 m from the burning cloud's middle takes %.2f%% (Classic, 2.5 m: %.2f%%); no ember touched him"
+			% [e1.pct, e0.pct])
+	_expect(int(e1.stale_e) == 1 and int(e1.stale_r) == 0,
+			"the burst stales as the Embers that lit it (his stale queue: %d Embers, %d bursts)" % [int(e1.stale_e), int(e1.stale_r)])
+	# the lighter standing in the cloud he lights: the foe beside him burns, he never does
+	await _calm()
+	_wear(ff_id)
+	rr._stale.clear()
+	var fwd2 := -p.global_basis.z
+	fwd2.y = 0.0
+	var side2 := fwd2.normalized().cross(Vector3.UP).normalized()
+	_foe_at = p.global_position + side2 * 1.5
+	await _ticks(2)
+	var gas2 := _gas(foe, p.global_position)
+	var pp0 := rr.pct_of(p)
+	var d2 := _dealt.size()
+	var l2 := _launch.size()
+	_embers_at(p.global_position - side2 * 6.0 + Vector3.UP * 1.3)
+	await _secs(0.5)
+	var b2 := _burst_on(foe, d2, l2)
+	_expect(_burnt(gas2) and absf(float(b2[0]) - 8.0 * scale) < 0.05 and absf(rr.pct_of(p) - pp0) < 0.01,
+			"Flashfire: lit from inside the cloud, the foe in it takes %.2f%%, its lighter nothing (%.2f%%)" % [b2[0], rr.pct_of(p) - pp0])
+	# his Embers: 6% (7) over the seven embers, each that lands its share
+	var share := {}
+	for id: String in ["", ff_id]:
+		await _calm()
+		_wear(id)
+		rr._stale.clear()
+		var fwd3 := -p.global_basis.z
+		fwd3.y = 0.0
+		_foe_at = p.global_position + fwd3.normalized() * 3.5
+		await _ticks(2)
+		var d3 := _dealt.size()
+		_embers_at(_foe_at + Vector3.UP * 1.3)
+		await _secs(0.5)
+		var each: Array = _dealt.slice(d3).filter(func(e: Array) -> bool: return e[1] == foe and String(e[2]) == "fire_jab/embers") \
+				.map(func(e: Array) -> float: return float(e[3]))
+		share[id] = [each.size(), (each.reduce(func(a: float, x: float) -> float: return a + x, 0.0) / maxf(each.size(), 1.0))]
+	var ec := BendLoadout.hit_class(p, RingRules.class_of("fire_jab/embers"))
+	_expect(is_equal_approx(float(ec.get("d", 0.0)), 6.0) and is_equal_approx(float(RingRules.class_of("fire_jab/embers").d), 7.0)
+			and int(share[""][0]) > 0 and int(share[ff_id][0]) > 0 and absf(float(share[ff_id][1]) - 6.0 / 7.0 * scale) < 0.01
+			and absf(float(share[""][1]) - 7.0 / 7.0 * scale) < 0.01,
+			"Flashfire: his Embers add 6%% (7): each ember that lands %.3f%% (%d landed; Classic %.3f%%, %d)"
+			% [float(share[ff_id][1]), int(share[ff_id][0]), float(share[""][1]), int(share[""][0])])
+	# other fire lights it too (the Breath's cone, a fire wall raised over it); water does not
+	await _calm()
+	_wear("")
+	_foe_at = home
+	await _ticks(2)
+	var fwd4 := -p.global_basis.z
+	fwd4.y = 0.0
+	fwd4 = fwd4.normalized()
+	var g_breath := _gas(foe, p.global_position + fwd4 * 3.0)
+	var m4 := moments.size()
+	BendEffects.apply(bc, "fire_breath", "breath", ((SwayMoves.move("fire_breath").bend as Dictionary).breath as Dictionary))
+	await _ticks(3)
+	var by_breath := moments.slice(m4).any(func(m: Array) -> bool: return m[0] == "ignited" and m[1] == p)
+	var g_wall := _gas(foe, p.global_position + fwd4 * 6.0)
+	var g_water := _gas(foe, p.global_position - fwd4 * 5.0)
+	var wall := BendZone.make(p, "fire_wall", FormEffects.ground_at(p, p.global_position + fwd4 * 6.0 + fwd4.cross(Vector3.UP) * 2.0),
+			{"width_m": 4.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 2.0}, fwd4)
+	var wspec: Dictionary = ((SwayMoves.move("water_jet").bend as Dictionary).splash as Dictionary).duplicate()
+	wspec["_info"] = BendR3.info_for(bc, "water_jet", "splash", false, wspec)
+	var wfrom := p.global_position + Vector3.UP * 1.3
+	BendBolt.launch(p, wfrom, (p.global_position - fwd4 * 5.0 + Vector3.UP * 1.0 - wfrom).normalized(), wspec)
+	await _secs(0.6)
+	_expect(_burnt(g_breath) and by_breath, "a Breath (Classic) over a gas cloud lights it, his")
+	_expect(wall != null and _burnt(g_wall), "a fire wall raised reaching into a gas cloud lights it")
+	_expect(not _burnt(g_water), "water through a gas cloud does not light it")
+	if is_instance_valid(g_water):
+		g_water.end()
+	# a bot wearing it: its Embers at the player standing in a cloud of his own (as an earth player's) burn him bigger
+	var nb: NpcBending = (foe.get(&"brain") as NpcBrain).bending if foe.get(&"brain") != null else null
+	var bot := {}
+	for id: String in ["", ff_id]:
+		await _calm()
+		_wear(id, foe)
+		rr._stale.clear()
+		var fwd5 := -p.global_basis.z
+		fwd5.y = 0.0
+		_foe_at = p.global_position + fwd5.normalized() * 6.0
+		await _ticks(2)
+		if foe.has_method(&"face_point"):
+			foe.call(&"face_point", p.global_position)
+		var gas5 := _gas(p, p.global_position)
+		var d5 := _dealt.size()
+		var l5 := _launch.size()
+		if nb != null:
+			nb.begin("fire_jab", "embers")
+			nb.lock_t = nb.lock_s
+			nb._release()
+		await _secs(0.7)
+		var b5 := _burst_on(p, d5, l5)
+		bot[id] = {"lit": _burnt(gas5), "pct": b5[0], "by": b5[2]}
+		if nb != null:
+			nb._cancel()
+	_expect(nb != null and bool(bot[""].lit) and bool(bot[ff_id].lit) and bot[ff_id].by == foe
+			and absf(float(bot[ff_id].pct) - 8.0 * scale) < 0.05 and absf(float(bot[""].pct) - 6.0 * scale) < 0.05,
+			"a bot wearing Flashfire: its Embers light the player's own gas round him: he takes %.2f%% (a Classic bot's %.2f%%)"
+			% [bot[ff_id].pct, bot[""].pct])
+	# ...and wants its Embers more at a foe standing in gas
+	await _calm()
+	_wear(ff_id, foe)
+	var g6 := _gas(p, p.global_position)
+	var w_in := FireTalents.bot_weight(foe, {"key": "fire_jab/embers"}, p)
+	var w_punch := FireTalents.bot_weight(foe, {"key": "fire_blast/punch"}, p)
+	g6.end()
+	await _ticks(2)
+	var w_out := FireTalents.bot_weight(foe, {"key": "fire_jab/embers"}, p)
+	var g7 := _gas(p, p.global_position)
+	BendLoadout.clear(foe)
+	var w_classic := FireTalents.bot_weight(foe, {"key": "fire_jab/embers"}, p)
+	g7.end()
+	_expect(is_equal_approx(w_in, 2.0) and is_equal_approx(w_punch, 1.0) and is_equal_approx(w_out, 1.0) and is_equal_approx(w_classic, 1.0),
+			"a bot wearing Flashfire wants its Embers x%.1f at a foe in gas (another move x%.1f, no gas x%.1f, Classic x%.1f)"
+			% [w_in, w_punch, w_out, w_classic])
+	_foe_at = home
+	await _ticks(2)
