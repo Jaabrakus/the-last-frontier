@@ -74,7 +74,8 @@
     "air.frost.frost_gust": true,
     "air.frost.rime_wall": true,
     "air.frost.blizzard": true,
-    "air.frost.whiteout": true
+    "air.frost.whiteout": true,
+    "air.ball.toxic_gale": true
   },
   "behaviour": {
     "air.slice.tailwind": "AirTalents.on_hit (BendR3._noted: a Slice of his that lands charges his Carried wind)",
@@ -93,7 +94,8 @@
     "air.frost.frost_gust": "AirTalents.snuffs (BendZone.on_bolt: his Gust puts out a foe's Fire Wall or burning ground)",
     "air.frost.rime_wall": "AirTalents.on_wall_end (BendZone.end: a crust where his Wind Wall stood); the zone's push_mps from its spec",
     "air.frost.blizzard": "AirTalents talent mode air_wall/blizzard (moves.json air_wall.talent_bend.blizzard), snow_every and melt_snow (BendZone snow), wall_life_k (BendEffects wind_wall); matter/cold by BendLoadout.worn_class",
-    "air.frost.whiteout": "AirTalents.home_fill (SwayCaster._hold, NpcBending's lock fill) and patch_lock (stock:patch.lock_s)"
+    "air.frost.whiteout": "AirTalents.home_fill (SwayCaster._hold, NpcBending's lock fill) and patch_lock (stock:patch.lock_s)",
+    "air.ball.toxic_gale": "AirTalents.toxic_gale (BendZone.on_bolt, first: his Wind Ball through a gas cloud bursts it 4 m on, radius 4, his; built against the gas zone's interface, earth's Sulphur set makes the gas)"
   },
   "live": [
     "air.ball.dense",
@@ -135,6 +137,7 @@
     "air.frost.frost_gust",
     "air.frost.rime_wall",
     "air.frost.blizzard",
-    "air.frost.whiteout"],
+    "air.frost.whiteout",
+    "air.ball.toxic_gale"],
   "styles_live": ["boxing"]
 }

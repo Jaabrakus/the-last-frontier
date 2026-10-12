@@ -44,6 +44,8 @@ extends SceneTree
 ##                      it out in about a second; one at a time; his Wind Wall 15% shorter; a bot wearing it casts it
 ##   Whiteout           his Patch 1.7 s (1.5); on his own crust or in his own snow his locks fill x1.15 (a Slice's real fill);
 ##                      a bot's on its own crust too
+##   Toxic Gale         his Wind Ball through a foe's gas cloud (a BendZone of kind gas, as earth's Sulphur set makes) bursts it
+##                      4 m on along its way into a radius-4 cloud with the time it had left, his now; not worn it does not
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
@@ -52,7 +54,7 @@ const LIMIT_S := 600.0
 const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
 		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind", "air.slip.near_miss", "air.patch.second_wind",
 		"air.gust.dragon_fire", "air.slot.dust", "air.set.frostwind", "air.frost.hail_ball", "air.frost.frost_gust",
-		"air.frost.rime_wall", "air.frost.blizzard", "air.frost.whiteout"]
+		"air.frost.rime_wall", "air.frost.blizzard", "air.frost.whiteout", "air.ball.toxic_gale"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -313,6 +315,8 @@ func _run() -> void:
 		await _blizzard()
 	if _on("air.frost.whiteout"):
 		await _whiteout()
+	if _on("air.ball.toxic_gale"):
+		await _toxic_gale()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -1512,3 +1516,32 @@ func _fill_after(s: float) -> float:
 	sc.held_override = false
 	await _secs(0.8)
 	return f
+
+
+# ---------------------------------------------------------------- Toxic Gale
+func _toxic_gale() -> void:
+	var got := {}
+	for id: String in ["", "air.ball.toxic_gale"]:
+		await _stage(10.0)
+		_wear([id] if id != "" else [])
+		# (a foe's gas cloud 3.5 m ahead on the line, 2.5 m, 3 s, 1 s of it gone: the zone earth's Sulphur set makes)
+		var at := FormEffects.ground_at(player, player.global_position + Vector3.RIGHT * 3.5)
+		var gz := BendZone.make(foe, "gas", at, {"radius_m": 2.5, "life_s": 3.0}, Vector3.LEFT)
+		gz.t = 1.0
+		await _ticks(2)
+		var left0 := gz.life_s - gz.t
+		_cast(pc, "air_blast", "ball")
+		await _secs(0.4)
+		var ok := is_instance_valid(gz) and not gz.is_queued_for_deletion()
+		got[id] = {"owner": gz.owner_node if ok else null, "r": gz.radius if ok else -1.0,
+				"moved": Vector2(gz.global_position.x - at.x, gz.global_position.z - at.z).length() if ok else -1.0,
+				"left": (gz.life_s - gz.t) if ok else -1.0, "left0": left0}
+		if ok:
+			gz.queue_free()
+	_wear([])
+	var c: Dictionary = got[""]
+	var w: Dictionary = got["air.ball.toxic_gale"]
+	_expect(c.owner != player and not _near(float(c.r), AirTalents.GALE_R), "Toxic Gale not worn: his Wind Ball does not burst the gas into a cloud of his")
+	_expect(w.owner == player and _near(float(w.r), AirTalents.GALE_R) and _near(float(w.moved), AirTalents.GALE_M, 0.3)
+			and float(w.left) > 1.4 and float(w.left) <= float(w.left0) + 0.01,
+			"Toxic Gale: his Wind Ball bursts the foe's gas 4 m on into a radius-4 cloud, his now, with the time it had left (%s)" % [w])

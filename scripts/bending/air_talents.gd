@@ -54,6 +54,11 @@ extends RefCounted
 ##                                      NpcBendCaster.HIDING); his Wind Wall 15% shorter (wall_life_k, BendEffects' wind_wall)
 ##   Whiteout (air.frost.whiteout)      home_fill (SwayCaster._hold, NpcBending's lock): his locks fill x1.15 standing on his
 ##                                      own crust or in his own Blizzard; Patch 1.7 s (patch_lock)
+##   Toxic Gale (air.ball.toxic_gale)   toxic_gale (BendZone.on_bolt, first): his Wind Ball through a gas cloud (a BendZone of
+##                                      kind gas: earth's Sulphur set's, built in its own lane; anyone's) bursts it GALE_M on
+##                                      along its way into a GALE_R cloud with the time it had left, his now (its ticks his
+##                                      foes'); his Wind Ball adds 10% (a class number). Built against the gas zone's interface
+##                                      (kind, owner_node, radius, t, life_s): with no Sulphur set in a match it never meets gas
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
@@ -68,6 +73,10 @@ extends RefCounted
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const TAILWIND := "air.slice.tailwind"
+const TOXIC_GALE := "air.ball.toxic_gale"
+## Toxic Gale: how far on its Wind Ball bursts a gas cloud (m), and the cloud's radius then (the node: "radius 4").
+const GALE_M := 4.0
+const GALE_R := 4.0
 const DRIFT := "air.guard.drift"
 const EYE := "air.guard.eye"
 const REBOUND := "air.guard.rebound"
@@ -756,3 +765,35 @@ static func home_fill(body: Node) -> float:
 		if bz != null and bz.kind == "snow" and bz.owner_node == body and not bz.is_queued_for_deletion() and bz.inside(at):
 			return HOME_FILL
 	return 1.0
+
+
+# ---------------------------------------------------------------- Toxic Gale
+## Bolt `b` in a gas cloud `z` (BendZone.on_bolt, before the gas's own reactions): a Toxic Gale wearer's Wind Ball bursts it on
+## (see the header). True when it did (the ball flies on).
+static func toxic_gale(z: BendZone, b: BendBolt) -> bool:
+	if z.kind != "gas" or b.spent or b.kind != "air" or String(b.info.get("tag", "")) != "air_blast/ball" or z.is_queued_for_deletion():
+		return false
+	var by := b._by()
+	if by == null or not BendLoadout.wears(by, TOXIC_GALE) or not NetSpells.decides():
+		return false
+	var off := b.global_position - z.global_position
+	if Vector2(off.x, off.z).length() > z.radius + b.radius or off.y < -1.0 or off.y > 3.5:
+		return false
+	var key := StringName("air_gale_%d" % b.get_instance_id())
+	if z.has_meta(key):
+		return false
+	z.set_meta(key, true)
+	var flat := Vector3(b.velocity.x, 0.0, b.velocity.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else -by.global_basis.z
+	var to := FormEffects.ground_at(z, z.global_position + flat * GALE_M)
+	BendLooks.burst(z.global_position + Vector3.UP, "air", 26, flat, 70.0, 6.0, 0.3)
+	BendLooks.burst(to + Vector3.UP, "smoke", 30, Vector3.UP, 180.0, 3.0, 0.5)
+	var k := GALE_R / maxf(z.radius, 0.1)
+	z.owner_node = by                                    # (the cloud is his now: its ticks his foes')
+	z.radius = GALE_R
+	z.global_position = to
+	z.set_meta(&"gas_carried", true)
+	var look := z.get_node_or_null(^"Look") as Node3D
+	if look != null:
+		look.scale = Vector3(look.scale.x * k, look.scale.y, look.scale.z * k)
+	return true

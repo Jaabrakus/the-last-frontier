@@ -541,6 +541,8 @@ func _every(dt: float) -> void:
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
 ## passes as its owner's own does: a guard never sends a teammate's bolt back or eats it.
 func on_bolt(b: BendBolt) -> bool:
+	if kind == "gas" and AirTalents.toxic_gale(self, b):
+		return true                                  # (Toxic Gale: his Wind Ball bursts the gas on, his now; before its own rules)
 	if not b.spent and kind in ["fire_wall", "smoke"] and AirTalents.through_ally_fire(self, b):
 		return false                                 # (Dragon Fire: his Gust through an ally's fire carries a front on; it flies on)
 	if kind in ["fire_wall", "burn"] and AirTalents.snuffs(self, b):
