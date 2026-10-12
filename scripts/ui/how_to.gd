@@ -27,7 +27,7 @@ const CAP_ACTIONS := {
 	"W": [&"move_forward"], "A": [&"move_left"], "S": [&"move_back"], "D": [&"move_right"],
 	"Space": [&"jump"], "Shift": [&"sprint"], "Alt": [&"walk"], "C": [&"crouch"], "R": [&"reload"],
 	"T": [&"torch"], "E": [&"interact", &"bend_guard"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory", &"bend_wheel"],
-	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
+	"Z": [&"sleep"], "F": [&"cook", &"bend_swap"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
 	"9": [&"weapon_9"], "1-9": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4", &"weapon_5", &"weapon_6", &"weapon_7",

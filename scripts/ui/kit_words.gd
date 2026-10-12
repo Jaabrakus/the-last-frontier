@@ -158,7 +158,8 @@ static func keyed(t: String) -> String:
 		return t
 	RadialWheel.ensure_input()
 	return t.replace("{guard}", key(GUARD_ACTION)).replace("{quick}", key(SwayCaster.QUICK_BIND)).replace("{aim}", key(&"aim")) \
-			.replace("{fire}", key(&"fire")).replace("{wheel}", key(RadialWheel.ACTION)).replace("{jump}", key(&"jump"))
+			.replace("{fire}", key(&"fire")).replace("{wheel}", key(RadialWheel.ACTION)).replace("{jump}", key(&"jump")) \
+			.replace("{swap}", key(Hotbar.SWAP_ACTION))
 
 
 # --- the lines -----------------------------------------------------------------------------------------------------
