@@ -55,7 +55,7 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
 ## The overlay's parts (a number or a pose a node changes per wearer).
-const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new"]
+const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new", "class_beat"]
 ## THE BEHAVIOUR TALENTS (2026-10-11, the owner: "make sure all the talents work and they work in game"): a node whose effect is
 ## new code (its changes hold a "new" or "new:<what>.<key>" entry, or a class:<tag>+<variant> with a whole new class) applies only
 ## once its id is in loadout_apply.json `behaviour` ({id: where the code is}): the game's code then asks wears(body, id) at the place
@@ -81,7 +81,11 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"stock:late_mult", "rules:passives.water.steer_dps", "rules:passives.water.steer_max_deg", "rules:passives.water.steer_s",
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
-		"move:stone_form.cannonball.radius_m"]
+		"move:stone_form.cannonball.radius_m"] + EARTH_TUNE_PATHS
+## Earth's (pass 1, 2026-10-11): the % ring's full-catch time (Juggle: RingRules.guard_outcome reads it for the guard's owner),
+## and a skill set's own rule (set:<set>.<key>, the tree's skill_sets.<set>.zone: Sulphur's clouds, read by BendGas for the
+## gas's owner; set_base).
+const EARTH_TUNE_PATHS := ["stock:guard_catch_s", "set:sulphur.cloud_life_s", "set:sulphur.cloud_radius_m"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -91,6 +95,7 @@ static var read_store_in_scripts := false
 
 static var _cfg: Dictionary = {}
 static var _tree: Dictionary = {}                ## id -> the skill tree's node
+static var _tree_root: Dictionary = {}           ## the skill tree as read (its beat, its skill sets)
 static var _styles: Dictionary = {}              ## fighting_styles.json "styles"
 static var _resolved: Dictionary = {}            ## id -> resolve()
 static var _lib_exists: Dictionary = {}          ## library path -> whether the file is there (asked once)
@@ -121,6 +126,7 @@ static func config() -> Dictionary:
 static func reload_data() -> void:
 	_cfg = {}
 	_tree = {}
+	_tree_root = {}
 	_styles = {}
 	_resolved = {}
 	_lib_exists = {}
@@ -236,6 +242,7 @@ static func _style_ok(style: String, element: String) -> bool:
 static func _node(id: String) -> Dictionary:
 	if _tree.is_empty():
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(TREE_PATH)) if FileAccess.file_exists(TREE_PATH) else null
+		_tree_root = d if d is Dictionary else {}
 		_index(d)
 		if _tree.is_empty():
 			_tree = {"_none": {}}
@@ -279,13 +286,17 @@ static func _resolve(id: String) -> Dictionary:
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
 	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {},
-			"class_new": {}}
+			"class_new": {}, "class_beat": {}, "beat": false}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
 		var why := _take(out, n, c as Dictionary)
 		if why != "":
 			return _refused(why)
+		# (a built behaviour node whose new code is the Beat's: its wearer's held casts let go on the Beat pay, beat_paid)
+		if String(n.get("id", "")) in behaviour() and String((c as Dictionary).get("path", "")).begins_with("new") \
+				and (String((c as Dictionary).get("what", "")) + String((c as Dictionary).get("where", ""))).contains("Beat"):
+			out["beat"] = true
 	return out
 
 
@@ -355,10 +366,11 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 	if tail.is_empty() or mdata.is_empty():
 		return "%s: malformed" % path
 	if tail[0] == "lock_s" and tail.size() == 1:
-		# the move's lock, scoped to the node's own mode (Step's lock is not Hop's)
+		# the move's lock, scoped to the node's own mode (Step's lock is not Hop's); a move with no modes (Mend) its "" mode
 		var md := String(n.get("mode", ""))
 		var mlk: Variant = mdata.get("mode_lock_s", {})
-		if md == "" or (mlk is Dictionary and (mlk as Dictionary).has(md)):
+		var modeless := md == "" and SwayCaster.modes_of(mv2).is_empty()
+		if (md == "" and not modeless) or (mlk is Dictionary and (mlk as Dictionary).has(md)):
 			return "%s: no single base lock for mode %s" % [path, md]
 		if not is_equal_approx(float(mdata.get("lock_s", -1.0)), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(mdata.get("lock_s")), str(from)]
@@ -418,7 +430,32 @@ static func tune_base(path: String) -> Variant:
 			if v2 == null and keys.size() == 2 and String(keys[1]) in ["sputter_s", "release_s"]:
 				return Bending.rule("sputter_s", 0.7) if keys[1] == "sputter_s" else SwayMoves.lock_rule("release_s", 1.0)
 			return v2
+		"set":
+			if keys.size() == 2:
+				return set_rule(String(keys[0]), String(keys[1]))
 	return null
+
+
+## A skill set's own rule (data/sway/skill_tree.json skill_sets.<set>.zone.<key>: Sulphur's cloud_radius_m, cloud_life_s, ...),
+## null none. The game's number for everyone wearing the set; a node's set:<set>.<key> change makes it the wearer's own.
+static func set_rule(set_name: String, key: String) -> Variant:
+	_node("_")                                   # (the tree read)
+	var z: Variant = _dig(_tree_root, ["skill_sets", set_name, "zone", key])
+	return z if (z is float or z is int) else null
+
+
+## The Beat (the skill tree's beat: a held cast let go within window_s after its lock fills; a Catch's E again within it of a
+## clean catch): its window (s). It pays only a worn technique (beat_paid).
+static func beat_s() -> float:
+	_node("_")
+	var w: Variant = _dig(_tree_root, ["beat", "window_s"])
+	return float(w) if (w is float or w is int) else 0.2
+
+
+## Whether `body` wears a live technique that pays on the Beat (a behaviour node whose new code is the Beat's: its change says
+## so); Classic and every other loadout: false, the Beat does nothing and shows nothing.
+static func beat_paid(body: Object) -> bool:
+	return _wears(body) and bool(overlay_of(body).get("beat", false))
 
 
 ## Whether `a` and `b` are the same number (or arrays of the same numbers; `shape_only`: only the same shape).
@@ -456,11 +493,36 @@ static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: Stri
 	if not (base is Dictionary):
 		return "%s: no class %s" % [path, tag]
 	var cur: Variant = (base as Dictionary).get(key)
+	var c := _change_of(n, path)
+	if cur == null and bool(c.get("default_from", false)) and key == "volley_n":
+		cur = 1                                    # (a class with no volley_n is one projectile: the node's from is that default)
 	if cur == null or not is_equal_approx(float(cur), float(from)):
 		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-	if key == "volley_n" and not _counts_with(n, tag, to):
+	var built := String(n.get("id", "")) in behaviour()
+	if key == "volley_n" and not _counts_with(n, tag, to) and not (built and _has_new(n)):
 		return "%s: no spec count of the node's own beside it" % path
+	if String(c.get("when", "")) == "beat":
+		if not built:
+			return "%s: a Beat class needs its node's new code" % path
+		# (only a cast let go on the Beat sends it: hit_class reads it off a hit whose info says beat)
+		return _put(out["class_beat"] as Dictionary, [tag, key], to)
 	return _put(out["class"] as Dictionary, [tag, key], to)
+
+
+## Node `n`'s change at `path` ({} none).
+static func _change_of(n: Dictionary, path: String) -> Dictionary:
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")) == path:
+			return c as Dictionary
+	return {}
+
+
+## Whether node `n` has a "new" change (its own code makes what the number is of: the Avalanche's three stones).
+static func _has_new(n: Dictionary) -> bool:
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")).begins_with("new"):
+			return true
+	return false
 
 
 ## Whether node `n` also changes the spec count of the move and mode `tag` names to `to`.
@@ -508,8 +570,8 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 ## {id: why}}. A pick that is not live, of another element, worn without a node it requires, or that sets a number another
 ## already set, applies nothing.
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "ids": [],
-			"refused": {}}
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "class_beat": {},
+			"ids": [], "refused": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -540,6 +602,8 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 		for part: String in PARTS:
 			out[part] = trial[part]
 		(out.ids as Array).append(id)
+		if bool(r.get("beat", false)):
+			out["beat"] = true
 	return out
 
 
@@ -698,16 +762,21 @@ static func pose_of(body: Object, m: String, mode: String) -> String:
 
 ## The class `cls` (RingRules.class_of's: tagged, its growth scaled) of a hit by `body`, with the wearer's own numbers for its
 ## tag over it (`cls` itself for Classic or a tag he changes nothing of: no copy). A growth is scaled as class_of scales the
-## data's. The tag stays the move's.
-static func hit_class(body: Object, cls: Dictionary) -> Dictionary:
+## data's. The tag stays the move's. `info` the hit's: one sent on the Beat (info.beat: SwayCaster's release, BendR3.info_for)
+## takes the wearer's Beat class over that (Heave's Column: class_beat).
+static func hit_class(body: Object, cls: Dictionary, info := {}) -> Dictionary:
 	if cls.is_empty() or not _wears(body):
 		return cls
-	var over: Variant = (overlay_of(body).get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
-	if not (over is Dictionary):
+	var ov := overlay_of(body)
+	var over: Variant = (ov.get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
+	var beat: Variant = (ov.get("class_beat", {}) as Dictionary).get(String(cls.get("tag", ""))) if bool(info.get("beat", false)) else null
+	if not (over is Dictionary) and not (beat is Dictionary):
 		return cls
 	var out := cls.duplicate()
-	for k: String in over:
-		out[k] = float(over[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
+	for o: Variant in [over, beat]:
+		if o is Dictionary:
+			for k: String in o:
+				out[k] = float(o[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
 	return out
 
 

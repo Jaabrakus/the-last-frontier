@@ -2,6 +2,7 @@
   "format": "tidebreak-loadout-apply",
   "version": 1,
   "_doc": [
+    "Earth's talents, pass 1 (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): earth.wall.thick (Thick Wall) is switched ON: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down (5 hits from 4, 2.5 m wide from 3), worn and not worn. The behaviour talents built for earth are in `behaviour` (each id: where its code is), at the end of `live`, and on in `nodes`; the same test plays each worn and not worn.",
     "The tuning talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): Clean Return, Open Hands, Steady Point, Swift Lance, Heavy Boulder, Deep Roots, Swift Roots, Patient Turn, Lazy River, Rapids, Reaching Parry, Long Carry, Gale Force change a guard rule, a passive, a % ring rule or Stone Form's own number for the wearer (BendLoadout's tune part: each read where the game reads it for him). Live unsoaked; tests/ring/test_talents_tune.gd plays each worn and not worn in a ring.",
     "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
@@ -26,7 +27,7 @@
     "earth.burrow.lie_low": true,
     "water.skate.wet_trail": false,
     "fire.step.quick": true,
-    "earth.wall.thick": false,
+    "earth.wall.thick": true,
     "water.wall.thick_ice": false,
     "fire.lightning.pistol": true,
     "earth.fissure.deep": true,
