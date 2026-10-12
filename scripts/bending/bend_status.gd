@@ -210,7 +210,7 @@ static func hurt(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lock_
 		i["dir"] = dir
 		var res := _stock_hit(n, by, i)
 		var landed := float(res.get("d", 0.0)) > 0.0 or not bool(res.get("none", true))
-		if landed and n is FrontierPlayer and is_instance_valid(n):
+		if landed and n is FrontierPlayer and is_instance_valid(n) and not bool(info.get("no_hurt", false)):
 			# (his own reactions to a blow still hear of it, health untouched: SwayCaster's lock and Lightning's charge, the
 			# HUD's edge; AIR moves them onto the hitstun)
 			var p := n as FrontierPlayer

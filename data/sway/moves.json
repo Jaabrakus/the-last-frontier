@@ -703,7 +703,7 @@
       "circle_m": 0.7,
       "self_lock": true,
       "modes": ["patch"],
-      "mode_labels": {"patch": "Patch"},
+      "mode_labels": {"patch": "Patch", "cauterize": "Cauterize"},
       "bend": {"patch": {"do": "heal", "kind": "stone", "amount": 15.0}},
       "ring_lock_s": 1.5,
       "ring_moving_mult": 0.0,

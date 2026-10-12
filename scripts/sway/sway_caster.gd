@@ -960,6 +960,7 @@ func took_hit() -> void:
 		return
 	if String(spec_of(move).get("do", "")) == "lightning":
 		var src := lock_src
+		FireTalents.charge_broken(player, move)  # (a worn Grounded Charge keeps half of it)
 		_break("hit")
 		if _src_held(src):
 			_wait_release = true
@@ -1630,6 +1631,8 @@ func _physics_process(dt: float) -> void:
 					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer of a technique that pays on
 					# this move and mode (Heave's Column, Quarry's Fissure: BendLoadout.beat_paid); never a click, never his other casts)
 					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player, move, mode_of(move))
+					if elem() and FireTalents.any(player):
+						FireTalents.beat(player, move, mode_of(move), full_t)     # (let go on the Beat: a worn technique's)
 					_cast()
 					_beat_go = false
 			State.LOCKING:
@@ -2366,8 +2369,11 @@ func _try_begin(q: Dictionary) -> void:
 		_r3_form(m)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
+	var head_mode := _form_mode if _form_id == m and _form_mode != "" else mode_of(m)
+	fill = FireTalents.head_start(player, m, head_mode)     # (a worn technique's head start on this lock, by its move and mode
+	                                                        # or air form, FireTalents; Classic: 0.0)
 	if elem() and lock_src != SRC_GUARD:
-		fill = BendZone.eddy_fill(player, m)      # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
+		fill = maxf(fill, BendZone.eddy_fill(player, m))     # (Eddy, a skill tree technique: a head start after a perfect Turn)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:
@@ -2478,6 +2484,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		if BendLoadout.wears(player, WELLSPRING):
 			# (Wellspring, a skill tree enhance: quicker standing in his own water, slower anywhere else)
 			base = BendLoadout.tune_f(player, "new:patch.lock_wet_s" if BendZone.in_own_water(player) else "new:patch.lock_dry_s", base)
+		if FireTalents.any(player):
+			base = FireTalents.patch_lock(player, mode_of(m), base)     # (a worn Cauterize: its own lock, and Patch's)
 	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
 	var cm := BendStatus.cast_mult(player) if elem() else 1.0
 	_cm_used = cm
@@ -2759,7 +2767,9 @@ func _moving_mult(m: String) -> float:
 	var mm: Dictionary = d.get("mode_moving_mult", {})
 	var k := float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
 	if elem() and quick_element() == "fire":
-		k = maxf(k, float(Bending.passive("fire").get("moving_mult", 1.0)))     # (Footwork: full speed on the move)
+		# (Footwork: full speed on the move; a worn Hot Feet or Dancing Feet its own, BendLoadout.tune)
+		var fb := float(Bending.passive("fire").get("moving_mult", 1.0))
+		k = maxf(k, FireTalents.moving_mult(player, BendLoadout.tune_f(player, "rules:passives.fire.moving_mult", fb), fb))
 	return k
 
 
@@ -2804,6 +2814,8 @@ func _hold(dt: float, q: Dictionary) -> void:
 			rate = 0.0                            # (Patch: standing still only)
 		var pf := passive_fill()
 		rate *= pf
+		if FireTalents.any(player):
+			rate *= FireTalents.fill_mult(player, hs > moving_mps)     # (a worn passive's fill: Hot Feet, Dancing Feet)
 		if pf > 1.0:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:

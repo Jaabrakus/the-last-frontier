@@ -154,6 +154,21 @@ var _tick := 0.0
 var _fx: Array[Node] = []
 var _pushed := {}                  ## a wind wall: body id -> when it last pushed it back (BendStatus.now())
 var _caught := {}                  ## a Wind Prison: body id -> true once it has caught him (_imprison)
+## MATTER (the skill tree's tick contract; a worn fire talent's floor fire, FireTalents): a zone with a tick class (spec tick_tag,
+## matter/burn or matter/magma in rules.json stock.classes) adds % only (no_flinch, no_hurt) to whoever stands in it with his feet
+## on its floor, one tick each MATTER_EVERY_S from all the matter he stands in, at most tick_cap ticks from one zone; never to its
+## owner or his side; a jump clears it. Classic makes none (no spec has a tick_tag).
+var tick_tag := ""
+var tick_cap := 0
+var round_zone := false            ## (a patch: inside() reads its radius, not its box)
+var tick_floor := true             ## (floor fire: only feet on its floor take its tick; false: anyone in it, a scald's steam)
+var tick_shared := true            ## (its ticks count in the one-each-0.5-s from all matter; false: a reaction's own)
+var tick_all := false              ## (a reaction: everyone in it, its owner and his side too, no one's hit for those)
+var tick_info := {}                ## (merged into each tick's hit info: a live reaction's strike_d)
+var _ticks_to := {}                ## body id -> the ticks it gave him
+const MATTER_META := &"bend_matter_tick_at"
+const MATTER_EVERY_S := 0.5
+const MATTER_FEET_M := 0.45
 
 
 static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_way := Vector3.FORWARD) -> BendZone:
@@ -178,6 +193,13 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.put_out = bool(spec.get("put_out", false))
 	z.prison_s = float(spec.get("prison_s", 0.0))
 	z.swing_hold_s = float(spec.get("swing_s", SWING_S))
+	z.tick_tag = String(spec.get("tick_tag", ""))
+	z.tick_cap = int(spec.get("tick_cap", 0))
+	z.round_zone = bool(spec.get("round", false))
+	z.tick_floor = bool(spec.get("tick_floor", true))
+	z.tick_shared = bool(spec.get("tick_shared", true))
+	z.tick_all = bool(spec.get("tick_all", false))
+	z.tick_info = (spec.get("tick_info", {}) as Dictionary).duplicate() if spec.get("tick_info") is Dictionary else {}
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -200,6 +222,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 		z.set_meta(&"reach_m", z.radius + 1.0)
 	if mire:
 		z.set_meta(MIRE_META, true)
+	if p_kind == FireTalents.GAS_KIND:
+		z.add_to_group(FireTalents.GAS_GROUP)    # (a gas cloud: fire's quick "none" for Classic's cones, FireTalents.gas_near)
 	NetSpells.tag(z)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(z)
 	var x := Vector3.UP.cross(z.way).normalized()
@@ -266,7 +290,7 @@ func _look() -> void:
 			_fx.append_array([crest, foam, foot])
 			_grow(look, Vector3(1.0, 0.02, 1.0))
 			_own_fade(look)
-		"fire_wall", "burn":
+		"fire_wall", "burn", "seam":
 			_flames(look)
 			var h := size.y if kind == "fire_wall" else 0.5
 			var em := BendLooks.emitter(self, "embers", Vector3(size.x * 0.5, 0.1, size.z * 0.5), int(10 * maxf(size.x, size.z)),
@@ -560,22 +584,27 @@ func _wind_push() -> void:
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
 	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "gas"] \
-			or kind in GUARDS or kind in ROUND_NEW:
+			or kind in GUARDS or kind in ROUND_NEW or round_zone:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
 
 
 ## Its lasting effects on whom it holds, each `dt` s.
 func _every(dt: float) -> void:
+	if kind == FireTalents.GAS_KIND and FireTalents.gas_every(self):
+		return                                   # (fire touching the cloud lit it first: gone; FireTalents, before its own rules)
 	var r := maxf(radius, size.x * 0.6)
 	if put_out:
 		put_out_fires()
 	var now_in := {}
-	for e in BendCaster.near(owner_node, global_position, r + 1.0):
+	for e in (BendCaster.near(owner_node, global_position, r + 1.0) if not tick_all else FireTalents.everyone_near(self, global_position, r + 1.0)):
 		var n: Node3D = e[0]
 		if not inside(n.global_position):
 			continue
 		now_in[n.get_instance_id()] = true
+		if tick_tag != "":
+			_matter_tick(n)
+			continue
 		match kind:
 			"fire_wall", "burn":
 				if BendR3.stock() and kind == "fire_wall":
@@ -614,6 +643,10 @@ func _every(dt: float) -> void:
 				if not SbFx.fire(o.owner_node, SbFx.key_of(o.info), "put_out", {"at": o.global_position, "dir": o.way}):
 					BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 				o.end()
+	if kind == "seam":
+		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
+	if kind in FireTalents.LIGHTING_ZONES and FireTalents.any(owner_node):
+		FireTalents.zone_every(self)               # (a worn talent's fire zone: Scald's steam it touches scalds)
 
 
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
@@ -625,6 +658,10 @@ func on_bolt(b: BendBolt) -> bool:
 	if kind == "gas":
 		# (Sulphur's gas: fire lights it, water washes it, wind carries it, his own Pebbles with Flint light it: BendGas)
 		return not b.spent and inside(b.global_position) and BendGas.react(self, b)
+	if kind == "steam" and b.kind == "fire" and not b.spent and FireTalents.any(b.caster) and inside(b.global_position):
+		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
+	if kind == "seam" and b.kind == "water" and not b.spent:
+		FireTalents.seam_bolt(self, b)               # (water on a Magma seam cools it to obsidian)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -1116,6 +1153,7 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 	var bc := BendCaster.of(owner)
 	if bc != null:
 		bc.guarded.emit(result, what)
+	FireTalents.guarded(owner, result, what, el)        # (a worn talent's answer to a guard: Hot Hands)
 
 
 ## Eddy (a skill tree technique, BendZone.report): the fill a lock of move `m` begun now by `body` starts at, EDDY_FILL for his
@@ -1807,6 +1845,30 @@ static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) ->
 	out["from"] = at
 	out["air"] = BendR3.airborne(by)
 	return out
+
+
+## A matter zone's tick on `n` (see MATTER): % only, the hit no_hurt (no lock set-back, no Lightning-charge break, no string).
+func _matter_tick(n: Node3D) -> void:
+	var by: Node = owner_node
+	if not BendStatus.can_take(n, owner_node):
+		if not tick_all or n == null or not is_instance_valid(n):
+			return                                # (his own and his side's never: matter's rule)
+		by = null                                 # (a reaction hurts everyone in it: its owner and his side too, no one's hit)
+	if tick_floor and n.global_position.y - global_position.y > MATTER_FEET_M:
+		return                                    # (floor fire: jumped, his feet over it)
+	var id := n.get_instance_id()
+	var k := int(_ticks_to.get(id, 0))
+	if tick_cap > 0 and k >= tick_cap:
+		return
+	var now := BendStatus.now()
+	if tick_shared:
+		if now - float(n.get_meta(MATTER_META, -INF)) < MATTER_EVERY_S - 1e-3:
+			return                                # (one tick each 0.5 s from all the matter he stands in)
+		n.set_meta(MATTER_META, now)
+	_ticks_to[id] = k + 1
+	var inf := {"tag": tick_tag, "no_hurt": true, "matter": kind, "move": String(info.get("move", "")), "from": global_position}
+	inf.merge(tick_info, true)
+	BendR3.deliver(n, 1.0, n.global_position + Vector3.UP * 0.3, way, by, -1.0, Vector3.ZERO, inf)
 
 
 ## A body inside a fire wall at a tick, in the % ring (spec §2.3): on its entry (not inside at the last tick, and its last

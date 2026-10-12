@@ -74,6 +74,8 @@ func _dash_end() -> void:
 	body.set_meta(&"bend_dash_end", BendStatus.now())
 	SbFx.dash_ended(body)                     # (its Spellbreak trails stopped, its end played: visual only)
 	BendZone.carry_wind(body)
+	if FireTalents.any(body):
+		FireTalents.dash_ended(body)          # (a worn talent where the dash ends: Magma Landing's seam)
 
 
 func active() -> bool:

@@ -1036,13 +1036,28 @@ func reset_pct(b: Node, to := 0.0) -> void:
 		pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 
+## b's % raised by `delta` outside the fresh pool: no Patch ever takes it back (a worn Cauterize's cost, FireTalents).
+func add_pct_kept(b: Node, delta: float) -> void:
+	var st := _sk(b)
+	if st.is_empty() or delta <= 0.0:
+		return
+	var was := float(st.pct)
+	st["pct"] = was + delta
+	pct_changed.emit(b, float(st.pct), delta)
+
+
 ## Patch (spec §8): b's fresh pool taken back, at most patch.max_pct, never under 0; returns the % removed (0 when not
 ## allowed: heal_allowed).
 func patch(b: Node) -> float:
+	return patch_up_to(b, sub_num("patch", "max_pct", 10.0))
+
+
+## Patch's taking back with its own most (`max_pct`: a worn Cauterize's 12, FireTalents; Patch's own: patch).
+func patch_up_to(b: Node, max_pct: float) -> float:
 	if not heal_allowed(b):
 		return 0.0
 	var st := _sk(b)
-	var take := minf(fresh_pct(b), sub_num("patch", "max_pct", 10.0))
+	var take := minf(fresh_pct(b), max_pct)
 	if take <= 0.0:
 		return 0.0
 	# (the newest first: the pool shrinks from its young end)
@@ -1192,10 +1207,14 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		cls = BendLoadout.hit_class(by, cls, info)
 	elif tag != "":
 		cls = class_of(tag)
+		if cls.is_empty() and tag.contains("+"):
+			cls = BendLoadout.new_hit_class(by, tag)  # (a worn behaviour talent's whole new class: Blazing Fireball's burst)
 		cls = BendLoadout.hit_class(by, cls, info)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
 	var untagged := cls.is_empty()
 	if untagged:
 		cls = _untagged_class(info)
+	if cls.has("d_of_strike"):
+		cls["d"] = float(cls.d_of_strike) * float(info.get("strike_d", 0.0))   # (a live reaction: its share of the strike's %)
 	# (a class with once_s lands on the same body from the same attacker at most once a while: Fire Wall's entry pop)
 	var once := float(cls.get("once_s", 0.0))
 	if once > 0.0:
@@ -1220,8 +1239,10 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var d := float(cls.get("d", 0.0))
 	if untagged:
 		d = curve_d(float(info.get("dmg", 0.0)))
+	# (a reaction stales as the move that set it off, info stale_as: the skill tree's reaction rules; Classic sends none)
+	var stale_tag := String(info.get("stale_as", cls.tag))
 	if first and not returned and not untagged and by != null and not stale_off:
-		var copies := stale_count(by, String(cls.tag))
+		var copies := stale_count(by, stale_tag)
 		stale_k = 1.0 - minf(sub_num("stale", "step", 0.08) * float(copies), sub_num("stale", "max", 0.4))
 	d *= stale_k * stock_num("pct_scale", 1.0)
 	# (a late guard's half; an untagged hit's damage and knock came already halved by the guard that let it through)
@@ -1324,7 +1345,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	# the stale queue (landed, unguarded, never a return; a volley once)
 	if by != null and not returned and not late and not untagged:
 		var q: Array = _stale.get(by.get_instance_id(), [])
-		q.append(String(cls.tag))
+		q.append(stale_tag)
 		while q.size() > int(sub_num("stale", "n", 6.0)):
 			q.pop_front()
 		_stale[by.get_instance_id()] = q

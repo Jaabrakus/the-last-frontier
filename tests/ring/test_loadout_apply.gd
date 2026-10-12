@@ -268,7 +268,10 @@ func _run() -> void:
 					_expect(_near(_dig(bs, keys.slice(1)), from) and bs == base, "%s: a body that wears nothing reads %s (%s)" % [id, path, from])
 				# every key the node does not name is today's
 				var named := {}
-				for c2: Dictionary in n.changes:
+				var worn_ch: Array = []
+				for q: Variant in picks:
+					worn_ch.append_array(_node(String(q)).get("changes", []) as Array)     # (its own and the nodes it is worn with)
+				for c2: Dictionary in worn_ch:
 					if String(c2.path).begins_with("spec:%s/%s." % [mv, md]):
 						named[String(c2.path).get_slice(".", 1)] = true
 				var rest_same := true

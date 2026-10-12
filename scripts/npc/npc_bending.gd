@@ -158,6 +158,8 @@ var grown := false
 var fill := 0.0
 var lock_s := 0.0
 var lock_t := 0.0
+## The mode this lock casts in place of its own: a worn new skill's (FireTalents.bot_mode: Cauterize for the Patch); "" none.
+var _talent_mode := ""
 ## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
 var _cm_used := 1.0
 var circle: FormCircle
@@ -507,6 +509,10 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		var ring_b := float(d.get("ring_lock_s", 1.5))
 		base *= BendLoadout.tune_f(who, "new:patch.lock_wet_s" if BendZone.in_own_water(who as Node3D) else "new:patch.lock_dry_s",
 				ring_b) / maxf(ring_b, 0.01)
+	if id == "patch" and FireTalents.any(who):
+		# (a worn Cauterize: its lock and his Patch's over Patch's own ring lock, as the player's)
+		var pl := float(d.get("ring_lock_s", 1.5))
+		base *= FireTalents.patch_lock(who, md, pl) / maxf(pl, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -628,6 +634,7 @@ func tick(dt: float) -> void:
 		_jump_floor()                              # (mid-lock too: the jump never gates a lock, the player's Space)
 	if casting != "" and stock():
 		if mind().stunned() and casting == "fire_arc" and mode == "lightning":
+			FireTalents.charge_broken(me, casting)  # (a worn Grounded Charge keeps half of it)
 			_lose("hit")                           # (lightning's charge breaks in hitstun)
 			return
 		if (owned and not mind().lock_runs()) or mind().stunned():
@@ -657,8 +664,9 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		# (Sulphur Heart worn: faster in its own gas; Delta: in its own mud; the higher, else x1)
-		lock_t += dt * maxf(BendZone.BendGas.home_mult(me), BendZone.home_fill(me))
+		# (Sulphur Heart worn: faster in its own gas; Delta: in its own mud; the higher, else x1; a worn fire passive's own mult)
+		var fm := FireTalents.bot_fill_mult(me, Vector2(me.velocity.x, me.velocity.z).length() > 1.0) if FireTalents.any(me) else 1.0
+		lock_t += dt * maxf(BendZone.BendGas.home_mult(me), BendZone.home_fill(me)) * fm
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -802,6 +810,8 @@ func _choose(t: Node3D, d: float) -> Dictionary:
 			w *= float(cb.get("bonus", 2.0))        # (round 3: the string table's true strings instead, NpcRingMind)
 		if stock():
 			w *= mind().weight(o, t, d)
+		if FireTalents.any(me):
+			w *= FireTalents.bot_weight(me, o, t)   # (a worn talent's own reason: Flashfire's Embers at a foe in gas)
 		w *= me.rng.randf_range(0.7, 1.3)
 		if w > best_w:
 			best_w = w
@@ -1407,6 +1417,9 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
+	_talent_mode = FireTalents.bot_mode(me, id, md) if FireTalents.any(me) else ""
+	if _talent_mode != "":
+		lock_s = lock_for(id, _talent_mode, _preset_name(), _cast_dist(id, md, t), me)
 	# (a Beat technique worn that pays on this cast: on a missed roll it lets go past the window; Classic never asks)
 	_beat_late = BendLoadout.beat_s() + BEAT_MISS_S if BendLoadout.beat_paid(me, id, md) and not _beat_roll() else 0.0
 	_lock_at = _now()
@@ -1443,6 +1456,10 @@ func begin(id: String, md: String) -> void:
 	lock_s *= _cm_used
 	if not bool(o.get("guard", false)):
 		lock_t = lock_s * BendZone.eddy_fill(me, id)     # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
+	var head := FireTalents.head_start(me, id, md)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
+	if head > 0.0:
+		lock_t = maxf(lock_t, lock_s * head)
+		fill = head
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1457,7 +1474,8 @@ func begin(id: String, md: String) -> void:
 		me.face_point(t.global_position)
 	me.action = "cast"
 	if me.body != null:
-		me.body.play_cast(id, md, lock_s, element, grown)   # (grown: a pose's own grown clip, the Air Lance's spear throw)
+		me.body.play_cast(id, md, lock_s - lock_t, element, grown)   # (grown: a pose's own grown clip, the Air Lance's spear
+		                                                             # throw; what is left of it after a worn head start)
 	if bend_cast() == null and id == "stone_form" and md == "spike":
 		_raise_spike(t)
 	if SHOW_LOCK_CIRCLE and me.is_inside_tree():
@@ -1499,14 +1517,20 @@ func _release() -> void:
 	caster.dash_dir = _held_dir(o0, t)
 	# (the Beat, for a bot wearing a technique that pays on this cast (a test's; bots wear no loadout in a match): let go within
 	# beat_s of its lock filling (its beat_rate's roll: begin), its hits' info says so, as the player's: BendR3.info_for; a flash
-	# on its own hands)
+	# on its own hands. Fire's own techniques (Rhythm, Chain) pay through FireTalents.beat)
 	var keep_rel := BendR3.release
 	var beat := BendLoadout.beat_paid(me, id, md) and took - lock_s <= BendLoadout.beat_s()
 	if beat:
 		BendR3.release = {"beat": true}
 		beat_at = _now()
 		BendLooks.beat_flash(me, element)
-	var ok := _cast(id, md, t)
+	if FireTalents.beat_worn(me, id, md) and not caster.grown \
+			and me.rng.randf() < FireTalents.bot_beat_rate(float(pr.get("beat_rate", 0.2))):
+		# (let go on the Beat: a worn technique's; a grown cast never is. As a player's hand, not every release: its difficulty's
+		# beat_rate, bend_ai.json presets, the tree's beat.bots; a bot lets go of a full lock at once, so the rest go late)
+		FireTalents.beat(me, id, md, took - lock_s)
+	var ok := _cast(id, md if _talent_mode == "" else _talent_mode, t)
+	_talent_mode = ""
 	if beat:
 		BendR3.release = keep_rel
 	if not is_equal_approx(_cm_used, 1.0):

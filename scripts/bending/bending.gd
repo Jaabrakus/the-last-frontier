@@ -108,8 +108,8 @@ static func first_of(key: Array) -> Dictionary:
 
 ## The key's other move from `id` at `mode` (a double tap, a wheel step; spec §2.2): a two-id key its partner at its first
 ## mode, a one-id key its other mode (the first two of its modes); {} when there is none (a single-mode one-id key). `body`: the
-## caster's, whose worn talents may add a mode (SwayCaster.modes_of: the Sulphur Vent on earth's 4, Mire on water's 4; null or
-## Classic, the kit's).
+## caster's, whose worn talents may add a mode (SwayCaster.modes_of: the Sulphur Vent on earth's 4, Mire on water's 4,
+## Cauterize on fire's 5; null or Classic, the kit's).
 static func other_move(key: Array, id: String, mode: String, body: Object = null) -> Dictionary:
 	if key.size() >= 2:
 		var other := String(key[1]) if String(key[0]) == id else String(key[0])

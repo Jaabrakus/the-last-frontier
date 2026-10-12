@@ -6147,7 +6147,7 @@
         "fire.set.magma",
         "expert:fire_kick"
        ],
-       "effect": "The Kick's wave leaves its last 4 m molten for 3 s (a long seam in place of a small one) and knocks with base 6.4 (from 5.8), but runs 13.6 m (from 16; grown 18.7 from 22).",
+       "effect": "The Kick's wave leaves its last 4 m molten for 3 s (a long seam in place of a small one) and knocks with base 10.5 (from 9.5), but runs 13.6 m (from 16; grown 18.7 from 22).",
        "plus": "a long seam, knock +10%",
        "minus": "shorter",
        "help": "Your Kick leaves its last 4 m molten.",
@@ -6155,9 +6155,10 @@
        "changes": [
         {
          "path": "class:fire_kick/kick+lava.base",
-         "from": 5.8,
-         "to": 6.4,
-         "base_tag": "fire_kick/kick"
+         "from": 9.5,
+         "to": 10.5,
+         "base_tag": "fire_kick/kick",
+         "_drift": "2026-10-11 (fire talents pass 1): the Kick's class base is 9.5 in rules.json today (the node was written at 5.8); from updated to the data and to kept at the node's +10% knock (5.8 -> 6.4 was +10.3%)"
         },
         {
          "path": "spec:fire_kick/kick.range_m",
