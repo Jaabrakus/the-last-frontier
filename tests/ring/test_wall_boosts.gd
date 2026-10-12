@@ -216,6 +216,15 @@ func _run() -> void:
 			"water: his Lash through his own Ice Wall freezes to ice (%s), faster (%.0f vs %.0f m/s), the wall passed unworn (%s, past %s)"
 			% [lw.kind, lw.max_v, lv0, wall_ok, past])
 	_expect(patches > before_patches, "water: a frost patch of his where it ended (%d)" % patches)
+	# (the Ice Wall where his crosshair puts it, 6 m out: a step before the bot; the frozen Lash still strikes him)
+	await _face_off("water")
+	BendEffects.ice_wall(pc, way, (SwayMoves.move("water_shield").bend as Dictionary).ice_wall)
+	await _secs(1.0)
+	BendR3.hits_log.clear()
+	await _watch(_cast("water_whip", "whip"))
+	await _ticks(5)
+	var frozen_hits := BendR3.hits_log.filter(func(e: Dictionary) -> bool: return e.n == foe and String((e.info as Dictionary).get("wall_boost", "")) == "ice")
+	_expect(not frozen_hits.is_empty(), "water: the frozen Lash strikes the bot just past the wall (%d)" % frozen_hits.size())
 	# ---- earth
 	await _face_off("earth")
 	var ew := FormEffects.earth_wall(pc, FormEffects.ground_at(p, p.global_position + way * 3.5), SwayMoves.move("earth_wall"), "earth")

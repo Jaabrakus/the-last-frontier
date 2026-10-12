@@ -753,6 +753,20 @@ func _through_ice_wall(w: FormRaised) -> bool:
 	_ghost_ex.append(w.get_rid())                # (its own wall passed)
 	become("ice")
 	wall_boost("ice")
+	# (frozen, it sets off again at what its caster aims at, as an ice spear leaves the wall: a Lash's water bends in flight, the
+	# ice it became does not; within 25 deg of its line)
+	var bc := BendCaster.of(by)
+	var aim := Vector3.INF
+	if bc != null and bc.valid():
+		var tg := bc.aim_target()
+		# (a fighter by the crosshair: his chest; else where the crosshair is, through the wall it just passed, which the
+		# crosshair's own ray meets first when the wall stands before him)
+		aim = bc.target_point(tg, velocity.length()) if tg != null else bc.aim_point([w.get_rid()], Vector3.INF)
+	if aim.is_finite():
+		var want := aim - global_position
+		if want.length_squared() > 1.0 and rad_to_deg(velocity.angle_to(want)) < 25.0:
+			velocity = want.normalized() * velocity.length()
+			_face()
 	BendLooks.burst(global_position, "ice", 22, velocity.normalized(), 70.0, 4.0, 0.3, false)
 	BendSounds.play(&"ice_freeze", global_position, -2.0)
 	return true
