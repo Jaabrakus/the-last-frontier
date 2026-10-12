@@ -18,6 +18,15 @@ extends SceneTree
 ##                    Turn lets 0.6 through (0.5); a bot holds it while its foe guards
 ##   Eddy             after a perfect Turn the Lash's real lock (key 1, the aim held) starts 0.4 full, 1.6 s after or not worn
 ##                    from nothing; his Turn's beat 0.25 s; a bot's next Lash lock begins 0.4 full
+##   Pooling Wave     his Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends; not worn none; a bot's
+##                    own; his Wave hits launch lower (base 6.8 for 7.5, grown 7.6 for 8.4: RingRules.on_hit)
+##   Ride the Wave    the player's real Wave (key 2, the aim held to the click): let go on the Beat it carries him 3 m on
+##                    behind the water; 0.3 s after the click, or not worn, none; its lock 0.65 s (0.6); a bot rides its Wave
+##                    in from 10 m, not from 4 (NpcBending._on_beat)
+##   Wet Trail        his Skate travels 10.8 m/s and leaves 4 puddles of his for 7.2 s along its way; not worn 12 m/s, none;
+##                    a bot's own
+##   Wellspring       Patch's ring lock (SwayCaster's, a bot's lock_for): 1.25 s in his own puddle or at a grate, 1.6 s dry or in
+##                    another's puddle (1.5)
 ## Last line "TALENTS WATER PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS WATER"
@@ -98,6 +107,11 @@ func _face_off(d := 10.0) -> void:
 	player.global_position = home - way * d * 0.5
 	for b: CharacterBody3D in [player, foe]:
 		b.velocity = Vector3.ZERO
+		BendStatus.spend_cast_mult(b)             # (a perfect guard's cast reward from a check before: every lock its own)
+		var kn := BendKnock.peek(b)
+		if kn != null:
+			kn.reset()                            # (no knock, hitstun or tumble left from a check before)
+			kn.stun_t = 0.0
 	foe.look_at(Vector3(player.global_position.x, foe.global_position.y, player.global_position.z), Vector3.UP)
 	player.yaw = atan2(-way.x, -way.z)
 	player.pitch = 0.0
@@ -246,6 +260,10 @@ func _run() -> void:
 	await _cleanse()
 	await _whirl()
 	await _eddy()
+	await _pooling()
+	await _ride()
+	await _wet_trail()
+	await _wellspring()
 	_end()
 
 
@@ -618,3 +636,219 @@ func _eddy() -> void:
 		nb._cancel()
 	_wear(foe, [])
 	_expect(absf(bf - 0.4) < 0.01, "Eddy on a bot: its Lash's lock after its perfect Turn begins %.2f full" % bf)
+
+
+# ---------------------------------------------------------------- Pooling Wave
+## A Wave of `who`'s at the other from 8 m (BendEffects.apply): the puddle of his it left (null none), and where the cone ended.
+var _wave_from := Vector3.ZERO
+func _wave_puddle(who: Node3D) -> BendZone:
+	await _face_off(8.0)
+	_wave_from = who.global_position
+	var before := _zones("puddle")
+	_cast(who, "wave", "push")
+	await _ticks(3)
+	var pd := _new_zone("puddle", before, who)
+	await _secs(0.8)
+	return pd
+
+
+## The launch (m/s) a Wave hit of `by`'s on `on` gives him at 0% (RingRules.on_hit, the stock class of the tag), his % back after.
+func _wave_launch(by: Node3D, on: Node3D, tag: String) -> float:
+	var rules := RingRules.current()
+	rules.reset_pct(on, 0.0)
+	var r := rules.on_hit(on, by, {"tag": tag, "at": (on as Node3D).global_position + Vector3.UP})
+	rules.reset_pct(on, 0.0)
+	var kn := BendKnock.peek(on)
+	if kn != null:
+		kn.reset()
+		kn.stun_t = 0.0
+	return (r.get("v", Vector3.ZERO) as Vector3).length()
+
+
+func _pooling() -> void:
+	_wear(player, ["water.wave.pooling"])
+	var pd := await _wave_puddle(player)
+	var reach := float((SwayMoves.move("wave").bend.push as Dictionary).range_m)
+	var d := Vector2(pd.global_position.x - _wave_from.x, pd.global_position.z - _wave_from.z).length() if pd != null else -1.0
+	_expect(pd != null and _near(pd.radius, 1.2) and _near(pd.life_s, 6.0) and d <= reach + 0.3 and d >= reach - 2.0
+			and absf(pd.global_position.y - _wave_from.y) < 0.5 and pd.is_in_group(Bending.POOLS),
+			"Pooling Wave: the wearer's Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends, %.1f m on (its reach %.0f, kept off the lip)" % [d, reach])
+	var lw := _wave_launch(player, foe, "wave/push")
+	var lgw := _wave_launch(player, foe, "wave/push.grown")
+	_wear(player, [])
+	var p0 := await _wave_puddle(player)
+	var lc := _wave_launch(player, foe, "wave/push")
+	var lgc := _wave_launch(player, foe, "wave/push.grown")
+	_expect(p0 == null, "Pooling Wave not worn: the Wave leaves no puddle")
+	_expect(lw > 0.0 and lw < lc and lgw < lgc, "Pooling Wave's trade: his Wave launches %.2f m/s for the %.2f (grown %.2f for %.2f)" % [lw, lc, lgw, lgc])
+	_wear(foe, ["water.wave.pooling"])
+	var pb := await _wave_puddle(foe)
+	_wear(foe, [])
+	_expect(pb != null and pb.owner_node == foe, "Pooling Wave on a bot: its Wave leaves its own puddle")
+	for z: BendZone in _zones("puddle").values():
+		z.end()
+
+
+# ---------------------------------------------------------------- Ride the Wave
+## The player's own Wave (key 2, the aim held on the foe till the click, let go `late` s after it): {lock (s), moved (m along the
+## way to the foe in 0.6 s), ride (the cast's record)}.
+func _ride_wave(late: float) -> Dictionary:
+	await _face_off(10.0)
+	var sc := SwayCaster.of(player)
+	for i in 180:
+		if sc.state == SwayCaster.State.IDLE and not sc._cast_wait() and player.is_on_floor():
+			break                                     # (on the deck: key 2 in the air is the Downpour)
+		await physics_frame
+	sc._wait_release = false
+	player.hotbar.select(1)
+	await _ticks(3)
+	var from := player.global_position
+	var way := (foe.global_position - from)
+	way.y = 0.0
+	way = way.normalized()
+	sc.held_override = true
+	var lock := -1.0
+	for i in 120:
+		await physics_frame
+		if sc.state != SwayCaster.State.IDLE and lock < 0.0:
+			lock = sc.lock_s
+		if sc.state == SwayCaster.State.FULL:
+			break
+	await _secs(late)
+	var at := player.global_position
+	sc.held_override = false
+	await _secs(0.6)
+	sc.held_override = null
+	var out := {"lock": lock, "moved": (player.global_position - at).dot(way), "ride": bool(BendEffects.last_of(pc).get("ride", false)),
+			"move": String(BendEffects.last_of(pc).get("move", ""))}
+	await _secs(0.8)
+	return out
+
+
+func _ride() -> void:
+	_wear(player, ["water.wave.ride"])
+	var beat: Dictionary = await _ride_wave(0.0)
+	var late: Dictionary = await _ride_wave(0.3)
+	_wear(player, [])
+	var c: Dictionary = await _ride_wave(0.0)
+	_expect(beat.move == "wave" and bool(beat.ride) and absf(float(beat.moved) - 3.0) < 0.6,
+			"Ride the Wave: his Wave let go on the Beat carries him %.2f m on behind it (3)" % float(beat.moved))
+	_expect(late.move == "wave" and not bool(late.ride) and absf(float(late.moved)) < 0.5, "Ride the Wave: let go 0.3 s after the click, no ride (%.2f m)" % float(late.moved))
+	_expect(c.move == "wave" and not bool(c.ride) and absf(float(c.moved)) < 0.5, "Ride the Wave not worn: on the Beat or not, the Wave carries no one (%.2f m)" % float(c.moved))
+	_expect(float(c.lock) > 0.0 and absf(float(beat.lock) / float(c.lock) - 0.65 / 0.6) < 0.01, "Ride the Wave's trade: the Wave's lock %.3f s for the %.3f (0.65 for 0.6)" % [float(beat.lock), float(c.lock)])
+	# a bot wearing it rides its Wave in from afar, not from close by (NpcBending's release: _on_beat)
+	var nb: NpcBending = foe.brain.bending if foe.brain != null else null
+	var got := {}
+	for d: float in [10.0, 4.0]:
+		_wear(foe, ["water.wave.ride"])
+		await _face_off(d)
+		var at := foe.global_position
+		var way := (player.global_position - at)
+		way.y = 0.0
+		way = way.normalized()
+		if nb != null:
+			nb.begin("wave", "push")
+			nb._release()
+		await _secs(0.6)
+		got[d] = (foe.global_position - at).dot(way)
+		_wear(foe, [])
+		await _secs(0.6)
+	_expect(nb != null and absf(float(got[10.0]) - 3.0) < 0.6 and absf(float(got[4.0])) < 0.5,
+			"Ride the Wave on a bot: from 10 m its Wave rides it %.2f m in; from 4 m it stays (%.2f m)" % [float(got.get(10.0, -1.0)), float(got.get(4.0, -1.0))])
+
+
+# ---------------------------------------------------------------- Wet Trail
+## A Skate of `who`'s (BendEffects.apply flow/skate): {n (the puddles of his it left), life, radius, spread (m from the first to the
+## last), mps (its travel)}.
+func _skate_trail(who: Node3D) -> Dictionary:
+	await _face_off(10.0)
+	var before := _zones("puddle")
+	BendEffects.apply(BendCaster.of(who), "flow", "skate", SwayMoves.move("flow").bend.skate)
+	var v: Vector3 = BendEffects.last_of(BendCaster.of(who)).get("v", Vector3.ZERO)
+	await _secs(0.8)
+	var mine: Array = []
+	for z: BendZone in _zones("puddle").values():
+		if not before.has(z.get_instance_id()) and z.owner_node == who:
+			mine.append(z)
+	var spread := 0.0
+	for a: BendZone in mine:
+		for b: BendZone in mine:
+			spread = maxf(spread, a.global_position.distance_to(b.global_position))
+	var out := {"n": mine.size(), "life": (mine[0] as BendZone).life_s if not mine.is_empty() else -1.0,
+			"radius": (mine[0] as BendZone).radius if not mine.is_empty() else -1.0, "spread": spread, "mps": Vector2(v.x, v.z).length()}
+	for z: BendZone in mine:
+		z.end()
+	await _secs(0.5)
+	return out
+
+
+func _wet_trail() -> void:
+	_wear(player, ["water.skate.wet_trail"])
+	var w: Dictionary = await _skate_trail(player)
+	_wear(player, [])
+	var c: Dictionary = await _skate_trail(player)
+	_expect(int(w.n) == 4 and _near(w.life, 7.2) and _near(w.radius, 1.2) and float(w.spread) > 1.5 and _near(w.mps, 10.8, 0.01),
+			"Wet Trail: the wearer's Skate travels %.1f m/s and leaves 4 puddles of his for 7.2 s along %.1f m (%s)" % [float(w.mps), float(w.spread), w])
+	_expect(int(c.n) == 0 and _near(c.mps, 12.0, 0.01), "Wet Trail not worn: the Skate travels %.1f m/s and leaves no puddle (%d)" % [float(c.mps), int(c.n)])
+	_wear(foe, ["water.skate.wet_trail"])
+	var b: Dictionary = await _skate_trail(foe)
+	_wear(foe, [])
+	_expect(int(b.n) == 4, "Wet Trail on a bot: its Skate leaves its own 4 puddles (%d)" % int(b.n))
+
+
+# ---------------------------------------------------------------- Wellspring
+## Patch's ring lock for the player (SwayCaster's own, as its lock begins) and for the bot (NpcBending.lock_for), each standing where
+## it is now.
+func _patch_locks() -> Array:
+	var sc := SwayCaster.of(player)
+	var keep := sc.lock_src
+	sc.lock_src = SwayCaster.SRC_AIM
+	var l := sc._lock_time("patch", player, 0.0, 10.0)
+	sc.lock_src = keep
+	return [l, NpcBending.lock_for("patch", "patch", "normal", 0.0, foe)]
+
+
+func _wellspring() -> void:
+	await _face_off(10.0)
+	var grates: Array = get_nodes_in_group(Bending.POOLS).filter(func(n: Node) -> bool: return not (n is BendZone))
+	var got := {}
+	for worn: bool in [true, false]:
+		_wear(player, ["water.patch.wellspring"] if worn else [])
+		_wear(foe, ["water.patch.wellspring"] if worn else [])
+		await _face_off(10.0)
+		for g: Node in grates:
+			g.remove_from_group(Bending.POOLS)        # (out of the pools while dry and puddle are read: no grate in reach then)
+		var dry := _patch_locks()
+		var pp := BendZone.make(player, "puddle", FormEffects.ground_at(player, player.global_position), {"radius_m": 1.2, "life_s": 6.0})
+		var pf := BendZone.make(foe, "puddle", FormEffects.ground_at(foe, foe.global_position), {"radius_m": 1.2, "life_s": 6.0})
+		var other := BendZone.make(foe, "puddle", FormEffects.ground_at(player, player.global_position), {"radius_m": 1.2, "life_s": 6.0})
+		await _ticks(2)
+		var wet := _patch_locks()
+		pp.end()
+		pf.end()
+		await _ticks(2)
+		var theirs := _patch_locks()                 # (in the foe's puddle only: not his own water)
+		other.end()
+		for g: Node in grates:
+			g.add_to_group(Bending.POOLS)
+		var grate := [-1.0, -1.0]
+		if not grates.is_empty():
+			var g3 := grates[0] as Node3D
+			var keep_at := player.global_position
+			player.global_position = Vector3(g3.global_position.x, player.global_position.y, g3.global_position.z)
+			await _ticks(2)
+			grate = _patch_locks()
+			player.global_position = keep_at
+		got[worn] = {"dry": dry, "wet": wet, "theirs": theirs, "grate": grate}
+		await _ticks(2)
+	_wear(player, [])
+	_wear(foe, [])
+	var w: Dictionary = got[true]
+	var c: Dictionary = got[false]
+	var k := func(a: Array, b: Array, i: int) -> float: return float(a[i]) / maxf(float(b[i]), 0.001)
+	_expect(absf(k.call(w.wet, c.wet, 0) - 1.25 / 1.5) < 0.01 and absf(k.call(w.dry, c.dry, 0) - 1.6 / 1.5) < 0.01
+			and absf(k.call(w.theirs, c.theirs, 0) - 1.6 / 1.5) < 0.01 and (grates.is_empty() or absf(k.call(w.grate, c.grate, 0) - 1.25 / 1.5) < 0.01),
+			"Wellspring: his Patch locks %.2f s in his own puddle%s, %.2f s anywhere else, in another's puddle too (Classic %.2f s)" % [float(w.wet[0]),
+			" and at a grate" if not grates.is_empty() else "", float(w.dry[0]), float(c.dry[0])])
+	_expect(absf(k.call(w.wet, c.wet, 1) - 1.25 / 1.5) < 0.01 and absf(k.call(w.dry, c.dry, 1) - 1.6 / 1.5) < 0.01,
+			"Wellspring on a bot: its Patch lock x%.3f in its own puddle, x%.3f out of it" % [k.call(w.wet, c.wet, 1), k.call(w.dry, c.dry, 1)])

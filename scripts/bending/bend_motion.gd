@@ -77,7 +77,25 @@ func _dash_end() -> void:
 
 
 func active() -> bool:
-	return _carry_t > 0.0 or _fall_t > 0.0 or _run_t > 0.0
+	return _carry_t > 0.0 or _fall_t > 0.0 or _run_t > 0.0 or _ride_t > 0.0
+
+
+## Carried by a ride now (SwayCaster lifts a cast pose's root meanwhile).
+func riding() -> bool:
+	return _ride_t > 0.0
+
+
+## A ride (Ride the Wave, a skill tree technique): carried `m` m along `dir` (flat) over `s` s on top of his own way, then his own
+## speed again (no carry eased on after it). Foam at his feet meanwhile.
+var _ride := Vector3.ZERO
+var _ride_t := 0.0
+var _ride_keep := Vector3.ZERO
+func ride(dir: Vector3, m: float, s: float) -> void:
+	var flat := Vector3(dir.x, 0.0, dir.z).normalized()
+	_ride_keep = Vector3(body.velocity.x, 0.0, body.velocity.z)
+	_ride = flat * m / maxf(s, 0.01)
+	_ride_t = maxf(s, 0.01)
+	_trail("water")
 
 
 ## A dash's speed being carried now (the player's legs' clip speed does not cap it meanwhile: FrontierPlayer).
@@ -126,6 +144,16 @@ func _physics_process(dt: float) -> void:
 		if flat.length() < _carry.length():
 			body.velocity.x = _carry.x
 			body.velocity.z = _carry.z
+	if _ride_t > 0.0:
+		var step := minf(dt, _ride_t)
+		_ride_t -= dt
+		# (the ride's own share this frame on top of his own way, whatever his easing did since: its distance exact)
+		body.velocity.x = _ride_keep.x + _ride.x * step / dt
+		body.velocity.z = _ride_keep.z + _ride.z * step / dt
+		if _ride_t <= 0.0:
+			_ride_t = 0.0
+			body.velocity.x = _ride_keep.x
+			body.velocity.z = _ride_keep.z
 	if _dash == 1 and _carry_t <= 0.0:
 		_dash_end()
 	elif _dash == 2:

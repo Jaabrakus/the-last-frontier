@@ -478,6 +478,11 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		if mlk.has(md):
 			base = float(mlk[md])
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
+	if id == "patch" and BendLoadout.wears(who, SwayCaster.WELLSPRING):
+		# (Wellspring: the player's ring lock by where he stands, as a share of its own ring_lock_s, on the bot's)
+		var ring_b := float(d.get("ring_lock_s", 1.5))
+		base *= BendLoadout.tune_f(who, "new:patch.lock_wet_s" if BendZone.in_own_water(who as Node3D) else "new:patch.lock_dry_s",
+				ring_b) / maxf(ring_b, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -1414,7 +1419,11 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
+	var keep_rel := BendR3.release
+	if _on_beat(id, md, t):
+		BendR3.release = {"beat": true}            # (the Beat: a worn technique pays it, as the player's let go on it)
 	var ok := _cast(id, md, t)
+	BendR3.release = keep_rel
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0
@@ -1454,6 +1463,16 @@ func _release() -> void:
 	if stock() and not o.is_empty():
 		mind().on_released(o, t if t != null and is_instance_valid(t) else null)
 	_after_cast(o, before)
+
+
+## Whether a bot lets (id, md) go on the Beat (SwayCaster.BEAT_S: the player's timing rule) now: only for a technique it wears
+## that pays it, when it helps. Ride the Wave: its Wave rides it in RIDE_M behind the water when the foe is further off than that
+## and the deck has room ahead. Nothing worn (every normal match's bot), never.
+func _on_beat(id: String, md: String, t: Node3D) -> bool:
+	if id == "wave" and md == "push" and BendLoadout.wears(me, BendEffects.RIDE):
+		return t != null and is_instance_valid(t) and _flat_d(t) > BendEffects.RIDE_M + 1.5 \
+				and _room(_way(t)) > BendEffects.RIDE_M + 1.5
+	return false
 
 
 ## Casts (id, md) now through the one path: BendCast.cast when it is there; a bend spec through BendEffects with its caster;

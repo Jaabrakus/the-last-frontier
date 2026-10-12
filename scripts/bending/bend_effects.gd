@@ -447,6 +447,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 			n.set_meta(&"bend_dazzle_until", BendStatus.now() + float(spec.dazzle_s))
 		hit += 1
 	_cur["hit"] = hit
+	if not ring and String(info.get("tag", "")).get_slice(".", 0) == "wave/push":
+		_wave_talents(p, flat, r)
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var bz := z as BendZone
@@ -474,6 +476,34 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	if not SbFx.fire(p, SbFx.key_of(info), "cone", {"at": p.global_position + Vector3.UP * 1.1, "dir": flat, "radius": r,
 			"to": p.global_position + Vector3.UP * 1.1 + flat * r, "info": info}):
 		BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind)
+
+
+## The Wave's skill tree talents (BendLoadout.wears: the caster's own; Classic never here), its cone `r` m along `flat` cast:
+##   Pooling Wave   a puddle of his (POOLING_PUDDLE) on the deck where the cone ends: a Geyser's source
+##   Mudslide       a mud pool of his (MUDSLIDE_POOL; his puddles are mud with the Mud set it needs) there
+##   Ride the Wave  let go on the Beat (BendR3.release beat: SwayCaster's, a bot's NpcBending) on the deck, he is carried RIDE_M
+##                  along its axis behind the water (BendMotion.ride), foam at his feet
+const POOLING := "water.wave.pooling"
+const POOLING_PUDDLE := {"radius_m": 1.2, "life_s": 6.0}
+const MUDSLIDE := "water.mud.mudslide"
+const MUDSLIDE_POOL := {"radius_m": 2.0, "life_s": 6.0}
+const RIDE := "water.wave.ride"
+const RIDE_M := 3.0
+const RIDE_S := 0.25
+static func _wave_talents(p: Node3D, flat: Vector3, r: float) -> void:
+	var pool: Dictionary = POOLING_PUDDLE if BendLoadout.wears(p, POOLING) else (MUDSLIDE_POOL if BendLoadout.wears(p, MUDSLIDE) else {})
+	if not pool.is_empty() and p.is_inside_tree():
+		var end := p.global_position + flat * r
+		if BendR3.stock():
+			end = BendR3.off_lip(p.get_tree(), end, float(pool.radius_m) * 0.5)      # (on the deck, not past its lip)
+		var g := FormEffects.ground_at(p, end)
+		BendLooks.burst(g + Vector3.UP * 0.1, "water", 22, Vector3.UP, 70.0, 3.0, 0.35)
+		_cur["puddle"] = BendZone.make(p, "puddle", g, pool, flat)
+	if BendLoadout.wears(p, RIDE) and bool(BendR3.release.get("beat", false)) and p is CharacterBody3D \
+			and (p as CharacterBody3D).is_on_floor():
+		BendMotion.of(p as CharacterBody3D).ride(flat, RIDE_M, RIDE_S)
+		BendLooks.burst(p.global_position + Vector3.UP * 0.1, "water", 18, -flat + Vector3.UP * 0.4, 60.0, 3.0, 0.3)
+		_cur["ride"] = true
 
 
 ## The caster thrown along `flat` (back: behind; side: to its side_sign's side, the player's keys or a bot's own: no keys read
@@ -560,11 +590,37 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	if bool(spec.get("burn", false)):
 		var start := p.global_position
 		BendZone.make(p, "burn", start + dir * 3.0, {"width_m": 1.4, "height_m": 0.4, "thick_m": 6.0, "life_s": 3.0, "damage_s": 10.0}, dir)
+	if spec.get("puddles") is Dictionary and BendLoadout.wears(p, WET_TRAIL):
+		_wet_trail(p, dir, spec.puddles as Dictionary)
 	if bool(spec.get("shove", false)):
 		for e in BendCaster.near(p, p.global_position + dir * 2.0, 3.0):
 			var n: Node3D = e[0]
 			var side := (n.global_position - p.global_position).cross(Vector3.UP).normalized()
 			BendR3.deliver(n, 0.0, n.global_position, side, p, -1.0, side * 6.0 + Vector3.UP * 1.0, spec.get("_info", {}))
+
+
+## Wet Trail (a skill tree enhance): the Skate's puddles (its spec's puddles: count, life_s, radius_m; the wearer's numbers) laid
+## at his feet as he slides, WET_TRAIL_EVERY_S apart from the start: his water, Geyser sources (his mud with the Mud set). The
+## Skate leaves none for anyone who does not wear it (Classic made none: the data's puddles were never made).
+const WET_TRAIL := "water.skate.wet_trail"
+const WET_TRAIL_EVERY_S := 0.18
+static func _wet_trail(p: CharacterBody3D, dir: Vector3, pd: Dictionary) -> void:
+	var n := int(pd.get("count", 3))
+	var spec := {"radius_m": float(pd.get("radius_m", 1.2)), "life_s": float(pd.get("life_s", 6.0))}
+	var nctx := NetSpells.ctx()                   # (online: the later puddles named in its cast's run, NetSpells)
+	for i in n:
+		var lay := func() -> void:
+			if not is_instance_valid(p) or not p.is_inside_tree():
+				return
+			var g := FormEffects.ground_at(p, p.global_position)
+			if p.global_position.y - g.y > 1.0:
+				return                            # (off the deck in the air: nothing to lie on)
+			BendLooks.burst(g + Vector3.UP * 0.05, "water", 8, Vector3.UP, 60.0, 1.5, 0.2)
+			BendZone.make(p, "puddle", g, spec, dir)
+		if i == 0:
+			lay.call()
+		else:
+			p.get_tree().create_timer(WET_TRAIL_EVERY_S * i, false).timeout.connect(func() -> void: NetSpells.with(nctx, lay))
 
 
 static func buff(c: Variant, spec: Dictionary) -> void:

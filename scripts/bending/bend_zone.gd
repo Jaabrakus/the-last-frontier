@@ -955,6 +955,22 @@ static func whirl_held(body: Node) -> bool:
 	return t != null and guarding(t)
 
 
+## Whether `body` stands in water of his own now (Wellspring, a skill tree enhance): a puddle (or mud pool) of his he is in, or
+## a grate within its reach (Bending.POOLS: the ring's, reach_m).
+static func in_own_water(body: Node3D) -> bool:
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return false
+	for n in body.get_tree().get_nodes_in_group(Bending.POOLS):
+		var n3 := n as Node3D
+		if n3 is BendZone:
+			if (n3 as BendZone).owner_node == body and not n3.is_queued_for_deletion() and (n3 as BendZone).inside(body.global_position):
+				return true
+		elif n3 != null and n3.has_meta(&"reach_m") \
+				and Vector2(n3.global_position.x - body.global_position.x, n3.global_position.z - body.global_position.z).length() <= float(n3.get_meta(&"reach_m")):
+			return true
+	return false
+
+
 ## Whether `body` has a round-2 guard standing now (a catch, a Turn, a parry, a Wind Guard).
 static func guarding(body: Node) -> bool:
 	for z in body.get_tree().get_nodes_in_group(GROUP):

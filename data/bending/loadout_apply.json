@@ -8,7 +8,7 @@
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
     "nodes: one switch per node id (absent counts as on). A node whose soak left its gate (tools/ring/loadout_soak.gd: 0.40-0.60 of the games at 30, 0.45-0.55 at 60) is switched off here and noted in the doc; its numbers then read as the move's own.",
     "live: the node ids that may apply (the eight number-only nodes of the plan's B2, less those refused): air.ball.dense, air.gust.full_sail, air.slice.keen, earth.burrow.lie_low, fire.step.quick, earth.wall.thick, water.wall.thick_ice. Each node's numbers are read from data/sway/skill_tree.json changes[]; a node applies only when every change in it can be applied per wearer and the data still holds its `from`.",
-    "water.skate.wet_trail is NOT live: its puddles.count and puddles.life_s are in data/sway/moves.json but nothing in the game makes the Skate's puddles, so only its slower travel (-10%) could apply, a pure nerf. It stays out until the Skate leaves puddles. Earth's Steady Point is not in the set either (it needs new fields).",
+    "water.skate.wet_trail is live (2026-10-11): the Skate's puddles (puddles.count, puddles.life_s in data/sway/moves.json, made by nothing before) are laid for its wearer alone (BendEffects._wet_trail), so the node is whole: 4 puddles for 7.2 s and travel 10.8 m/s; Classic's Skate still leaves none. Earth's Steady Point is not in the set either (it needs new fields).",
     "air.gust.full_sail is switched OFF (2026-10-10): the Gust held long became the Air Lance (a spear throw), so Full Sail now widens the plain Gust (2.4 m from 2, lock 0.5 s from 0.45) instead of the grown one; the soak measured the old numbers, and unverified is not live. Flip it to true once tools/ring/loadout_soak.gd element=air nodes=air.gust.full_sail is in the gate.",
     "earth.wall.thick and water.wall.thick_ice are switched OFF (2026-10-10 soak, tools/ring/loadout_soak.gd): the numbers apply and are tested, but the soak's bots never raise an Earth Wall or an Ice Wall (0 casts in 60 mirror games each; they only answer a held stone with one), so the fairness gate cannot see these two nodes. Their rates (Thick Wall 17/30 = 0.567, Thick Ice 23/60 = 0.383) are the mirror's own noise: with nothing worn the same seeds gave 18/30 for earth and, for water, exactly the games the node run played (9/30). Unverified is not live; flip each to true here once a duel or a bot that walls has measured it.",
     "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing only; Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
@@ -21,6 +21,9 @@
   "enabled": true,
   "classic_style": false,
   "nodes": {
+    "water.patch.wellspring": true,
+    "water.wave.ride": true,
+    "water.wave.pooling": true,
     "water.turn.eddy": true,
     "water.turn.whirl": true,
     "water.turn.cleanse": true,
@@ -31,7 +34,7 @@
     "air.gust.full_sail": false,
     "air.slice.keen": true,
     "earth.burrow.lie_low": true,
-    "water.skate.wet_trail": false,
+    "water.skate.wet_trail": true,
     "fire.step.quick": true,
     "earth.wall.thick": false,
     "water.wall.thick_ice": true,
@@ -71,7 +74,11 @@
     "water.lash.steamcraft": "BendBolt.meet, BendBolt.steam (life, drift), BendZone steam drift",
     "water.turn.cleanse": "BendZone._every redirect (gas washed in its reach)",
     "water.turn.whirl": "BendZone._guard_bolt redirect, BendBolt.begin_swing / _swing, BendZone.whirl_held",
-    "water.turn.eddy": "BendZone.report, BendZone.eddy_fill, SwayCaster._try_begin, NpcBending.begin"
+    "water.turn.eddy": "BendZone.report, BendZone.eddy_fill, SwayCaster._try_begin, NpcBending.begin",
+    "water.wave.pooling": "BendEffects.cone, _wave_talents (a puddle where the cone ends)",
+    "water.wave.ride": "SwayCaster._cast (the Beat: BendR3.release beat), BendEffects._wave_talents, BendMotion.ride, NpcBending._on_beat",
+    "water.skate.wet_trail": "BendEffects.dash, _wet_trail (the Skate's puddles, the wearer's only)",
+    "water.patch.wellspring": "SwayCaster._lock_time patch, BendZone.in_own_water, NpcBending.lock_for"
   },
   "live": [
     "air.ball.dense",
@@ -102,7 +109,11 @@
     "water.lash.steamcraft",
     "water.turn.cleanse",
     "water.turn.whirl",
-    "water.turn.eddy"
+    "water.turn.eddy",
+    "water.wave.pooling",
+    "water.wave.ride",
+    "water.skate.wet_trail",
+    "water.patch.wellspring"
   ],
   "styles_live": ["boxing"]
 }

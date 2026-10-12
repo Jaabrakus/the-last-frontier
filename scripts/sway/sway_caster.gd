@@ -234,6 +234,12 @@ const SRC_GUARD := "guard"
 const SRC_DASH := "dash"
 ## Round 3: the shortest lock the jab step leaves (s).
 const MIN_LOCK_S := 0.05
+## The Beat (data/sway/skill_tree.json beat.window_s; the owner's yes 2026-10-11): a held cast let go within this of its lock
+## filling (never a click, a guard, key 3, Patch, or a cast that goes by itself) is on the Beat: BendR3.release beat while it
+## lands. Only a worn technique pays it (Ride the Wave: BendEffects._wave_talents); with none worn it does nothing.
+const BEAT_S := 0.2
+## Water's Wellspring (a skill tree enhance): Patch's ring lock by where its wearer stands (_lock_time).
+const WELLSPRING := "water.patch.wellspring"
 ## The control schemes' data (MatchSetup.schemes_data; see the header's schemes).
 const SCHEMES_DATA := "res://data/bending/schemes.json"
 ## The set key's line with nothing readied (the quick spell as it stays).
@@ -1905,6 +1911,8 @@ func _root() -> void:
 	var on := pose != null and is_instance_valid(pose) and pose.rooting() and not player.is_dead
 	if on and r3() and airborne():
 		on = false                                # (round 3: casting never stops the fall; a pose's root ignored airborne)
+	if on and _riding():
+		on = false                                # (Ride the Wave, a skill tree technique: the ride carries him out of the root)
 	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up():
 		on = true                                 # (round 3: no walking while the guard is up)
 	if on:
@@ -1913,6 +1921,12 @@ func _root() -> void:
 	elif rooted and player.drag_speed_cap == ROOT_CAP:
 		player.drag_speed_cap = INF
 	rooted = on
+
+
+## Carried by a ride now (BendMotion.ride: Ride the Wave); false with no BendMotion on him.
+func _riding() -> bool:
+	var bm := player.get_node_or_null(^"BendMotion") as BendMotion
+	return bm != null and bm.riding()
 
 
 var _plant_acc := -1.0
@@ -2444,6 +2458,9 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
 		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+		if BendLoadout.wears(player, WELLSPRING):
+			# (Wellspring, a skill tree enhance: quicker standing in his own water, slower anywhere else)
+			base = BendLoadout.tune_f(player, "new:patch.lock_wet_s" if BendZone.in_own_water(player) else "new:patch.lock_dry_s", base)
 	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
 	var cm := BendStatus.cast_mult(player) if elem() else 1.0
 	_cm_used = cm
@@ -3103,6 +3120,8 @@ func _cast() -> void:
 		if jbc != null:
 			jbc.jab_step_until = -INF             # (round 3: the step spent by this jab; its own hit owes the next one's)
 	var rel := {"air": airborne(), "at": BendStatus.now()} if r3_on else {}
+	if r3_on and state == State.FULL and not _queued and src in [SRC_AIM, SRC_QUICK] and full_t <= BEAT_S:
+		rel["beat"] = true                        # (the Beat: held, let go within BEAT_S of the click; only a worn technique pays it)
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

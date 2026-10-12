@@ -249,9 +249,25 @@ of `test_loadout_review.gd` still passes).
 | Cleanse | while his Turn stands a gas cloud reaching into its 2.2 m is washed out (not an ally's); Turn lock 0.24 s | `BendZone._every` redirect |
 | Whirl Turn | E held through a perfect Turn: the water circles him up to 0.6 s, let go it leaves along his aim; late 60% | `BendZone._guard_bolt`, `BendBolt._swing`, `BendZone.whirl_held` |
 | Eddy | his Lash or Spear begun within 1.2 s of a perfect Turn starts 40% full; his Turn's beat 0.25 s | `BendZone.report`, `eddy_fill`, `SwayCaster._try_begin`, `NpcBending.begin` |
+| Pooling Wave | his Wave leaves a 1.2 m puddle of his for 6 s on the deck where its cone ends; Wave base 6.8 (grown 7.6) | `BendEffects._wave_talents` |
+| Ride the Wave | his Wave let go on the Beat (held, let go within 0.2 s of the click) carries him 3 m on behind the water, deck only; Wave lock 0.65 s | `SwayCaster._cast` (BendR3.release beat), `BendEffects._wave_talents`, `BendMotion.ride` |
+| Wet Trail | his Skate leaves 4 puddles of his for 7.2 s along its way (0.18 s apart) and travels 10.8 m/s | `BendEffects.dash`, `_wet_trail` |
+| Wellspring | Patch's ring lock 1.25 s in his own puddle or at a grate, 1.6 s anywhere else (as it begins) | `SwayCaster._lock_time`, `BendZone.in_own_water`, `NpcBending.lock_for` |
 
 Bots (never worn in a normal match): a bot wearing Whirl Turn holds the swing while the foe it aims at stands guarding and sends
-it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; the rest are its casts' own.
+it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; a bot wearing Ride the Wave lets its Wave go on the Beat
+when its foe is further than 4.5 m and the deck has room ahead (NpcBending._on_beat); a bot's Patch lock takes Wellspring's share;
+the rest are its casts' own.
+
+The Beat (skill_tree.json beat, the owner's yes): SwayCaster marks a cast held and let go within `BEAT_S` (0.2 s) of its click
+(never a click, a guard, key 3, Patch or a cast that goes by itself) as `beat` in `BendR3.release` while it lands; only a worn
+technique pays it, so with nothing worn it changes nothing. Its tell is the technique's own (Ride the Wave's foam at his feet).
+Online the beat is the caster's machine's (the ride is his own motion).
+
+Data fixed: Wellspring's two changes both named `stock:patch.lock_s` (a number no code reads, and one path twice can't be two
+numbers): they are now `new:patch.lock_wet_s` (1.5 to 1.25) and `new:patch.lock_dry_s` (1.5 to 1.6), Patch's ring lock
+(moves.json patch.ring_lock_s), with a `new` entry for the where-he-stands rule. Wet Trail is no longer refused: the Skate's
+puddles are made for its wearer only (Classic's Skate still leaves none).
 
 Washout and Cleanse act on gas, the Sulphur set's matter (earth's skill set, not built in this lane): they are built against its
 interface, a `BendZone` of kind `gas` (round, `ROUND_NEW`), and do nothing until a gas cloud exists in a match. The test makes the

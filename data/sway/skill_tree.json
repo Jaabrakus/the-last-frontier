@@ -3880,16 +3880,21 @@
        "help": "Patch is quicker standing in your own water.",
        "changes": [
         {
-         "path": "stock:patch.lock_s",
+         "path": "new:patch.lock_wet_s",
          "from": 1.5,
          "to": 1.25,
-         "note": "in the wearer's own puddle or at a grate"
+         "note": "in the wearer's own puddle or at a grate (Patch's ring lock, moves.json patch.ring_lock_s; was stock:patch.lock_s, which no code reads, twice: 2026-10-11)"
         },
         {
-         "path": "stock:patch.lock_s",
+         "path": "new:patch.lock_dry_s",
          "from": 1.5,
          "to": 1.6,
          "note": "anywhere else"
+        },
+        {
+         "path": "new",
+         "what": "Patch's ring lock by where the wearer stands as it begins: his own puddle or a grate, else",
+         "where": "SwayCaster._lock_time patch, BendZone.in_own_water, NpcBending.lock_for"
         }
        ],
        "visual": {

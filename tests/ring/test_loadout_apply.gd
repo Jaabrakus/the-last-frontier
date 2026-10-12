@@ -160,9 +160,8 @@ func _run() -> void:
 	var all_on := {}
 	for id1: String in _live_all():
 		all_on[id1] = true
-	_expect(not "water.skate.wet_trail" in live and not bool(BendLoadout.resolve("water.skate.wet_trail").ok)
-			and String(BendLoadout.resolve("water.skate.wet_trail").why).contains("puddles"),
-			"Skate's Wet Trail is refused: its puddles are in the data and nothing makes them (%s)" % BendLoadout.resolve("water.skate.wet_trail").why)
+	_expect("water.skate.wet_trail" in live and bool(BendLoadout.resolve("water.skate.wet_trail").ok),
+			"Skate's Wet Trail is live: the Skate's puddles are made for its wearer alone (2026-10-11, BendEffects._wet_trail) (%s)" % BendLoadout.why_not("water.skate.wet_trail"))
 	_expect("earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") == "",
 			"Earth's Steady Point is live (2026-10-11: its release and sputter read per wearer, its own Spike lock)")
 	_expect(BendLoadout.live_styles() == ["boxing"], "the live styles are Boxing only (%s)" % [BendLoadout.live_styles()])
