@@ -232,3 +232,39 @@ zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path /Users/kiwimango/Do
 ```
 
 A game is about 11 s of wall time headless. `GODOT_TIMEOUT=1500` for 30 games per run. The soak forces on the nodes it is asked for (so a switched-off node can be re-measured) and takes the seeds from `seed=` (game `g` uses `seed + 101 g`).
+
+## Earth's behaviour talents (pass 1, 2026-10-11)
+
+The owner: "we need to make sure all the talents work and they work in game right". Branch `tb/talents-earth-p1`. Each node
+below is in `loadout_apply.json` `behaviour` (where its code is), at the end of `live`, on in `nodes`, and played worn and not
+worn in a real ring by `tests/ring/test_talents_earth.gd` (105 checks), the bot's side too. Live on the owner's word, not soaked.
+
+| Node | What the wearer gets (code) |
+|---|---|
+| Thick Wall (switched on) | 5 hits, 2.5 m wide, raised and shot down in a ring |
+| Juggle | his Catch holds two stones of one window side by side, E throws the oldest, a third drops at his feet; full catch 0.8 s (`BendZone.held_stone`, `held_stones`; `stock:guard_catch_s` in `RingRules.guard_outcome`) |
+| Return to Sender | a clean catch thrown back with E pressed within the Beat of the catch flies x1.15; late return lock 0.4 s (`BendZone.return_stone`, `beat_return`) |
+| Kick-Up | a Pebbles volley that meets nobody leaves one loose stone where it lands (`BendBolt._kick_up_end`) |
+| Avalanche | the Boulder landing on the deck breaks into three low rolling stones fanned 15 degrees, one volley of 3, base 5.9; a Catch holds one, the rest drop at the catcher's feet (`GustLift._avalanche`) |
+| Heave | a Column let go on the Beat launches with base 11.3 (a class change marked `when: beat` in the tree: `BendLoadout` `class_beat`); lock 1.7 s |
+| Kiln Stone | his stone through any Fire Wall or burning ground is heated until it lands: base x1.15, a fire trail; a Parry on the beat sends it back, a Turn douses it (`BendBolt.heat`, `GustLift._kiln_check`, `BendZone`) |
+| Rubble Wall | his wall shot down or capped leaves two loose stones at its foot; rise 0.8 s (`FormRaised._rubble_stones`) |
+| Quarry | his Beat Fissure into his own wall tears a chunk off and throws it on, the first chunk free; rise 0.8 s (`BendBolt._quarry`) |
+| Reinforce | a mended piece takes its next two hits free (`FormRaised.take_brace`); Mend's lock 2.6 s |
+| Sulphur (set) and Sulphur Spike, Sulphur Boulder, Fuming Column, Brimstone Wall, Flint Pebbles, Sulphur Heart | gas: `scripts/bending/bend_gas.gd` (loaded by path, a BendZone of kind `gas`); see its header |
+
+**The Beat** (the tree's timing rule; the owner's answer: yes) is built once for all techniques: a held cast let go within
+`beat.window_s` (0.2 s) of its lock filling, for a wearer of a technique it pays only (`BendLoadout.beat_paid`: a built node
+whose new code names the Beat). SwayCaster and a bot's release put `beat` on the hit's info (`BendR3.info_for`); a brief
+glow on the caster's own hands (`BendLooks.beat_flash`). Classic: nothing, not even the look.
+
+**New BendLoadout kinds** (additive): `set:<set>.<key>` tune paths (a skill set's zone rule, read from the tree's
+`skill_sets`), `stock:guard_catch_s`, a class change `when: beat` (`class_beat`), `default_from` for a class's `volley_n`
+beside a node's own new code, and a modeless move's lock (Mend). `test_loadout_apply.gd` wears a node with the nodes it
+requires, reads a Beat class on a Beat hit and a `default_from`'s default.
+
+**Not built (next pass): the Sulphur Vent** (a new skill on key 4 tapped twice). It needs a per-body mode the key's double
+tap reaches (`Bending.other_move` and `SwayCaster.step_other` are per element, not per wearer), its spec kept out of
+`moves.json` (the Classic fingerprint enumerates every bend key as a mode), its pose and a bot option. The water, fire and air
+lanes' new skills on empty double taps need the same seam: build it once. Also not built: lightning's Live Gas and the
+reactions of cone moves (Breath, the Wave) on gas; magma seams heating a Kiln Stone (the Magma set).
