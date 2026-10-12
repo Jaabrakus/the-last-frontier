@@ -1955,7 +1955,7 @@ func _offer_basics() -> void:
 
 func _beginner_start(lessons: bool) -> void:
 	MatchSetup.set_controls("basic")
-	MatchSetup.set_aim_help("strong")
+	MatchSetup.set_aim_help("light")           # (Normal, as everywhere: the owner, 2026-10-12; was Strong for a beginner)
 	FirstHints.set_on(true)
 	MatchSetup.difficulty = "easy"
 	MatchSetup.rules_choice = "stock"

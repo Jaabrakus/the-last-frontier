@@ -168,7 +168,7 @@
 	"go_show_s": 1.2,
 	"pause_s": 6.0,
 	"winded_refill": 0.4,
-	"zones": {"_about": "Zones on the new ring (rule_set zones; the owner, 2026-10-11: \"zones is still good ... it should have all the new bending movements\", picked hits like Lives and the new deep-water deck): every hit's d goes onto a damage meter (the ledger, never a launch's growth: it launches at 0% always); at wind_pct the body is winded (pushed back a zone, the meter down to winded_refill's share of it; in the last zone out of the round). The body's health shows the meter.", "wind_pct": 80.0},
+	"zones": {"_about": "Zones on the new ring (rule_set zones; the owner, 2026-10-11: \"zones is still good ... it should have all the new bending movements\", picked hits like Lives and the new deep-water deck): every hit's d goes onto a damage meter (the ledger, never a launch's growth: it launches at 0% always); at wind_pct the body is winded (pushed back a zone, the meter down to winded_refill's share of it; in the last zone out of the round). The body's health shows the meter.", "wind_pct": 80.0, "_tug": "The tug of war (RingRules header; the owner, 2026-10-12: \"give and take like a tug of war\"): one front a round; one of the losing side caught forward of the front's new line eased back at tug_ease_mps for up to tug_ease_s after it moved.", "tug_ease_mps": 7.0, "tug_ease_s": 2.5},
 	"_winded_back_m": "a winded competitor is set this far behind the line of the zone he is pushed into (m)",
 	"winded_back_m": 0.6,
 	"grate_reach_m": 1.5,

@@ -506,6 +506,15 @@ func _no_cues() -> void:
 	# round 4's HUD sets them right-aligned in the far corner, so one ending by itself in the moving second moves their box,
 	# which is no cue of the bot's)
 	await _until(func() -> bool: return hud.status_words().is_empty(), 8.0)
+	# (the screen's edges are the player's own hurt and low health, never the bot's: the ring's own foe held through the two
+	# seconds (its Column landing in the moving one flashed them), the player at full health off the heartbeat's threshold)
+	var rfoe: NpcFighter = RingMode.find(self).foe as NpcFighter if RingMode.find(self) != null else null
+	var rfoe_held := rfoe.held if rfoe != null else false
+	if rfoe != null:
+		rfoe.held = true
+	await _secs(1.0)                         # (a bolt of his already flying lands first)
+	p.health = p.max_health
+	await _ticks(3)
 	var still := n.global_position
 	var hold := func() -> void:
 		if is_instance_valid(n):
@@ -540,6 +549,8 @@ func _no_cues() -> void:
 	for k: int in changed:
 		if not steady.has(k):
 			tracking.append(changed[k])
+	if rfoe != null and is_instance_valid(rfoe):
+		rfoe.held = rfoe_held
 	_expect(moved >= 9.5 and tracking.is_empty(),
 			"the bot moved %.1f m in 1 s: no CanvasItem moved, showed or hid with it (%d items; %s; status '%s')" % [moved, c2.size(), tracking,
 			hud._status.text if hud._status != null else "-"])

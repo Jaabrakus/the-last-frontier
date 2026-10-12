@@ -1,12 +1,15 @@
 extends SceneTree
-## F swaps keys 1 and 2 (Hotbar.swap_keys, the action bend_swap; the owner, 2026-10-11: "the F should toggle between 1 and
-## 2"), in Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, earth), the foe held:
+## F cycles the keys (Hotbar.swap_keys, the action bend_swap; the owner, 2026-10-11: "the F should toggle between 1 and 2";
+## 2026-10-12: "f should cycle between those 1 2 3"), in Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, earth, then
+## water), the foe held:
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_swap_keys.gd
 ##   the swap     F with key 1's move readied: key 2's first move readied (Shove); F again: key 1's (Spike); key 1 tapped
 ##                twice and F: key 2's first move, as a press of 2 would
 ##   neither      key 4 readied: F readies key 1's
 ##   mid-lock     a lock of key 1's move under the aim: F ends it as a press of 2 does, key 2's move readied
-##   the words    F1's keys line says F swaps 1 and 2
+##   1 2 3        water (a key-3 move of its own, the Ice Tomahawk): F from key 1's move: 2, 3, then 1 again; earth's F never
+##                lands on 3 (its 3 the movement spell, Shift's)
+##   the words    F1's keys line says F cycles 1, 2, 3
 ## The last line "SWAP KEYS PASSED (<n> checks)" or "SWAP KEYS FAILED (<f> of <n>)".
 
 const LIMIT_S := 120.0
@@ -118,7 +121,21 @@ func _run() -> void:
 			"a lock of key 1's move: F ends it (%s) and readies key 2's (%s)" % [why, hb.spell])
 	# ---- the words
 	var help := KitWords.help_line("keys")
-	_expect(help.contains("swaps 1 and 2") and help.contains("F"), "the keys help line says it: '%s'" % help)
+	_expect(help.contains("cycles 1, 2, 3") and help.contains("F"), "the keys help line says it: '%s'" % help)
+	# ---- 1 2 3: water's key 3 is a move of its own
+	_expect(hb.cycle_keys() == [0, 1], "earth: F cycles 1 and 2 only (%s)" % str(hb.cycle_keys()))
+	MatchSetup.element = "water"
+	var wet := await _until(func() -> bool: return p.arena_element == "water" and p.hotbar.spell != "", 8.0)
+	el = "water"
+	await _ticks(20)
+	await _action(&"weapon_1")
+	await _ticks(20)
+	var seen := [hb.readied_key()]
+	for i in 3:
+		await _action(&"bend_swap")
+		seen.append(hb.readied_key())
+		await _ticks(20)
+	_expect(wet and seen == [0, 1, 2, 0], "water: 1, then F: 2, 3 (the Ice Tomahawk), 1 again (%s)" % str(seen))
 	_end()
 
 

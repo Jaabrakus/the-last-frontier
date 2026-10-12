@@ -620,8 +620,8 @@ func _beginner_path(m: MainMenu) -> void:
 		return
 	learn.pressed.emit()
 	check(MatchSetup.basic() and MatchSetup.practice() and RingMode.lessons_asked and MatchSetup.rule_set() == "stock"
-			and MatchSetup.aim_help() == "strong" and MatchSetup.difficulty == "easy",
-			"Learn the basics uses Basic, strong aim help and the five-card Lives practice from a saved Full/Zones setup")
+			and MatchSetup.aim_help() == "light" and MatchSetup.difficulty == "easy",
+			"Learn the basics uses Basic, Normal aim help (as everywhere) and the five-card Lives practice from a saved Full/Zones setup")
 	check(is_equal_approx(MatchSetup.speed, 1.0) and not MatchSetup.throw_me and MatchSetup.dummy == "stand"
 			and RingLessons.lessons_for(MatchSetup.scheme(), MatchSetup.element).size() == 5,
 			"the guided practice clears earlier speed/throw settings and includes recovery")

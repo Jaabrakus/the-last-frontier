@@ -8,7 +8,7 @@
       "label": "Keys",
       "line": "1-4 a move, tap the key twice for its other move; E guards; 5 heals",
       "strip": "",
-      "f1": "1-4 a key's first move, tap twice: its other move · F swaps 1 and 2 · E your guard · 5 Patch (twice: Mend) · hold 2 longer: it grows"
+      "f1": "1-4 a key's first move, tap twice: its other move · F cycles 1, 2, 3 · E your guard · 5 Patch (twice: Mend) · hold 2 longer: it grows"
     },
     "direction": {
       "label": "Direction",
@@ -26,13 +26,13 @@
       "label": "First moves only",
       "line": "1-4 ready only each key's first move: the same game, fewer choices",
       "strip": "1-4 a move · E your guard · 5 Patch",
-      "f1": "1-4 each key's first move only (a second tap does nothing) · F swaps 1 and 2 · E your guard · 5 Patch"
+      "f1": "1-4 each key's first move only (a second tap does nothing) · F cycles 1, 2, 3 · E your guard · 5 Patch"
     },
     "basic": {
       "label": "Basic",
       "line": "hold left click: jab · 1 or 2, then hold right-click and let go · E guards · Space jumps · 3 dashes",
       "strip": "1 or 2 readies · hold right-click, let go · thrown? hold Space",
-      "f1": "Hold left click: your jab · 1 your strike, tap twice: its partner · 2 your push, hold right-click longer: it grows · F swaps 1 and 2 · hold right-click till full, let go: the readied move · E: tap on the beat, hold to keep it up · Space jumps, again in the air · 3 dashes · thrown off? hold Space",
+      "f1": "Hold left click: your jab · 1 your strike, tap twice: its partner · 2 your push, hold right-click longer: it grows · F cycles 1, 2, 3 · hold right-click till full, let go: the readied move · E: tap on the beat, hold to keep it up · Space jumps, again in the air · 3 dashes · thrown off? hold Space",
       "keys": ["fire", "aim", "weapon_1", "weapon_2", "bend_swap", "bend_guard", "jump", "weapon_3"],
       "later_keys": ["weapon_4", "weapon_5"],
       "later_line": "Wall (4) and Heal (5) come in after your first win"

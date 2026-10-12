@@ -3,7 +3,7 @@ extends SceneTree
 ## the dressed ring at the format's size with every fighter of both sides, at the countdown (all at their spawns) and a few
 ## seconds into the fight (the bots under the team coach; the player stands in his slot). Every CanvasLayer hidden.
 ## Windowed (it draws; a normal window, never on top):
-##   Godot --path . -s tools/ring/team_format_shots.gd -- format=4v4 out=<dir> [light=golden] [fight_s=7]
+##   Godot --path . -s tools/ring/team_format_shots.gd -- format=4v4 out=<dir> [light=golden] [fight_s=7] [rules=stock|zones]
 ## Writes <dir>/team_<format>_<view>_<moment>.png (1600 x 900): views "above" (the whole deck from over the stands) and
 ## "corner"; moments "countdown" and "fight". Ends with TEAM SHOTS DONE.
 
@@ -19,7 +19,9 @@ var fight_s := 7.0
 
 
 func _initialize() -> void:
-	var a := CaptureKit.args({"format": "4v4", "out": out, "light": "golden", "fight_s": "7"})
+	var a := CaptureKit.args({"format": "4v4", "out": out, "light": "golden", "fight_s": "7", "rules": ""})
+	if String(a["rules"]) in ["stock", "zones"]:
+		RingRules.rule_set_override = String(a["rules"])      # (rules=zones: the Zones deck)
 	fmt = String(a["format"]) if String(a["format"]) in MatchSetup.FORMATS else "4v4"
 	out = String(a["out"])
 	fight_s = float(a["fight_s"])

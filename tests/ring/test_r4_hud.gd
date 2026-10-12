@@ -532,7 +532,7 @@ func _ui(a: StringName) -> void:
 	await _frames(2)
 
 
-## The Aim help row of the Options panel: its chips in the order of the help (Off, Light, Strong), Enter and Right and Left all going
+## The Aim help row of the Options panel: its chips in the order of the help (Off, Normal, Strong), Enter and Right and Left all going
 ## round the same way (the last value's Right is the first, the first's Left the last).
 func _aim_row(m: RingMenu) -> void:
 	var kept := MatchSetup.aim_help()
@@ -540,7 +540,7 @@ func _aim_row(m: RingMenu) -> void:
 	await _frames(3)
 	var row := m._aim as BroadcastUI.OptionRow
 	var words: Array = row.chips.chips.map(func(c: BroadcastUI.Chip) -> String: return (c.find_child("Text", true, false) as Label).text)
-	_expect(words == ["Off", "Light", "Strong"] and MatchSetup.AIM_ORDER == ["off", "light", "strong"],
+	_expect(words == ["Off", "Normal", "Strong"] and MatchSetup.AIM_ORDER == ["off", "light", "strong"],
 			"the Aim help chips run from the least help to the most (%s)" % [words])
 	MatchSetup.set_aim_help("strong")
 	m._paint()
@@ -555,7 +555,7 @@ func _aim_row(m: RingMenu) -> void:
 	MatchSetup.set_aim_help("strong")
 	var after := MatchSetup.next_aim_help()
 	_expect(wrapped_right and wrapped_left and next == "strong" and after == "off",
-			"Aim help: Right from Strong is Off (%s), Left from Off is Strong (%s), Enter's turn Light > Strong > Off (%s, %s)"
+			"Aim help: Right from Strong is Off (%s), Left from Off is Strong (%s), Enter's turn Normal > Strong > Off (%s, %s)"
 			% [wrapped_right, wrapped_left, next, after])
 	MatchSetup.set_aim_help(kept)
 	m._paint()

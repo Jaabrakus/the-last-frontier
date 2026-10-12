@@ -13,6 +13,15 @@ extends Node
 ##   confined    a competitor knocked back across a zone line is confined to that zone for the round (it only grows): his
 ##               forward line is then a soft wall. Walking forward past it he is eased back (soft_wall_mps, soft_wall_k per
 ##               m), held at soft_wall_hard_m past it; no penalty, play flows. Walking back of his own will confines nothing
+##   tug of war  zones (rule_set "zones"; the owner, 2026-10-12: "we cant have 2 teams pushed back then they are to far is a
+##               give and take like a tug of war"): one front a round, never both sides pushed back. front 0 the neutral
+##               strip open to both; front f > 0 team 1 held behind its own line f and team 0 free up to it, f < 0 the same
+##               the other way. A knock carrying a body back past the line one zone behind the front from its side
+##               (_give_line; from the strip, its own line 1) moves the front a zone toward that body's end, whichever side
+##               held the ground before; winded the same; at its last zone already, winded is out. Every competitor's confined
+##               follows the front (1 + the zones its side has lost); one of the losing side caught forward of the new line
+##               is eased back with it (tug_ease_mps, for tug_ease_s), not snapped. The time-out: the side the front stands
+##               in the other half of, else the sum below. The classic ring keeps the rules below as they were
 ##   advancing   while a side's competitors are all confined to zone k or deeper, the other side may come into their zone
 ##               k-1 (k 1: the neutral strip is open to both)
 ##   the end     walking (not knocked) never takes anyone off his own open end (eased back inside edge_guard_m); a knock
@@ -132,6 +141,10 @@ var last_out := {}
 var soft_walls := true
 ## The last side to go out whole in team mode (-1 none this round): a knockout.
 var knocked_out := -1
+## Zones' tug of war: the front this round (0 the neutral strip; > 0 team 1 pushed back that many zones, < 0 team 0), and
+## when it last moved (BendStatus.now()).
+var front := 0
+var front_moved_at := -INF
 
 ## Round 3 (stock): sudden death on (one life each at sudden.pct; the next fall wins).
 var sudden := false
@@ -226,6 +239,8 @@ func clear() -> void:
 	knocks = Vector2i.ZERO
 	last_out = {}
 	knocked_out = -1
+	front = 0
+	front_moved_at = -INF
 
 
 ## `body` a competitor of `team` (0 the player's side, 1 the other): never killed in the ring (no_death; winded instead).
@@ -259,6 +274,8 @@ func reset_round() -> void:
 	knocks = Vector2i.ZERO
 	last_out = {}
 	knocked_out = -1
+	front = 0
+	front_moved_at = -INF
 
 
 ## Team `team`'s side for the team filter (BendCaster.TEAM_META): "ring_0", "ring_1".
@@ -281,9 +298,64 @@ func still_in(team: int) -> Array:
 
 
 ## Whether team `team` may stand in the other side's zone `zone` (1..zones) now: only once every opponent still in is
-## confined deeper than it (advancing: all of them behind the line).
+## confined deeper than it (advancing: all of them behind the line); zones: the ground the front gives it.
 func may_enter(team: int, zone: int) -> bool:
+	if tug():
+		return zone >= 1 and zone <= -lost(team)
 	return zone >= 1 and zone <= min_confined(1 - team) - 1
+
+
+# ---------------------------------------------------------------- zones' tug of war (see the header)
+func tug() -> bool:
+	return rule_set == "zones"
+
+
+## The zones team `team` has lost to the front (< 0: the zones of the other side's it has taken).
+func lost(team: int) -> int:
+	return front if team == 1 else -front
+
+
+## Every competitor's confined from the front.
+func _sync_front() -> void:
+	for id in state:
+		var st := state[id] as Dictionary
+		st["confined"] = 1 + maxi(lost(int(st.team)), 0)
+
+
+## The front moved `n` zones toward team `team`'s end, kept short of the last zone's far side each way.
+func _give(team: int, n: int) -> void:
+	var m := zones() - 1
+	front = clampi(front + (n if team == 1 else -n), -m, m)
+	front_moved_at = BendStatus.now()
+	_sync_front()
+
+
+## The line (s from the centre toward team `team`'s own end) a knock must carry one of its own back past to give ground: one
+## zone behind the front from its side (from the neutral strip: its own line 1).
+func _give_line(team: int, extra := 0) -> float:
+	var l := lost(team) + extra
+	return ring.line_s(0, l + 1) if l >= 0 else -ring.line_s(0, -l - 1)
+
+
+## A knock carrying `b` back past its side's give line: the front a zone toward its end (a line more, a zone more); its side
+## at its last zone already: the water or the winding takes it from there.
+func _tug_judge(b: Node3D, st: Dictionary) -> void:
+	if not _knocked(b):
+		return
+	var t := int(st.team)
+	var c := int(st.confined)
+	var s := ring.s_of(b.global_position, end_of(b))
+	var n := 0
+	while lost(t) + n < zones() - 1 and s > _give_line(t, n):
+		n += 1
+	if n > 0:
+		_give(t, n)
+		knocked_back.emit(b, c, int(st.confined))
+
+
+static func zones_num(key: String, def: float) -> float:
+	var z: Variant = data().get("zones")
+	return float((z as Dictionary).get(key, def)) if z is Dictionary else def
 
 
 func _st(body: Node) -> Dictionary:
@@ -336,6 +408,9 @@ func forward_limit(body: Node3D) -> float:
 		return -INF
 	var c := int(st.confined)
 	var e := end_of(body)
+	if tug():
+		var l := lost(int(st.team))
+		return ring.line_s(e, l) if l > 0 else -ring.line_s(1 - e, -l)
 	if c > 1:
 		return ring.line_s(e, c - 1)
 	var k := min_confined(1 - int(st.team))
@@ -536,7 +611,9 @@ func _walls(b: Node3D, e: int, dt: float) -> void:
 		var depth := lim - s
 		var step := minf(depth, (num("soft_wall_mps", 2.5) + num("soft_wall_k", 8.0) * depth) * dt)
 		var hard := num("soft_wall_hard_m", 0.12)
-		if depth - step > hard:
+		if tug() and BendStatus.now() - front_moved_at < zones_num("tug_ease_s", 2.5) and depth > 0.5:
+			step = minf(depth, zones_num("tug_ease_mps", 7.0) * dt)   # (the front moved under him: eased back with it)
+		elif depth - step > hard:
 			step = depth - hard
 		moved = step
 		_stop(b, back)
@@ -642,8 +719,11 @@ func _refill(b: Node3D) -> void:
 
 
 # ---------------------------------------------------------------- the time-out
-## The team holding more ground (the lower confined zones, summed over those still in), -1 when level.
+## The team holding more ground (zones: the side the front stands in the other half of; else, or level, the lower confined
+## zones, summed over those still in), -1 when level.
 func territory() -> int:
+	if tug() and front != 0:
+		return 0 if front > 0 else 1
 	var g := [0, 0]
 	for t in 2:
 		for b in sides[t]:
@@ -1545,13 +1625,8 @@ func _zones_frame(dt: float) -> void:
 				return
 			if bool(st.out):
 				continue
-		var e := end_of(body)
-		var z := ring.zone_of(body.global_position, e)
-		var c := int(st.confined)
-		if z > c and z <= zones() and _knocked(body):
-			st["confined"] = z
-			knocked_back.emit(body, c, z)
-		_walls(body, e, dt)
+		_tug_judge(body, st)
+		_walls(body, end_of(body), dt)
 
 
 ## The meter full (zones): pushed back a zone (set winded_back_m behind its line, his launch ended), the meter down to
@@ -1565,13 +1640,15 @@ func _zones_wind(b: Node3D, by: Node) -> void:
 		st["by"] = who
 	reset_pct(b, wind_pct() * (1.0 - clampf(num("winded_refill", 0.4), 0.0, 1.0)))
 	var c := int(st.confined)
-	if c >= zones():
+	var t := int(st.team)
+	if lost(t) >= zones() - 1:
 		_out(b, who, "winded")
 		return
-	var to := c + 1
-	st["confined"] = to
+	_give(t, 1)                              # (the tug of war: the front a zone toward his end)
+	var to := int(st.confined)
 	var e := end_of(b)
-	var want := ring.line_s(e, to - 1) + num("winded_back_m", 0.6)
+	var l := lost(t)
+	var want := (ring.line_s(e, l) if l > 0 else -ring.line_s(e, -l)) + num("winded_back_m", 0.6)
 	var s := ring.s_of(b.global_position, e)
 	if s < want:
 		var back := ring.axis() * RingArena.side_sign(e)

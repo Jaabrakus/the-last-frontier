@@ -17,7 +17,7 @@ extends CanvasLayer
 ##   Practice           round 3, in a % ring practice only: its rows (its %, your %, what it does, its steering, Throw me
 ##                      off, speed, fresh moves), each at once and kept (RingPractice applies them; practice.json words)
 ##   Options            its rows in the panel at the right, each at once and kept:
-##     Aim help: light    how much the casts are helped onto a fighter near the crosshair, in turn
+##     Aim help: Normal   how much the casts are helped onto a fighter near the crosshair, in turn (Off, Normal, Strong)
 ##     Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                        section); on, they show in the match under way
 ##     Camera: High       round 4 (READ): where the camera sits behind you, in turn (RingCamera: High, Close, Shoulder, High
@@ -260,7 +260,7 @@ func _ready() -> void:
 		MatchSetup.save()
 		_picked(_games_text()))
 	_options = _sub_panel("OptionRows", w("options"))
-	_aim = _opt_row(_options, "AimHelp", "Aim help", _cap_words(MatchSetup.AIM_ORDER), cycle_aim, func(i: int) -> void:
+	_aim = _opt_row(_options, "AimHelp", "Aim help", MatchSetup.AIM_ORDER.map(MatchSetup.aim_name), cycle_aim, func(i: int) -> void:
 		MatchSetup.set_aim_help(String(MatchSetup.AIM_ORDER[i]))
 		_paint())
 	_hints = _opt_row(_options, "KeyHints", "Key hints", ["On", "Off"], toggle_hints, func(i: int) -> void:
@@ -664,11 +664,11 @@ func cycle_difficulty() -> void:
 
 
 ## The next control scheme in turn: at once (the match goes on with it), kept for the next time.
-## The aim's help in turn (MatchSetup.AIM_ORDER: off, light, strong): at once, kept.
+## The aim's help in turn (MatchSetup.AIM_ORDER: off, light (Normal), strong): at once, kept.
 func cycle_aim() -> void:
 	MatchSetup.set_aim_help(MatchSetup.next_aim_help())
 	_paint()
-	_note.text = "Aim help: %s" % MatchSetup.aim_help()
+	_note.text = "Aim help: %s" % MatchSetup.aim_name()
 
 
 ## The key hints on or off: at once (on: shown over the match under way; off: the ones up go), kept.

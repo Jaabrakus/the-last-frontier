@@ -87,6 +87,9 @@ static var _data := {}
 ## merged numbers for it.
 static var mode := "classic"
 static var _merged := {}
+## Zones' smaller deck (the rule set zones; the owner, 2026-10-12: "the zones and 2v2 should have a smaller arena"):
+## ring.json modes.zones over the stock overlay, under a team format's.
+static var zones_deck := false
 ## The team format's deck ("1v1": the base; "2v2", "4v4": ring.json formats over the base and the mode's overlay; the owner,
 ## 2026-10-10: team arenas "big enough"; docs/tidebreak/team_formats_and_arenas.md).
 static var format := "1v1"
@@ -114,7 +117,8 @@ static func data() -> Dictionary:
 	if _merged.is_empty():
 		_merged = _data.duplicate(true)
 		var ov: Variant = ((_data.get("modes", {}) as Dictionary).get(mode, {})) if mode != "classic" else null
-		for o: Variant in [ov, fov]:
+		var zov: Variant = ((_data.get("modes", {}) as Dictionary).get("zones", {})) if mode == "stock" and zones_deck else null
+		for o: Variant in [ov, zov, fov]:
 			if not (o is Dictionary):
 				continue
 			for k: String in (o as Dictionary):
@@ -129,11 +133,13 @@ static func data() -> Dictionary:
 
 
 ## Round 3: the numbers read through rule set `m`'s overlay from now on ("stock" and "zones", the new ring: modes.stock;
-## anything else the base).
+## zones its smaller deck over that, modes.zones; anything else the base).
 static func set_mode(m: String) -> void:
 	var want := "stock" if m in RingRules.NEW_RING else "classic"
-	if want != mode:
+	var z := m == "zones"
+	if want != mode or z != zones_deck:
 		mode = want
+		zones_deck = z
 		_merged = {}
 
 

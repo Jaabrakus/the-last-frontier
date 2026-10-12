@@ -741,15 +741,18 @@ static func controls_row_line(c := "") -> String:
 
 # --- The aim's help (the owner, 2026-10-05: "the auto aim is to strong yo") -----------------------------------------
 ## How much the player's casts are helped onto a fighter near the crosshair (PlayerBendCaster.assist_target and
-## target_point): "light" (the default: a 2 deg cone, the shot pulled under half way from the crosshair toward his chest,
-## no lead), "off" (the crosshair only), "strong" (the old help: a 6 deg cone, his chest, led for the flight). Kept at once
-## in GameSettings' match section (AIM_KEY); the user arg aim= for a run. Bots are not helped by it.
+## target_point): "light" (the default, everywhere, shown as Normal (the owner, 2026-10-12: "normal aim assist should be
+## default everywhere"): a 2 deg cone, the shot pulled under half way from the crosshair toward his chest, no lead), "off"
+## (the crosshair only), "strong" (the old help: a 6 deg cone, his chest, led for the flight). Kept at once in GameSettings'
+## match section (AIM_KEY); the user arg aim= for a run. Bots are not helped by it.
 const AIMS := ["light", "off", "strong"]
 ## The order the choices are shown and stepped in (least help to most: Off, Light, Strong); AIMS stays the data's (light first: the default).
 const AIM_ORDER := ["off", "light", "strong"]
 const AIM_KEY := "aim_help"
 const AIM_CONE_DEG := {"off": 0.0, "light": 2.0, "strong": 6.0}
 const AIM_PULL := {"off": 0.0, "light": 0.45, "strong": 1.0}
+## The words a choice is shown by (the data's "light" is Normal to the player).
+const AIM_NAMES := {"off": "Off", "light": "Normal", "strong": "Strong"}
 static var _aim_help := ""
 
 
@@ -782,8 +785,14 @@ static func aim_pull() -> float:
 	return float(AIM_PULL.get(aim_help(), 0.45))
 
 
+## The name the player sees for choice `a` (the one kept when "").
+static func aim_name(a := "") -> String:
+	var k := a if a != "" else aim_help()
+	return String(AIM_NAMES.get(k, k.capitalize()))
+
+
 static func aim_row() -> String:
-	return "Aim help:  %s" % aim_help()
+	return "Aim help:  %s" % aim_name()
 
 
 static func aim_row_line() -> String:

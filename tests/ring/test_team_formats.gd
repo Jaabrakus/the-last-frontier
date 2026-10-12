@@ -20,7 +20,7 @@ const PARK := Vector3(0.0, 60.0, 400.0)
 const OWN_CFG := "user://test_team_formats.cfg"
 const MIN_GAP_M := 3.0
 const COACH_AT_S := 2.0
-const SIZES := {"1v1": Vector2(34.0, 14.0), "2v2": Vector2(40.0, 20.0), "4v4": Vector2(52.0, 28.0)}
+const SIZES := {"1v1": Vector2(34.0, 14.0), "2v2": Vector2(34.0, 16.0), "4v4": Vector2(52.0, 28.0)}   # (2v2 drawn in 2026-10-12)
 
 var checks := 0
 var fails: Array[String] = []

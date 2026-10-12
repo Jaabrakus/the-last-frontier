@@ -129,6 +129,9 @@ func _run() -> void:
 	_expect(rules.rule_set == "zones" and RingRules.stock_on() and not RingRules.pct_on() and RingRules.zones_on(),
 			"zones: the new ring's gate on, the % off (%s)" % rules.rule_set)
 	_expect(RingArena.mode == "stock", "zones: the deep-water deck (RingArena.mode %s)" % RingArena.mode)
+	var want_l := 34.0 if MatchSetup.format == "2v2" else 52.0 if MatchSetup.format == "4v4" else 28.0
+	_expect(RingArena.zones_deck and is_equal_approx(lvl.ring.half_l() * 2.0, want_l) if lvl != null and lvl.ring != null else false,
+			"zones: its own smaller deck, %.0f m long (the owner, 2026-10-12; a team format's own)" % (lvl.ring.half_l() * 2.0 if lvl != null and lvl.ring != null else -1.0))
 	_expect(BendKnock.ragdoll_mps == INF, "zones: no ragdoll (the launch is the hit)")
 	_expect(not mode.stock() and mode.new_ring(), "zones: the zones' rounds on the new ring")
 	mode.phase_changed.connect(_on_phase)
@@ -269,7 +272,8 @@ func _check_meter() -> void:
 	var kn := BendKnock.peek(f)
 	if kn != null:
 		kn.reset()
-	(rules.state[f.get_instance_id()] as Dictionary)["confined"] = 1
+	rules.front = 0                                    # (the tug of war's front back to the strip: both at zone 1)
+	rules._sync_front()
 	rules.reset_pct(f, 0.0)
 	knock_backs = 0
 	windings = 0
@@ -286,6 +290,8 @@ func _check_walls() -> void:
 		var lim := rules.forward_limit(body)
 		if lim == -INF or not mode.ring.on_deck(body.global_position):
 			continue
+		if BendStatus.now() - rules.front_moved_at < RingRules.zones_num("tug_ease_s", 2.5):
+			continue                         # (the tug of war's front just moved: the losing side eased back with it)
 		var over := lim - rules.s_of(body)
 		if over > WALL_SLACK_M:
 			wall_bad += 1
@@ -310,7 +316,8 @@ func _force_out(r: int) -> void:
 		return
 	var won := mode.score.x
 	if r == 1:
-		(rules.state[f.get_instance_id()] as Dictionary)["confined"] = rules.zones()
+		var t := rules.team_of(f)
+		rules._give(t, rules.zones() - 1 - rules.lost(t))    # (the tug of war's front at his side's last zone)
 		rules.add_pct(f, RingRules.wind_pct(), null, "")
 	else:
 		var ring := mode.ring

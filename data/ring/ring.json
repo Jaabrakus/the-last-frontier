@@ -85,21 +85,22 @@
 	"formats": {
 		"_about": "The team formats' decks (docs/tidebreak/team_formats_and_arenas.md; the owner, 2026-10-10: 2v2 and 4v4 \"we need arenas built big enough\"): merged over the base and the rule set's overlay (modes.stock) when MatchSetup's format is one of these (RingArena.set_format); 1v1 is the base. deck_l = neutral_m + 2 x zones x zone_m. slot_z: the spawn line's places across the deck, the player's side's slot 0 his; spout_z: the respawn grates on each end's s line_s(zones - 1), one per fighter of a side; grate_z: every grate line's grates (spout_z among them); sockets.at [s, z] per side. layout: the team arena's raised pieces (RingArena THE LAYOUT; the owner's pick 2026-10-10, 'C · Ruins': a perch with its stairs on each team's flank, broken walls for cover, a broken column, the centre open; each piece also built turned half round the middle), checked against the spawns, grates, spouts and sockets (none within 1 m).",
 		"2v2": {
-			"deck_w": 20.0,
-			"deck_l": 40.0,
-			"zone_m": 6.0,
-			"slot_z": [-3.5, 3.5],
-			"grate_z": [5.0, -5.0],
+			"_size": "16 x 34 since 2026-10-12 (the owner: \"the zones and 2v2 should have a smaller arena\"; was 20 x 40, zone_m 6): the Ruins drawn in to fit, every piece at least 0.5 m off a grate and 2 m off a spawn",
+			"deck_w": 16.0,
+			"deck_l": 34.0,
+			"zone_m": 5.0,
+			"slot_z": [-3.0, 3.0],
+			"grate_z": [4.0, -4.0],
 			"grates_per_line": 2,
-			"spout_z": [5.0, -5.0],
+			"spout_z": [4.0, -4.0],
 			"sockets_at": [],
 			"layout": {
 				"name": "ruins",
 				"pieces": [
-					{"id": "perch", "kind": "perch", "rect": [-7.0, 6.0, -3.0, 9.0], "h": 2.6, "ramp": {"rect": [-12.0, 6.5, -7.0, 8.5], "up": "+x"}},
-					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -7.5, 0.0, -5.0], "h": 1.8},
-					{"id": "wall_back", "kind": "wall", "rect": [-11.4, -1.5, -10.6, 1.5], "h": 1.6},
-					{"id": "pillar", "kind": "pillar", "rect": [-4.0, -8.8, -3.0, -7.8], "h": 3.4}
+					{"id": "perch", "kind": "perch", "rect": [-6.0, 5.5, -3.0, 7.3], "h": 2.4, "ramp": {"rect": [-10.5, 5.5, -6.0, 7.3], "up": "+x"}},
+					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -6.2, 0.0, -4.2], "h": 1.8},
+					{"id": "wall_back", "kind": "wall", "rect": [-9.8, -1.5, -9.0, 1.5], "h": 1.6},
+					{"id": "pillar", "kind": "pillar", "rect": [-3.6, -7.0, -2.6, -6.0], "h": 3.4}
 				]
 			}
 		},
@@ -125,6 +126,15 @@
 		}
 	},
 	"modes": {
+		"zones": {
+			"_about": "Zones' deck (rule set zones, over stock; a team format's numbers over these): smaller than Lives' (the owner, 2026-10-12: \"the zones and 2v2 should have a smaller arena\"), 12 x 28, three zones of 4 m a side, the territory fought over closer",
+			"deck_w": 12.0,
+			"deck_l": 28.0,
+			"zone_m": 4.0,
+			"slot_z": [0.0, 2.5, -2.5],
+			"grate_z": [3.5, -3.5],
+			"spout_z": [3.5, -3.5, 0.0]
+		},
 		"_about": "Overlays on the numbers above for a rule set (RingArena.set_mode: the ring's rule set, RingRules.pick_rule_set). A key here replaces the base's; a block (coping, lanterns, piers, curtain) is the overlay's own. classic has none: today's numbers.",
 		"stock": {
 			"_about": "The % ring's stage (smash_r3 spec v2 §5.1-5.2): the deck where it is, the water 6 m under it in a deep tank 10 m wide on every side, the deck on piers with a stone face (grabbable), no ropes, the tank's edge a curtain of falling water from a rim channel curtain_up_m over the deck (touching it is touching water: out), a pale stone coping along the four lips (proud for the eye, its collider flush) and lanterns on pier heads just outside the lip. A wall (key 4) stands at least wall_lip_clear_m inside every lip. Respawn spouts on the s 12 m line at spout_z.",

@@ -47,8 +47,10 @@ extends Node
 ##                kept, another key ends it), the wheel too (SwayCaster.step_other)
 ##   round 3      in a stock-rules ring (RingRules.stock_on) key 3 acts at once and readies nothing, in every scheme
 ##                (SwayCaster.key3_press: the dash on the deck, the air dodge in the air)
-##   F            keys 1 and 2 swapped (SWAP_ACTION; the owner, 2026-10-11: "the F should toggle between 1 and 2"): an element's
-##                fighter's readied move goes to the other of the two keys, as that key's press would (swap_keys)
+##   F            the keys cycled, 1 -> 2 -> 3 -> 1 (SWAP_ACTION; the owner, 2026-10-11: "the F should toggle between 1 and 2";
+##                2026-10-12: "f should cycle between those 1 2 3"): an element's fighter's readied move goes to the next key, as
+##                that key's press would (swap_keys); 3 only where it is a move of its own (Bending.key3: water's Ice
+##                Tomahawk), never the movement spell (Shift's): there F goes 1 <-> 2
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -64,7 +66,7 @@ const SPELL := "spell"
 const KINDS := [WEAPON, TOOL, SPELL]
 ## Slot i's key action (i from 1): the old weapon keys.
 const ACTION := "weapon_%d"
-## F: keys 1 and 2 swapped for an element's fighter (swap_keys; InputSetup).
+## F: the keys 1, 2 (and 3 where it is a move) cycled for an element's fighter (swap_keys; InputSetup).
 const SWAP_ACTION := &"bend_swap"
 ## The one-button cycles whose number keys the slots take ([action, key]); the actions stay, unbound, for remapping.
 const TAKEN_KEYS := [[&"tool_cycle", KEY_7], [&"fish_gear", KEY_8]]
@@ -732,15 +734,33 @@ func handle_input(event: InputEvent) -> bool:
 	return false
 
 
-## Keys 1 and 2 swapped (F, SWAP_ACTION): an element's fighter's readied move goes to the other of keys 1 and 2, as a press of
-## that key would ready it (its first move; a lock under way ended as another key's press ends it); key 1 when neither is
-## readied. False when the bar is no element's (the open world's F is the cook key).
+## The keys cycled (F, SWAP_ACTION): an element's fighter's readied move goes to the next of keys 1, 2 and 3 (3 only where it is
+## a move of its own: cycle_keys), as a press of that key would ready it (its first move; a lock under way ended as another
+## key's press ends it); key 1 when none of them is readied. False when the bar is no element's (the open world's F is the
+## cook key).
 func swap_keys() -> bool:
 	if player == null or not (_element_keys() or _first_only()):
 		return false
-	var k := Bending.key_of(_element(), spell) if spell != "" else -1
-	select(1 if k == 0 else 0)
+	var ks := cycle_keys()
+	var at := ks.find(readied_key())
+	select(int(ks[(at + 1) % ks.size()]) if at >= 0 else 0)
 	return true
+
+
+## The keys F cycles (0-based): 1 and 2, and 3 when the element has a key-3 move of its own (Bending.key3, the new ring only:
+## elsewhere 3 is the movement spell, which acts at once).
+func cycle_keys() -> Array:
+	return [0, 1, 2] if RingRules.stock_on() and not Bending.key3(_element()).is_empty() else [0, 1]
+
+
+## The key (0-based) of the readied move: its key in Bending.keys, 2 for a key-3 move of its own; -1 none.
+func readied_key() -> int:
+	if spell == "":
+		return -1
+	var el := _element()
+	if RingRules.stock_on() and spell in Bending.key3(el):
+		return 2
+	return Bending.key_of(el, spell)
 
 
 ## The mouse wheel a step (`dir` 1 down, -1 up): first moves, the next of the four; an element's keys, the readied move's
