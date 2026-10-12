@@ -135,7 +135,8 @@ func _run() -> void:
 		all_on[id] = true
 	# the shipped switches first (no override): which of the eight a body wears
 	BendLoadout.config_override = {}
-	var shipped := BendLoadout.live_ids()
+	# (of the eight: the live list holds many more nodes since, the talents of 2026-10-11)
+	var shipped: Array = BendLoadout.live_ids().filter(func(x: String) -> bool: return x in NODES)
 	print("VWEARER shipped live: %s" % [shipped])
 	var cfg := JSON.parse_string(FileAccess.get_file_as_string("res://data/bending/loadout_apply.json")) as Dictionary
 	var want_on: Array = []
@@ -147,8 +148,10 @@ func _run() -> void:
 	var a2 := want_on.duplicate()
 	a2.sort()
 	_expect(a1 == a2, "BendLoadout.live_ids() == the file's live list less switched-off nodes (%s)" % [shipped])
-	_expect(shipped.size() == 5 and "earth.burrow.lie_low" in shipped and not "earth.wall.thick" in shipped and not "water.wall.thick_ice" in shipped
-			and not "water.skate.wet_trail" in shipped, "five of the eight are live as shipped: Keen Edge, Dense Ball, Full Sail, Lie Low, Quick Step")
+	# (the eight as shipped follow the file's switches: Thick Wall went on with earth's talents, 2026-10-11; Wet Trail stays out:
+	# nothing makes the Skate's puddles)
+	_expect("earth.burrow.lie_low" in shipped and not "water.skate.wet_trail" in shipped,
+			"live as shipped: the file's switches (%d of the eight), Lie Low among them, never Wet Trail" % shipped.size())
 
 	# ---- each node: wearer in seat 0, then in seat 1
 	BendLoadout.config_override = {"nodes": all_on}
