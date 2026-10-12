@@ -2339,7 +2339,9 @@ func _try_begin(q: Dictionary) -> void:
 		_r3_form(m)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
-	fill = FireTalents.head_start(player, m)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
+	var head_mode := _form_mode if _form_id == m and _form_mode != "" else mode_of(m)
+	fill = FireTalents.head_start(player, m, head_mode)     # (a worn technique's head start on this lock, by its move and mode
+	                                                        # or air form, FireTalents; Classic: 0.0)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:
@@ -2723,7 +2725,8 @@ func _moving_mult(m: String) -> float:
 	var k := float(mm.get(mode_of(m), d.get("moving_mult", 0.6)))
 	if elem() and quick_element() == "fire":
 		# (Footwork: full speed on the move; a worn Hot Feet or Dancing Feet its own, BendLoadout.tune)
-		k = maxf(k, BendLoadout.tune_f(player, "rules:passives.fire.moving_mult", float(Bending.passive("fire").get("moving_mult", 1.0))))
+		var fb := float(Bending.passive("fire").get("moving_mult", 1.0))
+		k = maxf(k, FireTalents.moving_mult(player, BendLoadout.tune_f(player, "rules:passives.fire.moving_mult", fb), fb))
 	return k
 
 

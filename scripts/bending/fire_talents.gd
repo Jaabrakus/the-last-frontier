@@ -4,39 +4,50 @@ extends RefCounted
 ## sure all the talents work and they work in game right"). Each applies only to the body that wears it live (BendLoadout.wears:
 ## loadout_apply.json `behaviour`, `live`, `nodes`); Classic (nothing worn) never gets past the first meta lookup of each seam,
 ## so its numbers are exactly the game's. The seams (one call each where the game does the thing, for the player and a bot):
-##   head_start(body, m)           a lock of move `m` begun now: the share of it already full (SwayCaster._try_begin,
+##   head_start(body, m, mode)     a lock of move `m` at `mode` begun now: the share of it already full (SwayCaster._try_begin,
 ##                                 NpcBending.begin); a technique's head start is given by:
 ##     beat(body, m, mode, late)   a held cast let go `late` s after its lock filled (SwayCaster's release, NpcBending._release):
 ##                                 within BEAT_S it is on the Beat (the tree's `beat`: a click or a cast that goes by itself
 ##                                 never is); Two-Hand Rhythm (a Punch: the next Punch 30% full within 1 s), Chain Kicks (a Kick:
-##                                 the next Kick 40% full within 0.6 s). Only a worn technique pays; then a flash on his own hands.
+##                                 the next Kick 40% full within 0.6 s; a Kick's, not a High Kick's or the air Slam's: keyed by
+##                                 move and mode). Only a worn technique pays; then a flash on his own hands. A bot lets go on
+##                                 the Beat only as often as its difficulty's beat_rate (bot_beat_rate: the tree's beat.bots)
 ##     guarded(body, result, what) a guard's result (BendZone.report): Hot Hands (a perfect Parry: the next Punch half full within 1 s)
 ##     charge_broken(body, m)      a hit broke his Lightning charge (SwayCaster.took_hit, NpcBending.tick): Grounded Charge (the
-##                                 next Lightning half full within 1 s)
-##   fill_mult(body, moving)       the fill's rate from a worn passive (SwayCaster._hold, NpcBending.tick): Hot Feet (standing
-##                                 still x0.9; its on-the-move x1.1 is the tune path rules:passives.fire.moving_mult, read in
-##                                 SwayCaster._moving_mult), Dancing Feet (x1.15 for 0.6 s after a Step ends; its x0.9 the same
-##                                 tune path)
+##                                 next Lightning lock, any mode of it, half full within 1 s)
+##   fill_mult(body, moving)       the fill's rate from a worn passive (SwayCaster._hold): Hot Feet (standing still x0.9; its
+##                                 on-the-move x1.1 is the tune path rules:passives.fire.moving_mult, read in
+##                                 SwayCaster._moving_mult through moving_mult), Dancing Feet (x1.15 for 0.6 s after a Step ends,
+##                                 moving or not: moving_mult gives Footwork's own x1.0 back meanwhile; else its x0.9 on the
+##                                 move, the same tune path), Forge (x1.15 on his own seam)
+##   bot_fill_mult(body, moving)   the same for a bot (NpcBending.tick): fill_mult and the on-the-move rate a bot's fill has no
+##                                 other seam for (a bot's lock has no moving penalty of its own: only a worn passive's change)
 ##   cast(bc, m, mode, spec, a)    a cast made (BendEffects._apply, after its effect): Ignite Step's burn line, the Step's mark
-##   gas_bolt, gas_cone, gas_every fire meeting a gas cloud (the Sulphur set's, earth's; BendZone kind "gas"): it burns, the
+##   gas_bolt, fire_cone, gas_every fire meeting a gas cloud (the Sulphur set's, earth's; BendZone kind "gas"): it burns, the
 ##                                 lighter's (ignite: rules.json reaction/ignited_gas, the world rule's 1.5x the cloud);
 ##                                 Flashfire's burst 1 m farther (flash_reach). Only gas ever reaches these, and only a worn
-##                                 Sulphur makes gas: Classic never does. A stand-in until earth's BendGas is merged (earth_gas)
+##                                 Sulphur makes gas: Classic never does. A stand-in until earth's BendGas is merged (earth_gas);
+##                                 after it, fire still lights a Flashfire wearer's gas first (each hook runs before the cloud's
+##                                 own rules: BendBolt's zone pass, BendEffects.cone, the top of BendZone._every)
 ## A lock's head start is never a whole lock (the tree's lock contract: "never a zero lock"): at most HEAD_MAX.
 
-const HEAD_META := &"talent_head_start"          ## {move: {fill, until}}: the next lock of that move starts that full
-const STEP_META := &"talent_step_at"             ## when his last Step was cast (Dancing Feet: its end is BendMotion's bend_dash_end)
+const HEAD_META := &"talent_head_start"          ## {"move" or "move/mode": {fill, until}}: the next lock of it starts that full
+const STEP_META := &"talent_step_at"             ## when his last Step was cast (cleared when another dash begins after it)
+const STEP_END_META := &"talent_step_end"        ## when his last Step's own dash ended (BendMotion._dash_end: dash_ended)
 ## The Beat (skill_tree.json `beat`, the owner's answer "yes"): a held cast let go within this many seconds after its lock filled.
 const BEAT_S := 0.2
 const HEAD_MAX := 0.95
-## The nodes' own numbers (their effect text; none of them is a number of today's data).
-const RHYTHM := {"move": "fire_blast", "fill": 0.3, "within_s": 1.0}
-const CHAIN := {"move": "fire_kick", "fill": 0.4, "within_s": 0.6}
-const HOT_HANDS := {"move": "fire_blast", "fill": 0.5, "within_s": 1.0}
-const GROUNDED := {"move": "fire_arc", "fill": 0.5, "within_s": 1.0}
+## The nodes' own numbers (their effect text; none of them is a number of today's data). A head start's key is its move and
+## mode ("your next Punch", "your next Kick") or its move alone (Grounded Charge: "lock again", whatever form).
+const RHYTHM := {"key": "fire_blast/punch", "fill": 0.3, "within_s": 1.0}
+const CHAIN := {"key": "fire_kick/kick", "fill": 0.4, "within_s": 0.6}
+const HOT_HANDS := {"key": "fire_blast/punch", "fill": 0.5, "within_s": 1.0}
+const GROUNDED := {"key": "fire_arc", "fill": 0.5, "within_s": 1.0}
 const DANCING_S := 0.6
 const DANCING_MULT := 1.15
 const HOT_FEET_STILL := 0.9
+## Tests only: a bot's beat_rate in place of its difficulty's (-1: its own).
+static var bot_beat_override := -1.0
 
 
 ## Whether `body` wears anything live (Classic: one meta lookup, false).
@@ -49,29 +60,34 @@ static func wears(body: Object, id: String) -> bool:
 
 
 # ---------------------------------------------------------------- head starts (the techniques)
-## The next lock of move `m` by `body` begun within `within_s` starts `fill` full (the higher of two given).
-static func give_head_start(body: Node, m: String, fill: float, within_s: float) -> void:
+## The next lock of `key` ("move/mode", or a move: any mode of it) by `body` begun within `within_s` starts `fill` full (the
+## higher of two given).
+static func give_head_start(body: Node, key: String, fill: float, within_s: float) -> void:
 	if body == null or not is_instance_valid(body):
 		return
 	var now := BendStatus.now()
 	var hs: Dictionary = (body.get_meta(HEAD_META) as Dictionary).duplicate() if body.has_meta(HEAD_META) else {}
-	var cur: Variant = hs.get(m)
+	var cur: Variant = hs.get(key)
 	if cur is Dictionary and float((cur as Dictionary).until) >= now and float((cur as Dictionary).fill) >= fill:
 		return
-	hs[m] = {"fill": clampf(fill, 0.0, HEAD_MAX), "until": now + within_s}
+	hs[key] = {"fill": clampf(fill, 0.0, HEAD_MAX), "until": now + within_s}
 	body.set_meta(HEAD_META, hs)
 
 
-## The share of a lock of move `m` by `body` begun now that is already full (0: none, Classic), the head start spent.
-static func head_start(body: Object, m: String) -> float:
+## The share of a lock of move `m` at `mode` by `body` begun now that is already full (0: none, Classic), the head start spent
+## (one given for this move and mode, else one given for the move).
+static func head_start(body: Object, m: String, mode := "") -> float:
 	if body == null or not is_instance_valid(body) or not (body is Node) or not (body as Node).has_meta(HEAD_META):
 		return 0.0
 	var n := body as Node
 	var hs: Dictionary = (n.get_meta(HEAD_META) as Dictionary).duplicate()
-	var e: Variant = hs.get(m)
+	var key := m + "/" + mode
+	if mode == "" or not hs.has(key):
+		key = m
+	var e: Variant = hs.get(key)
 	if e == null:
 		return 0.0
-	hs.erase(m)
+	hs.erase(key)
 	if hs.is_empty():
 		n.remove_meta(HEAD_META)
 	else:
@@ -81,21 +97,35 @@ static func head_start(body: Object, m: String) -> float:
 	return 0.0
 
 
+## Whether `body` wears a technique the Beat pays for a cast of `m` at `mode` (Two-Hand Rhythm: a Punch; Chain Kicks: a Kick).
+static func beat_worn(body: Node, m: String, mode: String) -> bool:
+	if not any(body):
+		return false
+	return (m == "fire_blast" and mode == "punch" and BendLoadout.wears(body, "fire.punch.rhythm")) \
+			or (m == "fire_kick" and mode == "kick" and BendLoadout.wears(body, "fire.kick.chain"))
+
+
 ## A held cast of `m` at `mode` let go `late` s after its lock filled: on the Beat (within BEAT_S) a worn technique pays (true).
 static func beat(body: Node, m: String, mode: String, late: float) -> bool:
 	if not any(body) or late > BEAT_S + 1e-4 or late < 0.0:
 		return false
 	var paid := false
 	if m == "fire_blast" and mode == "punch" and BendLoadout.wears(body, "fire.punch.rhythm"):
-		give_head_start(body, String(RHYTHM.move), float(RHYTHM.fill), float(RHYTHM.within_s))
+		give_head_start(body, String(RHYTHM.key), float(RHYTHM.fill), float(RHYTHM.within_s))
 		paid = true
 	if m == "fire_kick" and mode == "kick" and BendLoadout.wears(body, "fire.kick.chain"):
-		give_head_start(body, String(CHAIN.move), float(CHAIN.fill), float(CHAIN.within_s))
+		give_head_start(body, String(CHAIN.key), float(CHAIN.fill), float(CHAIN.within_s))
 		paid = true
 	if paid:
 		body.set_meta(&"talent_beat_at", BendStatus.now())
 		_hands_flash(body, true)
 	return paid
+
+
+## How often a bot lets go on the Beat (`rate`: its difficulty's beat_rate, bend_ai.json presets; the tree's beat.bots: easy 0,
+## normal 0.2, hard 0.5). A bot lets go of a full lock at once, so without this every release of its would be on the Beat.
+static func bot_beat_rate(rate: float) -> float:
+	return bot_beat_override if bot_beat_override >= 0.0 else rate
 
 
 ## A brief flash on `body`'s own hands only, nothing on anyone else: the Beat's cue (skill_tree.json beat.cue: with its click) or
@@ -117,7 +147,7 @@ static func guarded(body: Node, result: String, what: String, el: String) -> voi
 	if result != "perfect" or el != "fire" or what == "" or not any(body):
 		return
 	if BendLoadout.wears(body, "fire.parry.hot_hands"):
-		give_head_start(body, String(HOT_HANDS.move), float(HOT_HANDS.fill), float(HOT_HANDS.within_s))
+		give_head_start(body, String(HOT_HANDS.key), float(HOT_HANDS.fill), float(HOT_HANDS.within_s))
 		_hands_flash(body, false)                    # (the fists flare: visual only)
 
 
@@ -126,11 +156,12 @@ static func charge_broken(body: Node, m: String) -> void:
 	if m != "fire_arc" or not any(body):
 		return
 	if BendLoadout.wears(body, "fire.lightning.grounded"):
-		give_head_start(body, String(GROUNDED.move), float(GROUNDED.fill), float(GROUNDED.within_s))
+		give_head_start(body, String(GROUNDED.key), float(GROUNDED.fill), float(GROUNDED.within_s))
 
 
 # ---------------------------------------------------------------- the fill (the passives)
 ## The fill's rate from `body`'s worn passives now (1.0: none, Classic): `moving` as SwayCaster's fill reads it (over moving_mps).
+## Its on-the-move rate is moving_mult's (SwayCaster._moving_mult).
 static func fill_mult(body: Object, moving: bool) -> float:
 	if not any(body):
 		return 1.0
@@ -144,12 +175,35 @@ static func fill_mult(body: Object, moving: bool) -> float:
 	return k
 
 
-## Whether `body`'s last Step ended within `s` (a Step's end: BendMotion's bend_dash_end of the dash it began).
+## Footwork's on-the-move rate for `body` (`tuned`: his own rules:passives.fire.moving_mult, BendLoadout.tune; `base`: the
+## passive's): a worn Dancing Feet within DANCING_S of a Step's end gives `base` back, so its x1.15 is the whole rate on the move
+## too ("for 0.6 s after a Step they fill x1.15"), not x1.15 over its x0.9. Classic: `tuned` (= `base`).
+static func moving_mult(body: Object, tuned: float, base: float) -> float:
+	if not any(body) or is_equal_approx(tuned, base):
+		return tuned
+	if BendLoadout.wears(body, "fire.passive.dancing_feet") and stepped_within(body as Node, DANCING_S):
+		return base
+	return tuned
+
+
+## A bot's fill rate from its worn passives (NpcBending.tick; 1.0 Classic): fill_mult, and on the move Footwork's change as the
+## player's (moving_mult over the passive's own: a bot's lock has no moving rate of its own to put it in).
+static func bot_fill_mult(body: Object, moving: bool) -> float:
+	if not any(body):
+		return 1.0
+	var k := fill_mult(body, moving)
+	if moving:
+		var base := float(Bending.passive("fire").get("moving_mult", 1.0))
+		k *= moving_mult(body, BendLoadout.tune_f(body as Node, "rules:passives.fire.moving_mult", base), base) / maxf(base, 0.01)
+	return k
+
+
+## Whether `body`'s last Step ended within `s` (the end of the Step's own dash, dash_ended: a later dash of another move, the
+## Jets, is not a Step's).
 static func stepped_within(body: Node, s: float) -> bool:
-	if not body.has_meta(STEP_META) or not body.has_meta(&"bend_dash_end"):
+	if body == null or not body.has_meta(STEP_END_META):
 		return false
-	var end := float(body.get_meta(&"bend_dash_end"))
-	return end >= float(body.get_meta(STEP_META)) - 1e-4 and BendStatus.now() - end <= s + 1e-4
+	return BendStatus.now() - float(body.get_meta(STEP_END_META)) <= s + 1e-4
 
 
 # ---------------------------------------------------------------- casts
@@ -159,7 +213,9 @@ static func cast(bc: BendCaster, m: String, mode: String, spec: Dictionary, _a: 
 	if not any(p):
 		return
 	if m == "footwork" and mode == "step":
-		p.set_meta(STEP_META, BendStatus.now())
+		p.set_meta(STEP_META, BendStatus.now())     # (Dancing Feet: this dash's end is a Step's, dash_ended)
+	elif String(spec.get("do", "")) == "dash" and p.has_meta(STEP_META):
+		p.remove_meta(STEP_META)                    # (another dash began after the Step: its end is not a Step's)
 	if m == "footwork" and mode == "step" and BendLoadout.wears(p, "fire.step.ignite"):
 		# (Ignite Step: a 2 m line of fire along the Step from where it left, 1.5 s; floor fire: jump it)
 		var v: Variant = BendEffects.last_of(bc).get("v")
@@ -173,23 +229,43 @@ static func cast(bc: BendCaster, m: String, mode: String, spec: Dictionary, _a: 
 		p.set_meta(JETS_META, BendStatus.now())         # (Magma Landing: where this dash ends, a seam: dash_ended)
 	if m == "fire_wall" and mode == "wall" and BendLoadout.wears(p, "fire.wall.curved"):
 		curve_wall(p, BendEffects.last_of(bc).get("zone") as BendZone, spec)
-	if m == "fire_breath" and mode == "breath" and BendLoadout.wears(p, "fire.breath.scald"):
-		# (Scald: the Breath through steam: each steam cloud its cone reaches scalds)
-		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
-			var sz := z as BendZone
-			if sz != null and sz.kind == "steam" and not sz.is_queued_for_deletion() \
-					and _in_cone(p, sz.global_position, float(spec.get("range_m", 4.5)) + sz.radius, float(spec.get("deg", 45.0))):
-				through_steam(sz, p)
 
 
-## Whether `at` is within `reach` m and half of `deg` degrees (and a little) of `p`'s facing, flat (a cone's reach).
-static func _in_cone(p: Node3D, at: Vector3, reach: float, deg: float) -> bool:
-	var to := Vector3(at.x - p.global_position.x, 0.0, at.z - p.global_position.z)
-	if to.length() > reach:
+## A fire cone of `p`'s (BendEffects.cone: the Breath, the Jab's flame) along `flat`, `r` m and `deg` wide (`lit_by` its tag):
+## the gas it reaches burns (gas_cone), and a worn Scald makes each steam cloud it reaches scald (through_steam).
+static func fire_cone(p: Node3D, flat: Vector3, r: float, deg: float, lit_by: String) -> void:
+	gas_cone(p, flat, r, deg, lit_by)
+	if not wears(p, "fire.breath.scald") or not p.is_inside_tree():
+		return
+	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var sz := z as BendZone
+		if sz != null and sz.kind == "steam" and not sz.is_queued_for_deletion() and _reaches(p, flat, r, deg, sz):
+			through_steam(sz, p)
+
+
+## Whether a cone of `p`'s along `flat`, `r` m and `deg` wide reaches round zone `z` (its round within the cone's reach and angle).
+static func _reaches(p: Node3D, flat: Vector3, r: float, deg: float, z: BendZone) -> bool:
+	var to := Vector3(z.global_position.x - p.global_position.x, 0.0, z.global_position.z - p.global_position.z)
+	var d := to.length()
+	if d > r + z.radius or absf(z.global_position.y - p.global_position.y) > 3.0:
 		return false
-	var fwd := -p.global_basis.z
-	fwd.y = 0.0
-	return to.length() < 0.5 or rad_to_deg(fwd.normalized().angle_to(to.normalized())) <= deg * 0.5 + 15.0
+	if d <= z.radius or deg >= 360.0:
+		return true
+	var slack := rad_to_deg(asin(clampf(z.radius / d, 0.0, 1.0)))
+	return rad_to_deg(Vector3(flat.x, 0.0, flat.z).normalized().angle_to(to.normalized())) <= deg * 0.5 + slack
+
+
+## A fire zone of a wearer's (a Fire Wall's piece, floor fire, a seam: BendZone._every, the host's): a worn Scald makes each steam
+## cloud it touches scald ("your fire through steam").
+static func zone_every(z: BendZone) -> void:
+	var by := z.owner_node as Node3D
+	if by == null or not wears(by, "fire.breath.scald") or z.is_queued_for_deletion():
+		return
+	for o in z.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var sz := o as BendZone
+		if sz != null and sz.kind == "steam" and not sz.is_queued_for_deletion() and not sz.has_meta(&"talent_scalded") \
+				and _touches(sz, z):
+			through_steam(sz, by)
 
 
 ## The numbers of fire's floor fire and its bursts (the nodes' effect texts).
@@ -197,11 +273,19 @@ const IGNITE_M := 2.0
 const IGNITE_W := 1.2
 const IGNITE_S := 1.5
 const BURN_CAP := 3                      ## (the tick contract: one burn line or patch 3%, a tick 1%)
-const CRESCENT_R := 2.0
+const CRESCENT_R := 2.0                  ## (its change: "a burn zone (radius 2, ...)")
 const CRESCENT_S := 1.5
 const SCALD_S := 1.5
-const BLAZE_R := 2.0
+## Blazing Fireball "bursts 2 m wide": a ball of fire 1 m round its heart (Magma Landing's "2 m seam" is 1 m round the same way).
+## A body is in it when the ball touches him: his capsule (BODY_R round, BODY_H tall, the player's and a bot's) within it, in 3D,
+## so his middle at most BLAZE_R + BODY_R from its heart (a foe 2.2 m off is well out of it).
+const BLAZE_R := 1.0
+const BODY_R := 0.3
+const BODY_H := 1.6
 const LANDS_M := 3.0                     ## (a bolt ending this high over the deck or lower "lands": its patch or seam below)
+## The ends of a bolt where it struck something ("where it hits": a body, a raised wall, the world); "range" is its flight run out
+## in the air.
+const STRUCK_ENDS := ["hit", "wall", "world"]
 
 
 ## A matter zone (BendZone MATTER) of `by`'s: kind "burn" (fire's floor fire), "scald" or "seam"; `spec` its BendZone numbers.
@@ -227,16 +311,24 @@ static func patch(by: Node3D, at: Vector3, r: float, life: float, kind: String, 
 			"height_m": 0.4, "life_s": life, "tick_tag": tag, "tick_cap": cap}, m)
 
 
-## A bolt of a wearer's ended (BendBolt._finish, the host's: hit, wall, world, range): Blazing Fireball's burst, Crescent Burn's
-## patch.
+## A bolt of a wearer's ended (BendBolt._finish, the host's: hit, wall, world, range; steam: doused): Blazing Fireball's burst
+## (where it hits: never a flight run out in the air), Crescent Burn's patch, the Magma set's seams, Magma Fist's seam and, doused
+## (a perfect Turn, or any water that puts a fire bolt out as steam), its obsidian stone.
 static func bolt_ended(b: BendBolt, why: String) -> void:
 	var by := b.caster
-	if not any(by) or not why in ["hit", "wall", "world", "range"] or bool(b.info.get("returned", false)):
+	if not any(by) or bool(b.info.get("returned", false)):
 		return
 	var tag := String(b.info.get("tag", ""))
 	var at := b.global_position
+	if why == "steam":
+		if tag == "fire_blast/punch.grown" and BendLoadout.wears(by, "fire.magma.fist"):
+			# (Magma Fist doused: "a perfect Turn douses it (an obsidian stone drops)"; the stone his, falling where it went out)
+			obsidian(by, at, b)
+		return
+	if not why in ["hit", "wall", "world", "range"]:
+		return
 	var back := -b.velocity.normalized() * 0.35 if b.velocity.length_squared() > 1e-6 else Vector3.ZERO
-	if tag == "fire_blast/punch.grown" and BendLoadout.wears(by, "fire.fireball.blazing"):
+	if tag == "fire_blast/punch.grown" and why in STRUCK_ENDS and BendLoadout.wears(by, "fire.fireball.blazing"):
 		burst(by, at + back, BLAZE_R, "fire_blast/punch.grown+burst", b.struck_who)
 	if tag == "fire_kick/high_kick" and BendLoadout.wears(by, "fire.highkick.crescent_burn"):
 		patch(by, at + back, CRESCENT_R, CRESCENT_S, "burn", "matter/burn", BURN_CAP, "fire_kick")
@@ -255,26 +347,30 @@ static func bolt_ended(b: BendBolt, why: String) -> void:
 
 
 ## A burst of `by`'s at `at`, `r` m round (its hit class `key`: the wearer's whole new class, BendLoadout.new_class, read by
-## RingRules.on_hit): whoever is in it and in its sight (a wall between covers him: it stays on the side it hit), but `spare`
-## (the one the bolt itself struck), knocked away from it. How many it hit.
+## RingRules.on_hit): whoever it touches (his capsule within its ball: the line of his body within `r` + BODY_R of its heart) and
+## in its sight (a wall between covers him: it stays on the side it hit), but `spare` (the one the bolt itself struck), knocked
+## away from it. How many it hit.
 static func burst(by: Node3D, at: Vector3, r: float, key: String, spare: Node = null) -> int:
 	if not is_instance_valid(by) or not by.is_inside_tree():
 		return 0
-	BendLooks.burst(at, "fire", 34, Vector3.UP, 180.0, 6.0, 0.45)
+	BendLooks.burst(at, "fire", 34, Vector3.UP, 180.0, _speed_for(r * 2.0, 0.45), 0.45, false)
 	BendLooks.sound("fire", "hit", at, 0.0)
 	var n_hit := 0
 	var space := by.get_world_3d().direct_space_state
 	var wb := BendCaster.wrap(by)
 	var ex: Array[RID] = wb.exclude() if wb != null else []
 	var cls := BendLoadout.new_class(by, key)
-	for e in BendCaster.near(by, at, r + 0.6):
+	for e in BendCaster.near(by, at, r + BODY_H + 0.6):
 		var n: Node3D = e[0]
 		if n == spare or not BendStatus.can_take(n, by):
 			continue
-		var chest := n.global_position + Vector3.UP * 0.9
-		if Vector2(chest.x - at.x, chest.z - at.z).length() > r + 0.35:
+		var feet := n.global_position
+		var on := Geometry3D.get_closest_point_to_segment(at, feet + Vector3.UP * BODY_R, feet + Vector3.UP * (BODY_H - BODY_R))
+		if on.distance_to(at) > r + BODY_R:
 			continue
-		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(at, chest, 0xFFFFFFFF, ex))
+		var chest := feet + Vector3.UP * 0.9
+		var seen := Vector3(on.x, maxf(on.y, feet.y + 0.5), on.z)        # (never along the deck itself: the floor is no wall)
+		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(at, seen, 0xFFFFFFFF, ex))
 		if not h.is_empty() and BendBolt._taker(h.collider as Node) != n and not (h.collider is CharacterBody3D):
 			continue                              # (a wall between: the burst stays on its side)
 		var out := Vector3(chest.x - at.x, 0.0, chest.z - at.z)
@@ -285,17 +381,57 @@ static func burst(by: Node3D, at: Vector3, r: float, key: String, spare: Node = 
 	return n_hit
 
 
-## `by`'s fire passed through steam cloud `z` (a bolt of his: BendZone.on_bolt; his Breath: cast): a worn Scald makes it burn
-## for SCALD_S (once a cloud), his matter: a foe inside gains 1% each 0.5 s, at most 3% (not floor fire: a jump does not clear it).
+## The fire burst's speed whose cloud spans `span` m (BendLooks.burst_span at `size`): a burst drawn as wide as it reaches.
+static func _speed_for(span: float, size: float) -> float:
+	var lo := 0.2
+	var hi := 12.0
+	for i in 16:
+		var m := (lo + hi) * 0.5
+		if BendLooks.burst_span("fire", m, size) <= span:
+			lo = m
+		else:
+			hi = m
+	return lo
+
+
+## A loose obsidian stone of `owner`'s at `at` (falling to the deck from there; FormStone.make_loose: one of his three loose
+## stones, any earth player's Fissure throws it on): a seam cooled by water, or Magma Fist's ball of magma doused. `from`: any
+## node in the scene.
+static func obsidian(owner: Node, at: Vector3, from: Node) -> FormStone:
+	if from == null or not is_instance_valid(from) or not from.is_inside_tree() or not NetSpells.decides():
+		return null
+	var s := FormStone.ball(from.get_tree().current_scene, at, {"radius_m": 0.24, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0,
+			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.global_transform = Transform3D(Basis.IDENTITY, at + Vector3.UP * s.radius)
+	s.state = FormStone.State.RESTING
+	s.freeze = false
+	s.set_meta(&"talent_obsidian", true)
+	FormStone.make_loose(s, owner)
+	return s
+
+
+## `by`'s fire passed through steam cloud `z` (a fire bolt of his: BendZone.on_bolt; a fire cone of his, the Breath or the Jab's
+## flame: fire_cone; a Fire Wall, floor fire or a seam of his touching it: zone_every): a worn Scald makes it burn for SCALD_S
+## (once a cloud), his matter: a foe inside gains 1% each 0.5 s, at most 3% (not floor fire: a jump does not clear it). Its look
+## for that time: flame and embers through the cloud.
 static func through_steam(z: BendZone, by: Node3D) -> void:
 	if z == null or not is_instance_valid(z) or z.has_meta(&"talent_scalded") or not BendLoadout.wears(by, "fire.breath.scald"):
 		return
 	if not NetSpells.decides():
 		return
 	z.set_meta(&"talent_scalded", true)
-	if matter(by, "scald", z.global_position, Vector3.FORWARD, {"radius_m": z.radius, "round": true, "life_s": SCALD_S,
-			"tick_tag": "matter/burn", "tick_cap": BURN_CAP, "tick_floor": false}, "fire_breath") != null:
-		BendLooks.burst(z.global_position + Vector3.UP, "fire", 20, Vector3.UP, 120.0, 1.5, 0.6)
+	var sz := matter(by, "scald", z.global_position, Vector3.FORWARD, {"radius_m": z.radius, "round": true, "life_s": SCALD_S,
+			"tick_tag": "matter/burn", "tick_cap": BURN_CAP, "tick_floor": false}, "fire_breath")
+	if sz == null:
+		return
+	BendLooks.burst(z.global_position + Vector3.UP, "fire", 20, Vector3.UP, 120.0, 1.5, 0.6)
+	# (the scald's own look while it burns: the steam licked by flame, embers rising through it; nothing on anyone)
+	for e: Array in [["embers", 0.8, 26, 0.8, 1.4, 0.22], ["fire", 0.5, 12, 0.6, 1.0, 0.4]]:
+		var em := BendLooks.emitter(sz, String(e[0]), Vector3(z.radius * 0.6, float(e[1]), z.radius * 0.6), int(e[2]), float(e[3]),
+				float(e[4]), float(e[5]))
+		if em != null:
+			em.position = Vector3.UP * 0.7
+			sz._fx.append(em)
 
 
 # ---------------------------------------------------------------- the Fire Wall
@@ -478,18 +614,17 @@ static func _over(z: BendZone, q: Vector3, slack: float) -> bool:
 static func _cool(z: BendZone, stone: bool) -> void:
 	var at := z.global_position
 	BendLooks.burst(at + Vector3.UP * 0.4, "steam", 26, Vector3.UP, 90.0, 2.2, 0.9)
-	if stone and z.is_inside_tree():
-		var s := FormStone.ball(z.get_tree().current_scene, at, {"radius_m": 0.24, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0,
-				"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
-		s.state = FormStone.State.RESTING
-		s.freeze = false
-		s.set_meta(&"talent_obsidian", true)
-		FormStone.make_loose(s, z.owner_node)
+	if stone:
+		obsidian(z.owner_node, at, z)
 	z.end("cooled")
 
 
-## `body`'s dash ended (BendMotion._dash_end): Magma Landing's seam where his Jets land.
+## `body`'s dash ended (BendMotion._dash_end): a Step's (Dancing Feet's 0.6 s begin: stepped_within), Magma Landing's seam where
+## his Jets land.
 static func dash_ended(body: Node) -> void:
+	if body.has_meta(STEP_META):
+		body.remove_meta(STEP_META)
+		body.set_meta(STEP_END_META, BendStatus.now())
 	if not body.has_meta(JETS_META):
 		return
 	body.remove_meta(JETS_META)
@@ -657,14 +792,21 @@ static func storm_back(who: Node, spec: Dictionary, info: Dictionary, r: float) 
 ## "gas", round, its radius the cloud's. The tree's world rule Ignited Sulphur (skill_tree.json synergies ignited_sulphur: "any
 ## fire that enters a gas cloud lights it ... a burst 1.5x the cloud's size") is built here from fire's side as a stand-in, so
 ## Flashfire has its burst to change in fire's lane: fire meeting a cloud (a fire bolt, or an air bolt that took a fire wall's
-## flame, inside it: BendZone.on_bolt; a fire cone reaching it: BendEffects.cone; a fire wall, floor fire or a seam touching it:
-## the cloud's BendZone._every) burns it at once (ignite). Classic never meets gas: only a worn Sulphur makes it.
+## flame, inside it: BendBolt's zone pass, gas_bolt; a fire cone reaching it: BendEffects.cone, fire_cone; a fire wall, floor fire
+## or a seam touching it: the top of the cloud's BendZone._every, gas_every) burns it at once (ignite). Classic never meets gas:
+## only a worn Sulphur makes it, and Classic's fire asks one group lookup (GAS_GROUP: BendZone.make puts each cloud in it).
 ## Earth's lane builds the set with its own lighting (scripts/bending/bend_gas.gd: BendGas.react, cone, every and ignite, the same
-## rule and numbers, wired into BendZone as its constant BendGas). Once that is in the project (the lanes merged) this stand-in
-## steps aside (earth_gas()): BendGas lights all gas, one burst a cloud whichever hook is kept, and Flashfire's farther reach is
-## the one number it takes from here: flash_reach(lighter), added to its burst's reach (z.radius * BURST_K + flash_reach). The
-## node's class (8 and 8) needs nothing there: RingRules.on_hit reads the lighter's worn class for the burst's tag.
+## rule and numbers, wired into BendZone as its constant BendGas). Once that is in the project (the lanes merged, earth_gas()) this
+## stand-in steps aside for every lighter but Flashfire's wearer: BendGas lights the rest. A Flashfire wearer's fire still lights
+## the cloud HERE, and first: each of fire's hooks runs before the cloud's own rules (the bolt's zone pass before any zone's
+## on_bolt, where BendGas.react is; fire's cone hook before BendGas.cone in BendEffects.cone; gas_every at the top of
+## BendZone._every, before BendGas.tick and BendGas.every), and a cloud it burns is gone (queued) before BendGas looks at it. So
+## his burst reaches flash_reach farther and stales as the move that lit it after the merge too, with no edit to BendGas.ignite.
+## (The world rule's own staling for everyone else, "a reaction stales as the move that set it off", is BendGas.ignite's after
+## the merge: earth's lane.)
 const GAS_KIND := "gas"
+## Every gas cloud in the scene (BendZone.make adds it): Classic's fire asks this group once and finds none.
+const GAS_GROUP := &"bend_gas"
 const IGNITE_TAG := "reaction/ignited_gas"
 ## The burst reaches this share of the cloud's radius from its middle (the world rule's 1.5x; earth's BendGas.BURST_K).
 const BURST_K := 1.5
@@ -679,7 +821,7 @@ static var _earth_gas := -1
 
 
 ## Whether earth's Sulphur set lights gas in this build (its BendGas wired into BendZone: the lanes merged); fire's stand-in
-## lighting then steps aside.
+## lighting then steps aside for all but a Flashfire wearer (lights).
 static func earth_gas() -> bool:
 	if _earth_gas < 0:
 		var zs := load("res://scripts/bending/bend_zone.gd") as Script
@@ -687,8 +829,18 @@ static func earth_gas() -> bool:
 	return _earth_gas == 1
 
 
-## Flashfire's reach for `lighter`: FLASH_M past the burst's own when he wears it, else 0 (Classic: 0, one meta lookup). The burst
-## that lights gas adds it (ignite here; earth's BendGas.ignite once merged).
+## Whether fire lights gas for `lighter` here: always while earth's BendGas is not in the build (the stand-in), after it only for
+## a Flashfire wearer (his bigger burst; BendGas lights everyone else's).
+static func lights(lighter: Object) -> bool:
+	return not earth_gas() or flash_reach(lighter) > 0.0
+
+
+## Whether any gas cloud stands in `n`'s scene now (Classic: none, one group lookup).
+static func gas_near(n: Node) -> bool:
+	return n != null and n.is_inside_tree() and n.get_tree().get_first_node_in_group(GAS_GROUP) != null
+
+
+## Flashfire's reach for `lighter`: FLASH_M past the burst's own when he wears it, else 0 (Classic: 0, one meta lookup).
 static func flash_reach(lighter: Object) -> float:
 	return FLASH_M if wears(lighter, "fire.embers.flashfire") else 0.0
 
@@ -748,23 +900,28 @@ static func ignite(gas: BendZone, lighter: Node3D, lit_by := "") -> int:
 	var hl := RingHighlights.find(lighter.get_tree())
 	if hl != null:
 		hl.moment.emit("ignited", lighter, {"at": at, "hit": n_hit})
+	gas.set_meta(&"gas_ignited", n_hit)              # (as earth's BendGas.ignite marks a cloud it burst)
 	return n_hit
 
 
-## Bolt `b` inside gas cloud `gas` (BendZone.on_bolt, each frame): fire (or an air bolt carrying a fire wall's flame) lights it,
-## the bolt's caster the lighter; it flies on. (Earth's BendGas.react once merged: earth_gas.)
-static func gas_bolt(gas: BendZone, b: BendBolt) -> void:
-	if b.spent or not (b.kind == "fire" or b.burning) or not in_gas(gas, b.global_position) or earth_gas():
-		return
-	ignite(gas, b._by(), String(b.info.get("tag", "")))
+## Bolt `b` inside gas cloud `gas` (BendBolt's zone pass, each frame, before any zone's own on_bolt): fire (or an air bolt carrying
+## a fire wall's flame) lights it, the bolt's caster the lighter; it flies on. True when it burned (the cloud is gone: the pass
+## skips it). After the merge only a Flashfire wearer's (lights): BendGas.react, in the cloud's on_bolt, lights the rest.
+static func gas_bolt(gas: BendZone, b: BendBolt) -> bool:
+	if b.spent or gas.is_queued_for_deletion() or not (b.kind == "fire" or b.burning) or not in_gas(gas, b.global_position):
+		return false
+	var by := b._by()
+	if not lights(by):
+		return false
+	return ignite(gas, by, String(b.info.get("tag", ""))) >= 0
 
 
-## A fire cone of `p`'s (BendEffects.cone: the Breath, a jab's flame) along `flat`, `r` m and `deg` wide: each gas cloud it reaches
-## burns, his. (Earth's BendGas.cone once merged: earth_gas.)
+## A fire cone of `p`'s (BendEffects.cone: the Breath, a jab's flame; fire_cone) along `flat`, `r` m and `deg` wide: each gas cloud
+## it reaches burns, his. After the merge only a Flashfire wearer's (lights; fire's cone hook runs before BendGas.cone).
 static func gas_cone(p: Node3D, flat: Vector3, r: float, deg: float, lit_by: String) -> void:
-	if p == null or not is_instance_valid(p) or not p.is_inside_tree() or earth_gas():
+	if p == null or not is_instance_valid(p) or not gas_near(p) or not lights(p):
 		return
-	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
+	for z in p.get_tree().get_nodes_in_group(GAS_GROUP):
 		var g := z as BendZone
 		if g == null or g.kind != GAS_KIND or g.is_queued_for_deletion():
 			continue
@@ -777,23 +934,24 @@ static func gas_cone(p: Node3D, flat: Vector3, r: float, deg: float, lit_by: Str
 		ignite(g, p, lit_by)
 
 
-## Gas cloud `gas`'s own look round (its _every, the host's): a fire wall, floor fire or a seam touching it lights it, that fire's
-## owner the lighter. (Earth's BendGas.every once merged: earth_gas.)
-static func gas_every(gas: BendZone) -> void:
-	if gas.is_queued_for_deletion() or not NetSpells.decides() or earth_gas():
-		return
+## Gas cloud `gas`'s own look round (the top of its _every, the host's, before the cloud's own rules): a fire wall, floor fire or a
+## seam touching it lights it, that fire's owner the lighter. True when it burned (the rest of its _every skipped). After the
+## merge only a Flashfire wearer's fire (lights): BendGas.every, later in the same _every, lights the rest.
+static func gas_every(gas: BendZone) -> bool:
+	if gas.is_queued_for_deletion() or not NetSpells.decides():
+		return false
 	for o in gas.get_tree().get_nodes_in_group(BendZone.GROUP):
 		var oz := o as BendZone
-		if oz == null or oz == gas or oz.is_queued_for_deletion() or not oz.kind in LIGHTING_ZONES:
+		if oz == null or oz == gas or oz.is_queued_for_deletion() or not oz.kind in LIGHTING_ZONES or not lights(oz.owner_node):
 			continue
 		if _touches(gas, oz):
 			# (a fire wall's cast tag; a talent's floor fire carries its tick class, no move's: it stales as itself)
 			var lit_by := String(oz.info.get("tag", "")) if oz.tick_tag == "" and oz.info.get("tag") is String else ""
-			ignite(gas, oz.owner_node, lit_by)
-			return
+			return ignite(gas, oz.owner_node, lit_by) >= 0
+	return false
 
 
-## Whether fire zone `z` (a box, or round) reaches into gas cloud `gas`, flat.
+## Whether fire zone `z` (a box, or round) reaches into round cloud `gas` (a gas cloud; a steam cloud for Scald), flat.
 static func _touches(gas: BendZone, z: BendZone) -> bool:
 	var c := gas.global_position
 	if z.round_zone:
@@ -812,7 +970,7 @@ static func bot_weight(me: Node, o: Dictionary, t: Node3D) -> float:
 	if String(o.get("key", "")) != "fire_jab/embers" or t == null or not is_instance_valid(t) or not t.is_inside_tree() \
 			or not wears(me, "fire.embers.flashfire"):
 		return 1.0
-	for z in t.get_tree().get_nodes_in_group(BendZone.GROUP):
+	for z in t.get_tree().get_nodes_in_group(GAS_GROUP):
 		var g := z as BendZone
 		if g != null and g.kind == GAS_KIND and not g.is_queued_for_deletion() and in_gas(g, t.global_position):
 			return FLASH_BOT

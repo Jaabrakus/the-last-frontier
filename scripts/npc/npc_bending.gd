@@ -481,7 +481,9 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 			base = float(mlk[md])
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
 		if id == "patch" and FireTalents.any(who):
-			base *= FireTalents.patch_lock(who, md, 1.5) / 1.5    # (a worn Cauterize: its lock and his Patch's, as the player's)
+			# (a worn Cauterize: its lock and his Patch's over Patch's own ring lock, as the player's)
+			var pl := float(d.get("ring_lock_s", 1.5))
+			base *= FireTalents.patch_lock(who, md, pl) / maxf(pl, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -632,7 +634,7 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		lock_t += dt if not FireTalents.any(me) else dt * FireTalents.fill_mult(me, Vector2(me.velocity.x, me.velocity.z).length() > 1.0)
+		lock_t += dt if not FireTalents.any(me) else dt * FireTalents.bot_fill_mult(me, Vector2(me.velocity.x, me.velocity.z).length() > 1.0)
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -1368,7 +1370,7 @@ func begin(id: String, md: String) -> void:
 	# this lock's cast, _release)
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
-	var head := FireTalents.head_start(me, id)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
+	var head := FireTalents.head_start(me, id, md)     # (a worn technique's head start on this lock, FireTalents; Classic: 0.0)
 	if head > 0.0:
 		lock_t = lock_s * head
 		fill = head
@@ -1427,8 +1429,11 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
-	if FireTalents.any(me) and not caster.grown:
-		FireTalents.beat(me, id, md, took - lock_s)   # (let go on the Beat: a worn technique's; a grown cast never is)
+	if FireTalents.beat_worn(me, id, md) and not caster.grown \
+			and me.rng.randf() < FireTalents.bot_beat_rate(float(pr.get("beat_rate", 0.2))):
+		# (let go on the Beat: a worn technique's; a grown cast never is. As a player's hand, not every release: its difficulty's
+		# beat_rate, bend_ai.json presets, the tree's beat.bots; a bot lets go of a full lock at once, so the rest go late)
+		FireTalents.beat(me, id, md, took - lock_s)
 	var ok := _cast(id, md if _talent_mode == "" else _talent_mode, t)
 	_talent_mode = ""
 	if not is_equal_approx(_cm_used, 1.0):

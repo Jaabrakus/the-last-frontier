@@ -179,6 +179,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	if p_kind == "puddle":
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)
+	if p_kind == FireTalents.GAS_KIND:
+		z.add_to_group(FireTalents.GAS_GROUP)    # (a gas cloud: fire's quick "none" for Classic's cones, FireTalents.gas_near)
 	NetSpells.tag(z)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(z)
 	var x := Vector3.UP.cross(z.way).normalized()
@@ -524,6 +526,8 @@ func inside(p: Vector3) -> bool:
 
 ## Its lasting effects on whom it holds, each `dt` s.
 func _every(dt: float) -> void:
+	if kind == FireTalents.GAS_KIND and FireTalents.gas_every(self):
+		return                                   # (fire touching the cloud lit it first: gone; FireTalents, before its own rules)
 	var r := maxf(radius, size.x * 0.6)
 	if put_out:
 		put_out_fires()
@@ -558,8 +562,8 @@ func _every(dt: float) -> void:
 				o.end()
 	if kind == "seam":
 		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
-	if kind == "gas":
-		FireTalents.gas_every(self)                # (a fire wall, floor fire or a seam touching the cloud lights it: until earth's BendGas)
+	if kind in FireTalents.LIGHTING_ZONES and FireTalents.any(owner_node):
+		FireTalents.zone_every(self)               # (a worn talent's fire zone: Scald's steam it touches scalds)
 
 
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
@@ -569,10 +573,6 @@ func on_bolt(b: BendBolt) -> bool:
 		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
 	if kind == "seam" and b.kind == "water" and not b.spent:
 		FireTalents.seam_bolt(self, b)               # (water on a Magma seam cools it to obsidian)
-	if kind == "gas" and not b.spent:
-		FireTalents.gas_bolt(self, b)                # (fire lights gas, anyone's: the Ignited Sulphur burst, the bolt's caster's)
-		if is_queued_for_deletion():
-			return false                             # (burnt: the bolt flies on)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -1403,9 +1403,6 @@ static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) ->
 	return out
 
 
-## A body inside a fire wall at a tick, in the % ring (spec §2.3): on its entry (not inside at the last tick, and its last
-## entry pop fire_wall.entry_every_s ago or more) a set pop of entry_mps at entry_deg out of the wall's face; inside after,
-## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
 ## A matter zone's tick on `n` (see MATTER): % only, the hit no_hurt (no lock set-back, no Lightning-charge break, no string).
 func _matter_tick(n: Node3D) -> void:
 	var by: Node = owner_node
@@ -1430,6 +1427,9 @@ func _matter_tick(n: Node3D) -> void:
 	BendR3.deliver(n, 1.0, n.global_position + Vector3.UP * 0.3, way, by, -1.0, Vector3.ZERO, inf)
 
 
+## A body inside a fire wall at a tick, in the % ring (spec §2.3): on its entry (not inside at the last tick, and its last
+## entry pop fire_wall.entry_every_s ago or more) a set pop of entry_mps at entry_deg out of the wall's face; inside after,
+## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
 func _fire_wall_hit(n: Node3D, dt: float) -> void:
 	var id := n.get_instance_id()
 	var fw := BendR3.block("fire_wall")

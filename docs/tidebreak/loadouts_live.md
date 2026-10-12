@@ -220,20 +220,20 @@ of it: every seam asks `FireTalents.any(body)` (one meta lookup) first.
 | Talent | What the wearer gets | The seam |
 |---|---|---|
 | Hot Hands | a perfect Parry: the next Punch's lock begun within 1 s starts half full; late 60% through | `BendZone.report`, `SwayCaster._try_begin` / `NpcBending.begin` (`FireTalents.head_start`) |
-| Two-Hand Rhythm | a Punch let go on the Beat (within 0.2 s of its click; never a click, never a grown cast): the next Punch 30% full within 1 s; a brief flash on his own hands | SwayCaster's release, `NpcBending._release` (`FireTalents.beat`) |
-| Chain Kicks | a Kick on the Beat: the next Kick 40% full within 0.6 s; Kick lock 0.65 s | the same |
+| Two-Hand Rhythm | a Punch let go on the Beat (within 0.2 s of its click; never a click, never a grown cast): the next Punch 30% full within 1 s; a brief flash on his own hands. A bot lets go on the Beat only as often as its difficulty's `beat_rate` (bend_ai.json presets: easy 0, normal 0.2, hard 0.5; the tree's `beat.bots`) | SwayCaster's release, `NpcBending._release` (`FireTalents.beat`, `beat_worn`, `bot_beat_rate`) |
+| Chain Kicks | a Kick on the Beat: the next Kick 40% full within 0.6 s (a head start keyed by move and mode: never the High Kick's or the air Slam's lock); Kick lock 0.65 s | the same |
 | Grounded Charge | a hit breaks the Lightning charge: the next Lightning begun within 1 s starts half full | `SwayCaster.took_hit`, `NpcBending.tick` |
-| Hot Feet / Dancing Feet | fill x1.1 moving and x0.9 standing / x0.9 moving and x1.15 for 0.6 s after a Step ends | `SwayCaster._moving_mult` (tune `rules:passives.fire.moving_mult`), `SwayCaster._hold`, `NpcBending.tick` |
-| Blazing Fireball | a 2 m burst where the grown Punch ends (its own class, `class_new`), not past the wall it hit, not on the one its core struck | `BendBolt._finish` (`FireTalents.bolt_ended`), `RingRules.on_hit` (`BendLoadout.new_hit_class`) |
+| Hot Feet / Dancing Feet | fill x1.1 moving and x0.9 standing / x0.9 moving, and x1.15 (the whole rate, moving or standing) for 0.6 s after a Step's own dash ends (a Jets dash is no Step). A bot gets both sides: its tick multiplies by `bot_fill_mult` (the fill passives and Footwork's on-the-move change, which a bot's lock has no other seam for) | `SwayCaster._moving_mult` (tune `rules:passives.fire.moving_mult` through `FireTalents.moving_mult`), `SwayCaster._hold`, `NpcBending.tick` (`FireTalents.bot_fill_mult`), `BendMotion._dash_end` (`FireTalents.dash_ended`: the Step's end) |
+| Blazing Fireball | a burst 2 m wide (1 m round: `BLAZE_R`) where the grown Punch hits (a body, a raised wall, the deck; never a flight run out in the air), on whoever it touches (his capsule within it), its own class (`class_new`), not past the wall it hit, not on the one its core struck | `BendBolt._finish` (`FireTalents.bolt_ended`), `RingRules.on_hit` (`BendLoadout.new_hit_class`) |
 | Crescent Burn / Ignite Step | a 2 m patch where the crescent ends / a 2 m line where the Step leaves, 1.5 s, floor fire | `BendBolt._finish`, `BendEffects._apply` (`FireTalents.cast`) |
-| Scald | his fire through steam (a bolt, the Breath) makes the cloud burn 1.5 s | `BendZone.on_bolt`, `FireTalents.cast` |
+| Scald | his fire through steam (a fire bolt; any fire cone of his, the Breath or the Jab's flame; a Fire Wall, floor fire or seam of his touching the cloud) makes it burn 1.5 s, with its own look meanwhile (flame and embers through the cloud) | `BendZone.on_bolt`, `BendEffects.cone` (`FireTalents.fire_cone`), a fire zone's `BendZone._every` (`FireTalents.zone_every`) |
 | Curved Curtain | the Fire Wall as 4 pieces along a 120 deg arc, 5 m of curtain round the point aimed at (its middle on the far side), 4 s | `FireTalents.cast` |
 | Forked Lightning | the strike forks to the nearest puddle, steam or water bolt within 6 m of its line: live 0.5 s, half the strike's % to everyone in it (no launch, no stun, no set-back) | `BendEffects._strike` (`FireTalents.struck`), rules.json `reaction/live` (`d_of_strike`) |
 | Hold the Storm | a perfect Parry of Lightning with E held keeps it in his arms until E is let go (0.8 s at most), then along his aim at x1.2; fire goes back x1.1 | `BendEffects._strike` (`FireTalents.hold_storm`) |
 | Magma (the set) | where the Kick's or the Axe Kick's wave dies (range, a wall) a 1.5 m seam for 3 s: matter/magma, 4% at most, two at once; water on it leaves a loose obsidian stone of his; a zone of kind mud quenches it; waves 16 / 14.2 m/s | `BendBolt._finish`, `BendZone` seam (`FireTalents.seam`, `seam_bolt`, `seam_water`) |
-| Lava Kick / Magma Fist / Magma Landing / Forge | the Kick's last 4 m one seam / a seam where the grown Punch lands / a 2 m seam where the Jets land / x1.15 fill on his own seam, seams 2.5 s | the same, `BendMotion._dash_end`, `FireTalents.fill_mult`, tune `set:magma.seam_life_s` |
+| Lava Kick / Magma Fist / Magma Landing / Forge | the Kick's last 4 m one seam / a seam where the grown Punch lands, and doused (a perfect Turn, or any water that puts it out as steam) an obsidian stone of his drops where it went out / a 2 m seam where the Jets land / x1.15 fill on his own seam, seams 2.5 s | the same, `BendBolt._finish` (why `steam`: `FireTalents.obsidian`), `BendMotion._dash_end`, `FireTalents.fill_mult`, tune `set:magma.seam_life_s` |
 | Cauterize | Patch's key tapped twice: Cauterize (2% cost no Patch takes back, then up to 12% of the fresh pool back, gas within 1.5 m ends), lock 1.2 s; his Patch 1.7 s | `FireTalents.modes_for` (`Bending.other_move`, `SwayCaster.my_modes`), `BendEffects` heal, `RingRules.patch(b, max)` / `add_pct_kept` |
-| Flashfire (pass 2) | gas he lights bursts bigger: 8% and a set 8 m/s at 45 deg (6 and 6), 1 m farther than the burst's 1.5x the cloud; the burst is his whoever made the gas; his Embers 6% (7); a bot wearing it wants its Embers x2 at a foe standing in gas | `FireTalents.flash_reach` (the burst's reach), rules.json `reaction/ignited_gas` through `BendLoadout.hit_class`; the burst itself `FireTalents.ignite` until earth's `BendGas` is merged (lit by `gas_bolt` from `BendZone.on_bolt`, `gas_cone` from `BendEffects.cone`, `gas_every` from a gas cloud's `BendZone._every`); `NpcBending._choose` (`FireTalents.bot_weight`) |
+| Flashfire (pass 2) | gas he lights bursts bigger: 8% and a set 8 m/s at 45 deg (6 and 6), 1 m farther than the burst's 1.5x the cloud; the burst is his whoever made the gas; his Embers 6% (7); a bot wearing it wants its Embers x2 at a foe standing in gas | `FireTalents.flash_reach` (the burst's reach), rules.json `reaction/ignited_gas` through `BendLoadout.hit_class`; the burst itself `FireTalents.ignite` (lit by `gas_bolt` from `BendBolt`'s zone pass, before any zone's `on_bolt`; `gas_cone` from `BendEffects.cone`; `gas_every` from the top of a gas cloud's `BendZone._every`); after earth's `BendGas` is merged, fire still lights a Flashfire wearer's gas first, everyone else's is `BendGas`'s; `NpcBending._choose` (`FireTalents.bot_weight`) |
 
 The floor fire and the seams are `BendZone` MATTER (a zone with a `tick_tag`): % only through rules.json `matter/burn` and
 `matter/magma` (`no_flinch`, and `no_hurt`: `BendR3.take` and `BendStatus.hurt` skip the struck one's lock, so no set-back
@@ -258,15 +258,24 @@ lined fire's side up with it so the merge keeps one burst:
 - rules.json `matter/gas` and `reaction/ignited_gas` and callouts.json `ignited` are the same lines in the same places as
   earth's, so they merge cleanly into one of each.
 - `FireTalents.earth_gas()` is true once `BendZone` has the constant `BendGas`; fire's stand-in hooks (`gas_bolt`, `gas_cone`,
-  `gas_every`) then do nothing, whichever hooks the merge keeps, and `BendGas` lights all gas.
-- Flashfire's farther reach is the one number the burst takes from fire: `FireTalents.flash_reach(lighter)` (1 m worn, 0
-  Classic). **At the merge `BendGas.ignite`'s reach must add it** (`var reach := z.radius * BURST_K +
-  FireTalents.flash_reach(lighter)`); the node's 8 and 8 need nothing there (`RingRules.on_hit` reads the lighter's worn class
-  for the burst's tag). The tree's "a reaction stales as the move that set it off" needs `BendGas.ignite`'s hit info to carry
-  `stale_as` (the lighting bolt's or cone's tag), which fire's two lines in `RingRules.on_hit` read.
-- `tests/ring/test_talents_fire.gd` (`only=flashfire`) then checks both through earth's code: a merge that misses either fails
-  its "1 m farther" or "stales as the Embers" check. Its clouds are made by `BendZone.make(owner, "gas", ...)`, which earth's
-  `BendGas.live_n` does not count, so its Breath check needs the cloud made through `BendGas` (or `live_n` raised) there.
+  `gas_every`) then step aside for every lighter but a Flashfire wearer (`FireTalents.lights`), and `BendGas` lights the rest.
+- A Flashfire wearer's fire still lights the cloud in fire's code, and FIRST, so his burst keeps its 1 m farther reach
+  (`FireTalents.flash_reach`) and its `stale_as` (the lighting move's tag) with **no edit to `BendGas.ignite`** (fix pass,
+  12 October 2026): each of fire's hooks runs before the cloud's own rules. The bolt's is in `BendBolt`'s zone pass
+  (`_physics_process`: `FireTalents.gas_bolt` before each zone's `on_bolt`, where `BendGas.react` is), the cone's in
+  `BendEffects.cone` before the put-out block (earth's `BendGas.cone` call is after it), the fire zones' at the TOP of the gas
+  cloud's `BendZone._every` (before `BendGas.tick` and `BendGas.every`); a cloud fire burns is ended (queued) at once, and every
+  `BendGas` hook skips a queued cloud. The node's 8 and 8 come through `RingRules.on_hit` (the lighter's worn class) either way.
+  Keep those three hooks where they are when merging (the merge of `bend_zone.gd`'s `on_bolt` head no longer carries a fire
+  gas hook; its conflict is only fire's Scald/seam lines beside earth's Kiln Stone and gas lines: keep all of them).
+- The world rule's own staling for every OTHER lighter ("a reaction stales as the move that set it off") is `BendGas.ignite`'s
+  after the merge (earth's lane: its hit info would carry `stale_as`, which fire's two lines in `RingRules.on_hit` read).
+- Gas clouds join the group `FireTalents.GAS_GROUP` in `BendZone.make` (earth's `BendGas.make` goes through it), so Classic's
+  fire cones ask one group lookup instead of scanning the zones.
+- `tests/ring/test_talents_fire.gd` (`only=flashfire`) checks a merged build on this branch by setting
+  `FireTalents._earth_gas` to 1 as it will read: a Classic lighter's Embers, Breath and fire wall leave the cloud (BendGas's
+  then), a Flashfire wearer's light it, his burst reaching a foe 4.25 m off and staled as his Embers. Its clouds are made by
+  `BendZone.make(owner, "gas", ...)`; after the merge `_gas` raises `BendGas.live_n` for them.
 
 **Smoke soak of fire's behaviour talents (pass 2, 12 October 2026)**: `tools/ring/loadout_soak.gd` with bots wearing them
 (mirror fire matches, normal bots, seed 7300), to look for errors and stalls in real bot play, not the fairness gate (30 games a

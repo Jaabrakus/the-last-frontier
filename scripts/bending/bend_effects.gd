@@ -452,7 +452,7 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 		hit += 1
 	_cur["hit"] = hit
 	if kind == "fire":
-		FireTalents.gas_cone(p, flat, r, deg, String(info.get("tag", "")))   # (fire lights the gas it reaches: until earth's BendGas)
+		FireTalents.fire_cone(p, flat, r, deg, String(info.get("tag", "")))   # (fire lights the gas it reaches; a worn Scald's steam)
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var bz := z as BendZone

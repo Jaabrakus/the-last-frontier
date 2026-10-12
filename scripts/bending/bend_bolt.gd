@@ -433,6 +433,8 @@ func _physics_process(dt: float) -> void:
 		if spent:
 			return
 		for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+			if (z as BendZone).kind == FireTalents.GAS_KIND and FireTalents.gas_bolt(z as BendZone, self):
+				continue                          # (fire lit the gas before the cloud's own rules: gone, it flies on; FireTalents)
 			if (z as BendZone).on_bolt(self) or spent:
 				if spent:
 					return
