@@ -71,3 +71,14 @@ Run:
 ```
 zsh tools/loop/run_test_fps.sh <worktree> air_talents tests/ring/test_talents_air.gd [only=<id>,<id>]
 ```
+
+For the merge of the four lanes (2026-10-11):
+- The Beat is built in the earth lane too (tb/talents-earth-p1: `BendLoadout.beat_s` / `beat_paid`, `BendLooks.beat_flash`,
+  the same `rel.beat` in `SwayCaster._cast` and `beat` in `BendR3.info_for`). Keep one: earth's gate and flash, with air's
+  per-move check (`AirTalents.beat_worn`: an air technique pays only its own move's Beat) and air's key-3 hold
+  (`SwayCaster._key3_beat_hold`: key 3 held through a Leap's full lock waits for the let go, else no Leap could ever be on the
+  Beat), and the bot's release on the Beat (`NpcBending._release`) once.
+- tests/ring/test_loadout_apply.gd wears each live node with the nodes it requires in both lanes (the same intent).
+- `BendZone.inside`'s round kinds: earth adds `gas`, air adds `snow`. `BendZone.on_bolt`'s first lines: air's Toxic Gale before
+  earth's gas reactions. The matter tick's meta is `bend_matter_tick_at` in both (one tick a body each 0.5 s from any matter).
+- `BendLoadout.TUNE_PATHS`: each lane appends its own paths at the end.
