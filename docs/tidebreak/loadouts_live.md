@@ -268,6 +268,15 @@ lined fire's side up with it so the merge keeps one burst:
   its "1 m farther" or "stales as the Embers" check. Its clouds are made by `BendZone.make(owner, "gas", ...)`, which earth's
   `BendGas.live_n` does not count, so its Breath check needs the cloud made through `BendGas` (or `live_n` raised) there.
 
+**Smoke soak of fire's behaviour talents (pass 2, 12 October 2026)**: `tools/ring/loadout_soak.gd` with bots wearing them
+(mirror fire matches, normal bots, seed 7300), to look for errors and stalls in real bot play, not the fairness gate (30 games a
+node). Run A, the 19 behaviour talents but Dancing Feet worn together, 6 games: 3 wins of 6, 729 casts by the wearer, no script
+error, no stall; worn 17 of 19, because two picks are refused when worn together: Magma Fist (the tree's excludes: Magma Fist and
+Blazing Fireball never together) and Forked Lightning (it and Grounded Charge both lower the Lightning's 25%, to 22 and 23; in
+this branch two picks setting one number clash; earth p2's stacking rule in `BendLoadout.overlay_for` multiplies them, 20.24,
+once merged). Run B, Forked Lightning, the Magma set, Magma Fist, Dancing Feet, Flashfire and Cauterize, 4 games: 2 wins of 4,
+worn 7 of 7, no script error, no stall, LOADOUT SOAK DONE.
+
 ## Tests and commands
 
 ```
