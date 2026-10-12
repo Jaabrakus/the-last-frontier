@@ -1003,13 +1003,28 @@ func reset_pct(b: Node, to := 0.0) -> void:
 		pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 
+## b's % raised by `delta` outside the fresh pool: no Patch ever takes it back (a worn Cauterize's cost, FireTalents).
+func add_pct_kept(b: Node, delta: float) -> void:
+	var st := _sk(b)
+	if st.is_empty() or delta <= 0.0:
+		return
+	var was := float(st.pct)
+	st["pct"] = was + delta
+	pct_changed.emit(b, float(st.pct), delta)
+
+
 ## Patch (spec §8): b's fresh pool taken back, at most patch.max_pct, never under 0; returns the % removed (0 when not
 ## allowed: heal_allowed).
 func patch(b: Node) -> float:
+	return patch_up_to(b, sub_num("patch", "max_pct", 10.0))
+
+
+## Patch's taking back with its own most (`max_pct`: a worn Cauterize's 12, FireTalents; Patch's own: patch).
+func patch_up_to(b: Node, max_pct: float) -> float:
 	if not heal_allowed(b):
 		return 0.0
 	var st := _sk(b)
-	var take := minf(fresh_pct(b), sub_num("patch", "max_pct", 10.0))
+	var take := minf(fresh_pct(b), max_pct)
 	if take <= 0.0:
 		return 0.0
 	# (the newest first: the pool shrinks from its young end)

@@ -16,7 +16,7 @@
     "The class numbers (2026-10-11, the owner on the tree: \"fix it\"): a node's change class:<tag>+<variant>.<key> sets one number (d, base, growth, angle, set_stun; volley_n only beside the node's own spec count) of the % ring class of the wearer's own hits with that tag (BendLoadout's class part, RingRules.on_hit through BendLoadout.hit_class); the hit keeps its tag, so staling and the range exemption still see the move. That made nine more nodes whole, live on the owner's word and NOT yet through the soak (their numbers are the tree's starting values): earth.fissure.deep (Deep Fissure), water.spear.cold_hands (Cold Hands), water.spear.heavy (Heavy Spear), water.downpour.pooling (Pooling Downpour), fire.punch.snap (Snap Punch), fire.lightning.short_fuse (Short Fuse), fire.embers.tight (Tight Embers), air.palm.shoving (Shoving Palm), air.gust.rising (Rising Gust). water.mud.lash is not live: it requires the Mud set (new mud pools, not numbers) and its smother is not in its changes; a node whose required node is not live is refused (BendLoadout.why_not).",
     "The binds (2026-10-11, the owner: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: the feet only, as a skill tree twist, fire's a lightning shock): Stone Grip (earth.column.grip), Frost Geyser (water.geyser.frost), Static Shock (fire.lightning.shock) and Tripwind (air.pull.trip). Each sets its move's new spec key bind_s (from none: BendLoadout.NEW_SPEC_KEYS) to 0.7: its hit holds the feet (BendStatus.bind: no run, jump, roll, dodge or dash; aim, casts and the guard free; weaker each time on the same body, rules.json stock.bind) in place of its launch, and lowers its %. Live on the owner's word, not yet soaked.",
     "Wind Prison (air.wall.prison) and Drenching Wave (water.wave.drench), 2026-10-11 (the owner: \"air should have air prisons where they can catch someone mid flight and water should be able slowdown\"; both as twists): spec keys Classic lacks, prison_s 1.0 (BendZone: the Wind Wall holds whoever it touches in the air, helpless, and turns no shot aside; its wall 4.5 m tall from 2.5, so it reaches a knock-up's float) and drench_s 1.5 (the Wave's hit soaks him: 30% slower, BendStatus.drench). Live on the owner's word, not soaked.",
-    "Fire's behaviour talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"; scripts/bending/fire_talents.gd, tests/ring/test_talents_fire.gd), live on that word and NOT soaked. The techniques' head starts (a lock begun within its window starts part full, never a whole lock): Hot Hands (a perfect Parry: the next Punch half full within 1 s), Two-Hand Rhythm (a Punch let go on the Beat, within 0.2 s of its click: the next Punch 30% full within 1 s), Chain Kicks (a Kick on the Beat: the next Kick 40% full within 0.6 s), Grounded Charge (a hit breaks the Lightning charge: the next Lightning half full within 1 s); the passives' fill: Hot Feet (standing still x0.9, on the move x1.1), Dancing Feet (on the move x0.9, x1.15 for 0.6 s after a Step ends). A bot wearing one (a test) reads the same seams in NpcBending."
+    "Fire's behaviour talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"; scripts/bending/fire_talents.gd, tests/ring/test_talents_fire.gd), live on that word and NOT soaked. The techniques' head starts (a lock begun within its window starts part full, never a whole lock): Hot Hands (a perfect Parry: the next Punch half full within 1 s), Two-Hand Rhythm (a Punch let go on the Beat, within 0.2 s of its click: the next Punch 30% full within 1 s), Chain Kicks (a Kick on the Beat: the next Kick 40% full within 0.6 s), Grounded Charge (a hit breaks the Lightning charge: the next Lightning half full within 1 s); the passives' fill: Hot Feet (standing still x0.9, on the move x1.1), Dancing Feet (on the move x0.9, x1.15 for 0.6 s after a Step ends). Then the floor fire and bursts (BendZone matter: % only, no_hurt, one tick each 0.5 s, capped, never its owner, jumped clear): Crescent Burn, Ignite Step, Scald, Blazing Fireball (its burst a whole new class, BendLoadout.new_hit_class); Curved Curtain, Forked Lightning (rules.json reaction/live), Hold the Storm; the Magma set and its four nodes (seams, matter/magma; Forge's set:magma.seam_life_s); Cauterize (Patch's key tapped twice, its spec in FireTalents, never in moves.json). A bot wearing one (a test) reads the same seams in NpcBending. Not built: Flashfire (its gas is earth's Sulphur set). docs/tidebreak/loadouts_live.md has the table."
   ],
   "enabled": true,
   "classic_style": false,
@@ -75,7 +75,8 @@
     "fire.magma.fist": true,
     "fire.magma.lava_kick": true,
     "fire.magma.landing": true,
-    "fire.magma.forge": true
+    "fire.magma.forge": true,
+    "fire.slot.cauterize": true
   },
   "behaviour": {
     "fire.parry.hot_hands": "FireTalents.guarded (BendZone.report), FireTalents.head_start (SwayCaster._try_begin, NpcBending.begin)",
@@ -95,7 +96,8 @@
     "fire.magma.fist": "FireTalents.bolt_ended (a seam where the grown bolt hits or lands)",
     "fire.magma.lava_kick": "FireTalents.bolt_ended (the Kick's last 4 m one seam)",
     "fire.magma.landing": "FireTalents.cast (the Jets' mark), FireTalents.dash_ended (BendMotion._dash_end)",
-    "fire.magma.forge": "FireTalents.fill_mult (on_own_seam), FireTalents.seam_life (tune set:magma.seam_life_s)"
+    "fire.magma.forge": "FireTalents.fill_mult (on_own_seam), FireTalents.seam_life (tune set:magma.seam_life_s)",
+    "fire.slot.cauterize": "FireTalents.modes_for (Bending.other_move, SwayCaster.my_modes), FireTalents.patch_lock (SwayCaster._lock_time), FireTalents.cauterize (BendEffects heal; RingRules.patch_up_to, add_pct_kept); its spec FireTalents.own_spec (FormEffects.apply)"
   },
   "live": [
     "air.ball.dense",
@@ -138,6 +140,7 @@
     "fire.magma.fist",
     "fire.magma.lava_kick",
     "fire.magma.landing",
-    "fire.magma.forge"],
+    "fire.magma.forge",
+    "fire.slot.cauterize"],
   "styles_live": ["boxing"]
 }

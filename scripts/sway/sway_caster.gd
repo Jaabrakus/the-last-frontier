@@ -1220,7 +1220,7 @@ static func world_modes_of(id: String) -> Array:
 
 ## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
 func my_modes(id: String) -> Array:
-	return modes_of(id) if elem() else world_modes_of(id)
+	return FireTalents.modes_for(player, id, modes_of(id)) if elem() else world_modes_of(id)
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
@@ -2446,6 +2446,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
 		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+		if FireTalents.any(player):
+			base = FireTalents.patch_lock(player, mode_of(m), base)     # (a worn Cauterize: its own lock, and Patch's)
 	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
 	var cm := BendStatus.cast_mult(player) if elem() else 1.0
 	_cm_used = cm
@@ -2579,7 +2581,7 @@ func step_other() -> bool:
 	var k := Bending.key_of(el, move)
 	if k < 0:
 		return false
-	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move))
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move), player)
 	if nxt.is_empty():
 		return false
 	var keep := [readied_spell, String(modes.get(String(nxt.id), ""))]

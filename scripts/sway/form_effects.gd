@@ -64,6 +64,11 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if bd.has(mode):
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
+	if FireTalents.any(c.player):
+		var own := FireTalents.own_spec(c.player, m, mode)      # (a worn new skill's own spec: Cauterize; none in moves.json)
+		if not own.is_empty():
+			BendEffects.apply(c, m, mode, own, t, at)
+			return
 	var keep := BendR3.cur
 	var bc0 := BendCaster.of(c.player)
 	var grew := bc0 != null and bc0.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary

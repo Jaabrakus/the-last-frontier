@@ -155,6 +155,8 @@ var grown := false
 var fill := 0.0
 var lock_s := 0.0
 var lock_t := 0.0
+## The mode this lock casts in place of its own: a worn new skill's (FireTalents.bot_mode: Cauterize for the Patch); "" none.
+var _talent_mode := ""
 ## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
 var _cm_used := 1.0
 var circle: FormCircle
@@ -478,6 +480,8 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		if mlk.has(md):
 			base = float(mlk[md])
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
+		if id == "patch" and FireTalents.any(who):
+			base *= FireTalents.patch_lock(who, md, 1.5) / 1.5    # (a worn Cauterize: its lock and his Patch's, as the player's)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -1327,6 +1331,9 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
+	_talent_mode = FireTalents.bot_mode(me, id, md) if FireTalents.any(me) else ""
+	if _talent_mode != "":
+		lock_s = lock_for(id, _talent_mode, _preset_name(), _cast_dist(id, md, t), me)
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
@@ -1420,7 +1427,8 @@ func _release() -> void:
 	caster.dash_dir = _held_dir(o0, t)
 	if FireTalents.any(me) and not caster.grown:
 		FireTalents.beat(me, id, md, took - lock_s)   # (let go on the Beat: a worn technique's; a grown cast never is)
-	var ok := _cast(id, md, t)
+	var ok := _cast(id, md if _talent_mode == "" else _talent_mode, t)
+	_talent_mode = ""
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0

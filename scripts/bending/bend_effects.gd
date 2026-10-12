@@ -230,7 +230,9 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 		"heal":
 			var rr := RingRules.current()
 			if m == "patch" and BendR3.on(p) and rr != null:
-				if NetSpells.owns(p):
+				if NetSpells.owns(p) and bool(spec.get("cauterize", false)) and FireTalents.any(p):
+					_cur["patched"] = FireTalents.cauterize(p, spec)    # (a worn Cauterize: its cost, then up to 12% back)
+				elif NetSpells.owns(p):
 					_cur["patched"] = rr.patch(p)     # (round 3, spec §8: the fresh pool taken back, never health; online
 				                                      # his own machine's: NetSpells)
 			else:

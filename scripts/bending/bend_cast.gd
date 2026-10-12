@@ -41,6 +41,11 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 	if bd.has(mode):
 		BendEffects.apply(bc, id, mode, bd[mode], t, at)
 		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
+	if FireTalents.any(bc.body):
+		var own := FireTalents.own_spec(bc.body, id, mode)      # (a worn new skill's own spec: Cauterize; none in moves.json)
+		if not own.is_empty():
+			BendEffects.apply(bc, id, mode, own, t, at)
+			return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
 	var made: Object = null
 	var keep := BendR3.cur
 	# (round 3: the hit info a stone thrown now carries; ".grown" for a Spike or Boulder held on: stone_form.grow)

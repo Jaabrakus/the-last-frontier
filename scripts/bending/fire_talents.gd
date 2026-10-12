@@ -505,6 +505,65 @@ static func on_own_seam(body: Node) -> bool:
 	return false
 
 
+# ---------------------------------------------------------------- Cauterize (a new skill)
+## The modes `body` may ready of move `id` (`ms`: the move's own): a worn Cauterize adds its mode to Patch's key (a double tap).
+static func modes_for(body: Object, id: String, ms: Array) -> Array:
+	if id != "patch" or not wears(body, "fire.slot.cauterize") or "cauterize" in ms:
+		return ms
+	return ms + ["cauterize"]
+
+
+## Cauterize's own spec and ring lock (the node's numbers; kept out of moves.json: Classic's moves and their fingerprint stay
+## as they are, and only a wearer readies the mode). cost_pct is never in the fresh pool; max_pct of the fresh pool comes back;
+## gas within gas_m of him ends.
+const CAUTERIZE := {"do": "heal", "kind": "fire", "amount": 15.0, "cauterize": true, "cost_pct": 2.0, "max_pct": 12.0, "gas_m": 1.5}
+const CAUTERIZE_LOCK_S := 1.2
+
+
+## A worn new skill's own spec for move `m` at `mode` ({} none): Cauterize's (FormEffects.apply, where moves.json has none).
+static func own_spec(body: Object, m: String, mode: String) -> Dictionary:
+	if m == "patch" and mode == "cauterize" and wears(body, "fire.slot.cauterize"):
+		return CAUTERIZE.duplicate()
+	return {}
+
+
+## The mode a bot wearing a new skill casts a lock of (`id`, `md`) as ("" its own): a bot about to Patch with at least
+## Cauterize's max_pct fresh casts Cauterize (the same % back for its cost, a shorter lock, the gas round it gone); less, Patch.
+static func bot_mode(body: Node, id: String, md: String) -> String:
+	if id != "patch" or md != "patch" or not wears(body, "fire.slot.cauterize"):
+		return ""
+	var rr := RingRules.current()
+	return "cauterize" if rr != null and rr.fresh_pct(body) >= float(CAUTERIZE.max_pct) - 1e-4 else ""
+
+
+## Patch's ring lock for `body` at `mode` (`base`: the move's ring_lock_s): Cauterize's own, and a worn Cauterize's trade on the
+## Patch (stock:patch.lock_s 1.7 from 1.5).
+static func patch_lock(body: Object, mode: String, base: float) -> float:
+	if not wears(body, "fire.slot.cauterize"):
+		return base
+	if mode == "cauterize":
+		return CAUTERIZE_LOCK_S
+	return BendLoadout.tune_f(body, "stock:patch.lock_s", base)
+
+
+## A worn Cauterize cast by `p` (BendEffects' heal, his own machine's): cost_pct first, outside the fresh pool (no Patch takes it
+## back), then up to max_pct of the fresh pool taken back (RingRules.patch); the gas within gas_m of him ends. The % taken back.
+static func cauterize(p: Node3D, spec: Dictionary) -> float:
+	var rr := RingRules.current()
+	if rr == null or not wears(p, "fire.slot.cauterize") or not rr.heal_allowed(p):
+		return rr.patch(p) if rr != null else 0.0
+	rr.add_pct_kept(p, float(spec.get("cost_pct", 2.0)))
+	var took := rr.patch_up_to(p, float(spec.get("max_pct", 12.0)))
+	for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "gas" and not bz.is_queued_for_deletion() \
+				and Vector2(bz.global_position.x - p.global_position.x, bz.global_position.z - p.global_position.z).length() <= float(spec.get("gas_m", 1.5)) + bz.radius:
+			bz.end("cauterized")
+	BendLooks.burst(p.global_position + Vector3.UP * 1.0, "fire", 26, Vector3.UP, 70.0, 1.6, 0.3)
+	BendLooks.sound("fire", "cast", p.global_position + Vector3.UP, -4.0)
+	return took
+
+
 ## Everyone (the players and the fighters, whatever their side) within `r` m of `at`, flat, as BendStatus.near lists them: a
 ## reaction's (it hurts everyone in it).
 static func everyone_near(from: Node, at: Vector3, r: float) -> Array:

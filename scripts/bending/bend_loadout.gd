@@ -83,7 +83,8 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
 		"move:stone_form.cannonball.radius_m",
 		"rules:passives.fire.moving_mult",      # (fire's Footwork on the move: Hot Feet, Dancing Feet; SwayCaster._moving_mult)
-		"set:magma.seam_life_s"]                # (the Magma set's seams: Forge; FireTalents.seam_life)
+		"set:magma.seam_life_s",                # (the Magma set's seams: Forge; FireTalents.seam_life)
+		"stock:patch.lock_s"]                   # (Patch's ring lock, rules.json stock.patch: Cauterize's trade; FireTalents.patch_lock)
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}

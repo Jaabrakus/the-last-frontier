@@ -31,13 +31,17 @@ extends SceneTree
 ##   Magma Fist        a seam where the grown Punch lands; its core 22% (20)
 ##   Magma Landing     a real Jets dash: a 2 m seam where it lands; with the set alone none
 ##   Forge             standing on his own seam his fill x1.15; his seams last 2.5 s (3)
+##   Cauterize         Patch's key tapped twice readies Cauterize (Classic: Patch again); a real Cauterize with 20% fresh
+##                     leaves 10% (2% cost, 12% back), with 6% fresh leaves 2% (the cost is never taken back); its lock 1.2 s,
+##                     his Patch's 1.7 s (Classic 1.5 s)
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
 const BUILT := ["fire.parry.hot_hands", "fire.punch.rhythm", "fire.kick.chain", "fire.lightning.grounded",
 		"fire.passive.dancing_feet", "fire.passive.hot_feet", "fire.fireball.blazing", "fire.highkick.crescent_burn",
 		"fire.step.ignite", "fire.breath.scald", "fire.wall.curved", "fire.lightning.forked", "fire.parry.hold_storm",
-		"fire.set.magma", "fire.magma.fist", "fire.magma.lava_kick", "fire.magma.landing", "fire.magma.forge"]
+		"fire.set.magma", "fire.magma.fist", "fire.magma.lava_kick", "fire.magma.landing", "fire.magma.forge",
+		"fire.slot.cauterize"]
 const WATCHDOG_S := 400.0
 
 var checks := 0
@@ -164,6 +168,7 @@ func _run() -> void:
 	await _hold_storm()
 	await _magma()
 	await _magma_nodes()
+	await _cauterize()
 	_end()
 
 
@@ -975,6 +980,70 @@ func _magma_nodes() -> void:
 	_expect(absf(float(forge[2][1]) / maxf(float(forge[1][1]), 1e-4) - 1.15) < 0.03 and is_equal_approx(float(forge[2][2]), 2.5)
 			and is_equal_approx(float(forge[1][2]), 3.0),
 			"Forge: on his own seam the fill x%.2f; his seams last %.1f s (the set alone %.1f s)" % [float(forge[2][1]) / maxf(float(forge[1][1]), 1e-4), forge[2][2], forge[1][2]])
+
+
+# ---------------------------------------------------------------- Cauterize
+## Key 5 (Patch's) tapped `taps` times, then held until its lock casts (Patch goes at full): [mode, lock_s, % before, after].
+func _patch_with(fresh: float, taps: int) -> Array:
+	var rr := RingRules.current()
+	await _calm()
+	rr.reset_pct(p, 0.0)
+	rr.add_pct(p, fresh, foe, "fire_blast/punch")
+	for i in taps:
+		await _tap(4)
+	var md := c.mode_of("patch")
+	c.speed_override = 0.0
+	var n0 := casts.size()
+	var began := await _begin("patch", 1.0)
+	var lk := c.lock_s
+	var before := rr.pct_of(p)
+	await _until(func() -> bool: return casts.size() > n0, 3.0)
+	await _ticks(3)
+	c.held_override = false
+	c.speed_override = null
+	return [md if began else "none", lk, before, rr.pct_of(p)]
+
+
+func _cauterize() -> void:
+	_wear("")
+	var cp: Array = await _patch_with(20.0, 2)
+	_wear("fire.slot.cauterize")
+	var wp: Array = await _patch_with(20.0, 1)
+	var wc: Array = await _patch_with(20.0, 2)
+	var w6: Array = await _patch_with(6.0, 2)
+	_expect(String(cp[0]) == "patch" and String(wp[0]) == "patch" and String(wc[0]) == "cauterize",
+			"Cauterize: Patch's key tapped twice readies it (%s; once %s; Classic twice %s)" % [wc[0], wp[0], cp[0]])
+	_expect(is_equal_approx(float(cp[1]), 1.5) and is_equal_approx(float(wp[1]), 1.7) and is_equal_approx(float(wc[1]), 1.2),
+			"Cauterize: its lock %.1f s, his Patch's %.1f s (Classic %.1f s)" % [wc[1], wp[1], cp[1]])
+	_expect(absf(float(cp[3]) - 10.0) < 0.05 and absf(float(wc[3]) - 10.0) < 0.05 and absf(float(w6[3]) - 2.0) < 0.05,
+			"Cauterize: with 20%% fresh it leaves %.1f%% (2%% cost, 12%% back; Classic Patch %.1f%%), with 6%% fresh %.1f%% (the cost kept)"
+			% [wc[3], cp[3], w6[3]])
+	# a bot wearing it: its Patch with 12% or more fresh goes as Cauterize (its own begin and release)
+	var nb: NpcBending = (foe.get(&"brain") as NpcBrain).bending if foe.get(&"brain") != null else null
+	if nb == null:
+		return
+	var rr := RingRules.current()
+	var bot := {}
+	for id: String in ["", "fire.slot.cauterize"]:
+		await _calm()
+		_wear(id, foe)
+		rr.reset_pct(foe, 0.0)
+		rr.add_pct(foe, 20.0, p, "fire_blast/punch")
+		nb.begin("patch", "patch")
+		var lk := nb.lock_s
+		nb.lock_t = nb.lock_s
+		nb._release()
+		await _ticks(3)
+		bot[id] = [String(BendEffects.last_of(foe).get("mode", "")), lk, rr.pct_of(foe), rr.fresh_pct(foe)]
+		nb._cancel()
+		BendLoadout.clear(foe)
+	_expect(String(bot[""][0]) == "patch" and String(bot["fire.slot.cauterize"][0]) == "cauterize"
+			and absf(float(bot["fire.slot.cauterize"][1]) / float(bot[""][1]) - 1.2 / 1.5) < 0.01
+			and absf(float(bot["fire.slot.cauterize"][2]) - 10.0) < 0.05 and absf(float(bot["fire.slot.cauterize"][3]) - 8.0) < 0.05
+			and absf(float(bot[""][3]) - 10.0) < 0.05,
+			"a bot wearing Cauterize: with 20%% fresh its Patch goes as %s (lock x%.2f), leaving %.1f%% with %.1f%% fresh (Classic %s, %.1f fresh)"
+			% [bot["fire.slot.cauterize"][0], float(bot["fire.slot.cauterize"][1]) / float(bot[""][1]), bot["fire.slot.cauterize"][2],
+			bot["fire.slot.cauterize"][3], bot[""][0], bot[""][3]])
 
 
 # ---------------------------------------------------------------- a bot wearing them
