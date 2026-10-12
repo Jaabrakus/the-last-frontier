@@ -60,12 +60,14 @@
     "air.passive.gale_force": true,
     "earth.catch.juggle": true,
     "earth.catch.return_to_sender": true,
-    "earth.pebbles.kick_up": true
+    "earth.pebbles.kick_up": true,
+    "earth.boulder.avalanche": true
   },
   "behaviour": {
     "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)",
     "earth.catch.return_to_sender": "BendZone.return_stone (a clean catch thrown back on the Beat x1.15: beat_return, lock_began); the Beat in SwayCaster (_beat_go) and NpcBending (_release, _answer_catch on the Beat); return_lock_s per wearer (guard_lock_s)",
-    "earth.pebbles.kick_up": "BendBolt._finish / _kick_up_end (a volley that met nobody leaves one loose stone where its last pebble lands; the Fissure's _heave_loose throws it on); spread per wearer (spec)"
+    "earth.pebbles.kick_up": "BendBolt._finish / _kick_up_end (a volley that met nobody leaves one loose stone where its last pebble lands; the Fissure's _heave_loose throws it on); spread per wearer (spec)",
+    "earth.boulder.avalanche": "GustLift._land / _avalanche (where the wearer's Boulder lands on the deck: three low rolling stone bolts fanned 15 deg, one volley of 3); FormEffects._one_boulder (the Boulder's own hit whole); BendZone catch (one of a volley held, the rest dropped at the catcher's feet); class base and volley_n per wearer"
   },
   "live": [
     "air.ball.dense",
@@ -90,6 +92,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche"],
   "styles_live": ["boxing"]
 }

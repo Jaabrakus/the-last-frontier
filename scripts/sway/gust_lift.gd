@@ -488,6 +488,7 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 ## the physics again with what is left of its speed (it rolls).
 func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	if _shatters():
+		_avalanche(contact, n)                   # (Avalanche worn: three stones roll on from where it lands)
 		_shatter(contact, n)                     # (the ring: it bursts on what it met, nothing left lying)
 		return
 	phase = Phase.DONE
@@ -525,6 +526,43 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	_release_stone()
 	landed.emit(contact)
 	queue_free()
+
+
+## Earth's Avalanche (data/sway/skill_tree.json earth.boulder.avalanche; the owner, 2026-10-11: "make sure all the talents
+## work"): its wearer's Boulder that lands on the deck (a floor under it, not a wall's face; never a returned stone) breaks into
+## three stones that roll on along the deck from there, fanned AVALANCHE_DEG apart about its flight: low stone bolts (BendBolt
+## low: jumped, stopped by walls, taken by a Catch: BendZone keeps only one of a volley, the rest dropped at the catcher's feet,
+## the thrower's loose stones), one volley (a fresh volley_id, volley_n 3: together the Boulder's %, only the first to hit
+## knocks; the node's class base for its wearer). Online the host's. The Boulder in flight is one Boulder (its own hit whole:
+## FormEffects marks its info volley_n 1).
+const AVALANCHE := "earth.boulder.avalanche"
+const AVALANCHE_DEG := 15.0
+const AVALANCHE_ROLL := {"mps": 12.0, "range_m": 8.0, "radius_m": 0.18}
+
+
+func _avalanche(at: Vector3, n: Vector3) -> void:
+	var by_n := by() as Node3D
+	var inf: Dictionary = get_meta(&"bend_info", {})
+	if kind != "cannonball" or by_n == null or n.y < 0.5 or not BendLoadout.wears(by_n, AVALANCHE) \
+			or not String(inf.get("tag", "")).begins_with("stone_form/cannonball") or bool(inf.get("returned", false)) \
+			or not NetSpells.decides():
+		return
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-4 else caster.facing()
+	var vi := inf.duplicate()
+	vi["volley_id"] = BendR3.new_volley()
+	vi["volley_n"] = 3
+	vi["avalanche"] = true
+	var hd := _hurl_d()
+	var r := float(AVALANCHE_ROLL.radius_m)
+	for i in 3:
+		var dir := flat.rotated(Vector3.UP, deg_to_rad(AVALANCHE_DEG * float(i - 1)))
+		var spec := {"kind": "stone", "low": true, "mps": float(AVALANCHE_ROLL.mps), "range_m": float(AVALANCHE_ROLL.range_m),
+				"radius_m": r, "damage": damage_now() / 3.0, "knock_mps": float(hd.get("knock_mps", KNOCK_MPS)), "up_mps": 1.0,
+				"weight": "medium", "flight": "spinning", "spin_rate": float(AVALANCHE_ROLL.mps) / r, "spin_axis": Vector3.RIGHT,
+				"_info": vi}
+		BendBolt.launch(by_n, Vector3(at.x, at.y + BendBolt.LOW_M, at.z) + dir * 0.35, dir, spec)
+	BendLooks.burst(at + Vector3.UP * 0.2, "stone", 16, Vector3.UP, 120.0, 3.0, 0.3)
 
 
 ## A stone piece's look for the bursts: jagged shards of each ground's stone (six, made once: about 0.25 m long, scaled per

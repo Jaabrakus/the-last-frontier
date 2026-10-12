@@ -349,6 +349,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 			th0.info = BendR3.cur.duplicate()
 		if String(th0.info.get("tag", "")).ends_with(".grown") and not th0.stone.has_meta(GROWN_META):
 			grow_raised(th0, "stone_form", mode, true)    # (grown with no stone swelled yet: at once)
+		_one_boulder(bc, th0, mode)
 		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
@@ -377,7 +378,15 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		th.follow = true
 	if th != null and String(BendR3.cur.get("tag", "")).ends_with(".grown"):
 		grow_raised(th, "stone_form", mode, true)     # (cast grown with no stone raised first: a bot's, a test's)
+	_one_boulder(bc, th, mode)
 	return s
+
+
+## Avalanche's wearer (GustLift.AVALANCHE: his Boulder's class is a volley of three for the stones it breaks into): the Boulder
+## itself, until it lands, one stone whose hit is whole (its info volley_n 1). Anyone else's throw: untouched.
+static func _one_boulder(bc: BendCaster, th: Throw, mode: String) -> void:
+	if th != null and mode == "cannonball" and BendLoadout.wears(bc.body, GustLift.AVALANCHE) and not th.info.is_empty():
+		th.info["volley_n"] = 1
 
 
 ## Round 3: where an earth caster in the air off the deck tears his stone from (spec §6.1): the deck's face just under its

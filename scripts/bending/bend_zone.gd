@@ -699,6 +699,16 @@ func _guard_bolt(b: BendBolt) -> bool:
 				took += 1
 				_result("late", what)
 				return true
+			if bool(b.info.get("avalanche", false)):
+				# (an Avalanche's rolling stones, GustLift.AVALANCHE: a Catch holds one of its three, the rest drop at the catcher's
+				# feet, the thrower's loose stones)
+				var vid := int(b.info.get("volley_id", 0))
+				if _avalanche_took.has(vid):
+					_avalanche_drop(b)
+					took += 1
+					_result("perfect" if perfect else "late", what, shooter)
+					return true
+				_avalanche_took[vid] = true
 			_take_bolt(b, perfect)
 			_result("perfect" if perfect else "late", what, shooter)
 			return true
@@ -817,6 +827,27 @@ func _straight_back(b: BendBolt) -> void:
 	b.knock_mps *= k
 	b.up_mps *= k
 	BendLooks.burst(b.global_position, b.kind, 12)
+
+
+## The Avalanche volleys this Catch held a stone of (volley id -> true).
+var _avalanche_took := {}
+
+
+## An Avalanche stone past the one this Catch holds: stopped and dropped at the catcher's feet, a loose stone of its thrower's.
+func _avalanche_drop(b: BendBolt) -> void:
+	var by: Node = b._by()
+	var side := Vector3.UP.cross(b.velocity).normalized() if Vector3.UP.cross(b.velocity).length_squared() > 1e-6 else Vector3.RIGHT
+	var off := side * (0.6 if stones.size() % 2 == 0 else -0.6)
+	b.end("dropped")
+	var foot := FormEffects.ground_at(owner_node, owner_node.global_position + off)
+	var s := FormStone.ball(get_tree().current_scene, foot, {"radius_m": clampf(b.radius, 0.12, 0.45), "mass_kg": 20.0, "rise_s": 0.01,
+			"life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(foot * 10.0))) % 97, "stone")
+	s.state = FormStone.State.RESTING
+	s.freeze = false
+	s.set_meta(&"bend_weight", b.weight)
+	stones.append(s)
+	FormStone.make_loose(s, by)
+	BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 10)
 
 
 ## A stone bolt cushioned on the beat (the Wind Guard): it stops and drops at the guard's feet, a loose stone of whoever

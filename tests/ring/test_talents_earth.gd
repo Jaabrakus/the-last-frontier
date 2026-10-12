@@ -15,6 +15,10 @@ extends SceneTree
 ##   Kick-Up           the player's Pebbles (the cast's own path) at the deck away from the bot: one loose stone of his where the
 ##                     last pebble landed (Classic none); at the bot (hit): none; its spread 3.6 deg (3); his Fissure run at it
 ##                     throws it on
+##   Avalanche         the player's Boulder (FormEffects.apply, Stone Form's cast) landing on the deck breaks into three low
+##                     rolling stones fanned 15 deg, one volley of 3 (Classic: none); rolled into the bot they add the Boulder's
+##                     16% between them, the first at base 5.9; the bot's Catch holds one, the others drop at its feet as the
+##                     player's loose stones; the bot wearing it: its Boulder breaks the same
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -99,6 +103,16 @@ func _deck_off(dist: float, deg: float) -> Vector3:
 	return FormEffects.ground_at(player, player.global_position + way * dist)
 
 
+## The player and the bot stood on the deck's long axis, `p_s` and `b_s` m from its centre (the bot held still there).
+func _stage(p_s: float, b_s: float) -> void:
+	var ar := RingArena.find(self)
+	for e: Array in [[player, p_s], [bot, b_s]]:
+		var n: CharacterBody3D = e[0]
+		n.global_position = ar.center() + ar.axis() * float(e[1]) + Vector3.UP * 0.05
+		n.velocity = Vector3.ZERO
+	await _secs(0.4)
+
+
 ## The bot stood `dist` m from the player on the line between them (held still there), the player facing it.
 func _bot_at(dist: float) -> void:
 	var way := bot.global_position - player.global_position
@@ -152,6 +166,7 @@ func _run() -> void:
 	await _juggle()
 	await _return_to_sender()
 	await _kick_up()
+	await _avalanche()
 	_end()
 
 
@@ -457,3 +472,104 @@ func _kick_up() -> void:
 	_wear(player, "")
 	await _secs(1.0)
 	await _clear_held(player)
+
+
+# ---------------------------------------------------------------- Avalanche
+## The Avalanche stones `by` let roll in the next `s` seconds (their bolts, met as they fly): [{dir, low_m, info}], and how
+## many struck someone.
+func _rolling(by: Node3D, s: float) -> Array:
+	var seen := {}
+	var struck := [0]
+	for i in ceili(s * Engine.physics_ticks_per_second / 2.0):
+		await _ticks(2)
+		for n in get_nodes_in_group(BendBolt.GROUP):
+			var b := n as BendBolt
+			if b == null or seen.has(b.get_instance_id()) or b.caster != by or not bool(b.info.get("avalanche", false)):
+				continue
+			var flat := Vector3(b.velocity.x, 0.0, b.velocity.z).normalized()
+			seen[b.get_instance_id()] = {"dir": flat, "low_m": b.global_position.y - FormEffects.ground_at(b, b.global_position).y,
+					"info": b.info.duplicate()}
+			b.struck.connect(func(_who: Node, _d: float) -> void: struck[0] += 1)
+	return [seen.values(), struck[0]]
+
+
+## The player's Boulder cast (Stone Form at the Boulder, the cast's own path) with his crosshair on deck point `p`.
+func _boulder_at(p: Vector3) -> void:
+	await _aim_at(p + Vector3.UP * 0.1)
+	sc.set_mode("stone_form", "cannonball")
+	FormEffects.apply(sc, "stone_form", null, p)
+
+
+func _avalanche() -> void:
+	var id := "earth.boulder.avalanche"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Avalanche is live, its code built (%s)" % BendLoadout.why_not(id))
+	await _stage(-4.5, 4.5)
+	var deck := _deck_off(5.0, 60.0)
+	var got := {}
+	for w: String in ["", id]:
+		_wear(player, w)
+		await _boulder_at(deck)
+		got[w] = await _rolling(player, 1.6)
+		await _secs(1.0)
+	var c: Array = got[""][0]
+	var a: Array = got[id][0]
+	_expect(c.is_empty(), "Classic: the Boulder bursts where it lands, nothing rolls on (%d)" % c.size())
+	var fan := -1.0
+	var low := true
+	var one := a.size() == 3
+	if a.size() == 3:
+		var dirs: Array = a.map(func(e: Dictionary) -> Vector3: return e.dir)
+		for e: Dictionary in a:
+			low = low and absf(float(e.low_m) - BendBolt.LOW_M) < 0.2
+			one = one and int(e.info.get("volley_n", 0)) == 3 and int(e.info.volley_id) == int(a[0].info.volley_id) \
+					and String(e.info.get("tag", "")) == "stone_form/cannonball"
+		for i in 3:
+			for j in 3:
+				fan = maxf(fan, rad_to_deg((dirs[i] as Vector3).angle_to(dirs[j])))
+	_expect(a.size() == 3 and _near(fan, 30.0, 1.5) and low, "Avalanche: where it lands, three stones roll on along the deck, fanned 15 deg (%d, %.1f deg across, low %s)" % [a.size(), fan, low])
+	_expect(one, "Avalanche: the three are one volley of 3 with the Boulder's tag")
+	# rolled into the bot: the Boulder's 16% between them; the first knocks at the node's base
+	var wc := BendLoadout.hit_class(player, RingRules.class_of("stone_form/cannonball"))
+	_expect(_near(float(wc.base), 5.9, 0.001) and _near(float(RingRules.class_of("stone_form/cannonball").base), 7.4, 0.001),
+			"Avalanche: the wearer's Boulder knocks at base 5.9 (the class's 7.4)")
+	await _stage(-4.5, 1.5)
+	var p0 := rules.pct_of(bot)
+	BendStatus.anchor(bot, 3.0)                      # (his feet kept where they are: the first's knock does not carry him off the rest)
+	await _boulder_at(_deck_on_line(4.7))
+	var r: Array = await _rolling(player, 1.6)
+	bot.remove_meta(&"bend_anchor")
+	var k := int(r[1])
+	var d := rules.pct_of(bot) - p0
+	_expect(k >= 1 and _near(d, 16.0 / 3.0 * float(k) * RingRules.stock_num("pct_scale", 1.0), 0.05),
+			"Avalanche: rolled into the bot, each of the %d stones that reach him adds a third of the Boulder's 16%% (%.2f%%)" % [k, d])
+	await _secs(1.5)
+	# the bot's Catch holds one, the others drop at its feet as the player's loose stones
+	await _stage(-4.5, 4.5)
+	await _clear_held(bot)
+	var rec := _catch(bot, 3.0)
+	var loose0 := FormStone.loose_of(player).size()
+	await _boulder_at(_deck_on_line(4.5))
+	await _secs(1.4)
+	var held_b := BendZone.held_stones(bot).size()
+	var loose1 := FormStone.loose_of(player).size()
+	_end_zone(rec)
+	_expect(held_b == 1 and loose1 - loose0 == 2, "Avalanche: the bot's Catch holds one, two drop at its feet as the player's loose stones (%d held, %d loose)" % [held_b, loose1 - loose0])
+	await _clear_held(bot)
+	await _clear_held(player)
+	_wear(player, "")
+	# the bot wearing it: its own Boulder, flown over the burrowed player, breaks on the deck the same
+	_wear(bot, id)
+	await _stage(2.0, 9.0)
+	player.set_meta(&"bend_under_until", BendStatus.now() + 3.0)
+	BendCast.cast(BendCaster.of(bot), "stone_form", "cannonball", player, player.global_position)
+	var rb: Array = await _rolling(bot, 2.0)
+	player.remove_meta(&"bend_under_until")
+	_expect((rb[0] as Array).size() == 3, "Avalanche on the bot: its Boulder breaks into three where it lands (%d)" % (rb[0] as Array).size())
+	_wear(bot, "")
+	await _secs(1.0)
+	await _clear_held(player)
+
+
+## The deck `dist` m from the player on the line to the bot.
+func _deck_on_line(dist: float) -> Vector3:
+	return _deck_off(dist, 0.0)

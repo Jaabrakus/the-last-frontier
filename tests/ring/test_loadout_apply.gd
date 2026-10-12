@@ -234,11 +234,12 @@ func _run() -> void:
 				var key0 := rest.get_slice("+", 1).get_slice(".", 1)
 				var base_c := RingRules.class_of(tag0)
 				var gs := RingRules.stock_num("growth_scale", 1.0) if key0 == "growth" else 1.0
-				var wc := BendLoadout.hit_class(w, base_c)
+				# (a Beat class, a change with when "beat", is the wearer's on a hit let go on the Beat: Heave's)
+				var wc := BendLoadout.hit_class(w, base_c, {"beat": true} if String(c.get("when", "")) == "beat" else {})
 				var bc0 := BendLoadout.hit_class(bot, base_c)
 				_expect(_near(wc.get(key0), to * gs) and String(wc.get("tag", "")) == tag0,
 						"%s: the wearer's %s hits have %s %s, the tag kept (%s)" % [id, tag0, key0, to, wc.get(key0)])
-				_expect(is_same(bc0, base_c) and _near(bc0.get(key0), from * gs),
+				_expect(is_same(bc0, base_c) and _near(bc0.get(key0, from if bool(c.get("default_from", false)) else null), from * gs),
 						"%s: a body that wears nothing hits with the class as it is (%s %s)" % [id, key0, from])
 				var named_keys := {}
 				for c3: Dictionary in n.changes:

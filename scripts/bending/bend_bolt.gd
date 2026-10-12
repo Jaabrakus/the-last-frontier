@@ -783,6 +783,8 @@ func _meet_bolts() -> void:
 			continue
 		if b.global_position.distance_to(global_position) > radius + b.radius + 0.25:
 			continue
+		if bool(info.get("avalanche", false)) and bool(b.info.get("avalanche", false)) and b.info.get("volley_id") == info.get("volley_id"):
+			continue                              # (an Avalanche's three stones roll out together: GustLift.AVALANCHE)
 		meet(self, b)
 		if spent:
 			return
