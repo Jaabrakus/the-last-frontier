@@ -25,7 +25,9 @@ extends Node
 ##                                deck box: where a plan of inputs takes it ({result: deck | edge | water | air, t, pos, ...});
 ##                                plan(kind, ...) makes spec §9.6's six recovery plans and the lead model's policy
 ##
-## THE RULES (spec v2): gravity 20 (BendKnock.gravity_override when set), run 5 / sprint 6.5, the element's air drift; Space
+## THE RULES (spec v2): gravity 20 (BendKnock.gravity_override when set), run 5 (no sprint in the ring: the owner, 2026-10-11,
+## Shift + a direction is the movement spells' key, Hotbar._shift_dir; Shift is still read for Shift + Space's drop), the
+## element's air drift; Space
 ## is always the full jump (2.0 m) and the short hop (0.8 m) is Space within 0.05 s of a cast's release (either order);
 ## Space in the air the double jump (it keeps half the launch's carry: BendKnock.scale_carry); once it is spent, off the deck
 ## and a fresh press 0.2 s after it, the Rise (once per airtime, free air control after); refreshed by landing, a grab and a tumbling
@@ -537,11 +539,12 @@ func _step_free(dt: float) -> void:
 		_try_grab()
 
 
-## The deck's run: toward the held way at run (sprint) speed, its accel and decel; held still crouched, in landing lag, in
-## hitstun (no steering) and at a speed cap of the body's own (a root, the countdown, a floor cast).
+## The deck's run: toward the held way at run speed (no sprint in the ring: the owner, 2026-10-11; the player's and every
+## bot's), its accel and decel; held still crouched, in landing lag, in hitstun (no steering) and at a speed cap of the body's
+## own (a root, the countdown, a floor cast).
 func _ground_physics(dt: float, stun: bool) -> void:
 	var mv := _move_vec()
-	var spd := num("physics", "sprint", 6.5) if _b("sprint") else num("physics", "run", 5.0)
+	var spd := num("physics", "run", 5.0)
 	if not virtual:
 		spd *= BendStatus.drench_mult(body)          # (drenched: slower a while, BendStatus.drench)
 	spd = minf(spd, _speed_cap())

@@ -257,7 +257,7 @@ func _ready() -> void:
 	rules.knocked_back.connect(_on_knocked_back)
 	rules.rang_out.connect(_on_rang_out)
 	rules.side_out.connect(_on_side_out)
-	if stock():
+	if new_ring():
 		_prev_gravity = BendKnock.gravity_override
 		BendKnock.gravity_override = RingRules.stock_num("gravity", 20.0)
 		_gravity_set = true
@@ -301,6 +301,13 @@ func _exit_tree() -> void:
 ## The % match (the installed rules' rule set is "stock").
 func stock() -> bool:
 	return rules != null and rules.rule_set == "stock"
+
+
+## The new ring's moves, knocks and deck (Lives or Zones: RingRules.NEW_RING): every competitor with MOVE's RingMoves.
+## Zones (rule_set "zones") plays the zones' rounds on it (stock() false): _zones_round at each, a ring-out or the last winding
+## out of the round (hidden, _on_rang_out).
+func new_ring() -> bool:
+	return rules != null and rules.rule_set in RingRules.NEW_RING
 
 
 # ---------------------------------------------------------------- the match
@@ -387,6 +394,8 @@ func next_round() -> void:
 	rules.soft_walls = not practice
 	if stock():
 		_stock_game()
+	elif new_ring():
+		_zones_round()
 	_new_tally()
 	_to("COUNTDOWN")
 	NetMatch.told(self, ["m_next", round])
@@ -759,7 +768,7 @@ func _fight() -> void:
 		_coach(0.0)
 	rules.live = true
 	practice_ctl.arm()
-	if stock():
+	if new_ring():
 		for b in competitors():
 			_ready_key1(b)
 	_sting("go")
@@ -925,6 +934,17 @@ func _on_rang_out(who: Node3D, by: Node) -> void:
 		self_outs += 1
 	if not stock() and rules.team_mode() and who is NpcFighter and is_instance_valid(who):
 		(who as NpcFighter).held = true      # (out: he sits the round out)
+	if new_ring() and not stock() and not practice and is_instance_valid(who):
+		# (zones on the new ring: out of the round, off the deck until the next: his locks and stones dropped, the splash told,
+		# hidden at his spout; your own in a team format: watch your team play on)
+		var sc := SwayCaster.of(who)
+		if sc != null:
+			sc.drop_all()
+		if ring != null and ring.water != null and ring.is_out(who.global_position) and not ring.water.holds(who):
+			ring.water.curtain_splash(who.global_position, (who as CharacterBody3D).velocity.length() if who is CharacterBody3D else 8.0)
+		_hide(who, true)
+		if who == player and team_n() > 1 and not rules.still_in(rules.team_of(player)).is_empty():
+			RingSpectate.start(self)
 	rang_out.emit(who, by)
 
 
@@ -1323,10 +1343,27 @@ func competitors() -> Array:
 ## hooks (stock).
 func join(b: Node3D, team: int) -> void:
 	rules.add(b, team)
-	if stock():
+	if new_ring():
 		_equip(b)
+	if stock():
 		if rules.falls.is_empty():
 			rules.reset_lives()              # (a side grown before the first fall: every one at team.stocks)
+
+
+## A round's start (zones on the new ring): every competitor with its RingMoves and its hooks, shown and solid (one out last
+## round was hidden), the meter at 0 and health full, key 1 readied; your own camera again.
+func _zones_round() -> void:
+	rules.lives_on = false
+	var sp := get_node_or_null(RingSpectate.NODE_NAME) as RingSpectate
+	if sp != null:
+		sp.stop()
+	for b in competitors():
+		_equip(b)
+		_hide(b, false)
+	_held_before.clear()                     # (every bot was readied and held for the countdown: _ready_bot)
+	rules.reset_game()
+	for b in competitors():
+		_ready_key1(b)
 
 
 ## A game's start (stock): every competitor with its RingMoves and its hooks, shown and solid, lives full, % 0, key 1 readied.

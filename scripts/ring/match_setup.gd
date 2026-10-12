@@ -82,8 +82,10 @@ const KINDS := ["match", "practice"]
 const DUMMIES := ["stand", "block", "throw"]
 ## Round 3: the % ring's Practice ways (data/ring/practice.json ways), B steps them.
 const STOCK_DUMMIES := ["stand", "walk", "jump", "block", "guard_held", "guard_after", "recover", "throw", "fight"]
-## Round 3: the rule sets the menu offers ("stock" the % layer, "classic" today's zones) and the games of a match.
-const RULE_SETS := ["stock", "classic"]
+## Round 3: the rule sets the menu offers ("stock" the % layer, Lives; "zones" the zones on the new ring, Zones: the owner,
+## 2026-10-11, "zones is still good ... it should have all the new bending movements") and the games of a match. Round 2's
+## "classic" is a run's or a test's only (rules=classic, RingRules.rule_set_override).
+const RULE_SETS := ["stock", "zones"]
 const GAMES := [1, 3]
 ## Practice's rows (data/ring/practice.json).
 const PRACTICE_PATH := "res://data/ring/practice.json"
@@ -183,8 +185,8 @@ static func parse(args: PackedStringArray) -> bool:
 				if v in DUMMIES or v in STOCK_DUMMIES:
 					dummy = v
 			"rules", "rule_set":
-				var rs := String({"lives": "stock", "zones": "classic"}.get(v, v))
-				if rs in RULE_SETS:
+				var rs := String({"lives": "stock"}.get(v, v))
+				if rs in RULE_SETS or rs == "classic":
 					rules_choice = rs
 			"games":
 				if v.is_valid_int() and int(v) in GAMES:
@@ -313,6 +315,8 @@ static func load() -> void:
 		dummy = dm
 	# (round 3's rows)
 	var rs := str(_kept("rules", ""))
+	if rs == "classic":
+		rs = "zones"                             # (kept before 2026-10-11: the menu's Zones was round 2's ring, now the new one's)
 	rules_choice = rs if rs in RULE_SETS else ""
 	var gm := int(_kept("games", 1))
 	games_n = gm if gm in GAMES else 1
@@ -391,12 +395,12 @@ static func practice() -> bool:
 ## Round 3: the rule set the next ring plays ("stock": the % layer; "classic": today's zones): the menu's or the user arg's
 ## choice, else rules.json rule_set.
 static func rule_set() -> String:
-	if RingRules.rule_set_override in RULE_SETS:
+	if RingRules.rule_set_override in RingRules.RULE_SETS:
 		return RingRules.rule_set_override       # (a test's or a tool's pin: what the next ring plays, RingRules.pick_rule_set)
-	if rules_choice in RULE_SETS:
+	if rules_choice in RingRules.RULE_SETS:
 		return rules_choice
 	var d := String(RingRules.data().get("rule_set", "classic"))
-	return d if d in RULE_SETS else "classic"
+	return d if d in RingRules.RULE_SETS else "classic"
 
 
 ## Round 3: the games in a match (1, or 3: best of 3, the first to two).
@@ -463,9 +467,9 @@ static func next_in(list: Array, v: Variant) -> Variant:
 	return list[(i + 1) % list.size()] if not list.is_empty() else v
 
 
-## The dummy's ways B steps under the rule set now (the % ring's or the classic's).
+## The dummy's ways B steps under the rule set now (the new ring's, Lives or Zones, or round 2's classic).
 static func dummy_ways() -> Array:
-	return STOCK_DUMMIES if rule_set() == "stock" else DUMMIES
+	return STOCK_DUMMIES if rule_set() in RingRules.NEW_RING else DUMMIES
 
 
 ## The practice dummy's move for `what` as "id/variation" ("" none): "throw" its element's key 1 first move (earth Spike,

@@ -128,9 +128,10 @@ static func data() -> Dictionary:
 	return _merged
 
 
-## Round 3: the numbers read through rule set `m`'s overlay from now on ("stock": modes.stock; anything else the base).
+## Round 3: the numbers read through rule set `m`'s overlay from now on ("stock" and "zones", the new ring: modes.stock;
+## anything else the base).
 static func set_mode(m: String) -> void:
-	var want := m if m == "stock" else "classic"
+	var want := "stock" if m in RingRules.NEW_RING else "classic"
 	if want != mode:
 		mode = want
 		_merged = {}

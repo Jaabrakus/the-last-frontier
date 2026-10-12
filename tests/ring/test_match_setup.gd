@@ -281,7 +281,7 @@ func _round3() -> void:
 			and MatchSetup.games_label() == "best of 3", "rules=lives games=3: %s \"%s\", %d \"%s\"" % [MatchSetup.rule_set(),
 			MatchSetup.rule_label(), MatchSetup.games(), MatchSetup.games_label()])
 	MatchSetup.parse(PackedStringArray(["rules=zones", "games=2", "speed=x", "steer=sideways"]))
-	check(MatchSetup.rule_set() == "classic" and MatchSetup.rule_label() == "Zones" and MatchSetup.games() == 3
+	check(MatchSetup.rule_set() == "zones" and MatchSetup.rule_label() == "Zones" and MatchSetup.games() == 3
 			and MatchSetup.speed == 0.5 and MatchSetup.steer == "out", "rules=zones: \"Zones\"; a bad games, speed, steer left alone")
 	var was := MatchSetup.kind
 	MatchSetup.kind = "match"
@@ -299,12 +299,14 @@ func _round3() -> void:
 	MatchSetup.fresh = false
 	MatchSetup.throw_me = false
 	MatchSetup.load()
-	check(MatchSetup.rule_set() == "classic" and MatchSetup.games() == 3 and MatchSetup.practice_pct() == {"foe": 120.0, "player": 60.0}
+	check(MatchSetup.rule_set() == "zones" and MatchSetup.games() == 3 and MatchSetup.practice_pct() == {"foe": 120.0, "player": 60.0}
 			and MatchSetup.steer == "out" and MatchSetup.speed == 0.5 and MatchSetup.fresh and MatchSetup.throw_me,
 			"round 3's rows kept: save() then load() (%s %d %s %s %.2f %s %s)" % [MatchSetup.rule_set(), MatchSetup.games(),
 			MatchSetup.practice_pct(), MatchSetup.steer, MatchSetup.speed, MatchSetup.fresh, MatchSetup.throw_me])
 	check(MatchSetup.pct_label(-1.0) == "grows" and MatchSetup.pct_label(120.0) == "120%", "the % rows' words")
-	check(MatchSetup.dummy_ways() == MatchSetup.DUMMIES, "zones: B steps the classic ways")
+	check(MatchSetup.dummy_ways() == MatchSetup.STOCK_DUMMIES, "zones (the new ring, 2026-10-11): B steps the new ring's ways")
+	MatchSetup.rules_choice = "classic"
+	check(MatchSetup.dummy_ways() == MatchSetup.DUMMIES, "round 2's classic (rules=classic): B steps the classic ways")
 	MatchSetup.rules_choice = "stock"
 	check(MatchSetup.dummy_ways() == MatchSetup.STOCK_DUMMIES and MatchSetup.dummy_line("guard_after") == "guards after a hit",
 			"lives: B steps the %% ring's ways (%s)" % MatchSetup.dummy_line("guard_after"))
@@ -507,7 +509,7 @@ func _menu() -> void:
 	check(MatchSetup.games() == games_was, "and back to %d" % games_was)
 	rul.chip(1).pressed.emit()
 	await frames(1)
-	check(MatchSetup.rule_set() == "classic" and rnd_row.visible and not gms_row.visible and MatchSetup.rule_label() == "Zones",
+	check(MatchSetup.rule_set() == "zones" and rnd_row.visible and not gms_row.visible and MatchSetup.rule_label() == "Zones",
 			"Zones: the Rounds row shown in its place (%s)" % MatchSetup.rule_set())
 	var rnd := mc.find_child("Rounds", true, false) as BroadcastUI.Segments
 	rnd.chip(2).pressed.emit()

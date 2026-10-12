@@ -200,7 +200,7 @@ func _process(dt: float) -> void:
 		return
 	# (the first-time panel's place, top left: it gave way as these came up; round 4: in the % ring under your plate)
 	var vh := get_viewport().get_visible_rect().size.y
-	var under := PercentBar.top_plates_bottom(vh) if RingRules.stock_on() else -1.0
+	var under := PercentBar.top_plates_bottom(vh) if RingRules.pct_on() else -1.0
 	_panel.position = Vector2(36.0 * _s, under + PercentBar.cnum("hints_gap", 12.0) * vh / 720.0 if under >= 0.0 else 36.0 * _s)
 
 

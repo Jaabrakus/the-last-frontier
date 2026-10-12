@@ -251,7 +251,7 @@ func _ready() -> void:
 	_diff = _opt_row(_setup, "Difficulty", "Difficulty", _cap_words(MatchSetup.DIFFICULTIES), cycle_difficulty, func(i: int) -> void:
 		MatchSetup.difficulty = String(MatchSetup.DIFFICULTIES[i])
 		_picked(_diff_text()))
-	_rules = _opt_row(_setup, "Rules", "Rules", [MatchSetup.rule_label("stock"), MatchSetup.rule_label("classic")], cycle_rules, func(i: int) -> void:
+	_rules = _opt_row(_setup, "Rules", "Rules", [MatchSetup.rule_label("stock"), MatchSetup.rule_label("zones")], cycle_rules, func(i: int) -> void:
 		MatchSetup.rules_choice = String(MatchSetup.RULE_SETS[i])
 		MatchSetup.save()
 		_picked(_rules_text()))
@@ -407,7 +407,7 @@ func note_text() -> String:
 func _restart_line() -> String:
 	if match_mode != null and match_mode.practice:
 		return w("restart_line_practice")
-	return w("restart_line_game") if RingRules.stock_on() else w("restart_line")
+	return w("restart_line_game") if RingRules.pct_on() else w("restart_line")
 
 
 ## The Match setup row's line: what the next restart plays ("Earth vs Water  ·  normal  ·  Lives").
@@ -496,7 +496,7 @@ func _bug_side(r: Rect2, el: String, who: String, lives: int, max_lives: int, ri
 	var gl := BroadcastUI.glyph(el, BroadcastUI.INK, 34.0, pc)
 	var nm := BroadcastUI.caps(who, BroadcastUI.head(true, 2), 42, BroadcastUI.INK, HORIZONTAL_ALIGNMENT_RIGHT if right else HORIZONTAL_ALIGNMENT_LEFT)
 	var pips := BroadcastUI.hbox(5)
-	if RingRules.stock_on():
+	if RingRules.pct_on():
 		for i in max_lives:
 			pips.add_child(BroadcastUI.glyph("diamond", BroadcastUI.INK if i < lives else Color(BroadcastUI.INK, 0.22), 14.0))
 	if not right:
@@ -764,7 +764,7 @@ func _diff_text() -> String:
 
 func _paint() -> void:
 	_set_row(_setup_row, w("match_setup"), _setup_line())
-	_set_row(_options_row, w("options"), w("options_line") if RingRules.stock_on() else w("options_line_zones"))
+	_set_row(_options_row, w("options"), w("options_line") if RingRules.pct_on() else w("options_line_zones"))
 	var rs := _items.find_child("Restart", false, false) as Button
 	_set_row(rs, w("restart"), _restart_line())
 	var els: Array = Bending.ELEMENTS

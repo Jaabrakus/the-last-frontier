@@ -488,6 +488,8 @@ func column(i: int) -> Dictionary:
 	var ms := KitWords.key_moves(el, i)
 	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
 	var k := String(heads.get(i, str(i + 1))) if s == "direction" else str(i + 1)
+	if i == 2 and s != "direction" and RingRules.stock_on():
+		k = KitWords.key(&"sprint")          # (the new ring: Shift + a direction is key 3's, Hotbar._shift_dir; the owner, 2026-10-11)
 	out.head = "%s%s%s" % [k, SEP, KitWords.role(el, i)] if i < KEYS else ""
 	if ms.is_empty():
 		return out

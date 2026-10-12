@@ -37,9 +37,15 @@ extends Node
 ## that body may stand now; edge_along(pos, dir) the metres along dir to an open end. allowed_rect(body), edge_m(pos, side).
 ## Read by RingMode and the HUD: team_of, end_of, confined_of, s_of, forward_limit, territory(), health_frac(team), knocks.
 ## ROUND 3, THE % LAYER (smash_r3 spec v2 §2, §3, §6.7, §7, §8, §14.3; PERCENT's; every number in rules.json stock). THE
-## GATE: stock_on() is true only while an installed RingRules has rule_set "stock" (pick_rule_set(): rule_set_override, the
-## user arg rules=, else rules.json rule_set, "stock" by default; "classic" is today's zones, and with it every rule below is
-## off: the classic code above runs untouched). Under stock: no zones, no confinement, no soft walls, no winding, no edge
+## GATE: stock_on() is true only while an installed RingRules has rule_set "stock" or "zones" (pick_rule_set(): rule_set_override,
+## the user arg rules=, else rules.json rule_set, "stock" by default; "classic" is round 2's zones, and with it every rule below
+## is off: the classic code above runs untouched). ZONES (the owner, 2026-10-11: "zones is still good ... but it should have
+## all the new bending movements"; picked: hits like Lives, the new deep-water deck): rule_set "zones" is the new ring in every
+## move, knock and stage (stock_on() true: MOVE's RingMoves, AIR, the launches, the stock deck), only its scoring the zones':
+## the ledger a damage meter (pct_on() false: no lives, spouts or clock), the launch at 0% always (it never grows), at
+## zones.wind_pct winded (_zones_wind: back a zone, the meter to winded_refill's share; in the last zone out), the zone lines'
+## confinement, the soft walls and advancing as classic's; a ring-out (into the water) or the last winding out of the round.
+## The body's health shows the meter (_hp_sync: the zones' HUD and time-out read health). Under stock: no zones, no confinement, no soft walls, no winding, no edge
 ## guard (forward_limit -INF, bounds_fn_for the deck's rectangle), no knock_scale, no ragdoll (BendKnock.ragdoll_mps INF):
 ##   the ledger  a hit adds d % (never health: BendStatus.hurt does not touch it, and damage that reaches it anyway is turned
 ##               into % by the curve and put back, absorb); d is the move's class's (class_of(tag): stock.classes; a skill
@@ -94,8 +100,11 @@ signal hit_safe(b: Node3D, by: Node, point: Vector3)
 
 const DATA_PATH := "res://data/ring/rules.json"
 const NODE_NAME := "RingRules"
-## The rule sets (rules.json rule_set): "classic" today's zones, "stock" the % layer (round 3).
-const RULE_SETS := ["classic", "stock"]
+## The rule sets (rules.json rule_set): "classic" round 2's zones (kept for its tests), "stock" the % layer (round 3, the
+## menu's Lives), "zones" the zones on the new ring (the menu's Zones).
+const RULE_SETS := ["classic", "stock", "zones"]
+## The rule sets of the new ring (stock_on(): MOVE, AIR, the launches, the stock deck).
+const NEW_RING := ["stock", "zones"]
 
 static var _data := {}
 ## The RingRules installed now (the one BendKnock.rules points at), or null: the gate's owner.
@@ -103,7 +112,7 @@ static var _current: RingRules = null
 ## The rule set the next ring plays, when set ("classic" | "stock"; "": rules=, else rules.json): tests, BOTS' Rules row.
 static var rule_set_override := ""
 
-## This ring's rule set (rules.json rule_set, read as it is installed): "classic" or "stock".
+## This ring's rule set (rules.json rule_set, read as it is installed): "classic", "stock" or "zones".
 var rule_set := "classic"
 
 var ring: RingArena
@@ -173,10 +182,10 @@ func _ready() -> void:
 	BendKnock.rules = self
 	rule_set = pick_rule_set()
 	# (stock: no ragdoll in the ring, the launch is the hit; the intangible moments and the respawn's absence as a filter)
-	BendKnock.ragdoll_mps = INF if rule_set == "stock" else num("ragdoll_mps", 16.0)
+	BendKnock.ragdoll_mps = INF if rule_set in NEW_RING else num("ragdoll_mps", 16.0)
 	_installed = true
 	_current = self
-	if rule_set == "stock" and not BendStatus.take_filters.has(take_ok):
+	if rule_set in NEW_RING and not BendStatus.take_filters.has(take_ok):
 		BendStatus.take_filters.append(take_ok)
 		_filter_on = true
 	# (the grates' reach: a waterbender draws water within grate_reach_m of one: Bending.near_water reads reach_m)
@@ -368,8 +377,8 @@ func edge_along(pos: Vector3, dir: Vector3) -> float:
 	if d.length() < 1e-4:
 		return INF
 	d = d.normalized()
-	if rule_set == "stock":
-		# (stock: all four sides open, no ropes: the metres to the deck's rectangle along dir)
+	if rule_set in NEW_RING:
+		# (stock, zones: all four sides open, no ropes: the metres to the deck's rectangle along dir)
 		var tx := ((signf(d.x) * ring.half_l() - l.x) / d.x) if absf(d.x) > 1e-4 else INF
 		var tz := ((signf(d.z) * ring.half_w() - l.z) / d.z) if absf(d.z) > 1e-4 else INF
 		return maxf(minf(tx, tz), 0.0)
@@ -388,10 +397,15 @@ func clamp_for(pos: Vector3, body: Node3D) -> Vector3:
 	var e := end_of(body)
 	if e < 0 or ring == null:
 		return pos
-	if rule_set == "stock":
-		# (stock: the deck's rectangle only, no zones, no edge guard: MOVE's teeter keeps a walker on)
+	if rule_set in NEW_RING:
+		# (stock: the deck's rectangle only, no zones, no edge guard: MOVE's teeter keeps a walker on; zones: that, from the
+		# body's forward limit back)
 		var ls := ring.to_local(pos)
 		ls.x = clampf(ls.x, -ring.half_l() + 0.6, ring.half_l() - 0.6)
+		if rule_set == "zones":
+			var sg0 := RingArena.side_sign(e)
+			var s0 := clampf(ls.x * sg0, forward_limit(body) + 0.2, ring.half_l() - 0.6)
+			ls.x = s0 * sg0
 		ls.z = clampf(ls.z, -ring.half_w() + 0.6, ring.half_w() - 0.6)
 		# (a team arena's raised pieces: a bot on the deck is sent round them, never into a wall; one up on a perch keeps its
 		# place there)
@@ -414,8 +428,8 @@ func bounds_fn_for(body: Node3D) -> Callable:
 # ---------------------------------------------------------------- knocks (BendKnock.rules)
 ## Every knock in the ring: scaled by knock_scale and the knocker's element, its flat part capped to max_push_m of travel.
 func knock_scale(_n: Node, v: Vector3, by: Node) -> Vector3:
-	if rule_set == "stock":
-		return v                             # (stock: the launch is the class's, worked out in on_hit; knock_scale off)
+	if rule_set in NEW_RING:
+		return v                             # (stock, zones: the launch is the class's, worked out in on_hit; knock_scale off)
 	var el := BendPoses.element_of(by) if by != null and is_instance_valid(by) else ""
 	var f := float((data().get("element_factor", {}) as Dictionary).get(el, 1.0))
 	v *= num("knock_scale", 0.6) * f
@@ -460,6 +474,9 @@ func _physics_process(dt: float) -> void:
 	if rule_set == "stock":
 		_stock_frame(dt)
 		return
+	if rule_set == "zones":
+		_zones_frame(dt)
+		return
 	if not live or ring == null:
 		return
 	for id in state.keys():
@@ -501,6 +518,8 @@ func _knocked(b: Node3D) -> bool:
 	var kn := BendKnock.peek(b)
 	if kn != null and (kn.knock_t > 0.0 or kn.is_launched() or kn.kv.length() > 0.1):
 		return true
+	if kn != null and rule_set == "zones" and kn.stun_t > 0.0:
+		return true                          # (zones: a launch's hitstun, its flight and its landing)
 	var rag := b.get_node_or_null(^"Ragdoll") as PlayerRagdoll
 	return rag != null and rag.is_down()
 
@@ -521,7 +540,7 @@ func _walls(b: Node3D, e: int, dt: float) -> void:
 			step = depth - hard
 		moved = step
 		_stop(b, back)
-	else:
+	elif rule_set != "zones":                # (zones: no edge guard, MOVE's teeter keeps a walker on as in Lives)
 		var edge := ring.half_l() - num("edge_guard_m", 0.35)
 		if s > edge and not _knocked(b) and ring.on_deck(b.global_position):
 			var over := s - edge
@@ -582,8 +601,8 @@ func _on_winded(by: Node, b: Node3D) -> void:
 	var st := _st(b)
 	if st.is_empty():
 		return
-	if rule_set == "stock":
-		absorb(b, by)                        # (stock: no winding, no zones: the blow is %)
+	if rule_set in NEW_RING:
+		absorb(b, by)                        # (stock: no winding, no zones: the blow is %; zones: the meter, _zones_frame winds)
 		return
 	_refill(b)
 	if by != null and is_instance_valid(by) and by != b:
@@ -671,7 +690,17 @@ static func pick_rule_set() -> String:
 
 ## THE GATE: a stock-rules RingRules is installed (a % ring match). False in the open world, the duel and the classic ring.
 static func stock_on() -> bool:
+	return _current != null and is_instance_valid(_current) and _current.rule_set in NEW_RING
+
+
+## The % and the lives count now (Lives: rule_set "stock"): the % plates, the lives, the spouts, the clock. Zones: false.
+static func pct_on() -> bool:
 	return _current != null and is_instance_valid(_current) and _current.rule_set == "stock"
+
+
+## The zones on the new ring now (rule_set "zones").
+static func zones_on() -> bool:
+	return _current != null and is_instance_valid(_current) and _current.rule_set == "zones"
 
 
 ## The RingRules installed now (null: no ring).
@@ -978,6 +1007,7 @@ func add_pct(b: Node, delta: float, by: Node, tag: String) -> void:
 			if t >= 0:
 				_tally(t, "pct_dealt", delta)
 				pct_dealt.emit(by, b as Node3D, delta)
+	_hp_sync(b)
 	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 
@@ -988,6 +1018,7 @@ func mirror_pct(b: Node, v: float) -> void:
 		return
 	var was := float(st.pct)
 	st["pct"] = maxf(v, 0.0)
+	_hp_sync(b)
 	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 
@@ -999,6 +1030,7 @@ func reset_pct(b: Node, to := 0.0) -> void:
 	var was := float(st.pct)
 	st["pct"] = maxf(to, 0.0)
 	(st.fresh as Array).clear()
+	_hp_sync(b)
 	if was != float(st.pct):
 		pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
@@ -1028,6 +1060,7 @@ func patch(b: Node) -> float:
 	var t := team_of(b)
 	if t >= 0:
 		_tally(t, "healed", was - float(st.pct))
+	_hp_sync(b)
 	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 	return was - float(st.pct)
 
@@ -1059,6 +1092,9 @@ func reset_game() -> void:
 	for id in state:
 		var st := state[id] as Dictionary
 		_stock_init(st)
+		st.erase("hp_set")
+		if is_instance_valid(st.get("body")):
+			_hp_sync(st.body)                # (zones: health full with the meter at 0)
 	_stale.clear()
 	_volleys.clear()
 	_once.clear()
@@ -1120,7 +1156,7 @@ func left_spout(b: Node3D) -> void:
 ## and BendStatus's own: dmg (untagged damage), at (the hit point), dir (the hit's travel), v_given (the caller's knock).
 ## {} when the gate is off or n is no competitor: as today.
 func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
-	if not stock_on() or rule_set != "stock":
+	if not stock_on() or not (rule_set in NEW_RING):
 		return {}
 	var st := _sk(n)
 	if st.is_empty():
@@ -1219,7 +1255,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	if from is Vector3:
 		range_m = Vector2(at.x - (from as Vector3).x, at.z - (from as Vector3).z).length()
 	var air := bool(info.get("air", false))
-	var p := pct_of(n)
+	var p := pct_of(n) if rule_set == "stock" else 0.0     # (zones: the meter never grows a launch)
 	var v := launch_v(cls, p, d, w, range_m, air)
 	if by != null and BendStatus.until(by, &"bend_carry_until") > 0.0:
 		v *= BendLoadout.tune_f(by, "stock:carried_mult", stock_num("carried_mult", 1.15))
@@ -1348,9 +1384,19 @@ func _prune_volleys(now: float) -> void:
 			_volleys.erase(k)
 
 
-## The health b has lost (raw damage), his health put back full (stock: health is never touched).
+## The health b has lost (raw damage), his health put back full (stock: health is never touched; zones: put back to what the
+## meter shows, _hp_sync's).
 func take_deficit(b: Node3D) -> float:
 	var deficit := 0.0
+	if rule_set == "zones":
+		var shown: Variant = _st(b).get("hp_set", _hp_max(b))     # (none shown yet: the meter at 0, health full)
+		var now_hp := _hp(b)
+		if now_hp < 0.0:
+			return 0.0
+		deficit = float(shown) - now_hp
+		if deficit > 0.01:
+			_set_hp(b, float(shown))
+		return deficit if deficit > 0.01 else 0.0
 	if b is FrontierPlayer:
 		var p := b as FrontierPlayer
 		deficit = p.max_health - p.health
@@ -1428,6 +1474,130 @@ func _end_string(body: Node3D, st: Dictionary, now: float) -> void:
 					and float(sd.get("pct", 0.0)) > float(best.get("string_pct", 0.0))):
 				best["string_hits"] = hits
 				best["string_pct"] = float(sd.get("pct", 0.0))
+
+
+# ---------------------------------------------------------------- zones on the new ring: each frame (rule_set "zones")
+## The meter at which a body is winded (zones.wind_pct).
+static func wind_pct() -> float:
+	return float((data().get("zones", {}) as Dictionary).get("wind_pct", 100.0)) if data().get("zones") is Dictionary else 100.0
+
+
+## Each frame (zones): stray damage onto the meter, a string over on its first free frame (as stock); then, live, the water
+## (out of the round), the meter full (winded), a launch carrying him back over a zone line (confined to it), the soft walls.
+func _zones_frame(dt: float) -> void:
+	var now := BendStatus.now()
+	for id in state.keys():
+		var st := _sk((state.get(id, {}) as Dictionary).get("body"))
+		if st.is_empty():
+			continue
+		var b: Variant = st.get("body")
+		if not (b is Node3D) or not is_instance_valid(b):
+			continue
+		var body := b as Node3D
+		if bool(st.out) or not body.is_inside_tree():
+			continue
+		if body.has_meta(RingNet.PUPPET_META):
+			continue                             # (a remote body online: judged on its owner's machine, RingNet)
+		if live:
+			absorb(body)
+		if int((st.string as Dictionary).get("hits", 0)) > 0 and not stunned(body):
+			_end_string(body, st, now)
+		if not live or ring == null:
+			continue
+		if ring.is_ring_out(body):
+			_out(body, credit(body), "ringout")
+			if not live:
+				return
+			continue
+		if body is NpcFighter and (body as NpcFighter).arm_broken != "":
+			(body as NpcFighter).arm_broken = ""   # (no running from the deck on a broken arm: the ring's no maims)
+		if pct_of(body) >= wind_pct():
+			var lb: Variant = st.get("last_by")
+			_zones_wind(body, lb as Node if lb is Node and is_instance_valid(lb) else null)
+			if not live:
+				return
+			if bool(st.out):
+				continue
+		var e := end_of(body)
+		var z := ring.zone_of(body.global_position, e)
+		var c := int(st.confined)
+		if z > c and z <= zones() and _knocked(body):
+			st["confined"] = z
+			knocked_back.emit(body, c, z)
+		_walls(body, e, dt)
+
+
+## The meter full (zones): pushed back a zone (set winded_back_m behind its line, his launch ended), the meter down to
+## winded_refill's share of it; winded in the last zone: out of the round, the winder's.
+func _zones_wind(b: Node3D, by: Node) -> void:
+	var st := _st(b)
+	if st.is_empty() or bool(st.out):
+		return
+	var who: Node = by if by != null and is_instance_valid(by) and by != b else credit(b)
+	if who != null:
+		st["by"] = who
+	reset_pct(b, wind_pct() * (1.0 - clampf(num("winded_refill", 0.4), 0.0, 1.0)))
+	var c := int(st.confined)
+	if c >= zones():
+		_out(b, who, "winded")
+		return
+	var to := c + 1
+	st["confined"] = to
+	var e := end_of(b)
+	var want := ring.line_s(e, to - 1) + num("winded_back_m", 0.6)
+	var s := ring.s_of(b.global_position, e)
+	if s < want:
+		var back := ring.axis() * RingArena.side_sign(e)
+		back.y = 0.0
+		b.global_position += back.normalized() * (want - s)
+		if b is CharacterBody3D:
+			(b as CharacterBody3D).velocity = Vector3.ZERO
+	var kn := BendKnock.peek(b)
+	if kn != null:
+		kn.reset()
+	BendStatus.unfloat(b)
+	knocked_back.emit(b, c, to)
+	winded.emit(b, who, to)
+
+
+## Zones: the body's health shows the meter (full at 0, empty at wind_pct): the zones' HUD, health_frac and the time-out read
+## it; hp_set keeps what was shown (take_deficit: damage that reached health past it goes onto the meter).
+func _hp_sync(b: Node) -> void:
+	if rule_set != "zones" or not (b is Node3D) or not is_instance_valid(b):
+		return
+	var st := _st(b)
+	if st.is_empty():
+		return
+	var most := _hp_max(b)
+	if most <= 0.0:
+		return
+	var v := most * clampf(1.0 - pct_of(b) / maxf(wind_pct(), 1.0), 0.0, 1.0)
+	v = maxf(v, 0.5)                         # (never 0 from the meter: the body's own winding is the meter's, not its)
+	_set_hp(b, v)
+	st["hp_set"] = v
+
+
+func _hp(b: Node) -> float:
+	if b is FrontierPlayer:
+		return (b as FrontierPlayer).health
+	if b is NpcFighter:
+		return (b as NpcFighter).health
+	return -1.0
+
+
+func _hp_max(b: Node) -> float:
+	if b is FrontierPlayer:
+		return (b as FrontierPlayer).max_health
+	if b is NpcFighter:
+		return (b as NpcFighter).health_max
+	return 0.0
+
+
+func _set_hp(b: Node, v: float) -> void:
+	if b is FrontierPlayer:
+		(b as FrontierPlayer).health = v
+	elif b is NpcFighter:
+		(b as NpcFighter).health = v
 
 
 ## b into the water (spec §7.1, §5.2): a life gone, credited to the last knocker within knock_credit_s (else his own fall),

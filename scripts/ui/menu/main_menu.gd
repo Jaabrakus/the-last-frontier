@@ -1296,7 +1296,7 @@ func _open_match() -> void:
 		MatchSetup.difficulty = String(MatchSetup.DIFFICULTIES[i])
 		_paint_setup())
 	y += ROW_H
-	var rul := _setting(mc, "Rules", y, "RULES", [MatchSetup.rule_label("stock"), MatchSetup.rule_label("classic")],
+	var rul := _setting(mc, "Rules", y, "RULES", [MatchSetup.rule_label("stock"), MatchSetup.rule_label("zones")],
 			MatchSetup.RULE_SETS.find(MatchSetup.rule_set()), 20)
 	rul.picked.connect(func(i: int) -> void:
 		MatchSetup.rules_choice = String(MatchSetup.RULE_SETS[i])

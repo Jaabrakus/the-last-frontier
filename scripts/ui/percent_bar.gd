@@ -107,7 +107,7 @@ func _exit_tree() -> void:
 func _process(dt: float) -> void:
 	_t += dt
 	var m := match_node()
-	var on := m != null and player != null and is_instance_valid(player) and RingRules.stock_on()
+	var on := m != null and player != null and is_instance_valid(player) and RingRules.pct_on()
 	right_bottom = -1.0
 	if not on:
 		if visible:

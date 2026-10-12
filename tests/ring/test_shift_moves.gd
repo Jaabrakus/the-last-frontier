@@ -1,0 +1,158 @@
+extends SceneTree
+## The movement spells on Shift + a direction, no sprint in the ring (the owner, 2026-10-11: "those movement spells we keep it as
+## shift and then hit a direction button it would be easier then hiting 3 right and then we can use 3 for a different move";
+## picked: no sprint in the ring). Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, fire against water, the foe
+## held), the player's controls driven (PlayerControls.set_held, as a duel AI's):
+##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_shift_moves.gd -- [rules=stock|zones]
+##   the chord    Shift held, then a direction: key 3's movement spell (SwayCaster.last_key3 "dash"); a direction held, then
+##                Shift: the same; Shift alone, a direction alone, Shift + Space, the guard held + Shift + a direction:
+##                never key 3; in the air Shift + a direction: the air dodge (last_key3 "dodge")
+##   no sprint    Shift and W held 2 s: the run's speed (movement.json physics.run), never the old sprint's
+##   the words    the strip's key 3 shows Shift; F1 says Shift + a direction dashes
+## The last line "SHIFT MOVES PASSED (<n> checks)" or "SHIFT MOVES FAILED (<f> of <n>)".
+
+const LIMIT_S := 150.0
+
+var checks := 0
+var fails: Array[String] = []
+var p: FrontierPlayer
+var c: SwayCaster
+var ctl: PlayerControls
+var rules := "stock"
+
+
+func _expect(ok: bool, what: String) -> void:
+	checks += 1
+	print(("  ok   " if ok else "  FAIL ") + what)
+	if not ok:
+		fails.append(what)
+
+
+func _initialize() -> void:
+	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
+		print("SHIFT MOVES FAILED (watchdog)")
+		quit(2))
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("rules=") and a.substr(6) in ["stock", "zones"]:
+			rules = a.substr(6)
+	MatchSetup.set_match()
+	MatchSetup.incoming = true
+	MatchSetup.format = "1v1"
+	MatchSetup.element = "fire"
+	MatchSetup.foes = ["water"]
+	RingRules.rule_set_override = rules
+	SwayCaster.free_override = true
+	InputSetup.ensure()
+	change_scene_to_file("res://scenes/ring.tscn")
+	_run.call_deferred()
+
+
+func _end() -> void:
+	RingRules.rule_set_override = ""
+	if fails.is_empty() and checks > 0:
+		print("SHIFT MOVES PASSED (%d checks)" % checks)
+		quit(0)
+	else:
+		for f in fails:
+			print("  FAIL " + f)
+		print("SHIFT MOVES FAILED (%d of %d)" % [fails.size(), checks])
+		quit(1)
+
+
+func _ticks(n: int) -> void:
+	for i in n:
+		await physics_frame
+
+
+func _until(cond: Callable, s: float) -> bool:
+	var end := Time.get_ticks_msec() + int(s * 1000.0)
+	while Time.get_ticks_msec() < end:
+		if cond.call():
+			return true
+		await physics_frame
+	return bool(cond.call())
+
+
+## Every key let go, the player landed and still on the deck again, the caster idle (the next case from rest: Fire's step
+## carries him through the air a good second).
+func _rest() -> void:
+	ctl.release_all()
+	await _ticks(20)
+	await _until(_settled, 5.0)
+	await _ticks(10)
+	c.last_key3 = ""
+
+
+func _settled() -> bool:
+	var rm := RingMoves.of(p)
+	return not c.airborne() and p.is_on_floor() and c.state == SwayCaster.State.IDLE and (rm == null or rm.mode == "") \
+			and Vector2(p.velocity.x, p.velocity.z).length() < 0.2
+
+
+## Keys pressed in turn, `gap` physics frames apart (each held from its press), then held `hold` frames; key 3's word after.
+func _press(keys: Array, gap := 2, hold := 4) -> String:
+	await physics_frame
+	for k: StringName in keys:
+		ctl.set_held(k, true)
+		await _ticks(gap)
+	await _ticks(hold)
+	return c.last_key3
+
+
+func _run() -> void:
+	for i in 20:
+		await process_frame
+	var lvl := current_scene as RingLevel
+	p = lvl.player if lvl != null else null
+	_expect(p != null, "the ring and its player")
+	if p == null:
+		return _end()
+	p.ignore_mouse_capture = true
+	c = SwayCaster.of(p)
+	var laid := await _until(func() -> bool: return p.arena_element == "fire" and p.hotbar.spell != "", 8.0)
+	var rm := RingMode.find(self)
+	var fight := await _until(func() -> bool: return rm.phase == "FIGHT", 10.0)
+	_expect(laid and fight and RingRules.stock_on() and rm.rules.rule_set == rules,
+			"fire's keys laid, the fight on, the new ring (%s)" % rm.rules.rule_set)
+	if rm.foe != null:
+		rm.foe.held = true
+	ctl = PlayerControls.new(false)
+	p.controls = ctl
+	await _rest()
+	# ---- the chord, both orders
+	_expect(await _press([&"sprint", &"move_left"]) == "dash", "Shift, then A: key 3's movement spell (%s)" % c.last_key3)
+	await _rest()
+	_expect(await _press([&"move_right", &"sprint"], 6) == "dash", "D held, then Shift: key 3's movement spell (%s)" % c.last_key3)
+	await _rest()
+	# ---- never key 3
+	_expect(await _press([&"sprint"], 2, 20) == "", "Shift alone: nothing (%s)" % c.last_key3)
+	await _rest()
+	_expect(await _press([&"move_forward"], 2, 20) == "", "W alone: nothing (%s)" % c.last_key3)
+	await _rest()
+	_expect(await _press([&"sprint", &"jump"], 1, 6) == "", "Shift + Space: no movement spell (%s)" % c.last_key3)
+	await _rest()
+	_expect(await _press([InputSetup.GUARD_ACTION, &"sprint", &"move_back"], 3, 6) == "",
+			"the guard held + Shift + S: the guard's own Roll, not key 3 (%s)" % c.last_key3)
+	await _rest()
+	# ---- in the air: the air dodge
+	ctl.set_held(&"jump", true)
+	await _ticks(10)
+	ctl.set_held(&"jump", false)
+	var air := RingMoves.of(p) != null and RingMoves.of(p).airborne()
+	var said := await _press([&"sprint", &"move_left"], 2, 3)
+	_expect(air and said == "dodge", "in the air, Shift + A: the air dodge (airborne %s, %s)" % [air, said])
+	await _rest()
+	# ---- no sprint: Shift and W held 2 s (the dash it fires first is over by the end)
+	await _press([&"move_forward", &"sprint"], 4, 0)
+	await _ticks(120)
+	var v := Vector2(p.velocity.x, p.velocity.z).length()
+	var run := float((RingMoves.data().get("physics", {}) as Dictionary).get("run", 5.0))
+	_expect(v <= run + 0.15, "Shift + W held: the run's %.2f m/s, no sprint (%.2f)" % [run, v])
+	await _rest()
+	# ---- the words
+	var strip: Variant = p.hud.get(&"bend_strip") if p.hud != null else null
+	var col: Dictionary = (strip as BendStrip).column(2) if strip is BendStrip else {}
+	_expect(String(col.get("head", "")).begins_with(KitWords.key(&"sprint")), "the strip's key 3 reads Shift (%s)" % col.get("head", ""))
+	var help := String(p.hud.call(&"help_text")) if p.hud != null else ""
+	_expect(help.contains("Shift + a direction dash") and not help.contains("Shift sprint"), "F1: Shift + a direction dashes")
+	_end()

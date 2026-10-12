@@ -229,6 +229,7 @@ func _ready() -> void:
 func _physics_process(dt: float) -> void:
 	_follow_caster()
 	_follow_scheme()
+	_shift_dir()
 	if not kit_placed:
 		_kit_t += dt
 		if _kit_t >= KIT_S:
@@ -681,6 +682,24 @@ func hands_free() -> void:
 	_tools_away()
 	if not player.hands_free:
 		player.toggle_hands_free()
+
+
+## The new ring (RingRules.stock_on: Lives or Zones; the owner, 2026-10-11: "those movement spells we keep it as shift and then
+## hit a direction button ... then we can use 3 for a different move"): Shift + a direction, in either order (the second press
+## makes the pair), is key 3 (select(2): the element's movement spell on the deck, the air dodge in the air) toward the held
+## keys (SwayCaster.held_world); the direction again within key3_min_s is key 3's second tap (its other move). Never with the
+## guard held (the guard's Roll is E + a direction) nor with Space (Shift + Space drops off a ledge: RingMoves._drop_off).
+func _shift_dir() -> void:
+	if player == null or not player.arena or player.is_dead or not RingRules.stock_on():
+		return
+	var c := player.controls
+	if c == null or not c.pressed(&"sprint") or c.pressed(InputSetup.GUARD_ACTION) or c.pressed(&"jump"):
+		return
+	var fresh := false
+	for a: StringName in [&"move_forward", &"move_back", &"move_left", &"move_right"]:
+		fresh = fresh or c.just_pressed(a)
+	if fresh or (c.just_pressed(&"sprint") and c.move_vector().length() > 0.3):
+		select(2)
 
 
 ## The player's key event (FrontierPlayer._unhandled_input): true when it was a slot key or the wheel.

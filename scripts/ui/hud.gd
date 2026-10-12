@@ -73,10 +73,12 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 ## the four rules (KitWords.rule_lines: the lock, the guard, the counters, the floor and the air), Q, the ring's rule
 ## (ARENA_RING: the rule set's own, the % ring's lives or the zones).
 ## ("Ctrl/C" held together by word joiners: the wrapped column broke it at the slash at 1280x720.)
-const ARENA_HELP := "WASD move · Shift sprint · Space jump, even while you hold a cast · Ctrl⁠/⁠C crouch\n" \
+const ARENA_HELP := "WASD move · %SHIFT% · Space jump, even while you hold a cast · Ctrl⁠/⁠C crouch\n" \
 		+ "%KEYS%\n%RULES%\n" \
 		+ "{quick}: the readied move onto LMB · hold {quick}: your jab back · F1 this help · Esc free mouse\n" \
 		+ "%RING%"
+## F1's Shift: the new ring's movement spells (Hotbar._shift_dir; no sprint there, the owner 2026-10-11), else the sprint.
+const ARENA_SHIFT := {"ring": "Shift + a direction dash", "else": "Shift sprint"}
 ## F1's last line, the ring's rule, per rule set (RingRules.stock_on(): "stock" the % ring's lives; else the zones).
 const ARENA_RING := {
 	"stock": "Three lives each: into the water loses one, and the last side with lives left takes the game",
@@ -114,7 +116,8 @@ func help_text() -> String:
 	if arena:
 		var keys_l := String(ARENA_KEYS.get(KitWords.scheme_id(), ARENA_KEYS.keys))
 		var h := ARENA_HELP.replace("%KEYS%", keys_l).replace("%RULES%", "\n".join(PackedStringArray(KitWords.rule_lines())))
-		h = h.replace("%RING%", String(ARENA_RING.stock if RingRules.stock_on() else ARENA_RING.classic))
+		h = h.replace("%SHIFT%", String(ARENA_SHIFT.ring if RingRules.stock_on() else ARENA_SHIFT["else"]))
+		h = h.replace("%RING%", String(ARENA_RING.stock if RingRules.pct_on() else ARENA_RING.classic))
 		return KitWords.keyed(h)
 	# (the control scheme's own line for how moves are chosen, outside the keys scheme)
 	var scheme_l := KitWords.help_line() if KitWords.scheme_id() != "keys" else ""
@@ -467,8 +470,8 @@ func set_arena(on: bool) -> void:
 		compass.visible = not on
 	if bend_strip != null:
 		bend_strip.visible = on
-		# (round 3: the % ring's plates in place of the zones' bar; the classic ring keeps the MatchBar)
-		var pct := RingRules.stock_on()
+		# (round 3: the % ring's plates in place of the zones' bar; the zones, classic or on the new ring, keep the MatchBar)
+		var pct := RingRules.pct_on()
 		match_bar.visible = on and not pct
 		match_bar.set_process(not pct)
 		percent_bar.set_process(on)

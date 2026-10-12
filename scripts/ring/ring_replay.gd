@@ -470,6 +470,7 @@ func _hook(b: Node3D, si: int) -> void:
 		r.launched.connect(_on_launched)
 		r.pct_changed.connect(_on_pct)
 		r.ko.connect(_on_ko)
+		r.rang_out.connect(_on_out)
 	var bc := BendCaster.of(b)
 	if bc == null or _hooked.has(bc.get_instance_id()):
 		return
@@ -651,6 +652,14 @@ func _on_pct(b: Node3D, _pct: float, delta: float) -> void:
 ## A clash (BendClash.clashed): its event (the two kinds; who sent the first).
 func on_clash(at: Vector3, ka: String, kb: String, dir: Vector3, by_a: Node, _by_b: Node) -> void:
 	note_event(Ev.CLASH, at, dir, ka if ka in ELS else "stone", slot_index(by_a), ELS.find(kb))
+
+
+## Zones on the new ring (RingRules rule_set "zones": no lives, no ko): a ring-out into the water is its fall, the round's
+## end for him (as a last life).
+func _on_out(b: Node3D, by: Node) -> void:
+	var r := _rules()
+	if r != null and r.rule_set == "zones" and String(r.last_out.get("why", "")) == "ringout":
+		_on_ko(b, by, 0.0, "", 0)
 
 
 func _on_ko(b: Node3D, by: Node, _pct: float, _tag: String, left: int) -> void:

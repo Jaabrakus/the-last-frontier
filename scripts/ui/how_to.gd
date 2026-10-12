@@ -233,7 +233,7 @@ func _doing(id: String) -> bool:
 		"ring", "ring_stock":
 			var moves := scheme_topic()
 			return p.arena and seen.has(moves) and current != moves and not _hints_up() \
-					and RingRules.stock_on() == (id == "ring_stock")
+					and RingRules.pct_on() == (id == "ring_stock")
 	return false
 
 

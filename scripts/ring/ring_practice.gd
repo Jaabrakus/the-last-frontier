@@ -189,7 +189,7 @@ func _lay_lines() -> void:
 	if hint_back == null or not hint_back.is_inside_tree():
 		return
 	var vh := hint_back.get_viewport_rect().size.y
-	var under := PercentBar.top_plates_bottom(vh) if stock() else -1.0
+	var under := PercentBar.top_plates_bottom(vh) if RingRules.pct_on() else -1.0
 	var dy := maxf(under + PercentBar.cnum("hints_gap", 12.0) * vh / 720.0 - 112.0, 0.0) if under >= 0.0 else 0.0
 	if is_equal_approx(dy, _dy):
 		return

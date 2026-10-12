@@ -367,7 +367,7 @@
       ],
       "by": {
         "*": {
-          "line": "[weapon_3] in the air dodges",
+          "line": "[sprint] + a direction in the air dodges",
           "do": "air_dodge"
         }
       }
@@ -559,7 +559,7 @@
       {"line": "Hold [bend_guard]: guard", "uses": ["bend_guard"]},
       {"line": "[jump]: jump · Thrown off? Hold [jump] for help", "uses": ["jump"], "rules": ["stock"]},
       {"line": "[jump]: jump", "uses": ["jump"], "rules": ["classic"]},
-      {"line": "[weapon_3]: dash on the deck", "uses": ["weapon_3"]}
+      {"line": "[sprint] + a direction: dash", "uses": ["sprint"]}
     ],
     "keys": [
       {
@@ -575,12 +575,12 @@
         ]
       },
       {
-        "line": "[weapon_1] to [weapon_4]: strike, push, dash, wall",
+        "line": "[weapon_1] strike  ·  [weapon_2] push  ·  [weapon_4] wall  ·  [sprint] + a direction: dash",
         "uses": [
           "weapon_1",
           "weapon_2",
-          "weapon_3",
-          "weapon_4"
+          "weapon_4",
+          "sprint"
         ]
       },
       {
@@ -590,10 +590,10 @@
         ]
       },
       {
-        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
         "uses": [
           "jump",
-          "weapon_3"
+          "sprint"
         ],
         "rules": [
           "stock"
@@ -640,10 +640,10 @@
         ]
       },
       {
-        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
         "uses": [
           "jump",
-          "weapon_3"
+          "sprint"
         ],
         "rules": [
           "stock"
@@ -682,10 +682,10 @@
         ]
       },
       {
-        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
         "uses": [
           "jump",
-          "weapon_3"
+          "sprint"
         ],
         "rules": [
           "stock"
@@ -712,12 +712,12 @@
         ]
       },
       {
-        "line": "[weapon_1] to [weapon_4]: strike, push, dash, wall",
+        "line": "[weapon_1] strike  ·  [weapon_2] push  ·  [weapon_4] wall  ·  [sprint] + a direction: dash",
         "uses": [
           "weapon_1",
           "weapon_2",
-          "weapon_3",
-          "weapon_4"
+          "weapon_4",
+          "sprint"
         ]
       },
       {
@@ -727,10 +727,10 @@
         ]
       },
       {
-        "line": "[jump] twice  ·  [weapon_3] in the air",
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
         "uses": [
           "jump",
-          "weapon_3"
+          "sprint"
         ],
         "rules": [
           "stock"

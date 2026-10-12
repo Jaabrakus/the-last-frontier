@@ -70,6 +70,7 @@
 		"rules_line_classic": "push them back through three zones and off the open end into the water",
 		"stock": "Lives",
 		"classic": "Zones",
+		"zones": "Zones",
 		"games": "Games:  %s",
 		"games_line": "from the next restart",
 		"games_line_menu": "one game, or best of 3: the first to take two",

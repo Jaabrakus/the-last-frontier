@@ -328,7 +328,7 @@ func _follow(m: RingMode) -> void:
 	m.rang_out.connect(func(_w: Node3D, _by: Node) -> void:
 		if not m.stock():
 			cheer(1.0, 3.5))
-	if not m.stock() or m.rules == null:
+	if not m.new_ring() or m.rules == null:
 		return
 	var rules := m.rules
 	rules.launched.connect(func(_b: Node3D, v: Vector3, _hs: float, _by: Node, _tag: String) -> void:
