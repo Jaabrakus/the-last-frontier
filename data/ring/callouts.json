@@ -19,7 +19,7 @@
     "clash": {"word": "CLASH!", "priority": 2, "who": "any"},
     "comeback": {"word": "COMEBACK!", "priority": 8, "who": "mine"},
     "last_life": {"word": "LAST LIFE", "priority": 7, "who": "any"},
-    "ignited": {"word": "IGNITED!", "priority": 3, "who": "any", "_why": "a gas cloud lit by fire (the skill tree's reaction rules: reactions called out here only; FireTalents.ignite). Classic makes no gas"}
+    "ignited": {"word": "IGNITED!", "priority": 2, "who": "any"}
   },
   "row": {"label": "Callouts: %s", "line": "Big words for big moments", "on": "On", "off": "Off"},
   "_clash": "A clash (two attacks meeting): a two-colour burst of each element's bits (n each, size, speed m/s, spread deg), a flash and two shockwave rings standing in the air at the meeting point (life s, scale from .. to), a light, one sound ([id, gain dB, pitch]: the clash id when the sounds have one, else the loudest hit), and a shared hold of both casters' poses through BendImpact when it is there (hold_s).",

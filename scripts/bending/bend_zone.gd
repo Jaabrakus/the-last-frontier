@@ -548,10 +548,6 @@ func _every(dt: float) -> void:
 				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
 	_inside_was = now_in
-	if kind == "seam":
-		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
-	if kind == "gas":
-		FireTalents.gas_every(self)                # (a fire wall, floor fire or a seam touching the cloud lights it)
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -560,6 +556,10 @@ func _every(dt: float) -> void:
 				if not SbFx.fire(o.owner_node, SbFx.key_of(o.info), "put_out", {"at": o.global_position, "dir": o.way}):
 					BendLooks.burst(o.global_position + Vector3.UP, "steam", 30, Vector3.UP, 90.0, 2.5, 1.0)
 				o.end()
+	if kind == "seam":
+		FireTalents.seam_water(self)               # (water on a seam cools it to obsidian; mud quenches it)
+	if kind == "gas":
+		FireTalents.gas_every(self)                # (a fire wall, floor fire or a seam touching the cloud lights it: until earth's BendGas)
 
 
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)

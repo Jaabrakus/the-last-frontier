@@ -34,12 +34,14 @@ extends SceneTree
 ##   Cauterize         Patch's key tapped twice readies Cauterize (Classic: Patch again); a real Cauterize with 20% fresh
 ##                     leaves 10% (2% cost, 12% back), with 6% fresh leaves 2% (the cost is never taken back); its lock 1.2 s,
 ##                     his Patch's 1.7 s (Classic 1.5 s)
-##   Flashfire         gas (the Sulphur set's cloud, earth's: a round BendZone of kind gas, made here as earth's lane will
-##                     make it) lit by fire burns (anyone's fire: the set's rule): a real Embers cast through a cloud round the
-##                     foe bursts it, the burst his: 8% and a set 8 m/s (Classic 6 and 6); 1 m farther (a foe 3 m from a 2.5 m
-##                     cloud's middle burnt only worn); never on the lighter standing in it; whoever made the gas, the lighter
-##                     owns it; it stales as the Embers; his Embers 6% (7); the Breath and a fire wall light it too, water does
-##                     not; a bot wearing it lights the player's gas bigger and wants its Embers at a foe in gas
+##   Flashfire         gas (the Sulphur set's cloud, earth's: a round BendZone of kind gas, made here as earth's lane makes
+##                     it) lit by fire burns (anyone's fire: the world rule Ignited Sulphur): a real Embers cast through a cloud
+##                     round the foe bursts it, the burst his: 8% and a set 8 m/s (Classic 6 and 6); the burst 1.5x the cloud
+##                     (a foe 3.25 m from a 2.5 m cloud's middle, outside it, burnt worn or not) and 1 m farther worn (4.25 m:
+##                     only worn; FireTalents.flash_reach); never on the lighter standing in it; whoever made the gas, the
+##                     lighter owns it; it stales as the Embers; his Embers 6% (7); the Breath and a fire wall light it too,
+##                     water does not; a bot wearing it lights the player's gas bigger and wants its Embers at a foe in gas.
+##                     The same checks hold through earth's BendGas once the lanes are merged (FireTalents.earth_gas)
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
@@ -1091,8 +1093,15 @@ var _launch: Array = []                ## [on, launch v, by, tag] (RingRules.lau
 
 ## A gas cloud of `owner`'s, `r` m round, on the deck under `at`: the Sulphur set's matter as earth's lane makes it (a round
 ## BendZone of kind gas; earth's set is not built in fire's lane). It lasts 6 s (the set's cloud 3 s): the test's time to cast.
+## Once earth's BendGas is merged (FireTalents.earth_gas) its readers count the clouds its own maker made (BendGas.live_n): this
+## one is counted the same (its end takes it off again).
 func _gas(owner: Node3D, at: Vector3, r := 2.5) -> BendZone:
-	return BendZone.make(owner, "gas", FormEffects.ground_at(owner, at), {"radius_m": r, "round": true, "life_s": 6.0}, Vector3.FORWARD)
+	var z := BendZone.make(owner, "gas", FormEffects.ground_at(owner, at), {"radius_m": r, "round": true, "life_s": 6.0}, Vector3.FORWARD)
+	if FireTalents.earth_gas():
+		var bg: Variant = (load("res://scripts/bending/bend_zone.gd") as Script).get_script_constant_map().get("BendGas")
+		if bg is Script:
+			(bg as Script).set(&"live_n", int((bg as Script).get(&"live_n")) + 1)
+	return z
 
 
 ## The player turned to face `at` (his yaw: the camera's and the crosshair's).
@@ -1193,35 +1202,52 @@ func _flashfire() -> void:
 			"Flashfire: the burst knocks him a set 8 m/s at 45 deg (flat %.2f; Classic 6: %.2f)" % [r1.v, r0.v])
 	_expect(r1.by == p and r0.by == p and bool(r1.called) and bool(r0.called),
 			"the burst is the lighter's though the gas was the foe's, and called out IGNITED! (%s, %s)" % [str(r1.by), str(r0.by)])
-	# 1 m farther: the foe 3 m from the middle of a 2.5 m cloud (outside it), the Embers through its middle and on past him
+	# the burst's reach: 1.5x the cloud (the world rule), 1 m farther worn. The foe 3.25 m, then 4.25 m, from the middle of a
+	# 2.5 m cloud (outside it: 3.75 m Classic, 4.75 m worn), the Embers through its middle and on past him
+	print("  (gas lit by %s)" % ("earth's BendGas" if FireTalents.earth_gas() else "fire's stand-in, FireTalents.ignite"))
+	# (a script's static number read and written through the script, as _gas counts a cloud for earth's BendGas once merged:
+	# FireTalents' own cache, written back unchanged)
+	var fts := load("res://scripts/bending/fire_talents.gd") as Script
+	var cached: Variant = fts.get(&"_earth_gas")
+	fts.set(&"_earth_gas", int(cached))
+	_expect(cached is int and int(cached) == (1 if FireTalents.earth_gas() else 0) and int(fts.get(&"_earth_gas")) == int(cached),
+			"a script's static number reads and writes through the script (FireTalents._earth_gas: %s)" % str(cached))
 	var reach := {}
-	for id: String in ["", ff_id]:
-		await _calm()
-		_wear(id)
-		rr._stale.clear()
-		var fwd := -p.global_basis.z
-		fwd.y = 0.0
-		fwd = fwd.normalized()
-		var mid := p.global_position + fwd * 5.0
-		_foe_at = mid + fwd.cross(Vector3.UP).normalized() * 3.0
-		await _ticks(2)
-		var gas := _gas(foe, mid)
-		var d0 := _dealt.size()
-		var l0 := _launch.size()
-		var t0 := BendStatus.now()
-		_embers_at(mid + Vector3.UP * 1.3)
-		await _secs(0.6)
-		var b := _burst_on(foe, d0, l0)
-		var embers_on := BendR3.hits_log.filter(func(h: Dictionary) -> bool: return (h.n == foe and float(h.at) >= t0
-				and String(h.tag) == "fire_jab/embers")).size()
-		reach[id] = {"lit": _burnt(gas), "pct": b[0], "embers": embers_on, "stale_e": rr.stale_count(p, "fire_jab/embers"),
-				"stale_r": rr.stale_count(p, FireTalents.IGNITE_TAG)}
-	var e0: Dictionary = reach[""]
-	var e1: Dictionary = reach[ff_id]
+	for far: float in [3.25, 4.25]:
+		for id: String in ["", ff_id]:
+			await _calm()
+			_wear(id)
+			rr._stale.clear()
+			var fwd := -p.global_basis.z
+			fwd.y = 0.0
+			fwd = fwd.normalized()
+			var mid := p.global_position + fwd * 5.0
+			_foe_at = mid + fwd.cross(Vector3.UP).normalized() * far
+			await _ticks(2)
+			var gas := _gas(foe, mid)
+			var d0 := _dealt.size()
+			var l0 := _launch.size()
+			var t0 := BendStatus.now()
+			_embers_at(mid + Vector3.UP * 1.3)
+			await _secs(0.6)
+			var b := _burst_on(foe, d0, l0)
+			var embers_on := BendR3.hits_log.filter(func(h: Dictionary) -> bool: return (h.n == foe and float(h.at) >= t0
+					and String(h.tag) == "fire_jab/embers")).size()
+			reach["%s@%.2f" % [id, far]] = {"lit": _burnt(gas), "pct": b[0], "embers": embers_on, "flash": FireTalents.flash_reach(p),
+					"stale_e": rr.stale_count(p, "fire_jab/embers"), "stale_r": rr.stale_count(p, FireTalents.IGNITE_TAG)}
+	var n0: Dictionary = reach["@3.25"]
+	var n1: Dictionary = reach[ff_id + "@3.25"]
+	var e0: Dictionary = reach["@4.25"]
+	var e1: Dictionary = reach[ff_id + "@4.25"]
+	_expect(bool(n0.lit) and bool(n1.lit) and int(n0.embers) == 0 and absf(float(n0.pct) - 6.0 * scale) < 0.05
+			and absf(float(n1.pct) - 8.0 * scale) < 0.05,
+			"the burst reaches 1.5x the cloud: a foe 3.25 m from a 2.5 m cloud's middle (outside it) takes %.2f%% (worn %.2f%%)"
+			% [n0.pct, n1.pct])
 	_expect(bool(e0.lit) and bool(e1.lit) and int(e0.embers) == 0 and int(e1.embers) == 0 and float(e0.pct) < 0.01
-			and absf(float(e1.pct) - 8.0 * scale) < 0.05,
-			"Flashfire: 1 m farther: a foe 3 m from the burning cloud's middle takes %.2f%% (Classic, 2.5 m: %.2f%%); no ember touched him"
-			% [e1.pct, e0.pct])
+			and absf(float(e1.pct) - 8.0 * scale) < 0.05 and is_equal_approx(float(e1.flash), 1.0) and is_equal_approx(float(e0.flash), 0.0)
+			and is_equal_approx(FireTalents.flash_reach(null), 0.0),
+			"Flashfire: 1 m farther (flash_reach %.1f m; Classic %.1f): a foe 4.25 m from the burning cloud's middle takes %.2f%% (Classic, 3.75 m: %.2f%%); no ember touched him"
+			% [e1.flash, e0.flash, e1.pct, e0.pct])
 	_expect(int(e1.stale_e) == 1 and int(e1.stale_r) == 0,
 			"the burst stales as the Embers that lit it (his stale queue: %d Embers, %d bursts)" % [int(e1.stale_e), int(e1.stale_r)])
 	# the lighter standing in the cloud he lights: the foe beside him burns, he never does
@@ -1234,14 +1260,14 @@ func _flashfire() -> void:
 	_foe_at = p.global_position + side2 * 1.5
 	await _ticks(2)
 	var gas2 := _gas(foe, p.global_position)
-	var pp0 := rr.pct_of(p)
 	var d2 := _dealt.size()
 	var l2 := _launch.size()
 	_embers_at(p.global_position - side2 * 6.0 + Vector3.UP * 1.3)
 	await _secs(0.5)
 	var b2 := _burst_on(foe, d2, l2)
-	_expect(_burnt(gas2) and absf(float(b2[0]) - 8.0 * scale) < 0.05 and absf(rr.pct_of(p) - pp0) < 0.01,
-			"Flashfire: lit from inside the cloud, the foe in it takes %.2f%%, its lighter nothing (%.2f%%)" % [b2[0], rr.pct_of(p) - pp0])
+	var self2 := _burst_on(p, d2, l2)
+	_expect(_burnt(gas2) and absf(float(b2[0]) - 8.0 * scale) < 0.05 and float(self2[0]) < 0.01 and float(self2[1]) < 0.0,
+			"Flashfire: lit from inside the cloud, the foe in it takes %.2f%%, its lighter nothing (%.2f%%, no launch)" % [b2[0], self2[0]])
 	# his Embers: 6% (7) over the seven embers, each that lands its share
 	var share := {}
 	for id: String in ["", ff_id]:
@@ -1277,20 +1303,26 @@ func _flashfire() -> void:
 	BendEffects.apply(bc, "fire_breath", "breath", ((SwayMoves.move("fire_breath").bend as Dictionary).breath as Dictionary))
 	await _ticks(3)
 	var by_breath := moments.slice(m4).any(func(m: Array) -> bool: return m[0] == "ignited" and m[1] == p)
-	var g_wall := _gas(foe, p.global_position + fwd4 * 6.0)
+	# (water first, alone: it never lights gas; earth's set washes the cloud away, fire's stand-in leaves it)
 	var g_water := _gas(foe, p.global_position - fwd4 * 5.0)
-	var wall := BendZone.make(p, "fire_wall", FormEffects.ground_at(p, p.global_position + fwd4 * 6.0 + fwd4.cross(Vector3.UP) * 2.0),
-			{"width_m": 4.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 2.0}, fwd4)
+	var mw := moments.size()
+	var dw := _dealt.size()
 	var wspec: Dictionary = ((SwayMoves.move("water_jet").bend as Dictionary).splash as Dictionary).duplicate()
 	wspec["_info"] = BendR3.info_for(bc, "water_jet", "splash", false, wspec)
 	var wfrom := p.global_position + Vector3.UP * 1.3
 	BendBolt.launch(p, wfrom, (p.global_position - fwd4 * 5.0 + Vector3.UP * 1.0 - wfrom).normalized(), wspec)
 	await _secs(0.6)
+	var water_lit: bool = moments.slice(mw).any(func(m: Array) -> bool: return m[0] == "ignited") \
+			or _dealt.slice(dw).any(func(e: Array) -> bool: return String(e[2]) == FireTalents.IGNITE_TAG)
+	if is_instance_valid(g_water) and not g_water.is_queued_for_deletion():
+		g_water.end()
+	var g_wall := _gas(foe, p.global_position + fwd4 * 6.0)
+	var wall := BendZone.make(p, "fire_wall", FormEffects.ground_at(p, p.global_position + fwd4 * 6.0 + fwd4.cross(Vector3.UP) * 2.0),
+			{"width_m": 4.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 2.0}, fwd4)
+	await _secs(0.6)
 	_expect(_burnt(g_breath) and by_breath, "a Breath (Classic) over a gas cloud lights it, his")
 	_expect(wall != null and _burnt(g_wall), "a fire wall raised reaching into a gas cloud lights it")
-	_expect(not _burnt(g_water), "water through a gas cloud does not light it")
-	if is_instance_valid(g_water):
-		g_water.end()
+	_expect(not water_lit, "water through a gas cloud does not light it")
 	# a bot wearing it: its Embers at the player standing in a cloud of his own (as an earth player's) burn him bigger
 	var nb: NpcBending = (foe.get(&"brain") as NpcBrain).bending if foe.get(&"brain") != null else null
 	var bot := {}
