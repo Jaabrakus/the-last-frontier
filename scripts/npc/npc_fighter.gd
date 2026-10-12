@@ -1038,6 +1038,8 @@ func _ring_move(dt: float) -> bool:
 	if not _ring_lean and body != null and body.sk != null:
 		_ring_lean = true
 		RingMoves.lean_on(body.sk, ring_moves)
+	if AirTalents.crust_ahead(self, pad.move):
+		jump(1.0)                                   # (a frost crust across its way, a worn talent's: jumped, as anyone can)
 	if not ring_moves.pre(pad.intent(), dt):
 		return false
 	var moving := pad.move.length() > 0.05

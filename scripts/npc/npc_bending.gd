@@ -513,6 +513,10 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		# (a worn Cauterize: its lock and his Patch's over Patch's own ring lock, as the player's)
 		var pl := float(d.get("ring_lock_s", 1.5))
 		base *= FireTalents.patch_lock(who, md, pl) / maxf(pl, 0.01)
+	if id == "patch" and who != null and BendLoadout.wears(who, AirTalents.SECOND_WIND):
+		# (Second Wind's Patch lock as its share of the ring's Patch lock: a bot's Patch lock is its own; Classic x1)
+		var ring := float(d.get("ring_lock_s", base))
+		base *= AirTalents.patch_lock(who, ring) / maxf(ring, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -664,9 +668,10 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		# (Sulphur Heart worn: faster in its own gas; Delta: in its own mud; the higher, else x1; a worn fire passive's own mult)
+		# (Sulphur Heart worn: faster in its own gas; Delta: in its own mud; Whiteout: on its own frost; the highest, else x1; a
+		# worn fire passive's own mult)
 		var fm := FireTalents.bot_fill_mult(me, Vector2(me.velocity.x, me.velocity.z).length() > 1.0) if FireTalents.any(me) else 1.0
-		lock_t += dt * maxf(BendZone.BendGas.home_mult(me), BendZone.home_fill(me)) * fm
+		lock_t += dt * maxf(maxf(BendZone.BendGas.home_mult(me), BendZone.home_fill(me)), AirTalents.home_fill(me)) * fm
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -1120,8 +1125,8 @@ func _wall_on_line(t: Node3D) -> bool:
 	var b := t.global_position + Vector3.UP
 	for w in me.get_tree().get_nodes_in_group(FormRaised.GROUP):
 		var fr := w as FormRaised
-		if fr != null and fr.is_up() and fr.kind == "wall" and not BendEffects.is_mound(fr):
-			# (a Mud Mound is low terrain, 0.7 m: shots at the chest pass over it, so no arc is owed to it)
+		if fr != null and fr.is_up() and fr.kind == "wall" and not BendEffects.is_mound(fr) and not AirTalents.is_crust(fr):
+			# (a Mud Mound is low terrain, 0.7 m, and a 0.4 m frost crust no wall: shots at the chest pass over, no arc is owed)
 			var q := fr.global_position + Vector3.UP
 			if q.distance_to(Geometry3D.get_closest_point_to_segment(q, a, b)) < 1.2 + fr.size.x * 0.5:
 				return true
@@ -1460,6 +1465,10 @@ func begin(id: String, md: String) -> void:
 	if head > 0.0:
 		lock_t = maxf(lock_t, lock_s * head)
 		fill = head
+	var reb := AirTalents.start_fill(me, id)           # (Rebound's head start after a perfect Wind Guard; Classic 0)
+	if reb > 0.0:
+		lock_t = maxf(lock_t, lock_s * reb)
+		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))
@@ -1517,13 +1526,16 @@ func _release() -> void:
 	caster.dash_dir = _held_dir(o0, t)
 	# (the Beat, for a bot wearing a technique that pays on this cast (a test's; bots wear no loadout in a match): let go within
 	# beat_s of its lock filling (its beat_rate's roll: begin), its hits' info says so, as the player's: BendR3.info_for; a flash
-	# on its own hands. Fire's own techniques (Rhythm, Chain) pay through FireTalents.beat)
+	# on its own hands. Fire's own techniques (Rhythm, Chain) pay through FireTalents.beat, air's through AirTalents.bot_beat)
 	var keep_rel := BendR3.release
 	var beat := BendLoadout.beat_paid(me, id, md) and took - lock_s <= BendLoadout.beat_s()
 	if beat:
 		BendR3.release = {"beat": true}
 		beat_at = _now()
 		BendLooks.beat_flash(me, element)
+	elif AirTalents.bot_beat(me, id, md, lock_t - lock_s, _preset_name()):
+		BendR3.release = {"beat": true}              # (a bot wearing an air Beat technique lets this one go on the Beat; a test's)
+		beat = true
 	if FireTalents.beat_worn(me, id, md) and not caster.grown \
 			and me.rng.randf() < FireTalents.bot_beat_rate(float(pr.get("beat_rate", 0.2))):
 		# (let go on the Beat: a worn technique's; a grown cast never is. As a player's hand, not every release: its difficulty's

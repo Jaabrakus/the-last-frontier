@@ -165,7 +165,8 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 		# (Carried wind: a hit straight out of a dash knocks harder; spent on this cast)
 		var k := BendLoadout.tune_f(p, "rules:passives.air.knock_mult", float(Bending.passive("air").get("knock_mult", 1.15)))
 		spec["knock_mps"] = float(spec.get("knock_mps", 0.0)) * k
-		p.remove_meta(&"bend_carry_until")
+		if not AirTalents.keeps_carry(p, m, mode, spec):
+			p.remove_meta(&"bend_carry_until")        # (Carry the Edge's Beat Slice keeps it; Classic always spends it)
 		carried = true
 	if String(spec.get("do", "")) == "zone" and String(spec.get("zone", "")) == "catch" and BendStatus.element_mode(p):
 		var held := BendZone.held_stone(p)
@@ -217,6 +218,9 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			zone(bc, a, spec)
 		"wind_wall":
 			var ws := spec.duplicate()
+			var wk: float = AirTalents.wall_life_k(p)
+			if wk != 1.0:
+				ws["life_s"] = float(ws.get("life_s", 4.0)) * wk      # (Blizzard's wearer: his Wind Wall 15% shorter)
 			ws["zone"] = "wind_wall"
 			if not ws.has("at"):
 				ws["at"] = "place"
@@ -406,7 +410,9 @@ static func wind_wave(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	var point := bc.aim_point()
 	var from: Vector3 = a.from
 	var dir: Vector3 = (point - from).normalized() if point.is_finite() and point.distance_to(from) > 0.5 else (a.dir as Vector3)
-	return BendBolt.launch(p, from, dir, s)
+	var b := BendBolt.launch(p, from, dir, s)
+	AirTalents.on_wind_wave(p, b, s)                # (Carrying Wind's Beat Gust carries loose stones; Classic none)
+	return b
 
 
 ## A cone (or, `ring`, all round) before the caster from `from` along `flat`. A guard of the one it reaches takes its share
@@ -458,6 +464,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	if bool(spec.get("put_out", false)) or bool(spec.get("melt", false)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var bz := z as BendZone
+			if bz.kind == "snow" and bool(spec.get("melt", false)):
+				AirTalents.breath_melt(p, bz, flat, r, deg)  # (a Breath into a Blizzard melts it out; a worn talent's snow only)
 			var to := bz.global_position - p.global_position
 			if to.length() > r + 2.0:
 				continue
@@ -587,6 +595,7 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	var bm := BendMotion.of(p)
 	bm.carry(dir * fwd, 0.25)
 	bm.dash_began(up)
+	AirTalents.on_dash(p, spec)                     # (Peak Wind's Beat Leap: Carried wind at its top; Classic none)
 	if float(spec.get("under_s", 0.0)) > 0.0:
 		p.set_meta(&"bend_under_until", BendStatus.now() + float(spec.under_s))
 	if kind == "air" and up < 2.0 and BendPoses.element_of(p) == "air":

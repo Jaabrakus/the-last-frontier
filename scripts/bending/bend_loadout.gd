@@ -94,7 +94,10 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"move:stone_form.cannonball.radius_m",
 		"rules:passives.fire.moving_mult",      # (fire's Footwork on the move: Hot Feet, Dancing Feet; SwayCaster._moving_mult)
 		"set:magma.seam_life_s",                # (the Magma set's seams: Forge; FireTalents.seam_life)
-		"stock:patch.lock_s"] + EARTH_TUNE_PATHS   # (Patch's ring lock, rules.json stock.patch: Cauterize's trade; FireTalents.patch_lock)
+		"stock:patch.lock_s",                   # (Patch's ring lock, rules.json stock.patch: Cauterize's trade, FireTalents.patch_lock;
+		                                        # Second Wind, AirTalents.patch_lock)
+		"rules:air_rules.guard.hold_max_s",     # (air: Rebound's held Wind Guard, SwayCaster._hold_guard and a bot's shield_tick)
+		"rules:passives.air.near_m"] + EARTH_TUNE_PATHS   # (air: Near Miss, BendBolt._near_miss)
 ## Earth's (pass 1, 2026-10-11): the % ring's full-catch time (Juggle: RingRules.guard_outcome reads it for the guard's owner;
 ## that is the spec's reference answer, which no game code calls today: the game's own Catch ends its full catches at the spec's
 ## window_s, which the same node sets, so the per-wearer number here only keeps the reference agreeing with the game),
@@ -489,6 +492,8 @@ static func tune_base(path: String) -> Variant:
 				return Bending.rules().get(String(keys[1]))
 			if keys.size() == 3 and keys[0] == "passives":
 				return Bending.passive(String(keys[1])).get(String(keys[2]))
+			if keys.size() == 3 and keys[0] == "air_rules":
+				return BendR3.block(String(keys[1])).get(String(keys[2]))      # (moves.json air_rules, BendR3's defaults under it)
 		"stock":
 			if keys.size() == 1:
 				return (RingRules.data().get("stock", {}) as Dictionary).get(String(keys[0]))
@@ -788,7 +793,7 @@ static func _stack(a: Variant, b: Variant, fa: Variant, fb: Variant) -> Array:
 	return [v, fa]
 
 
-## `src` folded into `into` (a number set twice is a clash: returns where, else "").
+## `src` folded into `into` (a number set twice to two values is a clash: returns where, else ""; the same value twice agrees).
 static func _fold(into: Dictionary, src: Dictionary) -> String:
 	for k: String in src:
 		if src[k] is Dictionary:
@@ -799,8 +804,8 @@ static func _fold(into: Dictionary, src: Dictionary) -> String:
 			var why := _fold(into[k], src[k])
 			if why != "":
 				return "%s.%s" % [k, why]
-		elif into.has(k):
-			return k
+		elif into.has(k) and not (str(into[k]) == str(src[k])):
+			return k                             # (two nodes that set the same number to the same value agree: no clash)
 		else:
 			into[k] = src[k]
 	return ""
@@ -1058,6 +1063,11 @@ static func new_hit_class(body: Object, tag: String) -> Dictionary:
 	out["tag"] = tag
 	out["growth"] = float(out.get("growth", 0.0)) * RingRules.stock_num("growth_scale", 1.0)
 	return out
+
+
+## new_hit_class by air's name (RingRules.on_hit, Dragon Fire's front; fire's lane named it new_hit_class): the same class.
+static func worn_class(body: Object, tag: String) -> Dictionary:
+	return new_hit_class(body, tag)
 
 
 ## The wearer's own number at tune path `path` (TUNE_PATHS), else `base` (the game's: Classic reads it unchanged).

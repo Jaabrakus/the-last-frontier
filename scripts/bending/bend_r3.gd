@@ -192,6 +192,7 @@ static func _noted(by: Node, n: Node, inf: Dictionary) -> void:
 	var bc := BendCaster.of(by)
 	if bc != null:
 		bc.last_hit_at = BendStatus.now()
+	AirTalents.on_hit(by, n, inf)                  # (a worn air talent's side of his hit: Tailwind; Classic none)
 
 
 ## The host's word to hitter `by`'s owner that his hit on `n` (`inf`) landed (NetSpells.apply_hit): his jab string as the

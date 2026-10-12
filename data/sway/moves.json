@@ -1752,6 +1752,11 @@
           "passes": ["stone", "lightning"]
         }
       },
+      "_talent_bend": "A worn skill tree new skill's own mode of this move (AirTalents.talent_spec; the owner 2026-10-11: new skills on the empty double taps, yes): its bend spec, its lock (lock_s) and its name (label), read only for its wearer (SwayCaster.my_modes adds the mode; FormEffects.apply and BendCast.cast cast it). Never in modes or bend: Classic and every bot of a normal match never have it. dust: Dust Cloud (air.slot.dust), from the dormant air_redirect dust, 2.5 s in the ring.",
+      "talent_bend": {
+        "dust": {"do": "zone", "zone": "dust", "kind": "air", "at": "place", "place": {"min_m": 2.0, "max_m": 6.0}, "radius_m": 3.0, "life_s": 2.5, "one_at_a_time": true, "lock_s": 0.9, "label": "Dust Cloud", "pose_as": "wall", "talent": "air.slot.dust"},
+        "blizzard": {"do": "zone", "zone": "snow", "kind": "air", "at": "place", "place": {"min_m": 2.0, "max_m": 10.0}, "radius_m": 2.5, "life_s": 3.0, "one_at_a_time": true, "lock_s": 0.9, "label": "Blizzard", "pose_as": "wall", "talent": "air.frost.blizzard"}
+      },
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },

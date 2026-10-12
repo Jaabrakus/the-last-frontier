@@ -164,6 +164,15 @@ var _look: Node3D
 var _swing_became := false
 ## The body its blow struck (_hit; null none): a worn talent's burst spares him (FireTalents.bolt_ended).
 var struck_who: Node = null
+## While valid, the swing goes on only as long as it says true (Eye of the Gale: the guarder's E held; AirTalents.eye_catch): let
+## go, it leaves along his aim from where it is. Invalid (every Turn): the swing runs its time.
+var swing_hold := Callable()
+## Carrying Wind's Beat Gust (AirTalents.on_wind_wave): the loose stones it crosses are thrown on (AirTalents.carry_stones).
+var carries := false
+## Frostwind's Gust or Wind Ball (AirTalents.frosts): the puddles, grates and steam it crosses freeze (AirTalents.frost_step).
+var frosts := false
+## Hail Ball's Wind Ball (AirTalents.hails): hail falls where it ends (AirTalents.hail_burst).
+var hails := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -200,6 +209,8 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.pull = bool(spec.get("pull", false))
 	var inf: Variant = spec.get("_info", {})
 	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
+	b.frosts = AirTalents.frosts(by, b.info)        # (Frostwind worn: its wind freezes water it crosses; Classic false)
+	b.hails = AirTalents.hails(by, b.info)          # (Hail Ball worn: hail where it ends; Classic false)
 	b.floor_wave = String(spec.get("do", "")) == "floor_wave"
 	if b.floor_wave:
 		b.width_m = float(spec.get("width_m", 2.2))
@@ -357,26 +368,29 @@ func _swing(dt: float) -> void:
 		_swing_t = -1.0
 		end("swing")
 		return
-	_swing_t += dt / _swing_s
-	var u := minf(_swing_t, 1.0)
-	var a := _swing_a0 - TAU * (_swing_t if _swing_hold > 0.0 else u)
-	# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
-	var e := smoothstep(0.0, SWING_IN, u)
-	var rr := lerpf(_swing_r0, _swing_r, e)
-	var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
-	var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
-	var was := global_position
-	global_position = at
-	if (at - was).length_squared() > 1e-6:
-		velocity = (at - was).normalized() * velocity.length()
-	_face()
-	if _swing_t < 1.0:
-		return
-	if _swing_hold > 0.0 and _swing_t < _swing_hold and BendZone.whirl_held(_swing_by):
-		return                                    # (Whirl Turn: held on, it goes on circling)
+	if not (swing_hold.is_valid() and not bool(swing_hold.call())):
+		# (Eye of the Gale: while its hold says so it circles on; let go, it leaves at once. Every other Turn: its time)
+		_swing_t += dt / _swing_s
+		var u := minf(_swing_t, 1.0)
+		var a := _swing_a0 - TAU * (_swing_t if _swing_hold > 0.0 else u)
+		# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
+		var e := smoothstep(0.0, SWING_IN, u)
+		var rr := lerpf(_swing_r0, _swing_r, e)
+		var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
+		var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
+		var was := global_position
+		global_position = at
+		if (at - was).length_squared() > 1e-6:
+			velocity = (at - was).normalized() * velocity.length()
+		_face()
+		if _swing_t < 1.0:
+			return
+		if _swing_hold > 0.0 and _swing_t < _swing_hold and BendZone.whirl_held(_swing_by):
+			return                                    # (Whirl Turn: held on, it goes on circling)
 	_swing_hold = 0.0
 	swing_held_s = _swing_t * _swing_s
 	_swing_t = -1.0
+	swing_hold = Callable()
 	var to := BendZone.guard_aim(_swing_by, global_position)
 	var sp := velocity.length() * _swing_k
 	velocity = (to - global_position).normalized() * sp
@@ -464,6 +478,10 @@ func _physics_process(dt: float) -> void:
 		if _swing_t >= 0.0:
 			return                            # (a Turn took it: it swings from the next frame)
 		_near_miss()
+		if carries:
+			AirTalents.carry_stones(self, from, step)
+		if frosts:
+			AirTalents.frost_step(self, from, step)
 	if floor_wave:
 		_wave_step(from, step)
 		if lip_end and not spent:
@@ -633,10 +651,11 @@ var _missed: Array[int] = []
 func _near_miss() -> void:
 	if _by() == null:
 		return
-	var near_m := float(Bending.passive("air").get("near_m", 1.2))
-	for e in BendCaster.near(_by(), global_position, near_m):
+	var base := float(Bending.passive("air").get("near_m", 1.2))
+	for e in BendCaster.near(_by(), global_position, base * AirTalents.NEAR_QUERY_K):
 		var n: Node3D = e[0]
-		if BendStatus.until(n, &"bend_slip_until") <= 0.0 or _missed.has(n.get_instance_id()):
+		var near_m: float = AirTalents.near_m(n, base)        # (his own: Near Miss worn; Classic the passive's)
+		if float(e[1]) > near_m or BendStatus.until(n, &"bend_slip_until") <= 0.0 or _missed.has(n.get_instance_id()):
 			continue
 		if (NpcSenses.chest_of(n) - global_position).length() > near_m + 0.6:
 			continue
@@ -682,6 +701,9 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		return
 	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
 		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
+	if who is FormRaised and kind == "fire" and AirTalents.melt_crust(who as FormRaised):
+		BendLooks.burst(at, "steam", 14, n, 70.0, 2.0, 0.5)
+		end("melted")                             # (Frostwind's crust melted back by fire)
 		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)
@@ -1047,6 +1069,8 @@ func _finish(why: String) -> void:
 		_kick_up_end(why)
 	if FireTalents.any(caster) and NetSpells.decides():
 		FireTalents.bolt_ended(self, why)        # (a worn talent where it ends: a burst, a patch, a seam; Classic never)
+	if hails:
+		AirTalents.hail_burst(self, why)
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)

@@ -1208,7 +1208,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	elif tag != "":
 		cls = class_of(tag)
 		if cls.is_empty() and tag.contains("+"):
-			cls = BendLoadout.new_hit_class(by, tag)  # (a worn behaviour talent's whole new class: Blazing Fireball's burst)
+			# (a worn behaviour talent's whole new class: Blazing Fireball's burst, Dragon Fire's front; Classic: none)
+			cls = BendLoadout.new_hit_class(by, tag)
 		cls = BendLoadout.hit_class(by, cls, info)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
 	var untagged := cls.is_empty()
 	if untagged:

@@ -549,8 +549,10 @@ func _ground_physics(dt: float, stun: bool) -> void:
 		spd *= BendStatus.drench_mult(body)          # (drenched: slower a while, BendStatus.drench)
 	spd = minf(spd, _speed_cap())
 	var target := mv * spd
-	if _crouch or _lag > 0.0 or stun or _guard_zone():
+	if _crouch or _lag > 0.0 or stun:
 		target = Vector3.ZERO
+	elif _guard_zone():
+		target = AirTalents.guard_walk(body, target)   # (no walking with the guard up; Drift Guard's wearer walks slowly)
 	var flat := Vector3(_o.x, 0.0, _o.z)
 	var acc := num("physics", "accel", 40.0) if target.length() > flat.length() else num("physics", "decel", 30.0)
 	flat = flat.move_toward(target, acc * dt)
@@ -774,6 +776,8 @@ func _try_ground_dodge() -> bool:
 	var pad_dir := _v3("dodge_dir")
 	var roll := fresh.length() > 0.1 or (_b("dodge") and pad_dir.length() > 0.1)
 	var duck := _b("fast_fall") or (_b("dodge") and pad_dir.length() <= 0.1)
+	if roll and not _b("dodge") and AirTalents.drift_steers(body, _o) and _guard_zone():
+		roll = false                             # (Drift Guard's wearer walking with his guard up: a key pressed steers the walk)
 	if not roll and not duck:
 		return false
 	if not _guard_ok():

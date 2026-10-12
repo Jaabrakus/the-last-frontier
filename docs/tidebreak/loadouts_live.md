@@ -312,6 +312,8 @@ worn 7 of 7, no script error, no stall, LOADOUT SOAK DONE.
   Lava Kick needs beside the set's Kick speed) reads that `with`. Water's and air's versions of those lines differ: keep earth's
   and fire's at the merge.
 
+Air's behaviour talents (Tailwind, Drift Guard, Eye of the Gale, Rebound and the rest as they are built) and Full Sail switched on again: `docs/tidebreak/talents_air.md`.
+
 ## Tests and commands
 
 ```

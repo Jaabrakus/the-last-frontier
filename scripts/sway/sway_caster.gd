@@ -1009,7 +1009,7 @@ func _hold_guard() -> void:
 	if not is_instance_valid(_gzone) or _gzone.is_queued_for_deletion():
 		_gzone = null
 		return
-	var hold := float(BendR3.block("guard").get("hold_max_s", 2.5))
+	var hold := BendLoadout.tune_f(player, "rules:air_rules.guard.hold_max_s", float(BendR3.block("guard").get("hold_max_s", 2.5)))
 	var e_down := _guard_down()
 	if e_down and _gzone.t < hold and _gzone.life_s >= _gzone.t:
 		_gzone.life_s = maxf(_gzone.life_s, minf(_gzone.t + 0.1, hold))
@@ -1577,6 +1577,7 @@ func _physics_process(dt: float) -> void:
 		_hold_guard()                             # (a puppet's lock is its owner's, net_lock; its guard held by his E)
 		return
 	_tick_floor(dt)
+	_key3_beat_watch()                            # (a Beat wearer's key-3 let go after his Leap went; Classic nothing)
 	_spell_hands()
 	_sync_meta()
 	_root()
@@ -1629,11 +1630,14 @@ func _physics_process(dt: float) -> void:
 					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
 					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer of a technique that pays on
-					# this move and mode (Heave's Column, Quarry's Fissure: BendLoadout.beat_paid); never a click, never his other casts)
+					# this move and mode (Heave's Column, Quarry's Fissure: BendLoadout.beat_paid); never a click, never his other casts;
+					# fire's own (FireTalents.beat) and air's (AirTalents.beat_worn, _let_go) pay their own techniques)
 					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player, move, mode_of(move))
 					if elem() and FireTalents.any(player):
 						FireTalents.beat(player, move, mode_of(move), full_t)     # (let go on the Beat: a worn technique's)
+					_let_go = true                # (a held cast let go: the Beat's one way, AirTalents.beat_worn)
 					_cast()
+					_let_go = false
 					_beat_go = false
 			State.LOCKING:
 				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
@@ -1797,6 +1801,27 @@ func _click_runs_on() -> bool:
 	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false))
 
 
+## The cast going now is a held one let go (the let-go branch): the Beat may count.
+var _let_go := false
+## Key 3's Beat (Peak Wind's Leap; AirTalents.beat_worn): key 3 is a click and stays one (its move goes the moment the lock is
+## full, held or tapped, as ever), so a wearer who still holds key 3 as it goes has his let go read: when its lock filled
+## (-INF: nothing to read; Classic never sets it). _key3_beat_watch settles it (AirTalents.key3_let_go).
+var _k3_full_at := -INF
+
+
+## Each frame: key 3 let go after its Beat-read cast went (or held on past the Beat's window): AirTalents.key3_let_go.
+func _key3_beat_watch() -> void:
+	if _k3_full_at == -INF:
+		return
+	var since := BendStatus.now() - _k3_full_at
+	if player.controls == null or not player.controls.pressed(&"weapon_3"):
+		AirTalents.key3_let_go(player, since)
+		_k3_full_at = -INF
+	elif since > AirTalents.BEAT_S + AirTalents.BEAT_EPS:
+		AirTalents.key3_let_go(player, INF)       # (held on past the window: not on the Beat)
+		_k3_full_at = -INF
+
+
 ## The lock's button pressed (true the frame it goes down) and how long it has been held (_press_t: the click's test). A
 ## lock moved to another button counts from that one's press.
 var _press_src := ""
@@ -1932,8 +1957,9 @@ func _root() -> void:
 		on = false                                # (round 3: casting never stops the fall; a pose's root ignored airborne)
 	if on and _riding():
 		on = false                                # (Ride the Wave, a skill tree technique: the ride carries him out of the root)
-	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up():
-		on = true                                 # (round 3: no walking while the guard is up)
+	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up() \
+			and not AirTalents.drifts(player):
+		on = true                                 # (round 3: no walking while the guard is up; Drift Guard: RingMoves caps it)
 	if on:
 		if player.drag_speed_cap > ROOT_CAP:
 			player.drag_speed_cap = ROOT_CAP
@@ -2358,7 +2384,7 @@ func _try_begin(q: Dictionary) -> void:
 	state = State.LOCKING
 	move = m
 	target = t
-	fill = 0.0
+	fill = AirTalents.start_fill(player, m) if lock_src != SRC_GUARD else 0.0     # (Rebound's head start; Classic 0)
 	off_t = 0.0
 	full_t = 0.0
 	hold_t = 0.0
@@ -2470,6 +2496,7 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	var mlk: Dictionary = d.get("mode_lock_s", {})
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
+	base = AirTalents.talent_lock(player, m, mode_of(m), base)  # (a worn new skill's own lock; Classic base)
 	if not holds_stone(m, t):
 		base = BendLoadout.talent_lock(player, m, mode_of(m), base)   # (a worn new skill's own lock: the Sulphur Vent's)
 		base = BendLoadout.lock(player, m, mode_of(m), base)      # (a worn loadout's own lock for this mode; Classic: base)
@@ -2480,7 +2507,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
-		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+		base = AirTalents.patch_lock(player, float(d.get("ring_lock_s", base)))  # (round 3, spec §8: Patch's own lock in the % ring;
+		                                                                         # a worn talent's, Second Wind)
 		if BendLoadout.wears(player, WELLSPRING):
 			# (Wellspring, a skill tree enhance: quicker standing in his own water, slower anywhere else)
 			base = BendLoadout.tune_f(player, "new:patch.lock_wet_s" if BendZone.in_own_water(player) else "new:patch.lock_dry_s", base)
@@ -2816,6 +2844,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 		rate *= pf
 		if FireTalents.any(player):
 			rate *= FireTalents.fill_mult(player, hs > moving_mps)     # (a worn passive's fill: Hot Feet, Dancing Feet)
+		rate *= AirTalents.home_fill(player)       # (Whiteout on his own frost; Classic 1)
 		if pf > 1.0:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:
@@ -3169,6 +3198,13 @@ func _cast() -> void:
 		rel["beat"] = true                        # (let go on the Beat: its hits' info says so; a flash on his own hands)
 		beat_at = BendStatus.now()
 		BendLooks.beat_flash(self, Bending.element_of(m))
+	if r3_on and _let_go and full_t <= AirTalents.BEAT_S and AirTalents.beat_worn(player, m, String(pin[1])):
+		rel["beat"] = true                        # (the Beat: let go within beat window_s of the full lock; only a worn technique's)
+		AirTalents.beat_flash(player)
+	if r3_on and src == SRC_DASH and player.controls != null and state == State.FULL:
+		# (key 3 is a click: a Beat wearer still holding it as its move goes has his let go read, _key3_beat_watch; Classic none)
+		_k3_full_at = BendStatus.now() - full_t if AirTalents.key3_cast(player, m, String(pin[1]),
+				player.controls.pressed(&"weapon_3")) else -INF
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

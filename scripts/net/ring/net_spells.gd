@@ -339,7 +339,7 @@ static func apply_hit(h: Array) -> void:
 		"cast_mult":
 			BendStatus.give_cast_mult(n, float(a[2]))
 		"carry":
-			BendZone.carry_wind(n)
+			BendZone.carry_wind(n, float(a[2]) if a.size() > 2 else -1.0)
 		"whiff":
 			BendZone.whiffed(n)
 		"imprison":

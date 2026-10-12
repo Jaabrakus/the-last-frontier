@@ -6,7 +6,8 @@ extends RefCounted
 ##               question its caster was asked meanwhile answered and kept in order (PlayerBendCaster's tape: the aim, the
 ##               launch point, the keys, the target), its dice seeded, and with them what the run needs to run again: the
 ##               move, its variation and tier, grown, airborne, its release time (the caster's own clock: what a hit tells
-##               him back is in it), its target's net id and point, where he stood, his velocity, facings. Sent to every
+##               him back is in it), whether it was let go on the Beat (only when it was: a worn technique's; release_of),
+##               its target's net id and point, where he stood, his velocity, facings. Sent to every
 ##               other machine (RingNet.send_cast); here it ran at once, its things named "<my peer>:<seq>:<n>"
 ##   run         run(ev, sender) on every other machine: the cast run again on its caster's puppet (his NetBendCaster answering
 ##               from the event, his SwayCaster pinned to its variation, the puppet stood where he stood while it runs), its
@@ -54,9 +55,19 @@ static func begin(sc: SwayCaster, m: String, t: Node3D, at: Vector3, grown: bool
 			"t": net.net_id_of(t), "at": at, "pos": p.global_position, "vel": p.velocity, "ry": p.rotation.y,
 			"yaw": p.yaw, "pitch": p.pitch, "seed": randi(), "src": sc.lock_src, "sent": net.clock.now(),
 			"bound": bc.feet_bound(), "carry": bc.carry_ready()}
+	if bool(rel.get("beat", false)):
+		ev["beat"] = true                             # (let go on the Beat, a worn technique's: AirTalents; Classic never sends it)
 	bc.tape_begin(int(ev.seed))
 	ev["_keep"] = NetSpells.run_begin(String(ev.id))
 	return ev
+
+
+## The release a cast event `ev` replays with (BendR3.release): {air, at}, and beat when it was let go on the Beat.
+static func release_of(ev: Dictionary) -> Dictionary:
+	var rel := {"air": bool(ev.get("air", false)), "at": float(ev.get("rel_at", BendStatus.now()))}
+	if bool(ev.get("beat", false)):
+		rel["beat"] = true
+	return rel
 
 
 ## The cast begun (begin) has landed: its tape closed, its event sent.
@@ -121,7 +132,7 @@ static func run(ev: Dictionary, from: int) -> void:
 	p.yaw = float(ev.get("yaw", p.yaw))
 	p.pitch = float(ev.get("pitch", p.pitch))
 	var keep_rel := BendR3.release
-	BendR3.release = {"air": bool(ev.get("air", false)), "at": float(ev.get("rel_at", BendStatus.now()))}
+	BendR3.release = release_of(ev)                   # (the Beat too: the host decides what a Beat cast does)
 	nbc.begin(ev)
 	nbc.grown = bool(ev.get("grown", false))
 	sc.net_pin(m, mode)

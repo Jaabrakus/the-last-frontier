@@ -156,6 +156,8 @@ func _run() -> void:
 			"Thick Wall is on (2026-10-11: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down) (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	_expect("water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "",
 			"Thick Ice is switched on (2026-10-11: tests/ring/test_talents_water.gd raises the wall and shoots it) (%s)" % BendLoadout.why_not("water.wall.thick_ice"))
+	_expect("air.gust.full_sail" in live and BendLoadout.why_not("air.gust.full_sail") == "",
+			"Full Sail is switched on (2026-10-11: its wide Gust, its lock and a hit only the wide one makes, tests/ring/test_talents_air.gd)")
 	# the rest of this test wants every resolvable node on, whatever the switches say
 	var all_on := {}
 	for id1: String in _live_all():
@@ -194,6 +196,9 @@ func _run() -> void:
 		var bot := _body()
 		# (a node worn with the nodes it requires, as a loadout must: a Mud set twist with the Mud set; its own numbers over theirs)
 		var picks: Array = [id] + BendLoadout._requires(id)
+		var all_changes: Array = []                  # (the changes of every node worn: its own and the ones it requires)
+		for wid: Variant in picks:
+			all_changes.append_array(_node(String(wid)).get("changes", []) as Array)
 		var ov := BendLoadout.wear(w, picks, "", el)
 		_expect((ov.ids as Array).size() == picks.size() and (ov.ids as Array).has(id) and BendLoadout.picks_of(w).size() == picks.size()
 				and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
@@ -245,7 +250,7 @@ func _run() -> void:
 				_expect(is_same(bc0, base_c) and _near(bc0.get(key0, from if bool(c.get("default_from", false)) else null), from * gs),
 						"%s: a body that wears nothing hits with the class as it is (%s %s)" % [id, key0, from])
 				var named_keys := {}
-				for c3: Dictionary in n.changes:
+				for c3: Dictionary in all_changes:
 					if String(c3.path).begins_with("class:%s+" % tag0):
 						named_keys[String(c3.path).get_slice("+", 1).get_slice(".", 1)] = true
 				var others_same := true

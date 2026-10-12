@@ -131,6 +131,8 @@ var prison_s := 0.0
 ## A Turn's longest swing held on (spec swing_s: read only for a wearer of Whirl Turn, a skill tree twist; a tap swings SWING_S).
 var swing_hold_s := 0.0
 var put_out_n := 0
+## A wind wall's push (m/s): its spec's push_mps (Rime Wall's 3.2 for its wearer), else WIND_WALL_KNOCK.
+var push_mps := WIND_WALL_KNOCK
 ## The stones a guard caught or dropped from stone bolts (FormStone), for the tests.
 var stones: Array[FormStone] = []
 ## Round 2's timed guard (see the header): on, its perfect window (s), the share a late one lets through, its element, and
@@ -200,6 +202,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.tick_shared = bool(spec.get("tick_shared", true))
 	z.tick_all = bool(spec.get("tick_all", false))
 	z.tick_info = (spec.get("tick_info", {}) as Dictionary).duplicate() if spec.get("tick_info") is Dictionary else {}
+	z.push_mps = float(spec.get("push_mps", WIND_WALL_KNOCK))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -323,7 +326,7 @@ func _look() -> void:
 			var gl := BendGas.look(self)             # (Sulphur's gas: a yellow-green haze over its round)
 			if gl != null:
 				_fx.append(gl)
-		"smoke", "dust", "spray":
+		"smoke", "dust", "spray", "snow":
 			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
 					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
 			_fx.append(cl)
@@ -577,13 +580,13 @@ func _wind_push() -> void:
 		var side := signf((global_transform.affine_inverse() * n.global_position).z)
 		var out := global_basis.z.normalized() * (side if absf(side) > 0.0 else 1.0)
 		BendR3.deliver(n, 0.0, n.global_position, out, owner_node, -1.0,
-				Vector3(out.x, 0.0, out.z).normalized() * WIND_WALL_KNOCK + Vector3.UP * 0.5, info)
+				Vector3(out.x, 0.0, out.z).normalized() * push_mps + Vector3.UP * 0.5, info)
 
 
 ## Who it holds now: everyone within it (round) or in its box.
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
-	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "gas"] \
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "gas", "snow"] \
 			or kind in GUARDS or kind in ROUND_NEW or round_zone:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
@@ -593,6 +596,8 @@ func inside(p: Vector3) -> bool:
 func _every(dt: float) -> void:
 	if kind == FireTalents.GAS_KIND and FireTalents.gas_every(self):
 		return                                   # (fire touching the cloud lit it first: gone; FireTalents, before its own rules)
+	if kind == "snow":
+		AirTalents.snow_every(self)              # (Blizzard: its cold, the water it freezes, fire melting it)
 	var r := maxf(radius, size.x * 0.6)
 	if put_out:
 		put_out_fires()
@@ -655,8 +660,15 @@ func on_bolt(b: BendBolt) -> bool:
 	if kind in KILN_FIRES and b.kind == "stone" and not b.heated and not b.spent and inside(b.global_position) \
 			and BendLoadout.wears(b._by(), KILN_STONE):
 		b.heat()                                 # (Kiln Stone: a stone of the wearer's through any fire comes out heated)
+	if kind == "gas" and AirTalents.toxic_gale(self, b):
+		return true                                  # (Toxic Gale: his Wind Ball bursts the gas on, his now; before its own rules)
+	if not b.spent and kind in ["fire_wall", "smoke"] and AirTalents.through_ally_fire(self, b):
+		return false                                 # (Dragon Fire: his Gust through an ally's fire carries a front on; it flies on)
+	if kind in ["fire_wall", "burn"] and AirTalents.snuffs(self, b):
+		return true                                  # (Frost Gust: his Gust puts a foe's fire out)
 	if kind == "gas":
-		# (Sulphur's gas: fire lights it, water washes it, wind carries it, his own Pebbles with Flint light it: BendGas)
+		# (Sulphur's gas: fire lights it, a Washout wearer's water washes it, wind carries it, his own Pebbles with Flint light it:
+		# BendGas)
 		return not b.spent and inside(b.global_position) and BendGas.react(self, b)
 	if kind == "steam" and b.kind == "fire" and not b.spent and FireTalents.any(b.caster) and inside(b.global_position):
 		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
@@ -708,7 +720,12 @@ func on_bolt(b: BendBolt) -> bool:
 				b.burning = true
 				SbFx.fire(owner_node, SbFx.key_of(info), "blown", {"at": b.global_position, "dir": b.velocity})
 				return true
+		"snow":
+			if b.kind == "fire":
+				AirTalents.melt_snow(self)           # (Blizzard: fire melts it out in a second)
 		"wind_wall":
+			if AirTalents.wall_shards(self, b):
+				return true                          # (Frostwind: his Wind Wall drops water and ice as shards)
 			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()) and prison_s <= 0.0:
 				# (blown up and aside, not sent back: up over the wall and off to the side it was nearer)
 				b.guarded_by.append(get_instance_id())
@@ -991,8 +1008,9 @@ func _guard_bolt(b: BendBolt) -> bool:
 		"air_shield", "wind_guard":
 			if what == "air":
 				if perfect:
-					_straight_back(b)
-					carry_wind(owner_node)
+					if not AirTalents.eye_catch(self, b):
+						_straight_back(b)                 # (Eye of the Gale's wearer, E held: it circles him first)
+					carry_wind(owner_node, AirTalents.guard_carry_s(owner_node))
 				else:
 					_late(b)
 			elif what == "stone":
@@ -1139,6 +1157,7 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 	if owner == null or not is_instance_valid(owner):
 		return
 	owner.set_meta(&"bend_last_guard", {"result": result, "what": what, "at": BendStatus.now(), "element": el})
+	AirTalents.on_guard(owner, result, el)        # (Rebound's head start after a perfect Wind Guard; Classic none)
 	var c: Dictionary = counts.get(el, {})
 	c[result] = int(c.get(result, 0)) + 1
 	counts[el] = c
@@ -1225,13 +1244,14 @@ static func guarding(body: Node) -> bool:
 
 ## Carried wind on `body` (air's passive: a hit straight out of a dash, a near miss or a bounced guard knocks harder for
 ## Bending.passive("air").after_s): its meta bend_carry_until; its spiral and whistle on him.
-static func carry_wind(body: Node) -> void:
+static func carry_wind(body: Node, s := -1.0) -> void:
 	if body == null or not is_instance_valid(body) or BendPoses.element_of(body) != "air":
 		return
-	if not NetSpells.here(body, "carry", []):
+	if not NetSpells.here(body, "carry", [s] if s >= 0.0 else []):
 		return                                   # (online: his owner's, NetSpells)
-	body.set_meta(&"bend_carry_until", BendStatus.now() + BendLoadout.tune_f(body, "rules:passives.air.after_s",
-			float(Bending.passive("air").get("after_s", 0.8))))
+	# (`s` >= 0: its own length, a worn talent's: Eye of the Gale's perfect guard; else the passive's)
+	body.set_meta(&"bend_carry_until", BendStatus.now() + (s if s >= 0.0 else BendLoadout.tune_f(body, "rules:passives.air.after_s",
+			float(Bending.passive("air").get("after_s", 0.8)))))
 	if body is Node3D:
 		BendLooks.carried(body as Node3D)
 
@@ -1448,7 +1468,7 @@ static func cone_mult(body: Node, cone_kind: String, by: Node = null) -> float:
 		bz.took += 1
 		bz._result("perfect" if perfect else "late", cone_kind, by)
 		if perfect and cone_kind == "air":
-			carry_wind(body)
+			carry_wind(body, AirTalents.guard_carry_s(body))
 		return 0.0 if perfect else bz.late_mult
 	return 1.0
 
@@ -1775,6 +1795,8 @@ func end(why := "ended") -> void:
 	remove_from_group(GROUP)
 	if kind == "gas":
 		BendGas.ended(self)
+	if kind == "wind_wall":
+		AirTalents.on_wall_end(self, why)          # (Rime Wall: a crust where it stood; Classic none)
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)
@@ -1812,7 +1834,7 @@ static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> 
 			BendR3.jab_guarded(by)
 		if perfect:
 			if what == "air" and bz.kind in ["air_shield", "wind_guard"]:
-				carry_wind(body)
+				carry_wind(body, AirTalents.guard_carry_s(body))
 			return {"result": "perfect", "mult": 0.0, "info": info, "zone": bz}
 		var inf := info.duplicate()
 		inf["slide_only"] = true
