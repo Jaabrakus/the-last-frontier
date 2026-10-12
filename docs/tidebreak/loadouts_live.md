@@ -237,29 +237,36 @@ A game is about 11 s of wall time headless. `GODOT_TIMEOUT=1500` for 30 games pe
 
 The owner: "we need to make sure all the talents work and they work in game right". Branch `tb/talents-earth-p1`. Each node
 below is in `loadout_apply.json` `behaviour` (where its code is), at the end of `live`, on in `nodes`, and played worn and not
-worn in a real ring by `tests/ring/test_talents_earth.gd` (105 checks), the bot's side too. Live on the owner's word, not soaked.
+worn in a real ring by `tests/ring/test_talents_earth.gd` (167 checks after the fix pass of 2026-10-12, below), the bot's side
+too. Live on the owner's word, not soaked. Juggle is switched off (the fix pass: its plus is the Classic Catch's).
 
 | Node | What the wearer gets (code) |
 |---|---|
 | Thick Wall (switched on) | 5 hits, 2.5 m wide, raised and shot down in a ring |
-| Juggle | his Catch holds two stones of one window side by side, E throws the oldest, a third drops at his feet; full catch 0.8 s (`BendZone.held_stone`, `held_stones`; `stock:guard_catch_s` in `RingRules.guard_outcome`) |
+| Juggle (switched OFF, the owner's call) | his Catch holds two stones of one window side by side, E throws the oldest, a third drops at his feet; full catch 0.8 s (`BendZone.held_stone`, `held_stones`; the spec's `window_s`; `stock:guard_catch_s` only in `RingRules.guard_outcome`, the spec's reference, which no game code calls) |
 | Return to Sender | a clean catch thrown back with E pressed within the Beat of the catch flies x1.15; late return lock 0.4 s (`BendZone.return_stone`, `beat_return`) |
 | Kick-Up | a Pebbles volley that meets nobody leaves one loose stone where it lands (`BendBolt._kick_up_end`) |
-| Avalanche | the Boulder landing on the deck breaks into three low rolling stones fanned 15 degrees, one volley of 3, base 5.9; a Catch holds one, the rest drop at the catcher's feet (`GustLift._avalanche`) |
-| Heave | a Column let go on the Beat launches with base 11.3 (a class change marked `when: beat` in the tree: `BendLoadout` `class_beat`); lock 1.7 s |
-| Kiln Stone | his stone through any Fire Wall or burning ground is heated until it lands: base x1.15, a fire trail; a Parry on the beat sends it back, a Turn douses it (`BendBolt.heat`, `GustLift._kiln_check`, `BendZone`) |
+| Avalanche | the Boulder landing on the deck breaks into three low rolling stones fanned 15 degrees, one volley of 3, the first to hit knocks at base 5.9 (the class changes are marked `when: avalanche`: the Boulder's own hit before it lands keeps 7.4); a Catch holds one, the rest drop at the catcher's feet (`GustLift._avalanche`) |
+| Heave | a Column let go on the Beat launches with base 11.3 (a class change marked `when: beat` in the tree: `BendLoadout` `class_when`); lock 1.7 s |
+| Kiln Stone | his stone through any Fire Wall, burning ground or magma seam is heated until it lands: base x1.15, a fire trail; a stone he caught and throws back counts (its return class through `BendLoadout.hit_class` too); a Parry on the beat sends it back, a Turn douses it (`BendBolt.heat`, `GustLift._kiln_check`, `BendZone`) |
 | Rubble Wall | his wall shot down or capped leaves two loose stones at its foot; rise 0.8 s (`FormRaised._rubble_stones`) |
 | Quarry | his Beat Fissure into his own wall tears a chunk off and throws it on, the first chunk free; rise 0.8 s (`BendBolt._quarry`) |
 | Reinforce | a mended piece takes its next two hits free (`FormRaised.take_brace`); Mend's lock 2.6 s |
 | Sulphur (set) and Sulphur Spike, Sulphur Boulder, Fuming Column, Brimstone Wall, Flint Pebbles, Sulphur Heart | gas: `scripts/bending/bend_gas.gd` (loaded by path, a BendZone of kind `gas`); see its header |
 
 **The Beat** (the tree's timing rule; the owner's answer: yes) is built once for all techniques: a held cast let go within
-`beat.window_s` (0.2 s) of its lock filling, for a wearer of a technique it pays only (`BendLoadout.beat_paid`: a built node
-whose new code names the Beat). SwayCaster and a bot's release put `beat` on the hit's info (`BendR3.info_for`); a brief
-glow on the caster's own hands (`BendLooks.beat_flash`). Classic: nothing, not even the look.
+`beat.window_s` (0.2 s) of its lock filling, for a wearer of a technique that pays on that move and mode only
+(`BendLoadout.beat_paid(body, move, mode)`: a built node whose new code names the Beat pays on its own `extends_move`/`mode`,
+"A <move> let go on the Beat", unless `loadout_apply.json` `beat_on` names others: Quarry's Fissure, Return to Sender none,
+its Beat being the Catch's E again). SwayCaster and a bot's release put `beat` on the hit's info (`BendR3.info_for`); a brief
+glow on the caster's own hands (`BendLooks.beat_flash`). His other casts get nothing. Classic: nothing, not even the look. A
+bot wearing a Beat technique (only a test's: bots wear no loadout in a match) hits it at its difficulty's `beat_rate`
+(`bend_ai.json` presets, the tree's `beat.bots`: easy 0, normal 0.2, hard 0.5; `NpcBending._beat_roll`, its own dice), and on
+a miss holds the full lock past the window (Return to Sender: its E again past it).
 
 **New BendLoadout kinds** (additive): `set:<set>.<key>` tune paths (a skill set's zone rule, read from the tree's
-`skill_sets`), `stock:guard_catch_s`, a class change `when: beat` (`class_beat`), `default_from` for a class's `volley_n`
+`skill_sets`), `stock:guard_catch_s`, a class change `when: <flag>` (`class_when`: only on the wearer's hits whose info
+carries the flag; `beat`, `avalanche`), `default_from` for a class's `volley_n`
 beside a node's own new code, and a modeless move's lock (Mend). `test_loadout_apply.gd` wears a node with the nodes it
 requires, reads a Beat class on a Beat hit and a `default_from`'s default.
 
@@ -301,7 +308,8 @@ The air lane's Dust Cloud (`AirTalents.extra_modes`, `talent_spec`, ... over the
 the fire lane's Cauterize (`FireTalents.modes_for`, its spec in code) built their own copies of this seam at the same call
 sites. Merging, keep these generic lines: they read any move's `talent_bend` whose `talent` is worn, so Dust Cloud works
 through them as it is (its spec already has `talent`), and Cauterize once its spec moves to `patch.talent_bend.cauterize`.
-`kit_words.key_moves` and the radial wheel still show the static kit (no body to ask).
+`KitWords.key_moves(el, i, body)` and the radial wheel (`RadialWheel.items_for(el, body)`) take the player's body (the fix
+pass, 2026-10-12): his strip and wheel show the Vent on 4's double tap; with no body (the menus, the how-to) the static kit.
 
 **Picks worn together, as the tree says** (`BendLoadout.overlay_for`; the tree's `stacking` and `excludes`). Before, a number
 two picks both set was refused for the second ("set by the first only"), so Rubble Wall with Quarry or the Vent, or Clean
@@ -313,3 +321,43 @@ already worn (either way) is refused (Heave and Fuming Column, Thick and Brimsto
 Heave and Fuming Column both applied, one a class and the other a Beat class). Each number keeps its `from` and whether a set
 twist set it beside it (`_put_n`, the resolve's `from`); `_fold_n` and `_stack` fold them. `test_loadout_apply.gd`'s clash
 check now pulls the opposite way and a second check stacks the same way; `test_talents_earth.gd` (combos) plays earth's.
+
+## Earth's fix pass (2026-10-12, the verifier's findings)
+
+Branch `tb/talents-earth-fix` (from `tb/talents-earth-p2`). What changed, all for wearers only (Classic's fingerprint passes):
+
+- **Kiln Stone, returns**: `RingRules.on_hit` hands a returned hit's class (`return_class`) to `BendLoadout.hit_class` too, so a
+  stone a Kiln wearer caught and threw back through fire knocks with base x1.15 (it already came out heated). A return's tag
+  (`<origin>.return`) is no class a node changes, so only the heat reaches it. Tested in a ring (the bot's stone caught, thrown
+  back through its Fire Wall: x1.15 over Classic's same return).
+- **Juggle switched off** (`nodes`: false; its code kept and tested under `config_override`): as written its plus ("hold two
+  stones, E throws the first, E again the second") is the Classic Catch's, which holds every stone of its window and throws one
+  an E, so worn it was only its minus (a third stone dropped, full catches 0.8 s). The owner's call: what its plus should be (a
+  proposal: E throws both held stones at once as a pair; or a held stone kept past the window's end; or cut it).
+- **The Beat pays only its technique's own cast** (`beat_on`, above): before, any of the wearer's held casts let go within
+  0.2 s flashed, clicked and carried `info.beat` (an RTS wearer's Pebbles), and another lane's Beat node would have switched
+  it on for all its wearer's casts at merge. Bots: `beat_rate` per difficulty (above).
+- **Avalanche's class numbers are the rolling stones'**: the tree's two class changes are marked `when: avalanche` (the stones'
+  info says avalanche), so the Boulder's own hit before it lands is Classic's (7.4), as its text and identity say ("at 80% of
+  its base" is the first stone's; "one Boulder until it lands"). Tested: the Boulder's own hit equal worn and not, three stones
+  rolled into the bot, one knock, at base 5.9.
+- **Sulphur Boulder's trail is laid as it flies**: each puff on the deck under the Boulder as it passes its mark
+  (`GustLift._trail`, the flight foreseen from the hurl: `BendGas.trail_step`), never in the air over the water
+  (`BendGas.trail_puff`: no deck within 1.5 m of the hurl's deck under it, no puff); a flight cut short lays the rest where it
+  stops.
+- **Sulphur Heart online**: `BendGas.live_n` is counted by `BendZone.make` for every gas zone, so a joiner's machine (its gas
+  made from the host's word) sees its own gas: his lock fill x1.15 there too.
+- **The Vent in the kit readers**: `KitWords.key_moves` and `RadialWheel.items_for` take the player's body (his strip's key 4
+  says "tap twice: Sulphur Vent", his wheel offers it); with no body, or wearing nothing, the very static kit as before.
+- **The soak**: `nodes=all` wears the element's live nodes the tree lets go together (an excluded later pick named and left
+  out: earth's Swift Roots, Sulphur Boulder, Fuming Column and Brimstone Wall beside Deep Roots, Heavy Boulder, Heave and
+  Thick Wall), so earth's all-nodes soak no longer reports a missing loadout (`element=earth nodes=all n=2`: worn_ok 3/3,
+  LOADOUT SOAK DONE).
+- **Tests**: `test_talents_earth.gd` 167 checks (was 142): the above, live hits for the class numbers (Pebbles 4%, Spike 12%,
+  Boulder 13%, Fuming Column base 9.3, Avalanche 5.9), the bot wearing Kick-Up and each Sulphur twist, the bot's Beat rate.
+  `test_loadout_apply.gd` reads any `when` class with its flag (not only `beat`); its LIVE lists untouched.
+
+**For the merge** (all four lanes): `BendLoadout.overlay_for` now stacks two picks that change one number the same way (ratios
+multiplied, a set twist's final) and refuses the tree's `excludes` (earth p2): pairs another lane's test expected refused will
+stack. `class_beat` became `class_when` (a flag layer over it). `beat_paid` takes the cast's move and mode; called with the
+body alone it still answers "pays on any held cast".
