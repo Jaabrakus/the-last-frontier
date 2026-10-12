@@ -30,6 +30,15 @@ extends RefCounted
 ##                                      my_modes, Bending.other_move), talent_spec (spec_of, FormEffects.apply, BendCast.cast),
 ##                                      talent_lock (SwayCaster._lock_time, NpcBending.lock_for), pose_mode (BendPoses.pick:
 ##                                      the Wind Wall's pose), label
+##   Frostwind (air.set.frostwind)      the skill set: frosts / frost_step (BendBolt.launch, its flight): his Gust or Wind Ball
+##                                      turns a puddle or a grate it crosses into crust (freeze_pool, make_crust: a snow
+##                                      FormRaised ridge CRUST_W x CRUST_H for CRUST_S, CRUST_CAP of his at once; floor waves and
+##                                      rolling stones stop at it, anyone can jump it, never slippery); a frozen grate is out of
+##                                      Bending.POOLS (no source) till its crust goes; steam it crosses falls as snow and clears;
+##                                      his Wind Wall drops water and ice as shards (wall_shards, BendZone.on_bolt); fire melts a
+##                                      crust (melt_crust in BendBolt._hit, a Breath's BendEffects.melt, a Fire Wall or burning
+##                                      ground on it: CrustWatch) back into its puddle (a grate's back into the grate); his Wind
+##                                      Wall 3.5 s (the set's spec number)
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
@@ -42,6 +51,7 @@ extends RefCounted
 ##                                          them, walls stop them)
 ##   Peak Wind (air.leap.peak_wind)         on_dash: a Beat Leap charges his Carried wind at its top (BendZone.carry_wind)
 
+const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const TAILWIND := "air.slice.tailwind"
 const DRIFT := "air.guard.drift"
 const EYE := "air.guard.eye"
@@ -68,6 +78,17 @@ const BOT_BEAT_RATE := {"easy": 0.0, "normal": 0.2, "hard": 0.5}
 const CARRY_M := 6.0
 const NEAR_MISS := "air.slip.near_miss"
 const DUST := "air.slot.dust"
+const FROSTWIND := "air.set.frostwind"
+## Frostwind's crust: a low ice ridge (m: long, high, thick), how long it lies (s), how many of a caster's stand at once, how
+## near a grate's middle a bolt must pass to freeze it (m), and the metas: a crust's maker (instance id), a grate frozen.
+const CRUST_W := 3.0
+const CRUST_H := 0.4
+const CRUST_T := 0.5
+const CRUST_S := 4.0
+const CRUST_CAP := 2
+const GRATE_R := 1.0
+const CRUST_META := &"air_crust_by"
+const FROZEN_META := &"air_frozen"
 ## The new skills a worn talent adds as a mode of a move on an empty double tap: id -> [move, mode] (their specs: moves.json
 ## <move>.talent_bend).
 const TALENT_MODES := {"air.slot.dust": ["air_wall", "dust"]}
@@ -395,3 +416,169 @@ static func label(m: String, mode: String) -> String:
 	if tb is Dictionary and (tb as Dictionary).get(mode) is Dictionary:
 		return String(((tb as Dictionary)[mode] as Dictionary).get("label", mode))
 	return mode
+
+
+# ---------------------------------------------------------------- Frostwind (the skill set) and its crust
+## Whether bolt info `info` of `by`'s is one Frostwind freezes with (a Gust or a Wind Ball of a Frostwind wearer; BendBolt.launch
+## sets its frosts).
+static func frosts(by: Node, info: Dictionary) -> bool:
+	var tag := String(info.get("tag", ""))
+	return tag in ["air_gust/gust", "air_blast/ball"] and BendLoadout.wears(by, FROSTWIND)
+
+
+## Frostwind (see the header) on the step a bolt of its takes (BendBolt's flight, `frosts`): a puddle or a grate it crosses
+## turned to crust, steam it crosses fallen as snow and cleared. Once each.
+static func frost_step(b: BendBolt, from: Vector3, step: Vector3) -> void:
+	var by := b._by()
+	if by == null or not b.is_inside_tree():
+		return
+	var to := from + step
+	var flat := Vector3(step.x, 0.0, step.z)
+	var way := flat.normalized() if flat.length_squared() > 1e-8 else -by.global_basis.z
+	for n in b.get_tree().get_nodes_in_group(Bending.POOLS):
+		var p3 := n as Node3D
+		if p3 == null or p3.is_queued_for_deletion() or p3.has_meta(FROZEN_META):
+			continue
+		var reach := (p3 as BendZone).radius if p3 is BendZone else GRATE_R
+		if p3 is BendZone and (p3 as BendZone).kind != "puddle":
+			continue                                   # (only water freezes: a mud pool never does)
+		if _flat_dist(p3.global_position, from, to) > b.radius + reach or b.global_position.y - p3.global_position.y > 3.0:
+			continue
+		freeze_pool(by, p3, way)
+	for z in b.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz == null or bz.kind != "steam" or bz.is_queued_for_deletion() or not bz.inside(b.global_position):
+			continue
+		snow_fall(bz.global_position, bz.radius)
+		bz.end("snow")
+
+
+## The flat distance (m) from `p` to the segment `a`-`b`.
+static func _flat_dist(p: Vector3, a: Vector3, b: Vector3) -> float:
+	var q := Geometry3D.get_closest_point_to_segment(Vector3(p.x, 0.0, p.z), Vector3(a.x, 0.0, a.z), Vector3(b.x, 0.0, b.z))
+	return q.distance_to(Vector3(p.x, 0.0, p.z))
+
+
+## Pool `pool` (a puddle zone, or a grate: Bending.POOLS) frozen by `by`'s wind into a crust across `way`: a puddle is gone
+## into it (fire melts it back), a grate is no water source while it stands (out of POOLS, back as it ends).
+static func freeze_pool(by: Node3D, pool: Node3D, way: Vector3) -> FormRaised:
+	var at := FormEffects.ground_at(by, pool.global_position)
+	var src := {"kind": "grate", "node": pool}
+	if pool is BendZone:
+		var pz := pool as BendZone
+		src = {"kind": "puddle", "owner": pz.owner_node, "radius": pz.radius, "life": maxf(pz.life_s - pz.t, 2.0)}
+		pz.end("frozen")
+	else:
+		pool.set_meta(FROZEN_META, true)
+		pool.remove_from_group(Bending.POOLS)
+	return make_crust(by, at, way, CRUST_S, src)
+
+
+## A frost crust of `by`'s at `at` (its foot) lying across `way`: a low ice ridge CRUST_W long, CRUST_H high, `life` s (a snow
+## FormRaised: floor waves and rolling stones stop at it, anyone can jump it, shots wear it as ice; never slippery), with its
+## CrustWatch. Two of his at once (his oldest crumbles: "capped").
+static func make_crust(by: Node3D, at: Vector3, way: Vector3, life: float, src := {}) -> FormRaised:
+	var flat := Vector3(way.x, 0.0, way.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else Vector3.FORWARD
+	var mine: Array = []
+	for w in by.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var fr := w as FormRaised
+		if fr != null and fr.state != FormRaised.State.CRUMBLING and int(fr.get_meta(CRUST_META, 0)) == by.get_instance_id():
+			mine.append(fr)
+	mine.sort_custom(func(a: FormRaised, b: FormRaised) -> bool: return int(a.get_meta(&"air_crust_n", 0)) < int(b.get_meta(&"air_crust_n", 0)))
+	while mine.size() >= CRUST_CAP:
+		(mine.pop_front() as FormRaised).crumble("capped")
+	var wd: Dictionary = SwayMoves.move("earth_wall").get("wall", {})
+	var wn: Dictionary = FormMatter.numbers(wd, FormMatter.entry("earth_wall", "snow"), "snow")
+	wn["width_m"] = CRUST_W
+	wn["height_m"] = CRUST_H
+	wn["thick_m"] = CRUST_T
+	wn["life_s"] = life
+	wn["rise_s"] = 0.15
+	wn["crumble_s"] = 0.8
+	var xf := Transform3D(Basis(Vector3.UP.cross(flat).normalized(), Vector3.UP, flat), at)
+	var r := FormRaised.raise(by.get_tree().current_scene, "wall", xf, wn, absi(hash(at)) % 97)
+	_crust_n += 1
+	r.set_meta(CRUST_META, by.get_instance_id())
+	r.set_meta(&"air_crust_n", _crust_n)
+	r.set_meta(&"bend_ice", true)
+	r.set_meta(&"bend_by", by.get_instance_id())
+	var w := CrustWatch.new()
+	w.name = "CrustWatch"
+	w.src = src
+	w.by = by
+	r.add_child(w)
+	BendLooks.burst(at + Vector3.UP * 0.3, "ice", 18, Vector3.UP, 120.0, 2.0, 0.2)
+	return r
+
+
+static var _crust_n := 0
+
+
+## Whether `r` is a frost crust (anyone's).
+static func is_crust(r: Node) -> bool:
+	return r is FormRaised and r.has_meta(CRUST_META)
+
+
+## A fire bolt meeting `r` (BendBolt._hit): a crust melts back (its puddle again, a grate's grate). True when it did.
+static func melt_crust(r: FormRaised) -> bool:
+	if not is_crust(r) or not r.is_up():
+		return false
+	r.crumble("melted")
+	return true
+
+
+## Steam fallen as snow (its look; the cloud cleared by whoever calls).
+static func snow_fall(at: Vector3, r: float) -> void:
+	BendLooks.burst(at + Vector3.UP * 1.6, "ice", 26, Vector3.DOWN, 70.0, 1.5, 0.12)
+	BendLooks.burst(at + Vector3.UP * 0.8 + Vector3(r * 0.4, 0.0, 0.0), "ice", 14, Vector3.DOWN, 90.0, 1.0, 0.1)
+
+
+## A Frostwind wearer's Wind Wall (BendZone.on_bolt's wind_wall): water and ice it blows aside fall as shards instead (the bolt
+## spent at the wall, ice shards dropping). True when it did.
+static func wall_shards(z: BendZone, b: BendBolt) -> bool:
+	if not b.kind in ["water", "ice"] or b.guarded_by.has(z.get_instance_id()) or not BendLoadout.wears(z.owner_node, FROSTWIND):
+		return false
+	z.took += 1
+	BendLooks.burst(b.global_position, "ice", 16, Vector3.DOWN, 80.0, 3.0, 0.16)
+	b.end("shards")
+	return true
+
+
+## A crust's own watch (a child of its FormRaised): fire standing on it (a Fire Wall, burning ground) melts it; as it goes,
+## a grate it froze is a water source again, and a puddle it froze comes back when fire melted it.
+class CrustWatch extends Node:
+	var src := {}
+	var by: Node3D
+	var _t := 0.0
+
+	func _ready() -> void:
+		(get_parent() as FormRaised).crumbled.connect(_gone)
+
+	func _physics_process(dt: float) -> void:
+		_t -= dt
+		if _t > 0.0:
+			return
+		_t = 0.25
+		var r := get_parent() as FormRaised
+		if r == null or not r.is_up() or not NetSpells.decides():
+			return
+		for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+			var bz := z as BendZone
+			if bz != null and bz.kind in ["fire_wall", "burn"] and not bz.is_queued_for_deletion() \
+					and (bz.inside(r.global_position) or bz.inside(r.global_position + r.global_basis.x * 1.2)
+					or bz.inside(r.global_position - r.global_basis.x * 1.2)):
+				r.crumble("melted")
+				return
+
+	func _gone(r: FormRaised, why: String) -> void:
+		var g: Variant = src.get("node")
+		if String(src.get("kind", "")) == "grate" and g is Node and is_instance_valid(g):
+			(g as Node).remove_meta(AirTalents.FROZEN_META)
+			(g as Node).add_to_group(Bending.POOLS)        # (its water a source again)
+		if why == "melted":
+			BendLooks.burst(r.global_position + Vector3.UP * 0.2, "water", 22)
+			var own: Variant = src.get("owner")
+			if String(src.get("kind", "")) == "puddle" and own is Node3D and is_instance_valid(own):
+				BendZone.make(own as Node3D, "puddle", r.global_position, {"radius_m": float(src.get("radius", 0.9)),
+						"life_s": float(src.get("life", 4.0))}, r.global_basis.z)

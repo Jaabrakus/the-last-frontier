@@ -153,6 +153,8 @@ var _swing_became := false
 var swing_hold := Callable()
 ## Carrying Wind's Beat Gust (AirTalents.on_wind_wave): the loose stones it crosses are thrown on (AirTalents.carry_stones).
 var carries := false
+## Frostwind's Gust or Wind Ball (AirTalents.frosts): the puddles, grates and steam it crosses freeze (AirTalents.frost_step).
+var frosts := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -188,6 +190,7 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.pull = bool(spec.get("pull", false))
 	var inf: Variant = spec.get("_info", {})
 	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
+	b.frosts = AirTalents.frosts(by, b.info)        # (Frostwind worn: its wind freezes water it crosses; Classic false)
 	b.floor_wave = String(spec.get("do", "")) == "floor_wave"
 	if b.floor_wave:
 		b.width_m = float(spec.get("width_m", 2.2))
@@ -446,6 +449,8 @@ func _physics_process(dt: float) -> void:
 		_near_miss()
 		if carries:
 			AirTalents.carry_stones(self, from, step)
+		if frosts:
+			AirTalents.frost_step(self, from, step)
 	if floor_wave:
 		_wave_step(from, step)
 		if lip_end and not spent:
@@ -662,6 +667,10 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		# (a ghost: the world or a raised wall ends it here as on the host, its look at once; the wall's wear is the host's word)
 		_end_look("wall" if who is FormRaised else "world", at, n)
 		_finish("wall" if who is FormRaised else "world")
+		return
+	if who is FormRaised and kind == "fire" and AirTalents.melt_crust(who as FormRaised):
+		BendLooks.burst(at, "steam", 14, n, 70.0, 2.0, 0.5)
+		end("melted")                             # (Frostwind's crust melted back by fire)
 		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)

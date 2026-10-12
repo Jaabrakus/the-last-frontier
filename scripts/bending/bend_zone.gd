@@ -583,6 +583,8 @@ func on_bolt(b: BendBolt) -> bool:
 				SbFx.fire(owner_node, SbFx.key_of(info), "blown", {"at": b.global_position, "dir": b.velocity})
 				return true
 		"wind_wall":
+			if AirTalents.wall_shards(self, b):
+				return true                          # (Frostwind: his Wind Wall drops water and ice as shards)
 			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()) and prison_s <= 0.0:
 				# (blown up and aside, not sent back: up over the wall and off to the side it was nearer)
 				b.guarded_by.append(get_instance_id())

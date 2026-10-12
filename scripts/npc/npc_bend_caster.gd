@@ -15,7 +15,7 @@ extends BodyBendCaster
 ## No camera, no keys, no notices; nothing drawn on anyone (the owner's no-target-cues rule).
 
 ## Clouds that hide a man from a bot's aim (BendZone kinds).
-const HIDING := ["smoke", "dust", "spray", "steam"]
+const HIDING := ["smoke", "dust", "spray", "steam", "snow"]          # (snow: Blizzard's, a worn talent's)
 
 var me: NpcFighter
 

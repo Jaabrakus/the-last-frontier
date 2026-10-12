@@ -30,6 +30,10 @@ extends SceneTree
 ##   Dust Cloud         not worn, 4 has one move; worn, 4 tapped twice readies it (the hotbar's own taps), named, the Wind
 ##                      Wall's pose, lock 0.9 s; cast through the real lock: a 3 m cloud for 2.5 s 2-6 m off where he aims, hiding
 ##                      him from the foe; a new one ends the old; his Wind Wall 3.5 s (4); a bot wearing it casts it (BendCast)
+##   Frostwind          his Gust or Wind Ball over a puddle turns it to crust (a snow ridge 0.4 x 3 m across its way, 4 s; not
+##                      worn: it stays a puddle); two of his at once; a floor wave stops at it; fire melts it back into the
+##                      puddle; over a grate: no water source till a Fire Wall on it melts it; steam his Gust crosses clears;
+##                      his Wind Wall drops water as shards; his Wind Wall 3.5 s; a bot wearing it freezes a puddle too
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
@@ -37,7 +41,7 @@ const NAME := "TALENTS AIR"
 const LIMIT_S := 600.0
 const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
 		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind", "air.slip.near_miss", "air.patch.second_wind",
-		"air.gust.dragon_fire", "air.slot.dust"]
+		"air.gust.dragon_fire", "air.slot.dust", "air.set.frostwind"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -186,14 +190,20 @@ func _clear_air() -> void:
 ## foe's chest.
 func _stage(gap := 7.0) -> void:
 	await _clear_air()
-	var way := Vector3(foe.global_position.x - player.global_position.x, 0.0, foe.global_position.z - player.global_position.z)
-	way = way.normalized() if way.length_squared() > 1e-4 else Vector3.FORWARD
+	var way := Vector3.RIGHT                         # (along the deck's long way, on its middle line: 5 m from every grate)
 	var mid := _home
 	player.global_position = mid - way * gap * 0.5
 	player.velocity = Vector3.ZERO
 	foe.global_position = mid + way * gap * 0.5
 	foe.velocity = Vector3.ZERO
 	foe.face_point(player.global_position)
+	var k := 0
+	for e: Dictionary in mode.extras:
+		if e.get("bot") is NpcFighter and e.bot != foe:
+			# (the other bots off the line, still: 3 m to its side, between the grates)
+			(e.bot as NpcFighter).global_position = mid + Vector3(-2.0 + 4.0 * k, 0.0, 3.0 if k % 2 == 0 else -3.0)
+			(e.bot as NpcFighter).velocity = Vector3.ZERO
+			k += 1
 	for b: Node in [player, foe]:
 		rules.note_lock_started(b)                  # (his spawn safety over: a lock ends it, spec §7.2)
 		var kn := BendKnock.peek(b)
@@ -246,7 +256,7 @@ func _run() -> void:
 	await _ticks(3)
 	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
 	player.pitch = 0.0
-	_home = (player.global_position + foe.global_position) * 0.5
+	_home = Vector3(4.0, FormEffects.ground_at(player, Vector3(4.0, player.global_position.y, 0.0)).y, 0.0)
 	physics_frame.connect(_aim)
 	var fc := BendCaster.of(foe) as NpcBendCaster
 	if fc != null:
@@ -280,6 +290,8 @@ func _run() -> void:
 		await _dragon_fire()
 	if _on("air.slot.dust"):
 		await _dust()
+	if _on("air.set.frostwind"):
+		await _frostwind()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -990,3 +1002,222 @@ func _wall_life() -> float:
 			life = (z as BendZone).life_s
 			(z as BendZone).queue_free()
 	return life
+
+
+# ---------------------------------------------------------------- Frostwind (the skill set)
+## The crusts of `by` standing (rising or up).
+func _crusts(by: Node) -> Array:
+	var out: Array = []
+	for w in get_nodes_in_group(FormRaised.GROUP):
+		var fr := w as FormRaised
+		if fr != null and fr.state != FormRaised.State.CRUMBLING and int(fr.get_meta(AirTalents.CRUST_META, 0)) == by.get_instance_id():
+			out.append(fr)
+	return out
+
+
+## A puddle of the mate's `m` m ahead of the player toward the foe (as a Parry's melt or a Downpour leaves one).
+func _puddle_ahead(m: float) -> BendZone:
+	var way := foe.global_position - player.global_position
+	way.y = 0.0
+	return BendZone.make(foe, "puddle", FormEffects.ground_at(player, player.global_position + way.normalized() * m),
+			{"radius_m": 0.9, "life_s": 8.0}, way)
+
+
+## The player's `m` `md` cast at the foe (the game's own cast) over a puddle 3 m ahead: {puddle (still there), crusts (his),
+## crust (the newest: its height, width, life, across the way)}.
+func _over_puddle(m: String, md: String) -> Dictionary:
+	await _stage(9.0)
+	var pz := _puddle_ahead(3.0)
+	await _ticks(3)
+	var b := _cast(pc, m, md)
+	var dir := b.velocity if b != null else Vector3.FORWARD
+	await _secs(0.5)
+	var cs := _crusts(player)
+	var c: FormRaised = cs[-1] if not cs.is_empty() else null
+	var res := {"puddle": is_instance_valid(pz) and not pz.is_queued_for_deletion() and pz.is_in_group(Bending.POOLS),
+			"crusts": cs.size(), "h": c.size.y if c != null else -1.0, "w": c.size.x if c != null else -1.0,
+			"life": c.life_s if c != null else -1.0, "matter": c.matter if c != null else "",
+			"across": absf(c.global_basis.x.normalized().dot(Vector3(dir.x, 0.0, dir.z).normalized())) if c != null else 1.0,
+			"at": c.global_position if c != null else Vector3.INF}
+	if is_instance_valid(pz):
+		pz.queue_free()
+	return res
+
+
+func _clear_crusts() -> void:
+	for w in get_nodes_in_group(FormRaised.GROUP):
+		if (w as FormRaised).has_meta(AirTalents.CRUST_META):
+			(w as FormRaised).queue_free()
+	await _ticks(2)
+
+
+func _frostwind() -> void:
+	_wear([])
+	var c := await _over_puddle("air_gust", "gust")
+	_expect(bool(c.puddle) and int(c.crusts) == 0, "Frostwind not worn: his Gust crosses a puddle and it stays a puddle")
+	_wear(["air.set.frostwind"])
+	var w := await _over_puddle("air_gust", "gust")
+	_expect(not bool(w.puddle) and int(w.crusts) == 1 and String(w.matter) == "snow" and _near(float(w.h), 0.4) and _near(float(w.w), 3.0)
+			and _near(float(w.life), 4.0) and float(w.across) < 0.1,
+			"Frostwind: his Gust over a puddle turns it to crust: an ice ridge 0.4 m high, 3 m long across its way, 4 s (%s)" % [w])
+	var wb := await _over_puddle("air_blast", "ball")
+	_expect(not bool(wb.puddle) and int(wb.crusts) == 2, "Frostwind: his Wind Ball over a puddle does too (%d of his)" % wb.crusts)
+	var w3 := await _over_puddle("air_gust", "gust")
+	_expect(int(w3.crusts) == 2, "Frostwind: two crusts of his at once, the oldest goes (%d)" % w3.crusts)
+	await _clear_crusts()
+
+	# a floor wave stops at a crust; fire melts it back into the puddle it was
+	var w4 := await _over_puddle("air_gust", "gust")
+	var crust: FormRaised = (_crusts(player) as Array)[-1] if not _crusts(player).is_empty() else null
+	var way := foe.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var at: Vector3 = w4.at
+	var stone_w := BendEffects.floor_wave(BendCaster.of(foe), {}, {"do": "floor_wave", "kind": "stone", "mps": 18.0, "range_m": 8.0, "width_m": 1.6,
+			"height_m": 0.9, "damage": 8.0, "knock_mps": 4.0})
+	if stone_w != null:
+		stone_w.global_position = Vector3(at.x, stone_w.global_position.y, at.z) + way * 3.0
+		stone_w.velocity = -way * 18.0
+		stone_w.deck_y = at.y
+	var stopped := {"why": ""}
+	if stone_w != null:
+		stone_w.ended.connect(func(why: String) -> void:
+			stopped.why = why
+			stopped["at"] = stone_w.global_position)
+	await _secs(0.6)
+	_expect(String(stopped.why) == "wall", "Frostwind: a floor wave running into the crust stops at it (%s; at %s, crust %s)" % [stopped.why,
+			stone_w.global_position if stone_w != null and is_instance_valid(stone_w) else stopped.get("at", "-"), at])
+	var puddles0 := _puddles_near(at)
+	var fire_w := BendBolt.launch(mate_of(), at + way * 3.0 + Vector3.UP * 0.25, -way, {"kind": "fire", "mps": 20.0, "radius_m": 0.2,
+			"range_m": 8.0, "damage": 6.0, "knock_mps": 2.0, "_info": {"tag": "fire_blast/fireball"}})
+	var fire_end := {"why": ""}
+	fire_w.ended.connect(func(w0: String) -> void: fire_end.why = w0)
+	await _secs(0.5)
+	var melted := crust == null or not is_instance_valid(crust) or crust.state == FormRaised.State.CRUMBLING
+	_expect(melted and _puddles_near(at) > puddles0, "Frostwind: fire melts the crust back into a puddle")
+	await _clear_crusts()
+
+	# a grate: frozen it is no water source; melted, it is again
+	var g := _nearest_grate()
+	_expect(g != null, "the ring has grates")
+	if g != null:
+		await _stage(9.0)
+		# (from the deck's middle out across the grate, level: the grates lie by the lips)
+		var gw := Vector3(0.0, 0.0, signf(g.global_position.z) if absf(g.global_position.z) > 0.01 else 1.0)
+		player.global_position = Vector3(g.global_position.x, player.global_position.y, g.global_position.z) - gw * 3.5
+		player.velocity = Vector3.ZERO
+		foe.global_position = _home + Vector3(5.0, 0.0, 0.0)
+		foe.velocity = Vector3.ZERO
+		aim_at = NpcSenses.chest_of(player) + gw * 12.0
+		await _ticks(12)
+		aim_at = NpcSenses.chest_of(player) + gw * 12.0
+		await _ticks(6)
+		var src0 := BendEffects._source_near(player, g.global_position, 0.5)
+		_cast(pc, "air_blast", "ball")
+		await _secs(0.4)
+		var frozen := not g.is_in_group(Bending.POOLS) and not BendEffects._source_near(player, g.global_position, 0.5)
+		var gc: Array = _crusts(player)
+		_expect(src0 and frozen and gc.size() == 1, "Frostwind: his Wind Ball over a grate freezes it: no water source while the crust stands (%s, %s, %d)"
+				% [src0, frozen, gc.size()])
+		var fz := BendZone.make(mate_of(), "fire_wall", g.global_position, (SwayMoves.move("fire_wall").bend as Dictionary).wall, gw)
+		await _secs(0.6)
+		_expect(g.is_in_group(Bending.POOLS) and BendEffects._source_near(player, g.global_position, 0.5),
+				"Frostwind: a Fire Wall on the crust melts it: the grate is a source again")
+		if is_instance_valid(fz):
+			fz.queue_free()
+	await _clear_crusts()
+
+	# steam his wind crosses falls as snow and clears
+	var st := {}
+	for id: String in ["", "air.set.frostwind"]:
+		await _stage(9.0)
+		_wear([id] if id != "" else [])
+		var sway := foe.global_position - player.global_position
+		sway.y = 0.0
+		var sz := BendBolt.steam(foe, player.global_position + sway.normalized() * 3.0 + Vector3.UP * 1.2)
+		await _ticks(2)
+		_cast(pc, "air_gust", "gust")
+		await _secs(0.3)
+		st[id] = sz != null and is_instance_valid(sz) and not sz.is_queued_for_deletion()
+		if sz != null and is_instance_valid(sz):
+			sz.queue_free()
+	_expect(bool(st[""]) and not bool(st["air.set.frostwind"]), "Frostwind: steam his Gust crosses falls as snow and clears (not worn: it stays)")
+
+	# his Wind Wall drops water and ice as shards (not worn: blown up and aside)
+	var sh := {}
+	for id: String in ["", "air.set.frostwind"]:
+		await _stage(9.0)
+		_wear([id] if id != "" else [])
+		var known := {}
+		for z in get_nodes_in_group(BendZone.GROUP):
+			known[z.get_instance_id()] = true
+		sc.ready_spell("air_wall")
+		sc.set_mode("air_wall", "wall")
+		BendEffects.apply(pc, "air_wall", "wall", (SwayMoves.move("air_wall").bend as Dictionary).wall)
+		var wz: BendZone = null
+		for z in get_nodes_in_group(BendZone.GROUP):
+			if not known.has(z.get_instance_id()) and (z as BendZone).kind == "wind_wall":
+				wz = z
+		await _ticks(3)
+		var wb2: BendBolt = null
+		if wz != null:
+			var into := wz.global_position - foe.global_position
+			into.y = 0.0
+			wb2 = BendBolt.launch(foe, foe.global_position + Vector3.UP * 1.3 + into.normalized() * 0.8, into.normalized(),
+					{"kind": "water", "mps": 26.0, "radius_m": 0.2, "range_m": 20.0, "damage": 8.0, "knock_mps": 3.0, "_info": {"tag": "water_jet/splash"}})
+		var why := {"why": ""}
+		if wb2 != null:
+			wb2.ended.connect(func(w0: String) -> void: why.why = w0)
+		await _secs(0.5)
+		sh[id] = String(why.why)
+		if wz != null and is_instance_valid(wz):
+			wz.queue_free()
+		if wb2 != null and is_instance_valid(wb2):
+			wb2.end("test")
+	_expect(String(sh[""]) != "shards" and String(sh["air.set.frostwind"]) == "shards",
+			"Frostwind: water his Wind Wall meets falls as shards (%s; not worn: %s)" % [sh["air.set.frostwind"], sh[""]])
+	_wear(["air.set.frostwind"])
+	var wl := _wall_life()
+	_expect(_near(wl, 3.5), "Frostwind: his Wind Wall stands %.1f s (4)" % wl)
+	# a bot wearing it: its Wind Ball freezes a puddle too
+	_wear([])
+	await _stage(9.0)
+	BendLoadout.wear(foe, ["air.set.frostwind"], "", "air")
+	var bway := player.global_position - foe.global_position
+	bway.y = 0.0
+	var bp := BendZone.make(player, "puddle", FormEffects.ground_at(foe, foe.global_position + bway.normalized() * 3.0), {"radius_m": 0.9, "life_s": 8.0}, bway)
+	await _ticks(2)
+	_cast(BendCaster.of(foe), "air_blast", "ball")
+	await _secs(0.4)
+	var bc := _crusts(foe).size()
+	BendLoadout.clear(foe)
+	_expect(bc == 1 and (not is_instance_valid(bp) or bp.is_queued_for_deletion()), "Frostwind on a bot: its Wind Ball freezes a puddle (%d crust)" % bc)
+	await _clear_crusts()
+	await _clear_air()
+
+
+func mate_of() -> NpcFighter:
+	for e: Dictionary in mode.extras:
+		if e.get("bot") is NpcFighter and BendCaster.same_team(e.bot, player):
+			return e.bot
+	return foe
+
+
+func _puddles_near(at: Vector3) -> int:
+	var n := 0
+	for z in get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "puddle" and not bz.is_queued_for_deletion() and Vector2(bz.global_position.x - at.x, bz.global_position.z - at.z).length() < 1.5:
+			n += 1
+	return n
+
+
+func _nearest_grate() -> Node3D:
+	var best: Node3D = null
+	var bd := INF
+	for g in mode.ring.grates:
+		var d := g.global_position.distance_to(_home)
+		if d < bd:
+			bd = d
+			best = g
+	return best
