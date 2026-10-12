@@ -2,25 +2,20 @@ extends SceneTree
 ## The gun-style casts (2026-10-11, the owner: Embers the pistol, the Ice Spear with the water spear forming in the hands;
 ## 2026-10-12: "the lightning pistol... we dont have that skill and use that animation for the ice or water rifle spear for
 ## water? and we keep the orignal lightning animation"), headless, in the ring:
-##   the picks       Embers' gun clips (each hand) timed as the sweep they replaced; the Ice Spear on the game's own standing
-##                   pistol aim (frontier-pistol-ice, aim "pistol", the water spear held) timed as the overhand throw; Lightning
-##                   the original; the Lightning Pistol twist gone (not in the tree, not live)
-##   the aim         an Ice Spear lock: BendAimArm right after the cast pose (before the body's helpers), the two fingers on the
-##                   crosshair's point and the head turned toward it while it is held; the kick after the strike; off once the
-##                   cast is over
-##   the water spear the Ice Spear's lock holds the water spear (BendLooks.HeldSpear) out from the pointing hand along its
-##                   forearm, drawn out as the lock fills; cast, it stays in the hand to the strike and is gone after it; a
-##                   broken lock drops it
+##   the picks       Embers' gun clips (each hand) timed as the sweep they replaced; the Ice Spear on our own overhand spear
+##                   throw with the floating spear (held "ice_spear"), launched from it (float_from), charged held past full
+##                   (its grow: ice/spear.grown); Lightning the original; the Lightning Pistol twist gone (not in the tree)
+##   the spear       (the owner, later 2026-10-12: "use the spear from the frontiers game but make it icy blue", "float above
+##                   the user offset pararell with the arm") the Ice Spear's lock holds BendLooks.FloatSpear: drawn out as the
+##                   lock fills, floating over the throwing arm, its point on the aim; charged, longer and glowing; cast, it
+##                   stays to the strike and goes; the lance thrown from where it floated; a broken lock shatters it
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_gun_casts.gd
 ## Ends with "GUN CASTS TEST PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "GUN CASTS TEST"
 const LIMIT_S := 240.0
 const PISTOL := "fire.lightning.pistol"
-const ICE_CLIP := "frontier-pistol-ice"
-## The two fingers point within this of the crosshair's point; the head's face within HEAD_DEG of it.
-const AIM_DEG := 6.0
-const HEAD_DEG := 12.0
+const ICE_CLIP := "own-bend-throw-overhand"
 
 var checks := 0
 var fails: Array[String] = []
@@ -31,10 +26,6 @@ var sc: SwayCaster
 var pose: SwayPose
 var _struck_frame := -1
 var _frame := 0
-## Sampled in the skeleton's update (after every modifier): the fingers' and the face's angles to the aim (deg).
-var _finger_deg := -1.0
-var _face_deg := -1.0
-var _spear_seen := {}
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -103,12 +94,11 @@ func _run() -> void:
 			"Embers: timed as the sweep it replaced (hold %.2f, strike %.2f, back %.2f, end %.2f s), both hands" % [float(em.hold_s),
 			float(em.strike_s), float(em.back_s), float(em.get("end_s", -1.0))])
 	var sp := BendPoses.pick("ice", "spear", "water")
-	var over := BendPoses._filled({"clip": "own-bend-throw-overhand"}, BendPoses.data())
-	_expect(String(sp.clip) == ICE_CLIP and String(sp.hand) == "r_palm" and String(sp.get("aim", "")) == "pistol"
-			and String(sp.get("held", "")) == "water_spear"
-			and _near(sp.hold_s, over.hold_s) and _near(sp.strike_s, over.strike_s) and _near(sp.back_s, over.back_s)
-			and _near(sp.get("end_s"), BendPoses.animation("own-bend-throw-overhand").length),
-			"Ice Spear: the pistol's aim, the water spear held, timed as the overhand throw (strike %.2f s), the bolt from the pointing hand" % float(sp.strike_s))
+	var ss: Dictionary = (SwayMoves.move("ice").get("bend", {}) as Dictionary).get("spear", {})
+	_expect(String(sp.clip) == ICE_CLIP and String(BendPoses._as_pose(sp.get("alt", "")).get("clip", "")) == "own-bend-throw-overhand-l"
+			and String(sp.get("held", "")) == "ice_spear" and bool(ss.get("float_from", false)) and ss.get("grow") is Dictionary
+			and not RingRules.class_of("ice/spear.grown").is_empty(),
+			"Ice Spear: our own overhand spear throw (each hand), the floating spear held and thrown from, charged when grown (%s)" % sp.clip)
 	_expect(BendPoses.body_strike_s(em) == float(BendPoses.animation("own-bend-fire-embers-gun").get_meta(&"strike_s")),
 			"a bot plays the gun clip straight through: its strike is the clip's own (%.3f s)" % BendPoses.body_strike_s(em))
 	_expect(String(BendPoses.pick("fire_arc", "lightning", "fire").clip) == "own-bend-fire-lightning",
@@ -139,75 +129,12 @@ func _run() -> void:
 		mode.foe.held = true
 		mode.foe.global_position = Vector3(0.0, 60.0, -400.0)
 	await _frames(30)
-	await _aim_checks()
 	await _spear_checks()
 	_end()
 
 
-## An Ice Spear lock on the pistol's aim: the arm and the head on the crosshair, the kick, off after.
-func _aim_checks() -> void:
-	Bending.of(player).element = "water"
-	_expect(String(BendPoses.pick("ice", "spear", "water", player).clip) == ICE_CLIP
-			and String(BendPoses.pick("ice", "spear", "water", mode.foe).clip) == ICE_CLIP,
-			"the player's Ice Spear and the bot's are both the pistol's aim")
-	_pin("ice", "spear")
-	var sk := player.skeleton
-	sk.skeleton_updated.connect(_sample_aim)
-	pose._on_started("ice", null)
-	_expect(String(pose.anim_name) == ICE_CLIP and String(pose.pick.get("aim", "")) == "pistol",
-			"the lock plays the pistol's aim (%s)" % pose.anim_name)
-	await _frames(30)                      # (0.5 s: raised, held on the aim)
-	var arm: Node = pose._aim_arm
-	_expect(arm != null and is_instance_valid(arm) and arm.get_parent() == sk and arm.get_index() == pose._pose.get_index() + 1,
-			"BendAimArm sits right after the cast pose")
-	var after_ok := true
-	if arm != null and is_instance_valid(arm):
-		for i in range(arm.get_index() + 1, sk.get_child_count()):
-			after_ok = after_ok and sk.get_child(i) is CharacterBodyMesh
-	_expect(after_ok, "only the body's helpers come after it")
-	_expect(arm != null and float(arm.get(&"weight")) > 0.95, "held on the aim: its weight %.2f" % (float(arm.get(&"weight")) if arm != null else -1.0))
-	_expect(_finger_deg >= 0.0 and _finger_deg <= AIM_DEG, "the two fingers point at the crosshair's point (%.1f deg off)" % _finger_deg)
-	_expect(_face_deg >= 0.0 and _face_deg <= HEAD_DEG, "the head looks at the crosshair's point (%.1f deg off)" % _face_deg)
-	_expect(is_zero_approx(pose.aim_lean), "no spine lean on the pistol's aim (%.3f)" % pose.aim_lean)
-	# the release: the strike, the kick, the end
-	_struck_frame = -1
-	_frame = 0
-	pose.struck.connect(_on_struck, CONNECT_ONE_SHOT)
-	pose._on_cast("ice", null)
-	var kick_max := 0.0
-	var guard := 0
-	while pose.phase != "" and guard < 400:
-		await process_frame
-		_frame += 1
-		guard += 1
-		if arm != null and is_instance_valid(arm):
-			kick_max = maxf(kick_max, float(arm.get(&"kick_deg")))
-	_expect(_struck_frame > 0, "the strike was told (frame %d after the release)" % _struck_frame)
-	_expect(kick_max > 5.0, "the kick after the strike (up to %.1f deg)" % kick_max)
-	await _frames(2)
-	_expect(arm != null and is_instance_valid(arm) and float(arm.get(&"weight")) == 0.0, "the cast over: the arm's aim is off")
-	sk.skeleton_updated.disconnect(_sample_aim)
-	sc._pinning = false
-
-
-func _sample_aim() -> void:
-	var arm: Node = pose._aim_arm if pose != null else null
-	if arm == null or not is_instance_valid(arm) or float(arm.get(&"weight")) < 0.95:
-		return
-	var sk := player.skeleton
-	var g := func(bn: String) -> Vector3: return sk.get_bone_global_pose(sk.find_bone(bn)).origin
-	var base: Vector3 = (g.call("r_indexa") + g.call("r_middlea")) * 0.5
-	var tip: Vector3 = (g.call("r_indexc") + g.call("r_middlec")) * 0.5
-	var target: Vector3 = arm.get(&"target")
-	_finger_deg = rad_to_deg((tip - base).angle_to(target - tip))
-	var hb := sk.find_bone("headb")
-	var face_local := (sk.get_bone_global_rest(hb).basis.orthonormalized().inverse() * Vector3(0, 0, 1)).normalized()
-	var hg := sk.get_bone_global_pose(hb)
-	_face_deg = rad_to_deg((hg.basis.orthonormalized() * face_local).angle_to(target - hg.origin))
-
-
-## The Ice Spear's water spear: out from the pointing hand while the lock fills, kept to the strike, gone after; a broken lock
-## drops it.
+## The Ice Spear's floating spear: drawn out as the lock fills, over the throwing arm, its point on the aim; charged, longer and
+## glowing; cast, it stays to the strike and goes; the lance thrown from where it floated; a broken lock shatters it.
 func _spear_checks() -> void:
 	Bending.of(player).element = "water"
 	_pin("ice", "spear")
@@ -216,39 +143,60 @@ func _spear_checks() -> void:
 	pose._stop()
 	sc._lock_looks("ice")
 	var spear: Node3D = sc.charge as Node3D
-	_expect(spear != null and spear.name.begins_with("BendHeldSpear"), "the Ice Spear's lock holds the water spear (%s)" % (spear.name if spear != null else "none"))
+	_expect(spear != null and spear.name.begins_with("BendFloatSpear"), "the Ice Spear's lock floats the spear (%s)" % (spear.name if spear != null else "none"))
 	if spear == null:
 		return
 	pose._on_started("ice", null)
-	_expect(String(pose.anim_name) == ICE_CLIP, "the lock plays the pistol's aim (%s)" % pose.anim_name)
+	_expect(String(pose.anim_name).begins_with(ICE_CLIP), "the lock plays the overhand spear throw (%s)" % pose.anim_name)
 	var shown_at := -1.0
 	for i in 36:                            # (0.6 s: the lock's fill rising to full)
 		spear.set(&"level", clampf(float(i + 1) / 36.0, 0.0, 1.0))
 		await process_frame
 		if shown_at < 0.0 and spear.visible:
 			shown_at = float(i + 1) / 36.0
-	_expect(shown_at > 0.0 and shown_at < 0.3, "it is drawn out of the hands as the lock fills (seen at %.2f of the fill)" % shown_at)
-	# (the hands and the spear read in the skeleton's update, after the cast's pose: where they are drawn)
+	_expect(shown_at > 0.0 and shown_at < 0.3, "it is drawn out of the air as the lock fills (seen at %.2f of the fill)" % shown_at)
+	await _frames(20)                       # (settled over the arm)
+	# (the arm read in the skeleton's update, after the cast's pose: where it is drawn, as the spear reads it)
 	var sk := player.skeleton
-	_spear_seen = {}
+	var seen := {}
 	var cb := func() -> void:
-		if is_instance_valid(spear):
-			_spear_seen = {"rp": sk.global_transform * sk.get_bone_global_pose(sk.find_bone("r_palm")).origin,
-					"re": sk.global_transform * sk.get_bone_global_pose(sk.find_bone("r_elbow")).origin,
-					"at": spear.global_position, "way": -spear.global_basis.z}
+		var hb := String(pose.pick.get("hand", "r_palm"))
+		seen["hand"] = sk.global_transform * sk.get_bone_global_pose(sk.find_bone(hb)).origin
+		seen["sh"] = sk.global_transform * sk.get_bone_global_pose(sk.find_bone(hb.substr(0, 2) + "shoulder")).origin
 	sk.skeleton_updated.connect(cb)
 	await _frames(2)
 	sk.skeleton_updated.disconnect(cb)
-	var rp: Vector3 = _spear_seen.get("rp", Vector3.ZERO)
-	var re: Vector3 = _spear_seen.get("re", Vector3.ZERO)
-	var way: Vector3 = _spear_seen.get("way", Vector3.FORWARD)
-	var fore := (rp - re).normalized()
-	var off := (Vector3(_spear_seen.get("at", Vector3.ZERO)) - rp).length()
-	var ang := rad_to_deg(way.angle_to(fore))
-	print("  (spear: palm %s, %.2f m up; its way %s; the forearm's %s; the body's ahead %s)" % [rp, rp.y - player.global_position.y,
-			way, fore, -player.global_basis.z])
-	_expect(off < 0.4 and ang < 20.0, "it runs out from the pointing hand along its forearm (its middle %.2f m from the palm, %.0f deg off the forearm)" % [off, ang])
-	# cast: in the hands to the strike, then gone
+	var over := Vector3(seen.get("hand", Vector3.ZERO)).lerp(Vector3(seen.get("sh", Vector3.ZERO)), 0.5)
+	var up := spear.global_position.y - over.y
+	var flat := Vector2(spear.global_position.x - over.x, spear.global_position.z - over.z).length()
+	var aim := BendCaster.of(player).aim_point()
+	var to_aim := (aim - spear.global_position).normalized() if aim.is_finite() else -player.global_basis.z
+	var off_deg := rad_to_deg((-spear.global_basis.z).angle_to(to_aim))
+	_expect(up > 0.15 and up < 0.5 and flat < 0.25, "it floats over the arm, %.2f m above the shoulder-to-hand middle (%.2f m aside)" % [up, flat])
+	_expect(off_deg < 12.0, "its point is on the aim (%.1f deg off)" % off_deg)
+	var fm: Variant = player.get_meta(BendLooks.FLOAT_META, null)
+	_expect(fm is Dictionary and (Vector3((fm as Dictionary).at)).distance_to(spear.global_position) < 0.05,
+			"where it floats is kept for the throw")
+	# charged: held past full
+	var len0 := float((spear.get(&"_spear") as Node3D).scale.z) if spear.get(&"_spear") != null else 1.0
+	sc.grown = true
+	await _frames(30)
+	var len1 := float((spear.get(&"_spear") as Node3D).scale.z) if spear.get(&"_spear") != null else 1.0
+	var lt: OmniLight3D = spear.get(&"_light")
+	_expect(len1 > len0 * 1.15 and (lt == null or lt.light_energy > 0.5),
+			"charged: it grows longer (%.2f -> %.2f) and glows (%.2f)" % [len0, len1, lt.light_energy if lt != null else -1.0])
+	sc.grown = false
+	# the lance thrown from where it floated
+	var bc := BendCaster.of(player)
+	var at: Vector3 = spear.global_position
+	player.set_meta(BendLooks.FLOAT_META, {"at": at, "t": BendStatus.now()})
+	var spec: Dictionary = ((SwayMoves.move("ice").get("bend", {}) as Dictionary).get("spear", {}) as Dictionary).duplicate(true)
+	var lance := BendThrow.one(bc, BendEffects.aim(bc, spec), spec)
+	_expect(lance != null and lance.global_position.distance_to(at) < 0.2, "the lance leaves from where the spear floated (%.2f m off)"
+			% (lance.global_position.distance_to(at) if lance != null else -1.0))
+	if lance != null:
+		lance.end("world")
+	# cast: over the arm to the strike, then gone
 	_struck_frame = -1
 	_frame = 0
 	pose.struck.connect(_on_struck, CONNECT_ONE_SHOT)
@@ -263,10 +211,10 @@ func _spear_checks() -> void:
 		if _struck_frame < 0:
 			seen_before = seen_before or (is_instance_valid(spear) and spear.visible and not bool(spear.get(&"_gone")))
 	await _frames(2)
-	_expect(seen_before and _struck_frame > 0, "cast: it stays in the hands to the strike (frame %d)" % _struck_frame)
-	_expect(not is_instance_valid(spear) or bool(spear.get(&"_gone")), "after the strike it is gone (the ice lance flies)")
+	_expect(seen_before and _struck_frame > 0, "cast: it stays over the arm to the strike (frame %d)" % _struck_frame)
+	_expect(not is_instance_valid(spear) or bool(spear.get(&"_gone")), "after the strike it is gone (the lance flies)")
 	await _frames(60)
-	# broken: it falls
+	# broken: it shatters
 	pose._stop()
 	sc._lock_looks("ice")
 	var s2: Node3D = sc.charge as Node3D
@@ -278,5 +226,5 @@ func _spear_checks() -> void:
 	sc._end_charge()
 	pose._on_end()                          # (the lock broken: the stand)
 	await _frames(3)
-	_expect(s2 != null and (not is_instance_valid(s2) or bool(s2.get(&"_gone"))), "a broken lock drops it")
+	_expect(s2 != null and (not is_instance_valid(s2) or bool(s2.get(&"_gone"))), "a broken lock shatters it")
 	sc._pinning = false

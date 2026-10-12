@@ -2775,7 +2775,7 @@
 		"air:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"air:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"air:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"air:ice/spear": "{\"aim\":\"pistol\",\"back_s\":0.7,\"clip\":\"frontier-pistol-ice\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
+		"air:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"ice_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"air:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"air:patch/patch": "{\"back_s\":0.533333333333333,\"clip\":\"own-bend-air-palm\",\"from\":\"cast\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"air:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -2896,7 +2896,7 @@
 		"earth:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"earth:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"earth:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"earth:ice/spear": "{\"aim\":\"pistol\",\"back_s\":0.7,\"clip\":\"frontier-pistol-ice\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
+		"earth:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"ice_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"earth:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"earth:patch/patch": "{\"back_s\":0.8,\"clip\":\"own-bend-earth-push\",\"from\":\"cast\",\"hand\":\"both\",\"hold_s\":0.3,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.433333333333333}",
 		"earth:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -3017,7 +3017,7 @@
 		"fire:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"fire:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"fire:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"fire:ice/spear": "{\"aim\":\"pistol\",\"back_s\":0.7,\"clip\":\"frontier-pistol-ice\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
+		"fire:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"ice_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"fire:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"fire:patch/patch": "{\"back_s\":0.5,\"clip\":\"own-bend-fire-punch\",\"from\":\"cast\",\"hand\":\"r_palm\",\"hold_s\":0.166666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.266666666666667}",
 		"fire:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -3138,7 +3138,7 @@
 		"water:gust/pull": "{\"back_s\":0.6,\"clip\":\"own-forage-grab-r\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.3,\"mask\":\"reach_r\",\"strike_s\":0.4}",
 		"water:ice/freeze": "{\"back_s\":0.9,\"clip\":\"own-bend-water-draw\",\"from\":\"mode\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"water:ice/shards": "{\"alt\":\"own-bend-throw-sidearm-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-sidearm\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.3}",
-		"water:ice/spear": "{\"aim\":\"pistol\",\"back_s\":0.7,\"clip\":\"frontier-pistol-ice\",\"end_s\":1.2,\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"water_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"stand_in\":{\"alt\":\"own-bend-throw-overhand-l\",\"clip\":\"own-bend-throw-overhand\"},\"strike_s\":0.333333333333333,\"warp\":[[0.0,0.0],[0.2,0.4],[0.333333333333333,0.5],[0.7,0.8],[1.2,1.33333333333333]]}",
+		"water:ice/spear": "{\"alt\":\"own-bend-throw-overhand-l\",\"back_s\":0.7,\"clip\":\"own-bend-throw-overhand\",\"from\":\"mode\",\"hand\":\"r_palm\",\"held\":\"ice_spear\",\"hold_s\":0.2,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.333333333333333}",
 		"water:mend/": "{\"back_s\":0.6667,\"clip\":\"own-form-press-wall\",\"from\":\"move\",\"hand\":\"both\",\"hold_s\":0.5667,\"mask\":\"upper\",\"root\":true,\"strike_s\":0.6667}",
 		"water:patch/patch": "{\"back_s\":0.866666666666667,\"clip\":\"own-bend-water-wave\",\"from\":\"cast\",\"hand\":\"both\",\"hold_s\":0.366666666666667,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.5}",
 		"water:pillar/ramp": "{\"back_s\":0.833333333333333,\"clip\":\"own-bend-earth-rise\",\"from\":\"mode\",\"hand\":\"r_palm\",\"hold_s\":0.333333333333333,\"mask\":\"upper\",\"root\":false,\"strike_s\":0.466666666666667}",
@@ -5755,27 +5755,35 @@
 			"wait": 0.1
 		},
 		"water:ice/spear@0.030": {
-			"clip": "frontier-pistol-ice",
+			"clip": "own-bend-throw-overhand",
 			"end": 70,
 			"root": 0,
 			"struck": 18,
-			"trace": "826b4a3395fa1a7f",
+			"trace": "98dbf152ad652fee",
 			"wait": 0.3
 		},
 		"water:ice/spear@0.350": {
-			"clip": "frontier-pistol-ice",
+			"clip": "own-bend-throw-overhand",
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "8864915a04224d12",
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"water:ice/spear@0.900": {
-			"clip": "frontier-pistol-ice",
+			"clip": "own-bend-throw-overhand",
 			"end": 60,
 			"root": 0,
 			"struck": 8,
-			"trace": "50543f4c0d348b06",
+			"trace": "8561f2f2d6a98ca3",
+			"wait": 0.1333
+		},
+		"water:ice/spear@alt": {
+			"clip": "own-bend-throw-overhand-l",
+			"end": 60,
+			"root": 0,
+			"struck": 8,
+			"trace": "febc155cd31d98ba",
 			"wait": 0.1333
 		},
 		"water:water_jet/air_hit@0.030": {

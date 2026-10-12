@@ -2465,8 +2465,10 @@ func _began() -> void:
 func _lock_looks(m: String) -> void:
 	if elem() and String(spec_of(m).get("do", "")) == "lightning":
 		charge = BendLooks.charge(player, self)
+	elif elem() and _held_look(m) == "ice_spear":
+		charge = BendLooks.float_spear(player, self)         # (the Ice Spear: the Frontier spear in ice, floating over the arm)
 	elif elem() and _held_look(m) == "water_spear":
-		charge = BendLooks.held_spear(player, self)          # (the Ice Spear's rifle hold: the water spear in the hands)
+		charge = BendLooks.held_spear(player, self)          # (the rifle hold's water spear in the hands)
 	elif elem():
 		SbFx.start(self, "charge", player, "%s/%s" % [m, mode_of(m)], "charge", {})
 	if elem() and BendPoses.element_of(player) == "water":

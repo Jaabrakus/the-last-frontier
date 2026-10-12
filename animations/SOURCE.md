@@ -445,9 +445,10 @@ to keep each knee on one side. Nothing imported, retargeted or sampled (same doc
   finger, out of the grip); no clip, dump or reference motion read. The gun stances are a look the keys were typed toward
   (the owner likes the game's pistol aim); nothing of the game's gun clips was read or measured for them. In the game
   Embers plays `own-bend-fire-embers-gun` (and its twin), timed as the clip it replaced (`timed_as` in
-  `data/bending/poses.json`: the sweep's hold, strike, back and end). Since 2026-10-12 the Ice Spear plays
-  `frontier-pistol-ice` (below), timed as the overhand throw; `own-bend-water-ice-rifle` stays installed, cast by no move,
-  as the timeline that clip is baked on. `own-bend-fire-lightning-duel` is installed but cast by no move: its right hand at
+  `data/bending/poses.json`: the sweep's hold, strike, back and end). Since 2026-10-12 the Ice Spear plays our own
+  `own-bend-throw-overhand` (and its twin) with the Frontier spear's own model (`assets/weapons/spear.glb`, made by
+  `tools/models/spear.py`) floating over the arm; `own-bend-water-ice-rifle` stays installed, cast by no move, as the
+  timeline `frontier-pistol-ice` (below) is baked on. `own-bend-fire-lightning-duel` is installed but cast by no move: its right hand at
   its strike is the two-finger hand of `frontier-pistol-ice`.
 - `bend_clips.py` is derived from `form_clips.py` (above) and keys body and limb targets by hand in its `CLIPS` table: the
   root's offset, a whole-body yaw, hip pitch and tilt, chest pitch, side bend and twist, head pitch and turn, clavicles,
@@ -499,8 +500,8 @@ to keep each knee on one side. Nothing imported, retargeted or sampled (same doc
   crosshair and the head toward it after the clip.
 - It is NOT one of our own key-posed clips and is not named `own-`: it lives in its own library, and `BendPoses` lets a pose
   play it only because `data/bending/poses.json` lists it by name in `frontier_tech` (`BendPoses.frontier_tech`). It is cast
-  by water's Ice Spear for everyone (the Lightning Pistol twist, `fire.lightning.pistol`, was taken out of the tree on
-  2026-10-12); Lightning is `own-bend-fire-lightning`. Its `authored` and `lineage` metas name the inputs above; it carries no
+  by no move: the Lightning Pistol twist (`fire.lightning.pistol`) was taken out of the tree on 2026-10-12, and later that
+  day the owner picked our own overhand throw for the Ice Spear over this aim. Lightning is `own-bend-fire-lightning`. Its `authored` and `lineage` metas name the inputs above; it carries no
   `native_asset_id`, `source_attribution` or `original_name`.
 - Tracing it: the inputs that bear on its origin are the two `Frontier_Downgraded.res` clips (built by
   `tools/anim_author/mocap_downgrade_all.gd` from `actor_b-p-bow-aim-idle` and `actor_b-p-pistol-aim-idle` in

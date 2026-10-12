@@ -3,7 +3,9 @@ extends Control
 ## The Sway's lock ring round the crosshair (SwayCaster; docs/main_story.md 11.4), GripRing's look made thin and centred:
 ## a dark under-ring and a thin ring in the move's art colour filling clockwise from the top. Its shape is the art's for
 ## colour-blind players (SwayMoves.ring_shape): Breath "open" (a gap at the top), Light "dotted", Ember "notched",
-## Weight "doubled"; Form "ground" (its lock is the circle on the ground: four ticks here). In the 0.15 s grace (the aim off the target) it flickers and waits; full, it closes with a flash
+## Weight "doubled"; "ground" four ticks only (its lock the circle on the ground). Every bending element's art (earth, form,
+## tide, gale, ember) is "notched" since 2026-10-12, the owner: "all bending spells need that circle on the crosshair like the
+## fire ones". In the 0.15 s grace (the aim off the target) it flickers and waits; full, it closes with a flash
 ## (the click) and a thin inner arc counts the second left to let go. An ended lock fades: a cast swells out, a break
 ## or a fizzle greys away. A hold (Gust on a stone or a sail): the ring stays whole, an inner arc shows the stone's draw (or the
 ## sail's mote running down), and the strain reddens and shakes it. With the aim held and a spell readied (SwayCaster.readied)

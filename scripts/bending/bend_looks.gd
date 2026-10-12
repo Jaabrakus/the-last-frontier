@@ -108,6 +108,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 	if shape == "crescent":
 		_crescent_body(parent, kind, r)
 		return
+	if shape == "spear" and kind == "ice" and live():
+		ice_spear_model(parent, FloatSpear.LEN_M * clampf(r / 0.16, 1.0, 1.4))   # (the Ice Spear: the spear that floated, flying)
+		return
 	if shape == "spear" and kind in ["stone", "ice", "air"]:
 		_spear_body(parent, kind, r)
 		return
@@ -1790,6 +1793,48 @@ static func held_spear(body: Node3D, sway: Node = null) -> HeldSpear:
 	return hs
 
 
+## FloatSpear over `body`, the Ice Spear's lock look (SwayCaster._lock_looks, a pose whose pick says "held": "ice_spear"), fed the
+## lock's fill as its `level`.
+static func float_spear(body: Node3D, sway: Node = null) -> FloatSpear:
+	var fs := FloatSpear.new()
+	fs.name = "BendFloatSpear"
+	fs.sway = sway
+	body.add_child(fs)
+	return fs
+
+
+## The Frontier spear's own model (ThrowableModels "spear", tools/models/spear.py) in ToonFx's ice crystal, its point along -Z,
+## centred, `length` m from butt to tip and `thick` times its own girth (a real spear's shaft is a line at a fight's distance),
+## a soft ice light on it (the Ice Spear's lance: the one that floated over the arm, flying). Under `parent`.
+const ICE_SPEAR_THICK := 3.0
+static func ice_spear_model(parent: Node3D, length: float, thick := ICE_SPEAR_THICK) -> Node3D:
+	var pivot := Node3D.new()
+	pivot.name = "IceSpear"
+	parent.add_child(pivot)
+	var m := ThrowableModels.build("spear")
+	var tip := ThrowableModels.marker_pos(m, "Tip")
+	var butt := ThrowableModels.marker_pos(m, "Butt")
+	var axis := tip - butt
+	if axis.length_squared() < 1e-6:
+		axis = Vector3(0.0, 0.0, -1.0)
+	var k := length / maxf(axis.length(), 0.01)
+	var q := Quaternion(axis.normalized(), Vector3(0.0, 0.0, -1.0))
+	var b := Basis.from_scale(Vector3(k * thick, k * thick, k)) * Basis(q)
+	m.basis = b
+	m.position = -(b * ((tip + butt) * 0.5))
+	pivot.add_child(m)
+	var l := OmniLight3D.new()
+	l.light_color = ICE
+	l.light_energy = 0.7
+	l.omni_range = 1.8
+	l.shadow_enabled = false
+	pivot.add_child(l)
+	for mi in m.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = ToonFx.mat("ice")
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return pivot
+
+
 ## Grow's second click (▲) at the caster's hands (`sway`: the player's SwayCaster): a bright ring snapping out and a deeper
 ## click (BendSounds lock_grow).
 static func grow_click(sway: Node) -> void:
@@ -2263,6 +2308,189 @@ class HeldSpear:
 		visible = false
 		if _drips != null:
 			_drips.emitting = false
+		var tree := get_tree()
+		if tree != null:
+			tree.create_timer(0.6).timeout.connect(queue_free)
+		else:
+			queue_free()
+
+
+## The Ice Spear's floating spear (the owner, 2026-10-12: "use the spear from the frontiers game but make it icy blue", "we
+## shouldnt have it in the hand we should have the spear float above the user offset pararell with the arm"): the Frontier
+## spear's model in ice (BendLooks.ice_spear_model), floating ABOVE_M over the throwing hand (the pose's pick's "hand"), its
+## point along the aim (the caster's aim point), drawn out of the air as the lock fills (`level`, GROW), CHARGED_K longer and
+## glowing once the lock grows (held past full: SwayCaster.grown, the Charged Spear), trembling the longer it is held so
+## (TREMBLE_M by TREMBLE_S). Where it floats is kept on the body (FLOAT_META: BendThrow throws the lance from there, the same
+## spear flying). Cast: it waits for the pose's strike and goes (the lance flies); broken: it shatters as frost.
+const FLOAT_META := &"bend_float_spear"
+class FloatSpear:
+	extends Node3D
+
+	var sway: Node
+	var level := 0.0
+	const ABOVE_M := 0.3
+	const LEN_M := 1.3
+	const CHARGED_K := 1.25
+	const GROW := Vector2(0.06, 0.6)
+	const FOLLOW := 18.0
+	const TREMBLE_M := 0.025
+	const TREMBLE_S := 1.2
+	const STRIKE_WAIT_S := 0.6
+	var _spear: Node3D
+	var _light: OmniLight3D
+	var _sk: Skeleton3D
+	var _hand := Vector3.INF
+	var _shoulder := Vector3.INF
+	var _bones := {}
+	var _t := 0.0
+	var _grown_t := -1.0
+	var _k := 1.0
+	var _ending := false
+	var _end_t := 0.0
+	var _gone := false
+	var _struck_cb := Callable()
+
+	func _ready() -> void:
+		top_level = true
+		visible = false
+		var b := get_parent()
+		_sk = b.get(&"skeleton") as Skeleton3D if b != null and &"skeleton" in b else null
+		if _sk != null:
+			_sk.skeleton_updated.connect(_on_skeleton_updated)
+		if BendLooks.live():
+			_spear = BendLooks.ice_spear_model(self, LEN_M)
+			_light = OmniLight3D.new()
+			_light.light_color = BendLooks.ICE
+			_light.light_energy = 0.0
+			_light.omni_range = 2.5
+			_light.shadow_enabled = false
+			add_child(_light)
+		_place(1.0)
+		BendSounds.play(&"ice_freeze", global_position, -10.0)
+
+	func _exit_tree() -> void:
+		if _sk != null and is_instance_valid(_sk) and _sk.skeleton_updated.is_connected(_on_skeleton_updated):
+			_sk.skeleton_updated.disconnect(_on_skeleton_updated)
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		if _struck_cb.is_valid() and p != null and is_instance_valid(p) and p.is_connected(&"struck", _struck_cb):
+			p.disconnect(&"struck", _struck_cb)
+		var b := get_parent()
+		if b != null and b.has_meta(FLOAT_META):
+			b.remove_meta(FLOAT_META)
+
+	## The throwing hand (the pose's pick's "hand"; the right one else), world, after every modifier.
+	func _on_skeleton_updated() -> void:
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		var pk: Variant = p.get(&"pick") if p != null and is_instance_valid(p) else null
+		var hb := String((pk as Dictionary).get("hand", "r_palm")) if pk is Dictionary else "r_palm"
+		if not _bones.has(hb):
+			_bones[hb] = _sk.find_bone(hb)
+		var bi: int = _bones[hb]
+		if bi >= 0:
+			_hand = _sk.global_transform * _sk.get_bone_global_pose(bi).origin
+		var sb := hb.substr(0, 2) + "shoulder"
+		if not _bones.has(sb):
+			_bones[sb] = _sk.find_bone(sb)
+		var si: int = _bones[sb]
+		if si >= 0:
+			_shoulder = _sk.global_transform * _sk.get_bone_global_pose(si).origin
+
+	## Its point's way: to the caster's aim point, else the body's ahead.
+	func _way() -> Vector3:
+		var b := get_parent() as Node3D
+		var fwd := -b.global_basis.z if b != null else Vector3.FORWARD
+		var bc := BendCaster.of(b) if b != null else null
+		var aim := bc.aim_point() if bc != null else Vector3.INF
+		if aim.is_finite() and aim.distance_to(global_position) > 1.0:
+			return (aim - global_position).normalized()
+		return fwd
+
+	func _place(dt: float) -> void:
+		var b := get_parent() as Node3D
+		if b == null:
+			return
+		var hand := _hand if _hand.is_finite() else b.global_position + Vector3.UP * 1.5 - b.global_basis.z * 0.2
+		# (over the arm: between the shoulder and the hand, a cocked throw's hand being high behind the head)
+		var over := hand.lerp(_shoulder, 0.5) if _shoulder.is_finite() else hand
+		var want := over + Vector3.UP * ABOVE_M
+		if _grown_t >= 0.0:
+			var a := TREMBLE_M * clampf((_t - _grown_t) / TREMBLE_S, 0.0, 1.0)
+			want += Vector3(sin(_t * 61.0), sin(_t * 47.0 + 1.3), cos(_t * 53.0)) * a
+		var at := want if not visible else global_position.lerp(want, minf(1.0, dt * FOLLOW))
+		var way := _way()
+		var up := Vector3.UP if absf(way.dot(Vector3.UP)) < 0.98 else Vector3.BACK
+		global_transform = Transform3D(Basis.looking_at(way, up), at)
+		var grow := smoothstep(GROW.x, GROW.y, level)
+		visible = grow > 0.01 and not _gone
+		_k = lerpf(_k, CHARGED_K if _grown_t >= 0.0 else 1.0, minf(1.0, dt * 8.0))
+		if _spear != null:
+			_spear.scale = Vector3(lerpf(0.35, 1.0, grow), lerpf(0.35, 1.0, grow), maxf(grow, 0.02) * _k) * (1.0 + 0.1 * (_k - 1.0))
+		if _light != null:
+			_light.light_energy = (1.6 + 0.6 * sin(_t * 18.0)) * (_k - 1.0) / (CHARGED_K - 1.0) if _grown_t >= 0.0 else 0.0
+		if visible:
+			b.set_meta(FLOAT_META, {"at": global_position, "t": BendStatus.now()})
+
+	func _process(dt: float) -> void:
+		_t += dt
+		if _gone:
+			return
+		if _grown_t < 0.0 and sway != null and is_instance_valid(sway) and bool(sway.get(&"grown")):
+			_grown_t = _t                          # (charged: held past full, the Charged Spear)
+			var pool := BendLooks._pool() if BendLooks.live() else null
+			if pool != null:
+				pool.play("flash", Transform3D(Basis.IDENTITY, global_position), 0.2, 0.4, 1.3, BendLooks.ICE, Color(0.92, 0.99, 1.0))
+				pool.shoot("star", global_position, 10, Vector3.UP, 120.0, Vector2(0.6, 1.6), Vector2(0.05, 0.1), 0.4, Vector3.ZERO, 2.0,
+						{"box": Vector3(0.04, 0.04, LEN_M * 0.5), "basis": global_basis})
+		if _ending:
+			_end_t += dt
+			var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+			var phase := String(p.get(&"phase")) if p != null and is_instance_valid(p) else ""
+			if phase != "release":
+				_shatter()                         # (broken, or the pose gone)
+				return
+			if _end_t >= STRIKE_WAIT_S:
+				_launch()
+				return
+		_place(dt)
+
+	## The lock over (SwayCaster._end_charge): cast, it waits over the arm for the strike; else it shatters.
+	func end() -> void:
+		if _ending or _gone or is_queued_for_deletion():
+			return
+		_ending = true
+		_end_t = 0.0
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		if p != null and is_instance_valid(p) and p.has_signal(&"struck"):
+			_struck_cb = func(_m: String) -> void: _launch()
+			p.connect(&"struck", _struck_cb, CONNECT_ONE_SHOT)
+
+	## Thrown: it goes (the lance, the same model, flies from where it floated: BendThrow reads FLOAT_META).
+	func _launch() -> void:
+		if _gone:
+			return
+		_place(1.0 / 60.0)
+		_gone = true
+		var pool := BendLooks._pool() if BendLooks.live() else null
+		if pool != null and visible:
+			pool.shoot("puff_frost", global_position, 8, -global_basis.z, 40.0, Vector2(0.3, 1.0), Vector2(0.12, 0.22), 0.45,
+					Vector3.ZERO, 3.0, {"box": Vector3(0.04, 0.04, LEN_M * 0.4), "basis": global_basis})
+		_finish()
+
+	## Broken: it shatters into frost where it floated.
+	func _shatter() -> void:
+		if _gone:
+			return
+		_gone = true
+		var pool := BendLooks._pool() if BendLooks.live() else null
+		if pool != null and visible:
+			BendSounds.play(&"ice_freeze", global_position, -6.0)
+			pool.shoot("puff_frost", global_position, 14, Vector3.UP, 120.0, Vector2(0.3, 1.2), Vector2(0.12, 0.25), 0.5,
+					Vector3(0, -2.0, 0), 2.0, {"box": Vector3(0.05, 0.05, LEN_M * 0.45), "basis": global_basis})
+			pool.shoot("star", global_position, 10, Vector3.UP, 150.0, Vector2(0.8, 2.0), Vector2(0.05, 0.1), 0.4, Vector3(0, -4.0, 0), 1.0)
+		_finish()
+
+	func _finish() -> void:
+		visible = false
 		var tree := get_tree()
 		if tree != null:
 			tree.create_timer(0.6).timeout.connect(queue_free)

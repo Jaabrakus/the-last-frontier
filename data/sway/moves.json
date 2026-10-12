@@ -30,10 +30,10 @@
     "light": {"color": [1.0, 0.97, 0.78], "ring": "dotted"},
     "ember": {"color": [1.0, 0.5, 0.22], "ring": "notched"},
     "weight": {"color": [0.72, 0.6, 1.0], "ring": "doubled"},
-    "form": {"color": [0.5, 0.78, 1.0], "ring": "ground"},
-    "earth": {"color": [0.78, 0.64, 0.44], "ring": "ground"},
-    "tide": {"color": [0.35, 0.65, 1.0], "ring": "ground"},
-    "gale": {"color": [0.86, 0.95, 1.0], "ring": "ground"}
+    "form": {"color": [0.5, 0.78, 1.0], "ring": "notched"},
+    "earth": {"color": [0.78, 0.64, 0.44], "ring": "notched"},
+    "tide": {"color": [0.35, 0.65, 1.0], "ring": "notched"},
+    "gale": {"color": [0.86, 0.95, 1.0], "ring": "notched"}
   },
   "moves": {
     "first_lock": {
@@ -859,7 +859,10 @@
           "knock_mps": 4.0,
           "radius_m": 0.16,
           "range_m": 40.0,
-          "long": true
+          "long": true,
+          "float_from": true,
+          "grow": {"mps": 54.0, "gravity": 1.5, "damage": 28.0, "knock_mps": 6.0, "radius_m": 0.2},
+          "grow_label": "Charged Spear"
         },
         "shards": {
           "do": "bolt",

@@ -61,6 +61,11 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 	var from: Vector3 = a.from
 	var point: Vector3 = a.point
 	var low := bool(spec.get("low", false))
+	if bool(spec.get("float_from", false)) and p.has_meta(BendLooks.FLOAT_META):
+		# (the Ice Spear: from where its spear floated over the arm, BendLooks.FloatSpear: the same spear flying)
+		var fm: Dictionary = p.get_meta(BendLooks.FLOAT_META)
+		if BendStatus.now() - float(fm.get("t", -INF)) < 0.4:
+			from = fm.at
 	var dir: Vector3
 	# (round 3: the air High Kick, spec "straight": along the aim, no lob)
 	var lob := (String(spec.get("shape", "")) == "crescent" or spec.has("apex_m")) and not bool(spec.get("straight", false))
