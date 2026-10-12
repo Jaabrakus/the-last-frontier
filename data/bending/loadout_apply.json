@@ -67,7 +67,10 @@
     "fire.fireball.blazing": true,
     "fire.highkick.crescent_burn": true,
     "fire.step.ignite": true,
-    "fire.breath.scald": true
+    "fire.breath.scald": true,
+    "fire.wall.curved": true,
+    "fire.lightning.forked": true,
+    "fire.parry.hold_storm": true
   },
   "behaviour": {
     "fire.parry.hot_hands": "FireTalents.guarded (BendZone.report), FireTalents.head_start (SwayCaster._try_begin, NpcBending.begin)",
@@ -79,7 +82,10 @@
     "fire.fireball.blazing": "FireTalents.bolt_ended (BendBolt._finish), FireTalents.burst; its burst class through BendLoadout.new_hit_class (RingRules.on_hit)",
     "fire.highkick.crescent_burn": "FireTalents.bolt_ended (BendBolt._finish), FireTalents.patch (BendZone matter)",
     "fire.step.ignite": "FireTalents.cast (BendEffects._apply), FireTalents.matter (BendZone matter)",
-    "fire.breath.scald": "FireTalents.through_steam (BendZone.on_bolt, FireTalents.cast for the Breath)"
+    "fire.breath.scald": "FireTalents.through_steam (BendZone.on_bolt, FireTalents.cast for the Breath)",
+    "fire.wall.curved": "FireTalents.curve_wall (FireTalents.cast from BendEffects._apply)",
+    "fire.lightning.forked": "FireTalents.struck (BendEffects._strike), BendZone live (reaction/live, RingRules d_of_strike)",
+    "fire.parry.hold_storm": "FireTalents.hold_storm, storm_back, lightning_back_k (BendEffects._strike)"
   },
   "live": [
     "air.ball.dense",
@@ -114,6 +120,9 @@
     "fire.fireball.blazing",
     "fire.highkick.crescent_burn",
     "fire.step.ignite",
-    "fire.breath.scald"],
+    "fire.breath.scald",
+    "fire.wall.curved",
+    "fire.lightning.forked",
+    "fire.parry.hold_storm"],
   "styles_live": ["boxing"]
 }

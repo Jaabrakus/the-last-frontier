@@ -132,6 +132,9 @@ var tick_tag := ""
 var tick_cap := 0
 var round_zone := false            ## (a patch: inside() reads its radius, not its box)
 var tick_floor := true             ## (floor fire: only feet on its floor take its tick; false: anyone in it, a scald's steam)
+var tick_shared := true            ## (its ticks count in the one-each-0.5-s from all matter; false: a reaction's own)
+var tick_all := false              ## (a reaction: everyone in it, its owner and his side too, no one's hit for those)
+var tick_info := {}                ## (merged into each tick's hit info: a live reaction's strike_d)
 var _ticks_to := {}                ## body id -> the ticks it gave him
 const MATTER_META := &"bend_matter_tick_at"
 const MATTER_EVERY_S := 0.5
@@ -155,6 +158,9 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.tick_cap = int(spec.get("tick_cap", 0))
 	z.round_zone = bool(spec.get("round", false))
 	z.tick_floor = bool(spec.get("tick_floor", true))
+	z.tick_shared = bool(spec.get("tick_shared", true))
+	z.tick_all = bool(spec.get("tick_all", false))
+	z.tick_info = (spec.get("tick_info", {}) as Dictionary).duplicate() if spec.get("tick_info") is Dictionary else {}
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -522,7 +528,7 @@ func _every(dt: float) -> void:
 	if put_out:
 		put_out_fires()
 	var now_in := {}
-	for e in BendCaster.near(owner_node, global_position, r + 1.0):
+	for e in (BendCaster.near(owner_node, global_position, r + 1.0) if not tick_all else FireTalents.everyone_near(self, global_position, r + 1.0)):
 		var n: Node3D = e[0]
 		if not inside(n.global_position):
 			continue
@@ -1392,19 +1398,26 @@ static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) ->
 ## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
 ## A matter zone's tick on `n` (see MATTER): % only, the hit no_hurt (no lock set-back, no Lightning-charge break, no string).
 func _matter_tick(n: Node3D) -> void:
-	if not BendStatus.can_take(n, owner_node) or (tick_floor and n.global_position.y - global_position.y > MATTER_FEET_M):
-		return                                    # (his own and his side's never; floor fire: jumped, his feet over it)
+	var by: Node = owner_node
+	if not BendStatus.can_take(n, owner_node):
+		if not tick_all or n == null or not is_instance_valid(n):
+			return                                # (his own and his side's never: matter's rule)
+		by = null                                 # (a reaction hurts everyone in it: its owner and his side too, no one's hit)
+	if tick_floor and n.global_position.y - global_position.y > MATTER_FEET_M:
+		return                                    # (floor fire: jumped, his feet over it)
 	var id := n.get_instance_id()
 	var k := int(_ticks_to.get(id, 0))
 	if tick_cap > 0 and k >= tick_cap:
 		return
 	var now := BendStatus.now()
-	if now - float(n.get_meta(MATTER_META, -INF)) < MATTER_EVERY_S - 1e-3:
-		return                                    # (one tick each 0.5 s from all the matter he stands in)
-	n.set_meta(MATTER_META, now)
+	if tick_shared:
+		if now - float(n.get_meta(MATTER_META, -INF)) < MATTER_EVERY_S - 1e-3:
+			return                                # (one tick each 0.5 s from all the matter he stands in)
+		n.set_meta(MATTER_META, now)
 	_ticks_to[id] = k + 1
-	BendR3.deliver(n, 1.0, n.global_position + Vector3.UP * 0.3, way, owner_node, -1.0, Vector3.ZERO,
-			{"tag": tick_tag, "no_hurt": true, "matter": kind, "move": String(info.get("move", "")), "from": global_position})
+	var inf := {"tag": tick_tag, "no_hurt": true, "matter": kind, "move": String(info.get("move", "")), "from": global_position}
+	inf.merge(tick_info, true)
+	BendR3.deliver(n, 1.0, n.global_position + Vector3.UP * 0.3, way, by, -1.0, Vector3.ZERO, inf)
 
 
 func _fire_wall_hit(n: Node3D, dt: float) -> void:

@@ -1158,6 +1158,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var untagged := cls.is_empty()
 	if untagged:
 		cls = _untagged_class(info)
+	if cls.has("d_of_strike"):
+		cls["d"] = float(cls.d_of_strike) * float(info.get("strike_d", 0.0))   # (a live reaction: its share of the strike's %)
 	# (a class with once_s lands on the same body from the same attacker at most once a while: Fire Wall's entry pop)
 	var once := float(cls.get("once_s", 0.0))
 	if once > 0.0:

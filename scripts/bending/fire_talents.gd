@@ -163,6 +163,8 @@ static func cast(bc: BendCaster, m: String, mode: String, spec: Dictionary, _a: 
 			var at := FormEffects.ground_at(p, p.global_position)
 			matter(p, "burn", at + dir * IGNITE_M * 0.5, dir, {"width_m": IGNITE_W, "thick_m": IGNITE_M, "life_s": IGNITE_S,
 					"tick_tag": "matter/burn", "tick_cap": BURN_CAP}, m)
+	if m == "fire_wall" and mode == "wall" and BendLoadout.wears(p, "fire.wall.curved"):
+		curve_wall(p, BendEffects.last_of(bc).get("zone") as BendZone, spec)
 	if m == "fire_breath" and mode == "breath" and BendLoadout.wears(p, "fire.breath.scald"):
 		# (Scald: the Breath through steam: each steam cloud its cone reaches scalds)
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
@@ -274,3 +276,177 @@ static func through_steam(z: BendZone, by: Node3D) -> void:
 	if matter(by, "scald", z.global_position, Vector3.FORWARD, {"radius_m": z.radius, "round": true, "life_s": SCALD_S,
 			"tick_tag": "matter/burn", "tick_cap": BURN_CAP, "tick_floor": false}, "fire_breath") != null:
 		BendLooks.burst(z.global_position + Vector3.UP, "fire", 20, Vector3.UP, 120.0, 1.5, 0.6)
+
+
+# ---------------------------------------------------------------- the Fire Wall
+## Curved Curtain: the wall ARC_M of curtain along an ARC_DEG arc round the point aimed at.
+const ARC_M := 5.0
+const ARC_DEG := 120.0
+const ARC_SEGS := 4
+
+
+## A worn Curved Curtain's Fire Wall (cast): the straight wall the cast raised at the point aimed at (`z0`) made a curtain ARC_M
+## long along an ARC_DEG arc round that point, its middle on the far side from the caster (a C open toward him): ARC_SEGS fire wall
+## pieces, each the wall's own (its numbers, its burn and entry pop, water puts it out), all of them his one wall (a new one ends
+## them: one_at_a_time). The pieces.
+static func curve_wall(p: Node3D, z0: BendZone, spec: Dictionary) -> Array:
+	var out: Array = []
+	if z0 == null or not is_instance_valid(z0) or z0.kind != "fire_wall":
+		return out
+	var center := z0.global_position
+	var away := Vector3(center.x - p.global_position.x, 0.0, center.z - p.global_position.z)
+	away = away.normalized() if away.length_squared() > 1e-4 else Vector3(z0.way.x, 0.0, z0.way.z).normalized()
+	var arc := deg_to_rad(ARC_DEG)
+	var r := ARC_M / arc
+	var seg := arc / float(ARC_SEGS)
+	var s := spec.duplicate()
+	s["width_m"] = 2.0 * r * sin(seg * 0.5) + 0.15          # (each piece the chord of its share, a hand's overlap)
+	s.erase("place")
+	z0.end("curved")
+	for i in ARC_SEGS:
+		var radial := away.rotated(Vector3.UP, -arc * 0.5 + seg * (float(i) + 0.5))
+		var at := FormEffects.ground_at(p, center + radial * r)
+		var z := BendZone.make(p, "fire_wall", at, s, radial)
+		if z != null:
+			z.set_meta(&"talent_curtain", true)
+			out.append(z)
+	return out
+
+
+# ---------------------------------------------------------------- Lightning
+## Forked Lightning: the fork's reach from the strike's line, and how long the water it reaches is live.
+const FORK_M := 6.0
+const LIVE_S := 0.5
+const WATER_BOLT_R := 1.0
+
+
+## A Lightning strike of caster `bc`'s from `from` to `to` (BendEffects._strike, the host's): a worn Forked Lightning's fork to
+## the nearest water within FORK_M of its line (a puddle, steam, a water bolt in flight) made live for LIVE_S: anyone in it
+## takes half the strike's % (rules.json reaction/live: no launch, no stun, no lock set-back; everyone, its caster too). The
+## live zone, or null.
+static func struck(bc: BendCaster, from: Vector3, to: Vector3) -> BendZone:
+	var p := bc.body
+	if not BendLoadout.wears(p, "fire.lightning.forked") or not NetSpells.decides():
+		return null
+	var tree := p.get_tree()
+	var best_d := FORK_M
+	var best_at := Vector3.INF
+	var best_on := from
+	var best_r := WATER_BOLT_R
+	for z in tree.get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz == null or bz.is_queued_for_deletion() or not bz.kind in ["puddle", "steam"]:
+			continue
+		var q := bz.global_position + Vector3.UP * (0.1 if bz.kind == "puddle" else 1.0)
+		var on := Geometry3D.get_closest_point_to_segment(q, from, to)
+		if on.distance_to(q) < best_d:
+			best_d = on.distance_to(q)
+			best_at = bz.global_position
+			best_on = on
+			best_r = bz.radius
+	for b in tree.get_nodes_in_group(BendBolt.GROUP):
+		var bb := b as BendBolt
+		if bb == null or bb.spent or bb.kind != "water":
+			continue
+		var on2 := Geometry3D.get_closest_point_to_segment(bb.global_position, from, to)
+		if on2.distance_to(bb.global_position) < best_d:
+			best_d = on2.distance_to(bb.global_position)
+			best_at = bb.global_position
+			best_on = on2
+			best_r = WATER_BOLT_R
+	if best_at == Vector3.INF:
+		return null
+	BendLooks.lightning(best_on, best_at + Vector3.UP * 0.3)          # (the fork)
+	var strike_d := float(BendLoadout.hit_class(p, RingRules.class_of("fire_arc/lightning")).get("d", 25.0))
+	var live := BendZone.make(p, "live", best_at, {"radius_m": best_r, "round": true, "life_s": LIVE_S, "tick_tag": "reaction/live",
+			"tick_cap": 1, "tick_floor": false, "tick_shared": false, "tick_all": true, "tick_info": {"strike_d": strike_d}}, Vector3.FORWARD)
+	if live != null:
+		live.info = {"move": "fire_arc", "tag": "reaction/live"}
+		for i in 3:
+			var a := best_at + Vector3(randf_range(-best_r, best_r) * 0.7, 0.2, randf_range(-best_r, best_r) * 0.7)
+			BendLooks.lightning(a, a + Vector3(randf_range(-0.6, 0.6), randf_range(0.3, 0.9), randf_range(-0.6, 0.6)))
+	return live
+
+
+## Everyone (the players and the fighters, whatever their side) within `r` m of `at`, flat, as BendStatus.near lists them: a
+## reaction's (it hurts everyone in it).
+static func everyone_near(from: Node, at: Vector3, r: float) -> Array:
+	var out: Array = []
+	if from == null or not from.is_inside_tree():
+		return out
+	var pool: Array = from.get_tree().get_nodes_in_group(NpcFighter.GROUP).duplicate()
+	for q in from.get_tree().get_nodes_in_group(&"player"):
+		if not pool.has(q):
+			pool.append(q)
+	for n in pool:
+		if not (n is Node3D) or not is_instance_valid(n):
+			continue
+		var q := (n as Node3D).global_position
+		var d := Vector2(q.x - at.x, q.z - at.z).length()
+		if d <= r and absf(q.y - at.y) < 3.0:
+			out.append([n, d])
+	return out
+
+
+## Hold the Storm: a perfect Parry of Lightning by `who` (BendEffects._strike, the host's) with E held keeps the strike in his
+## arms (the Lightning's charge on his hands) until he lets go of E or his redirect_lightning spec's s runs out; then it leaves
+## along his aim at x1.2 (Lightning keeps the old factor: lightning_back_k). True: held; false: it goes back at once, as ever (E
+## already let go, a bot, not worn).
+static func hold_storm(who: Node, spec: Dictionary, info: Dictionary, r: float) -> bool:
+	if not wears(who, "fire.parry.hold_storm") or not NetSpells.decides() or not (who is Node3D):
+		return false
+	var sc := SwayCaster.of(who)
+	if sc == null or not sc._guard_down():
+		return false
+	var base: Variant = (SwayMoves.move("fire_parry").get("bend", {}) as Dictionary).get("redirect_lightning", {})
+	var hs := BendLoadout.spec(who, "fire_parry", "redirect_lightning", base as Dictionary if base is Dictionary else {})
+	var hold_s := float(hs.get("s", 1.0))
+	var t0 := BendStatus.now()
+	var ch: Node = BendLooks.charge(who as Node3D, sc)
+	if ch != null:
+		ch.set(&"level", 1.0)
+	who.set_meta(&"talent_storm_held", t0)
+	var tree := who.get_tree()
+	var st := {"cb": Callable()}
+	st.cb = func() -> void:
+		var gone := not is_instance_valid(who)
+		if not gone and sc != null and is_instance_valid(sc) and sc._guard_down() and BendStatus.now() - t0 < hold_s - 1e-4:
+			return
+		tree.physics_frame.disconnect(st.cb)
+		if ch != null and is_instance_valid(ch):
+			ch.call(&"end")
+		if gone:
+			return
+		who.remove_meta(&"talent_storm_held")
+		storm_back(who, spec, info, r)
+	tree.physics_frame.connect(st.cb)
+	return true
+
+
+## The Lightning factor of a perfect Parry's return by `who`: x1.2 (the rule's) for a Hold the Storm wearer, whose own perfect_mult
+## (x1.1) is for fire only; else `k`, the game's.
+static func lightning_back_k(who: Node, k: float) -> float:
+	return Bending.rule("perfect_mult", 1.2) if wears(who, "fire.parry.hold_storm") else k
+
+
+## A held Lightning let go by `who`: along his aim now (BendEffects._strike's return, from his chest), x1.2.
+static func storm_back(who: Node, spec: Dictionary, info: Dictionary, r: float) -> void:
+	var w3 := who as Node3D
+	var space := w3.get_world_3d().direct_space_state
+	var bfrom := NpcSenses.chest_of(w3)
+	var bto := BendZone.guard_aim(w3, bfrom)
+	var bdir := (bto - bfrom).normalized()
+	var wbc := BendCaster.of(who)
+	var exl: Array[RID] = wbc.exclude() if wbc != null else []
+	var h2 := space.intersect_ray(PhysicsRayQueryParameters3D.create(bfrom, bfrom + bdir * r, 0xFFFFFFFF, exl))
+	var end2: Vector3 = h2.position if not h2.is_empty() else bfrom + bdir * r
+	SbFx.fire(who, SbFx.key_of({}, "fire_parry", "parry"), "lightning_back", {"at": bfrom, "dir": bdir})
+	if not SbFx.fire(who, SbFx.key_of(spec.get("_info", {})), "strike", {"at": bfrom, "to": end2, "dir": bdir, "el": "fire"}):
+		BendLooks.lightning(bfrom, end2)
+	BendLooks.sound("lightning", "cast", bfrom)
+	var who2 := BendBolt._taker(h2.collider as Node) if not h2.is_empty() else null
+	if who2 != null and BendStatus.can_take(who2, who):
+		var k := lightning_back_k(who, Bending.rule("perfect_mult", 1.2))
+		var binfo := BendZone.return_info(info, who, bfrom, k)
+		BendR3.deliver(who2, float(spec.get("damage", 50.0)) * k, end2, bdir, who, float(spec.get("_lock_s", -1.0)),
+				Vector3(bdir.x, 0.0, bdir.z).normalized() * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0, binfo)

@@ -135,7 +135,8 @@
 			"fire_kick/slam_wave": {"d": 4.0, "base": 5.0, "growth": 0.0, "angle": 15, "set": true, "set_stun": 0.3},
 			"_matter": "The skill tree's matter ticks (data/sway/skill_tree.json tick_contract, proposed_classes): a worn fire talent's floor fire (matter/burn: Crescent Burn, Ignite Step, Scald) and the Magma set's seams (matter/magma): % only, no knock, no stun (no_flinch), and no_hurt: no lock set-back, no Lightning-charge break, no string; one tick each 0.5 s from all the matter a body stands in, capped per zone (BendZone MATTER). Classic makes none.",
 			"matter/burn": {"d": 1.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true, "no_hurt": true},
-			"matter/magma": {"d": 1.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true, "no_hurt": true}
+			"matter/magma": {"d": 1.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true, "no_hurt": true},
+			"reaction/live": {"d": 0.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true, "no_hurt": true, "d_of_strike": 0.5}
 		},
 		"patch": {"fresh_s": 6.0, "max_pct": 10.0, "lock_s": 1.5},
 		"respawn": {"out_wait_s": 1.6, "spout_s": 3.0, "safe_after_s": 1.5, "spout_up_m": 3.0, "clear_m": 2.0, "clear_mps": 6.0},

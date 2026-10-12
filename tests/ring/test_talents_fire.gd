@@ -18,12 +18,18 @@ extends SceneTree
 ##                     between covers him; the core spares the burst; Classic no burst
 ##   Scald             his Punch through steam (and his Breath over it) makes the cloud scald 1.5 s: a foe in it gains 1%
 ##                     each 0.5 s, 3 at most; Classic none
+##   Curved Curtain    a real Fire Wall: 4 pieces along a 120 deg arc, 5 m of curtain round the point aimed at, 4 s (Classic:
+##                     one 4 m wall, 5 s); a piece burns who walks in; the next wall ends them all
+##   Forked Lightning  a strike that misses: its fork makes the puddle within 6 m of its line live 0.5 s: the foe in it takes
+##                     half the strike's % (11 of 22), no launch; its caster in live water too; Classic nothing
+##   Hold the Storm    the foe's Lightning perfectly Parried with E held: nothing goes back while E is held; let go, it strikes
+##                     him at x1.2 (as Classic's at once); held past 0.8 s it leaves by itself; his fire sent back x1.1 (1.2)
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
 const BUILT := ["fire.parry.hot_hands", "fire.punch.rhythm", "fire.kick.chain", "fire.lightning.grounded",
 		"fire.passive.dancing_feet", "fire.passive.hot_feet", "fire.fireball.blazing", "fire.highkick.crescent_burn",
-		"fire.step.ignite", "fire.breath.scald"]
+		"fire.step.ignite", "fire.breath.scald", "fire.wall.curved", "fire.lightning.forked", "fire.parry.hold_storm"]
 const WATCHDOG_S := 400.0
 
 var checks := 0
@@ -145,6 +151,9 @@ func _run() -> void:
 	await _ignite()
 	await _blazing()
 	await _scald()
+	await _curved()
+	await _forked()
+	await _hold_storm()
 	_end()
 
 
@@ -622,6 +631,166 @@ func _scald() -> void:
 	_expect(not bool(br[""]) and bool(br["fire.breath.scald"]), "Scald: his Breath over a steam cloud makes it scald (Classic: steam)")
 	var cls := BendLoadout.hit_class(p, RingRules.class_of("fire_breath/breath"))
 	_expect(is_equal_approx(float(cls.get("d", 0.0)), 11.0), "Scald: his Breath adds %.0f%% (from 12)" % float(cls.get("d", 0.0)))
+
+
+# ---------------------------------------------------------------- Curved Curtain, Forked Lightning, Hold the Storm
+func _walls_of(owner: Node) -> Array:
+	return get_nodes_in_group(BendZone.GROUP).filter(func(z: Node) -> bool:
+		return z is BendZone and (z as BendZone).owner_node == owner and (z as BendZone).kind == "fire_wall" and not z.is_queued_for_deletion())
+
+
+func _curved() -> void:
+	var got := {}
+	for id: String in ["", "fire.wall.curved"]:
+		await _calm()
+		_wear(id)
+		await _tap(3)
+		var began := await _begin("fire_wall")
+		var cast_ok := await _cast_at(0.0)
+		await _ticks(4)
+		var ws := _walls_of(p)
+		var pieces: Array = []
+		for w: BendZone in ws:
+			pieces.append({"at": w.global_position, "way": w.way, "w": w.size.x, "life": w.life_s})
+		got[id] = {"ok": began and cast_ok, "pieces": pieces}
+		if id != "" and not ws.is_empty():
+			# a piece burns who walks in (its entry pop); the next wall ends every piece
+			var t0 := BendStatus.now()
+			await _foe_in((ws[0] as BendZone).global_position, 0.6)
+			got[id]["burned"] = BendR3.hits_log.filter(func(h: Dictionary) -> bool:
+				return h.n == foe and float(h.at) >= t0 and String(h.tag).begins_with("fire_wall/")).size()
+			await _secs(0.3)
+			await _tap(3)
+			await _begin("fire_wall")
+			await _cast_at(0.0)
+			await _ticks(4)
+			got[id]["left"] = ws.filter(func(w: Node) -> bool: return is_instance_valid(w) and not w.is_queued_for_deletion()).size()
+			got[id]["now"] = _walls_of(p).size()
+	var c0: Array = got[""].pieces
+	var cv: Array = got["fire.wall.curved"].pieces
+	_expect(bool(got[""].ok) and bool(got["fire.wall.curved"].ok), "Fire Wall: real casts")
+	_expect(c0.size() == 1 and is_equal_approx(float(c0[0].w), 4.0) and is_equal_approx(float(c0[0].life), 5.0),
+			"Fire Wall (Classic): one wall %.1f m, %.1f s" % [float(c0[0].w) if c0.size() > 0 else -1.0, float(c0[0].life) if c0.size() > 0 else -1.0])
+	var r := FireTalents.ARC_M / deg_to_rad(FireTalents.ARC_DEG)
+	var ok_arc := cv.size() == 4
+	var span := 0.0
+	var curtain := 0.0
+	if ok_arc:
+		var c1: Vector3 = (cv[0].at as Vector3) - (cv[0].way as Vector3) * r
+		for pc: Dictionary in cv:
+			var cc: Vector3 = (pc.at as Vector3) - (pc.way as Vector3) * r
+			ok_arc = ok_arc and Vector2(cc.x - c1.x, cc.z - c1.z).length() < 0.05 and is_equal_approx(float(pc.life), 4.0)
+			curtain += float(pc.w)
+		for i in cv.size():
+			for j in cv.size():
+				span = maxf(span, rad_to_deg((cv[i].way as Vector3).angle_to(cv[j].way as Vector3)))
+	_expect(ok_arc and absf(span + 30.0 - 120.0) < 1.0 and absf(curtain - 4 * 0.15 - 2.0 * r * sin(deg_to_rad(15.0)) * 4.0) < 0.05,
+			"Curved Curtain: %d pieces round one point, spanning %.0f deg edge to edge, %.2f m of curtain, 4 s" % [cv.size(), span + 30.0, curtain - 4 * 0.15])
+	_expect(int(got["fire.wall.curved"].get("burned", 0)) >= 1, "Curved Curtain: a piece burns who walks in (%d hits)" % int(got["fire.wall.curved"].get("burned", 0)))
+	_expect(int(got["fire.wall.curved"].get("left", -1)) == 0 and int(got["fire.wall.curved"].get("now", -1)) == 4,
+			"Curved Curtain: the next wall ends every piece of the last (%d left, %d now)" % [int(got["fire.wall.curved"].get("left", -1)), int(got["fire.wall.curved"].get("now", -1))])
+
+
+## A Lightning strike of `by`'s from his chest along `dir` (its spec as cast for him, no flash: it strikes at once).
+func _strike(by: Node3D, dir: Vector3) -> Dictionary:
+	var spec: Dictionary = ((SwayMoves.move("fire_arc").bend as Dictionary).lightning as Dictionary).duplicate()
+	spec = BendLoadout.spec(by, "fire_arc", "lightning", spec)
+	spec["flash_s"] = 0.0
+	spec["_info"] = BendR3.info_for(by, "fire_arc", "lightning", false, spec)
+	spec["_lock_s"] = BendEffects.lock_of("fire_arc", "lightning")
+	var from := NpcSenses.chest_of(by)
+	BendEffects.record(by, {"do": "lightning"})
+	BendEffects.lightning(by, {"from": from, "dir": dir.normalized(), "flat": Vector3(dir.x, 0.0, dir.z).normalized()}, spec)
+	return BendEffects.last_of(by)
+
+
+func _forked() -> void:
+	var rr := RingRules.current()
+	var got := {}
+	for id: String in ["", "fire.lightning.forked"]:
+		await _calm()
+		_wear(id)
+		rr._stale.clear()
+		var pud := BendZone.make(foe, "puddle", FormEffects.ground_at(foe, _foe_at), {"radius_m": 1.6, "life_s": 6.0}, Vector3.FORWARD)
+		var to_foe := Vector3(_foe_at.x - p.global_position.x, 0.0, _foe_at.z - p.global_position.z).normalized()
+		var p0 := rr.pct_of(foe)
+		var t0 := BendStatus.now()
+		var rec := _strike(p, to_foe.rotated(Vector3.UP, deg_to_rad(28.0)))
+		await _secs(0.7)
+		var tags: Array = BendR3.hits_log.filter(func(h: Dictionary) -> bool: return h.n == foe and float(h.at) >= t0).map(func(h: Dictionary) -> String: return String(h.tag))
+		got[id] = [rr.pct_of(foe) - p0, tags, int(rec.get("hit", -1))]
+		if is_instance_valid(pud):
+			pud.queue_free()
+	var d := 0.5 * 22.0 * RingRules.stock_num("pct_scale", 1.0)
+	var fk: Array = got["fire.lightning.forked"]
+	_expect(int(got[""][2]) == 0 and int(fk[2]) == 0, "Lightning: the strike misses the foe (hit %d, %d)" % [got[""][2], fk[2]])
+	_expect(float(got[""][0]) < 0.01 and absf(float(fk[0]) - d) < 0.05 and (fk[1] as Array) == ["reaction/live"],
+			"Forked Lightning: the fork makes his puddle live: he takes %.2f%% (%s; half the strike's 22%% is %.2f; Classic %.2f%%)" % [fk[0], fk[1], d, got[""][0]])
+	var cls := BendLoadout.hit_class(p, RingRules.class_of("fire_arc/lightning"))
+	_expect(is_equal_approx(float(cls.get("d", 0.0)), 22.0), "Forked Lightning: the strike adds %.0f%% (from 25)" % float(cls.get("d", 0.0)))
+	# its caster in live water: anyone in it
+	await _calm()
+	_wear("fire.lightning.forked")
+	rr._stale.clear()
+	var own := BendZone.make(foe, "puddle", FormEffects.ground_at(p, p.global_position), {"radius_m": 1.6, "life_s": 6.0}, Vector3.FORWARD)
+	var pp0 := rr.pct_of(p)
+	var away := Vector3(p.global_position.x - _foe_at.x, 0.0, p.global_position.z - _foe_at.z).normalized()
+	_strike(p, away)
+	await _secs(0.7)
+	_expect(absf(rr.pct_of(p) - pp0 - d) < 0.05, "Forked Lightning: its caster standing in the water it makes live takes it too (%.2f%%)" % (rr.pct_of(p) - pp0))
+	if is_instance_valid(own):
+		own.queue_free()
+
+
+func _back_hits(t0: float) -> int:
+	return BendR3.hits_log.filter(func(h: Dictionary) -> bool: return h.n == foe and float(h.at) >= t0 and String(h.tag) == "fire_arc/lightning.return").size()
+
+
+func _hold_storm() -> void:
+	var rr := RingRules.current()
+	var got := {}
+	for id: String in ["", "fire.parry.hold_storm", "past"]:
+		await _calm()
+		_wear("fire.parry.hold_storm" if id == "past" else id)
+		rr._stale.clear()
+		c.guard_override = true
+		await _until(func() -> bool: return _zone_of(p, "parry") != null, 1.0)
+		var to_p := (p.global_position + Vector3.UP * 1.2) - NpcSenses.chest_of(foe)
+		var p0 := rr.pct_of(foe)
+		var t0 := BendStatus.now()
+		_strike(foe, to_p)
+		await _ticks(3)
+		var at_once := _back_hits(t0)
+		await _secs(0.4)
+		var while_held := _back_hits(t0)
+		if id == "past":
+			await _secs(0.6)
+		var before_let_go := _back_hits(t0)
+		c.guard_override = false
+		await _ticks(4)
+		got[id] = [at_once, while_held, before_let_go, _back_hits(t0), rr.pct_of(foe) - p0]
+	var c0: Array = got[""]
+	var hs: Array = got["fire.parry.hold_storm"]
+	var past: Array = got["past"]
+	_expect(int(c0[0]) == 1, "Parry (Classic): the foe's Lightning goes back at once (%d)" % c0[0])
+	_expect(int(hs[0]) == 0 and int(hs[1]) == 0 and int(hs[3]) == 1,
+			"Hold the Storm: held in his arms while E is held (%d, %d), it strikes the foe when he lets go (%d)" % [hs[0], hs[1], hs[3]])
+	_expect(absf(float(hs[4]) - float(c0[4])) < 0.05 and float(c0[4]) > 1.0,
+			"Hold the Storm: the held Lightning strikes at x1.2 as before (%.2f%%, Classic %.2f%%)" % [hs[4], c0[4]])
+	_expect(int(past[1]) == 0 and int(past[2]) == 1, "Hold the Storm: held past 0.8 s it leaves by itself (%d at 0.4 s, %d at 1.0 s)" % [past[1], past[2]])
+	# his fire sent back: x1.1 (Classic x1.2)
+	var rm := {}
+	for id: String in ["", "fire.parry.hold_storm"]:
+		await _calm()
+		_wear(id)
+		c.guard_override = true
+		await _until(func() -> bool: return _zone_of(p, "parry") != null, 1.0)
+		var b := _foe_punch(2.0)
+		await _ticks(3)
+		rm[id] = float(b.info.get("ret_mult", -1.0)) if is_instance_valid(b) else -1.0
+		c.guard_override = false
+	_expect(is_equal_approx(float(rm[""]), 1.2) and is_equal_approx(float(rm["fire.parry.hold_storm"]), 1.1),
+			"Hold the Storm: a perfect Parry sends fire back x%.1f (Classic x%.1f)" % [rm["fire.parry.hold_storm"], rm[""]])
 
 
 # ---------------------------------------------------------------- a bot wearing them

@@ -753,6 +753,8 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	if not SbFx.fire(p, lk, "strike", {"at": from, "to": end, "dir": dir}):
 		BendLooks.lightning(from, end)
 	BendLooks.sound("lightning", "cast", from)
+	if FireTalents.any(p):
+		rec["live"] = FireTalents.struck(bc, from, end)      # (a worn Forked Lightning's fork to the nearest water)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
 	rec["hit"] = 0
 	rec["struck_at"] = BendStatus.now()
@@ -770,6 +772,10 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 			info = lg.info
 	else:
 		back = BendZone.lightning_back(who, p)
+	if back != null and FireTalents.any(who) and FireTalents.hold_storm(who, spec, info, r):
+		rec["redirected"] = true                  # (a worn Hold the Storm with E held: it waits in his arms, FireTalents)
+		rec["held"] = true
+		return
 	if back != null:
 		# (a Parry on the beat: back along the parrier's aim, his now)
 		var bfrom := NpcSenses.chest_of(who)
@@ -788,6 +794,8 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 		rec["redirected"] = true
 		if who2 != null and BendStatus.can_take(who2, who):
 			var k := BendLoadout.tune_f(who, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+			if FireTalents.any(who):
+				k = FireTalents.lightning_back_k(who, k)     # (Hold the Storm's x1.1 is fire's only: Lightning keeps x1.2)
 			var binfo := BendZone.return_info(info, who, bfrom, k)
 			BendR3.deliver(who2, float(spec.get("damage", 50.0)) * k, end2, bdir, who, float(spec.get("_lock_s", -1.0)),
 					Vector3(bdir.x, 0.0, bdir.z).normalized() * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0, binfo)
