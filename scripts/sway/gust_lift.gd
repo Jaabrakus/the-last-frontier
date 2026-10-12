@@ -327,6 +327,8 @@ func _fly(dt: float) -> void:
 	var ghost := not NetSpells.decides()
 	if not ghost and _meet_lifts():
 		return
+	if not heated and not ghost and BendLoadout.wears(by(), BendZone.KILN_STONE):
+		_kiln_check()
 	var hd := _hurl_d()
 	velocity.y -= float(hd.get("gravity", 6.0)) * dt
 	var lead := _lead() * smoothstep(0.0, LEAD_IN_S, _fly_t)
@@ -528,6 +530,44 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	queue_free()
 
 
+## Kiln Stone (BendZone.KILN_STONE): heated by fire it flew through (its hit info says so; a fire trail on the stone) until it
+## lands; douse() a plain stone again (a Turn).
+var heated := false
+var _kiln_trail: GPUParticles3D
+
+
+func _kiln_check() -> void:
+	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind in BendZone.KILN_FIRES and not bz.is_queued_for_deletion() and bz.inside(stone.global_position):
+			heat()
+			return
+
+
+func heat() -> void:
+	if heated or stone == null or not is_instance_valid(stone):
+		return
+	heated = true
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf["heated"] = true
+	set_meta(&"bend_info", inf)
+	_kiln_trail = BendLooks.trail(stone, "fire", radius)
+	BendLooks.burst(stone.global_position, "fire", 10, -velocity.normalized(), 60.0, 2.0, 0.2)
+
+
+func douse() -> void:
+	if not heated:
+		return
+	heated = false
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf.erase("heated")
+	set_meta(&"bend_info", inf)
+	BendLooks.stop_trail(_kiln_trail)
+	_kiln_trail = null
+	if stone != null and is_instance_valid(stone):
+		BendLooks.burst(stone.global_position, "steam", 12, Vector3.UP, 90.0, 1.5, 0.4)
+
+
 ## Earth's Avalanche (data/sway/skill_tree.json earth.boulder.avalanche; the owner, 2026-10-11: "make sure all the talents
 ## work"): its wearer's Boulder that lands on the deck (a floor under it, not a wall's face; never a returned stone) breaks into
 ## three stones that roll on along the deck from there, fanned AVALANCHE_DEG apart about its flight: low stone bolts (BendBolt
@@ -550,6 +590,7 @@ func _avalanche(at: Vector3, n: Vector3) -> void:
 	var flat := Vector3(velocity.x, 0.0, velocity.z)
 	flat = flat.normalized() if flat.length_squared() > 1e-4 else caster.facing()
 	var vi := inf.duplicate()
+	vi.erase("heated")                           # (a Kiln Stone's heat ends where the Boulder lands)
 	vi["volley_id"] = BendR3.new_volley()
 	vi["volley_n"] = 3
 	vi["avalanche"] = true
@@ -692,6 +733,9 @@ func _except(b: Node) -> void:
 
 
 func _release_stone() -> void:
+	if _kiln_trail != null:
+		BendLooks.stop_trail(_kiln_trail)        # (Kiln Stone: the heat ends where it lands)
+		_kiln_trail = null
 	if stone is PhysicsBody3D and is_instance_valid(stone):
 		for b in _excepted:
 			if is_instance_valid(b):

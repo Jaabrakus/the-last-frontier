@@ -742,6 +742,31 @@ func _kick_up_end(why: String) -> void:
 	GatherFx.fall_dust(get_tree().current_scene, at, 0.4)
 
 
+## Kiln Stone (BendZone.KILN_STONE): heated by fire it crossed (its hits' info says so: the launch base x KILN_MULT for its
+## thrower, BendLoadout.hit_class), a fire trail behind it; douse() makes it a plain stone again (a Turn).
+var heated := false
+
+
+func heat() -> void:
+	if heated:
+		return
+	heated = true
+	info["heated"] = true
+	if _fire_trail == null:
+		_fire_trail = BendLooks.trail(self, "fire", maxf(radius, 0.12))
+	BendLooks.burst(global_position, "fire", 8, -velocity.normalized(), 60.0, 2.0, 0.15)
+
+
+func douse() -> void:
+	if not heated:
+		return
+	heated = false
+	info.erase("heated")
+	BendLooks.stop_trail(_fire_trail)
+	_fire_trail = null
+	BendLooks.burst(global_position, "steam", 12, Vector3.UP, 90.0, 1.5, 0.4)
+
+
 ## A raised wall worn by this bolt (WEAR by its kind and the wall's matter; the water jet's erode on an earth wall).
 func wear(w: FormRaised, at: Vector3) -> void:
 	if w.has_meta(&"bend_brace"):

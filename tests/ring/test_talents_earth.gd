@@ -22,6 +22,9 @@ extends SceneTree
 ##   Heave             the player's Column through his own lock (RMB held: held_override), let go 0.05 s after it fills: on the
 ##                     Beat, the bot launched harder (base 11.3: W x 1 more than 0.4 s after, which is Classic's 10.3); its lock
 ##                     x1.7/1.6; the bot wearing it lets go on the Beat and launches the player harder
+##   Kiln Stone        a Fire Wall (the bot's) between them: the player's Pebbles and Spike thrown through it come out heated
+##                     (Classic: plain) and knock the bot with base x1.15; the bot's Parry on the beat sends heated pebbles back
+##                     (plain ones it only stops); its Turn douses them; the bot wearing it heats its own Spike the same
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -171,6 +174,7 @@ func _run() -> void:
 	await _kick_up()
 	await _avalanche()
 	await _heave()
+	await _kiln_stone()
 	_end()
 
 
@@ -647,6 +651,143 @@ func _heave() -> void:
 	_expect(not bool(vs[""][1]) and bool(vs[id][1]) and float(vs[id][0]) - float(vs[""][0]) > 0.5 * w,
 			"Heave on the bot: its Column let go on the Beat launches the player harder (%.2f m/s, Classic's %.2f)" % [vs[id][0], vs[""][0]])
 	_wear(bot, "")
+
+
+# ---------------------------------------------------------------- Kiln Stone
+## A Fire Wall of the bot's across the line `dist` m from the player (any fire wall heats: his, an ally's).
+func _fire_wall_at(dist: float) -> BendZone:
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	return BendZone.make(bot, "fire_wall", FormEffects.ground_at(player, player.global_position + way * dist),
+			{"width_m": 5.0, "height_m": 2.2, "thick_m": 0.6, "life_s": 60.0, "damage_s": 0.0}, way)
+
+
+## The stone bolts `by` throws next (seen in flight `s` s): [heated ones, plain ones, sent back (now another's), their ends:
+## [why, heated at its end, another's at its end, heated at some time in flight]].
+func _stone_bolts(by: Node3D, s: float) -> Array:
+	var seen := {}
+	var was_hot := {}
+	var ends := []
+	for i in ceili(s * Engine.physics_ticks_per_second / 2.0):
+		await _ticks(1)
+		for n in get_nodes_in_group(BendBolt.GROUP):
+			var b := n as BendBolt
+			if b == null or b.kind != "stone":
+				continue
+			if seen.has(b.get_instance_id()):
+				if b.heated:
+					was_hot[b.get_instance_id()] = true
+				continue
+			if b.caster == by:
+				seen[b.get_instance_id()] = b
+				var bb := b
+				var bid := b.get_instance_id()
+				b.ended.connect(func(why: String) -> void: ends.append([why, bb.heated, bb.caster != by, bb.heated or was_hot.has(bid)]))
+	await _secs(0.3)
+	var hot := 0
+	var plain := 0
+	var back := 0
+	for e: Array in ends:
+		if bool(e[1]):
+			hot += 1
+		else:
+			plain += 1
+		if bool(e[2]):
+			back += 1
+	return [hot, plain, back, ends]
+
+
+func _kiln_stone() -> void:
+	var id := "earth.stone.kiln_stone"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Kiln Stone is live, its code built (%s)" % BendLoadout.why_not(id))
+	await _stage(-4.5, 1.5)
+	var fw := _fire_wall_at(3.0)
+	var w := RingRules.weight_of("earth")
+	# Pebbles through the fire at the bot: the first knocks (a set knock: its base, x1.15 heated)
+	var peb := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		rules.reset_pct(bot, 0.0)
+		await _aim_at(NpcSenses.chest_of(bot))
+		var got := [-1.0, false]
+		var cb := func(b: Node3D, v: Vector3, _st: float, _by: Node, t: String) -> void:
+			if b == bot and t == "rock_jab/pebbles" and got[0] < 0.0:
+				got[0] = v.length()
+		rules.launched.connect(cb)
+		BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+		var sb: Array = await _stone_bolts(player, 0.6)
+		rules.launched.disconnect(cb)
+		peb[wid] = [got[0], sb[0], sb[1]]
+		await _stage(-4.5, 1.5)
+	_expect(int(peb[""][1]) == 0 and int(peb[id][1]) >= 2, "Kiln Stone: his Pebbles through the Fire Wall come out heated (%d of them; Classic %d)" % [peb[id][1], peb[""][1]])
+	_expect(float(peb[""][0]) > 0.0 and _near(float(peb[id][0]) / float(peb[""][0]), 1.15, 0.01),
+			"Kiln Stone: a heated pebble knocks with base x%.3f (%.2f m/s, Classic %.2f)" % [float(peb[id][0]) / maxf(float(peb[""][0]), 0.01), peb[id][0], peb[""][0]])
+	# the Spike through the fire
+	var sp := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		rules.reset_pct(bot, 0.0)
+		await _aim_at(NpcSenses.chest_of(bot))
+		sc.set_mode("stone_form", "spike")
+		var hot := [false]
+		FormEffects.apply(sc, "stone_form", null, bot.global_position)
+		var v := -1.0
+		var got2 := [-1.0]
+		var cb2 := func(b: Node3D, vv: Vector3, _st: float, _by: Node, t: String) -> void:
+			if b == bot and t.begins_with("stone_form/spike") and got2[0] < 0.0:
+				got2[0] = vv.length()
+		rules.launched.connect(cb2)
+		for i in 90:
+			await _ticks(1)
+			for l in get_nodes_in_group(GustLift.GROUP):
+				if (l as GustLift).by() == player and (l as GustLift).heated:
+					hot[0] = true
+		rules.launched.disconnect(cb2)
+		v = float(got2[0])
+		sp[wid] = [v, hot[0]]
+		await _stage(-4.5, 1.5)
+	var diff := float(sp[id][0]) - float(sp[""][0])
+	_expect(bool(sp[id][1]) and not bool(sp[""][1]), "Kiln Stone: his Spike flown through the Fire Wall is heated (Classic: plain)")
+	_expect(float(sp[""][0]) > 0.0 and diff > 0.6 * w * 5.8 * 0.15 and diff < 1.05 * w * 5.8 * 0.15,
+			"Kiln Stone: the heated Spike launches the bot harder by its base x1.15 (%.2f m/s, Classic %.2f)" % [sp[id][0], sp[""][0]])
+	# the guards: a Parry on the beat sends heated pebbles back, plain ones it only stops; a Turn douses them
+	var bbc := BendCaster.of(bot)
+	var guard := {}
+	for g: Array in [["", "fire_parry", "parry"], [id, "fire_parry", "parry"], [id, "water_redirect", "redirect"]]:
+		_wear(player, String(g[0]))
+		await _aim_at(NpcSenses.chest_of(bot))
+		BendEffects.apply(bbc, String(g[1]), String(g[2]), (SwayMoves.move(String(g[1])).bend as Dictionary)[String(g[2])])
+		BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+		guard["%s/%s" % [g[0], g[2]]] = await _stone_bolts(player, 0.6)
+		await _secs(0.8)
+		await _stage(-4.5, 1.5)
+	var pp: Array = guard["%s/parry" % id]
+	var cp: Array = guard["/parry"]
+	var tt: Array = guard["%s/redirect" % id]
+	_expect(int(pp[2]) >= 2, "Kiln Stone: the bot's Parry on the beat sends the heated pebbles back, his now (%d of %d)" % [pp[2], pp[3].size()])
+	_expect(int(cp[2]) == 0, "Classic: plain pebbles at a Parry are stopped, none sent back (%s)" % [cp[3]])
+	var doused := 0
+	for e: Array in tt[3]:
+		if bool(e[3]) and not bool(e[1]):
+			doused += 1                              # (heated through the fire, plain at its end)
+	_expect(int(tt[0]) == 0 and doused >= 2, "Kiln Stone: the bot's Turn douses them to plain stones (%s)" % [tt[3]])
+	_wear(player, "")
+	# the bot wearing it: its Spike through the fire comes out heated
+	_wear(bot, id)
+	await _stage(-4.5, 1.5)
+	var bot_hot := false
+	BendCast.cast(bbc, "stone_form", "spike", player, player.global_position)
+	for i in 90:
+		await _ticks(1)
+		for l in get_nodes_in_group(GustLift.GROUP):
+			if (l as GustLift).by() == bot and (l as GustLift).heated:
+				bot_hot = true
+	_expect(bot_hot, "Kiln Stone on the bot: its Spike thrown through the Fire Wall comes out heated")
+	_wear(bot, "")
+	if is_instance_valid(fw):
+		fw.end("test")
+	await _stage(-4.5, 4.5)
 
 
 ## A body made to wear `id` (a stand-in for the checks of what a wearer's overlay says).

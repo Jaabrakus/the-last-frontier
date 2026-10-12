@@ -536,6 +536,9 @@ func _every(dt: float) -> void:
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
 ## passes as its owner's own does: a guard never sends a teammate's bolt back or eats it.
 func on_bolt(b: BendBolt) -> bool:
+	if kind in KILN_FIRES and b.kind == "stone" and not b.heated and not b.spent and inside(b.global_position) \
+			and BendLoadout.wears(b._by(), KILN_STONE):
+		b.heat()                                 # (Kiln Stone: a stone of the wearer's through any fire comes out heated)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -713,6 +716,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 			_result("perfect" if perfect else "late", what, shooter)
 			return true
 		"redirect":
+			if what == "stone" and b.heated:
+				b.douse()                           # (Kiln Stone: a Turn douses a heated stone to a plain one, then takes it as stone)
 			# (the Air Lance, the only air spear: the Turn takes it as water and ice, and it leaves as ice)
 			var lance := what == "air" and b.shape == "spear"
 			if what in ["water", "ice"] or lance:
@@ -732,7 +737,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 			else:
 				return _shield_bolt(b, perfect, what)
 		"parry":
-			if what == "fire":
+			if what == "fire" or (what == "stone" and b.heated):
+				# (a heated stone burns: a Parry takes it as fire, Kiln Stone)
 				if perfect:
 					_straight_back(b)
 				else:
@@ -1240,6 +1246,20 @@ func _stones() -> void:
 		var lead := lift._lead() if BendR3.stock() else Vector3.ZERO
 		if (lift.stone.global_position + lead).distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
 			continue
+		if r2 and BendR3.stock() and kind in ["redirect", "parry"] and lift.heated:
+			# (Kiln Stone: a heated stone burns: a Turn douses it to a plain stone (then as any stone, below); a Parry takes it
+			# as fire: on the beat sent straight back along his aim, his now; late, half through)
+			if kind == "redirect":
+				lift.douse()
+			else:
+				var thrower_h := _body_of(lift.caster)
+				if perfect:
+					_lift_back(lift)
+				else:
+					_late_lift(lift)
+				took += 1
+				_result("perfect" if perfect else "late", "stone", thrower_h)
+				continue
 		if r2 and BendR3.stock() and kind in ["redirect", "parry"]:
 			# (round 3, every guard a shield: a stone met on the beat drops where it is, nothing through, no reward; late,
 			# half as a slide)
@@ -1314,6 +1334,35 @@ func _stones() -> void:
 			_take_stone(s, v, perfect)
 			if r2:
 				_result("perfect" if perfect else "late", "stone", shooter)
+
+
+## Earth's Kiln Stone (data/sway/skill_tree.json earth.stone.kiln_stone; the owner, 2026-10-11: "make sure all the talents work"):
+## a stone of its wearer's (a bolt: Pebbles, the Fissure's crack; a hurled Spike, Boulder or caught stone: GustLift) that passes
+## through fire (KILN_FIRES: any Fire Wall or burning ground, whoever's) comes out heated until it lands: a fire trail, its launch
+## base x KILN_MULT for him (BendLoadout.hit_class, info.heated). A heated stone counts as fire for the guards: a Parry on the
+## beat sends it back, a Turn douses it to a plain stone. (Magma seams: the Magma set, not built in this branch.)
+const KILN_STONE := "earth.stone.kiln_stone"
+const KILN_MULT := 1.15
+const KILN_FIRES := ["fire_wall", "burn"]
+
+
+## A heated flying stone parried on the beat (Kiln Stone): straight back along the guard's aim, perfect_mult faster, his now (a
+## return: his class, never the thrower's).
+func _lift_back(lift: GustLift) -> void:
+	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
+	var at := lift.stone.global_position
+	var to := guard_aim(owner_node, at)
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	lift.velocity = (to - at).normalized() * lift.velocity.length() * k
+	var bc := BendCaster.of(owner_node)
+	if bc != null and bc.valid():
+		lift.caster = bc
+		lift._ex = bc.exclude()
+		if lift.stone is CollisionObject3D:
+			lift._ex.append((lift.stone as CollisionObject3D).get_rid())
+	lift.hit = {}
+	lift.set_meta(&"bend_info", return_info(lift.get_meta(&"bend_info", {}), owner_node, at, k))
+	BendLooks.burst(at, "fire", 12)
 
 
 ## A flying stone met late by a guard that halves (the Wind Guard): late_mult of its damage and its knock go on (its hurl's

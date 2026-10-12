@@ -770,13 +770,17 @@ static func hit_class(body: Object, cls: Dictionary, info := {}) -> Dictionary:
 	var ov := overlay_of(body)
 	var over: Variant = (ov.get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
 	var beat: Variant = (ov.get("class_beat", {}) as Dictionary).get(String(cls.get("tag", ""))) if bool(info.get("beat", false)) else null
-	if not (over is Dictionary) and not (beat is Dictionary):
+	# (Kiln Stone: a stone of his heated by fire it crossed, BendZone.KILN_STONE: its launch base higher)
+	var heated := bool(info.get("heated", false)) and wears(body, BendZone.KILN_STONE)
+	if not (over is Dictionary) and not (beat is Dictionary) and not heated:
 		return cls
 	var out := cls.duplicate()
 	for o: Variant in [over, beat]:
 		if o is Dictionary:
 			for k: String in o:
 				out[k] = float(o[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
+	if heated:
+		out["base"] = float(out.get("base", 0.0)) * BendZone.KILN_MULT
 	return out
 
 
