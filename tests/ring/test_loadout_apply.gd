@@ -124,6 +124,17 @@ func _dig(d: Variant, keys: Array) -> Variant:
 	return cur
 
 
+## LIVE and the behaviour talents built since (loadout_apply.json `behaviour`, in the live list's order): a builder of a behaviour
+## talent adds it to the json's live list (at its end), nodes and behaviour, and its own tests/ring/test_talents_<element>.gd plays it;
+## this test then checks its numbers like any live node's.
+func _live_all() -> Array:
+	var out: Array = LIVE.duplicate()
+	for v: Variant in (BendLoadout.config().get("live", []) as Array):
+		if String(v) in BendLoadout.behaviour() and not String(v) in out:
+			out.append(String(v))
+	return out
+
+
 func _near(a: Variant, b: Variant) -> bool:
 	return a != null and b != null and is_equal_approx(float(a), float(b))
 
@@ -139,13 +150,13 @@ func _run() -> void:
 		every_on = every_on and id0 in live
 	var only_known := true
 	for id0: String in live:
-		only_known = only_known and id0 in LIVE
+		only_known = only_known and id0 in _live_all()
 	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
 	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
 			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
 	var all_on := {}
-	for id1: String in LIVE:
+	for id1: String in _live_all():
 		all_on[id1] = true
 	_expect(not "water.skate.wet_trail" in live and not bool(BendLoadout.resolve("water.skate.wet_trail").ok)
 			and String(BendLoadout.resolve("water.skate.wet_trail").why).contains("puddles"),
@@ -172,10 +183,10 @@ func _run() -> void:
 	BendLoadout.config_override = {"styles_live": []}
 	_expect(BendLoadout.live_styles().is_empty() and not BendLoadout.style_ok("boxing", "fire"), "styles_live empty: no style plays")
 	BendLoadout.config_override = {"nodes": all_on}
-	_expect(BendLoadout.live_ids() == LIVE, "every node's switch on: the %d resolvable ones" % LIVE.size())
+	_expect(BendLoadout.live_ids() == _live_all(), "every node's switch on: the %d resolvable ones" % _live_all().size())
 
 	# ---------------------------------------------------------------- each live node's numbers, wearer and bot
-	for id: String in LIVE:
+	for id: String in _live_all():
 		var n := _node(id)
 		var el := id.get_slice(".", 0)
 		var w := _body()
@@ -193,6 +204,16 @@ func _run() -> void:
 				_expect(String(wp.get("clip", "")) == String(c.to) and String(wp.get("from", "")) == "node"
 						and String(BendPoses.pick(mvp, mdp, el, bot).get("clip", "")) == String(c.from),
 						"%s: the wearer casts %s with %s, the other with %s" % [id, rest, c.to, c.from])
+				continue
+			if path == "new":
+				continue                                 # (a behaviour talent's own code: its own test plays it, tests/ring/test_talents_<el>.gd)
+			if path.begins_with("new:") or (path.begins_with("class:") and c.to is Dictionary and c.from == null):
+				# (a behaviour talent's own number or whole new class: the wearer's, nothing for the other)
+				var key_n := path.substr(6) if path.begins_with("class:") else path
+				var got_n: Variant = BendLoadout.new_class(w, key_n) if path.begins_with("class:") else BendLoadout.tune(w, path, null)
+				var none_n: Variant = BendLoadout.new_class(bot, key_n) if path.begins_with("class:") else BendLoadout.tune(bot, path, null)
+				_expect(str(got_n) == str(c.to) and (none_n == null or (none_n is Dictionary and (none_n as Dictionary).is_empty())),
+						"%s: %s is the wearer's (%s), nobody else's" % [id, path, str(c.to)])
 				continue
 			if path in BendLoadout.TUNE_PATHS:
 				# (a guard rule, a passive, a % ring rule or a move's own number: the wearer's at its seam, the other's the game's)
