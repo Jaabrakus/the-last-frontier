@@ -8,7 +8,8 @@
     "nodes: one switch per node id (absent counts as on). A node whose soak left its gate (tools/ring/loadout_soak.gd: 0.40-0.60 of the games at 30, 0.45-0.55 at 60) is switched off here and noted in the doc; its numbers then read as the move's own.",
     "live: the node ids that may apply (the eight number-only nodes of the plan's B2, less those refused): air.ball.dense, air.gust.full_sail, air.slice.keen, earth.burrow.lie_low, fire.step.quick, earth.wall.thick, water.wall.thick_ice. Each node's numbers are read from data/sway/skill_tree.json changes[]; a node applies only when every change in it can be applied per wearer and the data still holds its `from`.",
     "water.skate.wet_trail is NOT live: its puddles.count and puddles.life_s are in data/sway/moves.json but nothing in the game makes the Skate's puddles, so only its slower travel (-10%) could apply, a pure nerf. It stays out until the Skate leaves puddles. Earth's Steady Point is not in the set either (it needs new fields).",
-    "air.gust.full_sail is switched OFF (2026-10-10): the Gust held long became the Air Lance (a spear throw), so Full Sail now widens the plain Gust (2.4 m from 2, lock 0.5 s from 0.45) instead of the grown one; the soak measured the old numbers, and unverified is not live. Flip it to true once tools/ring/loadout_soak.gd element=air nodes=air.gust.full_sail is in the gate.",
+    "air.gust.full_sail is switched ON again (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): since 2026-10-10 it widens the plain Gust (2.4 m from 2, lock 0.5 s from 0.45; the Gust held long is the Air Lance); tests/ring/test_talents_air.gd casts it in a ring (its width, its lock, a foe just past the plain Gust's reach hit by the wide one only, a bot's wide Gust). Not re-soaked on the new numbers.",
+    "Air's behaviour talents (2026-10-11, docs/tidebreak/talents_air.md): their code is scripts/bending/air_talents.gd (AirTalents), each asked by one line at the seam where it happens; `behaviour` says where. tests/ring/test_talents_air.gd plays each worn and not worn in a 2v2 ring. Live on the owner's word, not soaked.",
     "earth.wall.thick and water.wall.thick_ice are switched OFF (2026-10-10 soak, tools/ring/loadout_soak.gd): the numbers apply and are tested, but the soak's bots never raise an Earth Wall or an Ice Wall (0 casts in 60 mirror games each; they only answer a held stone with one), so the fairness gate cannot see these two nodes. Their rates (Thick Wall 17/30 = 0.567, Thick Ice 23/60 = 0.383) are the mirror's own noise: with nothing worn the same seeds gave 18/30 for earth and, for water, exactly the games the node run played (9/30). Unverified is not live; flip each to true here once a duel or a bot that walls has measured it.",
     "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing only; Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
     "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn.",
@@ -21,7 +22,7 @@
   "classic_style": false,
   "nodes": {
     "air.ball.dense": true,
-    "air.gust.full_sail": false,
+    "air.gust.full_sail": true,
     "air.slice.keen": true,
     "earth.burrow.lie_low": true,
     "water.skate.wet_trail": false,
@@ -56,9 +57,18 @@
     "water.passive.rapids": true,
     "fire.parry.reaching": true,
     "air.passive.long_carry": true,
-    "air.passive.gale_force": true
+    "air.passive.gale_force": true,
+    "air.slice.tailwind": true,
+    "air.guard.drift": true,
+    "air.guard.eye": true,
+    "air.guard.rebound": true
   },
-  "behaviour": {},
+  "behaviour": {
+    "air.slice.tailwind": "AirTalents.on_hit (BendR3._noted: a Slice of his that lands charges his Carried wind)",
+    "air.guard.drift": "AirTalents.guard_walk (RingMoves._ground_physics, SwayCaster._root, NpcRingMind.shield_tick: walking at 1.5 m/s with the Wind Guard up)",
+    "air.guard.eye": "AirTalents.eye_catch (BendZone._guard_bolt: E held through a perfect bounce circles it, BendBolt.swing_hold), AirTalents.guard_carry_s (BendZone.carry_wind's length)",
+    "air.guard.rebound": "AirTalents.on_guard and start_fill (BendZone.report, SwayCaster._try_begin, NpcBending.begin: the next air_blast lock 40% full); hold_max_s by tune (SwayCaster._hold_guard, NpcRingMind.shield_tick)"
+  },
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -82,6 +92,10 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force",
+    "air.slice.tailwind",
+    "air.guard.drift",
+    "air.guard.eye",
+    "air.guard.rebound"],
   "styles_live": ["boxing"]
 }

@@ -209,6 +209,8 @@ Also checked and cleared: the soak's wall keys (`earth_wall/wall`, `water_shield
 
 The fixes moved nothing: air, fire and water played the same ten games, line for line, on the code before the fixes and after them. The loadout was found on the wearer at every check (19 of 19 per run), with no anomaly and no script error. Ten games is a smoke run, not a fairness measure (see "How strict the gate is"). These are mirror matches, so they say nothing about one element against another.
 
+Air's behaviour talents (Tailwind, Drift Guard, Eye of the Gale, Rebound and the rest as they are built) and Full Sail switched on again: `docs/tidebreak/talents_air.md`.
+
 ## Tests and commands
 
 ```

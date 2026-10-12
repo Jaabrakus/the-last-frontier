@@ -148,6 +148,9 @@ var _body_parts: Array[Node] = []
 var _look: Node3D
 ## The swing turned it (become): it is drawn wrapped round the guard and leaves with a burst and a cast's voice.
 var _swing_became := false
+## While valid, the swing goes on only as long as it says true (Eye of the Gale: the guarder's E held; AirTalents.eye_catch): let
+## go, it leaves along his aim from where it is. Invalid (every Turn): the swing runs its time.
+var swing_hold := Callable()
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -336,22 +339,24 @@ func _swing(dt: float) -> void:
 		_swing_t = -1.0
 		end("swing")
 		return
-	_swing_t += dt / _swing_s
-	var u := minf(_swing_t, 1.0)
-	var a := _swing_a0 - TAU * u
-	# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
-	var e := smoothstep(0.0, SWING_IN, u)
-	var rr := lerpf(_swing_r0, _swing_r, e)
-	var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
-	var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
-	var was := global_position
-	global_position = at
-	if (at - was).length_squared() > 1e-6:
-		velocity = (at - was).normalized() * velocity.length()
-	_face()
-	if _swing_t < 1.0:
-		return
+	if not (swing_hold.is_valid() and not bool(swing_hold.call())):
+		_swing_t += dt / _swing_s
+		var u := minf(_swing_t, 1.0)
+		var a := _swing_a0 - TAU * u
+		# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
+		var e := smoothstep(0.0, SWING_IN, u)
+		var rr := lerpf(_swing_r0, _swing_r, e)
+		var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
+		var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
+		var was := global_position
+		global_position = at
+		if (at - was).length_squared() > 1e-6:
+			velocity = (at - was).normalized() * velocity.length()
+		_face()
+		if _swing_t < 1.0:
+			return
 	_swing_t = -1.0
+	swing_hold = Callable()
 	var to := BendZone.guard_aim(_swing_by, global_position)
 	var sp := velocity.length() * _swing_k
 	velocity = (to - global_position).normalized() * sp

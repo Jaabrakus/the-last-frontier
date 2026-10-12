@@ -1934,7 +1934,7 @@ func shield_tick(_dt: float) -> void:
 		_shield_dropped()
 		return
 	var bz := z as BendZone
-	var hold_max := float(BendR3.block("guard").get("hold_max_s", 2.5))
+	var hold_max := BendLoadout.tune_f(me, "rules:air_rules.guard.hold_max_s", float(BendR3.block("guard").get("hold_max_s", 2.5)))
 	var coming := false
 	for th: Dictionary in bend._threats():
 		if int(th.get("id", 0)) == int(shield.id):
@@ -1945,8 +1945,8 @@ func shield_tick(_dt: float) -> void:
 		if bz.t > bz.window_s and not bool(shield.held):
 			shield.held = true
 			stats.shield_held_long += 1
-		if me.get(&"_goal") != Vector3.INF:
-			me.halt()                             # (no walking while it is up)
+		if me.get(&"_goal") != Vector3.INF and not AirTalents.drifts(me):
+			me.halt()                             # (no walking while it is up; Drift Guard's wearer walks: RingMoves caps it)
 		return
 	drop_shield()
 

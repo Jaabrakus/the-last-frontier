@@ -1326,6 +1326,8 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
+	lock_t = lock_s * AirTalents.start_fill(me, id)   # (Rebound's head start after a perfect Wind Guard; Classic 0)
+	fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false

@@ -546,8 +546,10 @@ func _ground_physics(dt: float, stun: bool) -> void:
 		spd *= BendStatus.drench_mult(body)          # (drenched: slower a while, BendStatus.drench)
 	spd = minf(spd, _speed_cap())
 	var target := mv * spd
-	if _crouch or _lag > 0.0 or stun or _guard_zone():
+	if _crouch or _lag > 0.0 or stun:
 		target = Vector3.ZERO
+	elif _guard_zone():
+		target = AirTalents.guard_walk(body, target)   # (no walking with the guard up; Drift Guard's wearer walks slowly)
 	var flat := Vector3(_o.x, 0.0, _o.z)
 	var acc := num("physics", "accel", 40.0) if target.length() > flat.length() else num("physics", "decel", 30.0)
 	flat = flat.move_toward(target, acc * dt)

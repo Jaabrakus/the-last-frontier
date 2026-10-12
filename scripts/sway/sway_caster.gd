@@ -1000,7 +1000,7 @@ func _hold_guard() -> void:
 	if not is_instance_valid(_gzone) or _gzone.is_queued_for_deletion():
 		_gzone = null
 		return
-	var hold := float(BendR3.block("guard").get("hold_max_s", 2.5))
+	var hold := BendLoadout.tune_f(player, "rules:air_rules.guard.hold_max_s", float(BendR3.block("guard").get("hold_max_s", 2.5)))
 	var e_down := _guard_down()
 	if e_down and _gzone.t < hold and _gzone.life_s >= _gzone.t:
 		_gzone.life_s = maxf(_gzone.life_s, minf(_gzone.t + 0.1, hold))
@@ -1905,8 +1905,9 @@ func _root() -> void:
 	var on := pose != null and is_instance_valid(pose) and pose.rooting() and not player.is_dead
 	if on and r3() and airborne():
 		on = false                                # (round 3: casting never stops the fall; a pose's root ignored airborne)
-	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up():
-		on = true                                 # (round 3: no walking while the guard is up)
+	if not on and r3() and RingRules.stock_on() and _gzone != null and is_instance_valid(_gzone) and guard_up() \
+			and not AirTalents.drifts(player):
+		on = true                                 # (round 3: no walking while the guard is up; Drift Guard: RingMoves caps it)
 	if on:
 		if player.drag_speed_cap > ROOT_CAP:
 			player.drag_speed_cap = ROOT_CAP
@@ -2325,7 +2326,7 @@ func _try_begin(q: Dictionary) -> void:
 	state = State.LOCKING
 	move = m
 	target = t
-	fill = 0.0
+	fill = AirTalents.start_fill(player, m) if lock_src != SRC_GUARD else 0.0     # (Rebound's head start; Classic 0)
 	off_t = 0.0
 	full_t = 0.0
 	hold_t = 0.0

@@ -741,8 +741,9 @@ func _guard_bolt(b: BendBolt) -> bool:
 		"air_shield", "wind_guard":
 			if what == "air":
 				if perfect:
-					_straight_back(b)
-					carry_wind(owner_node)
+					if not AirTalents.eye_catch(self, b):
+						_straight_back(b)                 # (Eye of the Gale's wearer, E held: it circles him first)
+					carry_wind(owner_node, AirTalents.guard_carry_s(owner_node))
 				else:
 					_late(b)
 			elif what == "stone":
@@ -868,6 +869,7 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 	if owner == null or not is_instance_valid(owner):
 		return
 	owner.set_meta(&"bend_last_guard", {"result": result, "what": what, "at": BendStatus.now(), "element": el})
+	AirTalents.on_guard(owner, result, el)        # (Rebound's head start after a perfect Wind Guard; Classic none)
 	var c: Dictionary = counts.get(el, {})
 	c[result] = int(c.get(result, 0)) + 1
 	counts[el] = c
@@ -880,13 +882,14 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 
 ## Carried wind on `body` (air's passive: a hit straight out of a dash, a near miss or a bounced guard knocks harder for
 ## Bending.passive("air").after_s): its meta bend_carry_until; its spiral and whistle on him.
-static func carry_wind(body: Node) -> void:
+static func carry_wind(body: Node, s := -1.0) -> void:
 	if body == null or not is_instance_valid(body) or BendPoses.element_of(body) != "air":
 		return
-	if not NetSpells.here(body, "carry", []):
+	if not NetSpells.here(body, "carry", [s] if s >= 0.0 else []):
 		return                                   # (online: his owner's, NetSpells)
-	body.set_meta(&"bend_carry_until", BendStatus.now() + BendLoadout.tune_f(body, "rules:passives.air.after_s",
-			float(Bending.passive("air").get("after_s", 0.8))))
+	# (`s` >= 0: its own length, a worn talent's: Eye of the Gale's perfect guard; else the passive's)
+	body.set_meta(&"bend_carry_until", BendStatus.now() + (s if s >= 0.0 else BendLoadout.tune_f(body, "rules:passives.air.after_s",
+			float(Bending.passive("air").get("after_s", 0.8)))))
 	if body is Node3D:
 		BendLooks.carried(body as Node3D)
 
@@ -1038,7 +1041,7 @@ static func cone_mult(body: Node, cone_kind: String, by: Node = null) -> float:
 		bz.took += 1
 		bz._result("perfect" if perfect else "late", cone_kind, by)
 		if perfect and cone_kind == "air":
-			carry_wind(body)
+			carry_wind(body, AirTalents.guard_carry_s(body))
 		return 0.0 if perfect else bz.late_mult
 	return 1.0
 
@@ -1330,7 +1333,7 @@ static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> 
 			BendR3.jab_guarded(by)
 		if perfect:
 			if what == "air" and bz.kind in ["air_shield", "wind_guard"]:
-				carry_wind(body)
+				carry_wind(body, AirTalents.guard_carry_s(body))
 			return {"result": "perfect", "mult": 0.0, "info": info, "zone": bz}
 		var inf := info.duplicate()
 		inf["slide_only"] = true

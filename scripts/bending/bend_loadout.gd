@@ -81,7 +81,8 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"stock:late_mult", "rules:passives.water.steer_dps", "rules:passives.water.steer_max_deg", "rules:passives.water.steer_s",
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
-		"move:stone_form.cannonball.radius_m"]
+		"move:stone_form.cannonball.radius_m",
+		"rules:air_rules.guard.hold_max_s"]             # (air: Rebound's held Wind Guard, SwayCaster._hold_guard and a bot's shield_tick)
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -407,6 +408,8 @@ static func tune_base(path: String) -> Variant:
 				return Bending.rules().get(String(keys[1]))
 			if keys.size() == 3 and keys[0] == "passives":
 				return Bending.passive(String(keys[1])).get(String(keys[2]))
+			if keys.size() == 3 and keys[0] == "air_rules":
+				return BendR3.block(String(keys[1])).get(String(keys[2]))      # (moves.json air_rules, BendR3's defaults under it)
 		"stock":
 			if keys.size() == 1:
 				return (RingRules.data().get("stock", {}) as Dictionary).get(String(keys[0]))
