@@ -88,6 +88,24 @@ var _air := false
 var _helpless := false
 ## A Rise still owes its landing recovery after air controls return. This does not replenish any air move.
 var _rise_landing := false
+## A remote body online (RingNet's puppet, docs/tidebreak/ring_netcode.md): it simulates nothing; its state is its owner's, set
+## from the wire (set_puppet_state) and answered from there (clip_state, can_cast, airborne, intangible, helpless, body_yaw,
+## puppet_knock). Its body is put where its owner's was by NetBody.
+var puppet := false
+var _pup: Array = []
+var _pup_ry := INF
+## puppet_state()'s flags.
+const PF_AIR := 1
+const PF_CAN_CAST := 2
+const PF_INTANGIBLE := 4
+const PF_HELPLESS := 8
+const PF_LEGS := 16
+const PF_KNOCK_AIR := 32
+const PF_KNOCK_SLIDE := 64
+const PUP_CLIP := 0
+const PUP_MODE := 1
+const PUP_MODE_T := 2
+const PUP_FLAGS := 3
 var _glide := false
 var _ff := false
 var _lag := 0.0
@@ -230,6 +248,7 @@ static func drift_of(el: String) -> Vector2:
 func _ready() -> void:
 	if virtual or body == null:
 		return
+	puppet = body.has_meta(RingNet.PUPPET_META)
 	_ensure_filter()
 	if &"ring_moves" in body:
 		body.set(&"ring_moves", self)            # (FrontierPlayer's and NpcFighter's gate)
@@ -313,6 +332,8 @@ func profile() -> Dictionary:
 func can_cast() -> bool:
 	if body == null and not virtual:
 		return true
+	if puppet:
+		return _pup.size() <= PUP_FLAGS or (int(_pup[PUP_FLAGS]) & PF_CAN_CAST) != 0
 	if mode in LEDGE_MODES or mode in ["dodge", "lie", "getup_attack", "roll", "duck", "rise", "wall"]:
 		return false
 	return not _helpless and _lag <= 0.0 and not _stunned()
@@ -321,6 +342,8 @@ func can_cast() -> bool:
 func airborne() -> bool:
 	if body == null and not virtual:
 		return false
+	if puppet:
+		return _pup.size() > PUP_FLAGS and (int(_pup[PUP_FLAGS]) & PF_AIR) != 0
 	return _air and not mode in LEDGE_MODES and mode != "spout"
 
 
@@ -337,6 +360,8 @@ func off_deck() -> bool:
 
 ## An explicitly restricted airborne state. Completing a Rise returns ordinary air control instead.
 func helpless() -> bool:
+	if puppet:
+		return _pup.size() > PUP_FLAGS and (int(_pup[PUP_FLAGS]) & PF_HELPLESS) != 0
 	return _helpless
 
 
@@ -352,6 +377,8 @@ func on_spout() -> bool:
 func intangible() -> bool:
 	if body == null and not virtual:
 		return false
+	if puppet:
+		return _pup.size() > PUP_FLAGS and (int(_pup[PUP_FLAGS]) & PF_INTANGIBLE) != 0
 	if _t >= _int_from and _t < _int_until:
 		return true
 	if mode == "hang" and _t < _hang_safe_until:
@@ -387,6 +414,9 @@ func land_lag(s: float) -> void:
 # ---------------------------------------------------------------- the frame
 ## The body's frame of motion before its controller's: true when this moved it (always, on a live body).
 func pre(intent: Dictionary, dt: float) -> bool:
+	if puppet:
+		_t += dt
+		return body != null and is_instance_valid(body) and body.is_inside_tree()      # (its owner's machine moves it)
 	if not virtual:
 		if body == null or not is_instance_valid(body) or not body.is_inside_tree() or _dead():
 			return false
@@ -1822,8 +1852,10 @@ func _set_layers(off: bool) -> void:
 		_layers_kept.clear()
 
 
-## The way the body faces now when this says (the hang and the edge's moves: the deck; INF: his own).
+## The way the body faces now when this says (the hang and the edge's moves: the deck; INF: his own). A puppet: its owner's.
 func body_yaw() -> float:
+	if puppet:
+		return _pup_ry
 	if mode in LEDGE_MODES:
 		var n := Vector3.ZERO
 		if _m.has("normal"):
@@ -1839,7 +1871,7 @@ func body_yaw() -> float:
 ## share), fov with fov_w (its share); round 4 (READ) the camera variant on top (RingCamera.apply: its arm and pivot added,
 ## shoulder m, tilt_deg).
 func cam_bias() -> Dictionary:
-	if body == null or virtual or not (body is FrontierPlayer):
+	if body == null or virtual or puppet or not (body is FrontierPlayer):
 		return {}
 	var arm := num("cam", "deck_arm", 5.25)
 	var out := {"arm": arm, "pivot_up": num("cam", "deck_pivot_up", 0.3), "pivot": Vector3.ZERO, "pivot_w": 0.0, "fov": 60.0,
@@ -1890,7 +1922,7 @@ func note_mouse() -> void:
 ## out of hitstun, the lip more than turn_beyond_deg from the view and the mouse still mouse_still_s: toward the lip at up
 ## to turn_dps until it is within turn_until_deg. Pitch never moves.
 func cam_yaw_step(yaw: float, dt: float) -> float:
-	if body == null or virtual or not bool(block("cam").get("recover_turn", true)):
+	if body == null or virtual or puppet or not bool(block("cam").get("recover_turn", true)):
 		return 0.0
 	if not (off_deck() and _air) or mode in LEDGE_MODES or mode == "spout" or _stunned() or _turn_off:
 		_turning = false
@@ -1924,8 +1956,53 @@ func cam_turning() -> bool:
 
 
 # ---------------------------------------------------------------- the body-state clip
-## The body-state clip's key in movement.json clips now ("" none: the body's own locomotion and casts).
+## The body's state for its puppets online (RingNet, NetBody): [its clip_state, its mode, the mode's time, flags (PF_*)].
+func puppet_state() -> Array:
+	var f := 0
+	if airborne():
+		f |= PF_AIR
+	if can_cast():
+		f |= PF_CAN_CAST
+	if intangible():
+		f |= PF_INTANGIBLE
+	if helpless():
+		f |= PF_HELPLESS
+	if looks != null and _t - looks.air_legs_at <= SwayPose.AIR_LEGS_S:
+		f |= PF_LEGS
+	var kn := BendKnock.peek(body) if body != null else null
+	if kn != null and kn.is_launched():
+		f |= PF_KNOCK_AIR
+	elif kn != null and kn.knock_t > 0.0 and kn.kv.length() >= SwayPose.KNOCK_MIN_MPS:
+		f |= PF_KNOCK_SLIDE
+	return [clip_state(), mode, mode_t, f]
+
+
+## A puppet's state from its owner's (puppet_state's), and the way its body faces (`ry`).
+func set_puppet_state(s: Array, ry: float) -> void:
+	_pup = s
+	_pup_ry = ry
+	if s.size() <= PUP_FLAGS:
+		return
+	mode = String(s[PUP_MODE])
+	mode_t = float(s[PUP_MODE_T])
+	if looks != null and (int(s[PUP_FLAGS]) & PF_LEGS) != 0 and _t - looks.air_legs_at > SwayPose.AIR_LEGS_S:
+		looks.air_legs_at = _t
+	elif looks != null and (int(s[PUP_FLAGS]) & PF_LEGS) == 0:
+		looks.air_legs_at = -INF
+
+
+## A puppet's knock as its owner's pose shows it: "air" launched, "slide" reeling, "" none (SwayPose.knock_wanted).
+func puppet_knock() -> String:
+	if _pup.size() <= PUP_FLAGS:
+		return ""
+	var f := int(_pup[PUP_FLAGS])
+	return "air" if (f & PF_KNOCK_AIR) != 0 else ("slide" if (f & PF_KNOCK_SLIDE) != 0 else "")
+
+
+## The body-state clip's key in movement.json clips now ("" none: the body's own locomotion and casts). A puppet: its owner's.
 func clip_state() -> String:
+	if puppet:
+		return String(_pup[PUP_CLIP]) if _pup.size() > PUP_CLIP else ""
 	match mode:
 		"hang":
 			return "edge_grab" if mode_t < num("edge", "settle_s", 0.15) else "edge_hang"

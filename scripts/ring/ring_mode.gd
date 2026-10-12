@@ -162,6 +162,9 @@ var round_tally: Array = [{}, {}]
 var practice := false
 ## The practice: the dummy, its way and its lines (RingPractice; made with the mode).
 var practice_ctl: RingPractice
+## The match online (RingNet, docs/tidebreak/ring_netcode.md; null offline): a slot a remote human holds gets his puppet, not a
+## bot; this machine's side is its team 0 whichever side it is on the host's.
+var net: RingNet
 var dummy: String:
 	get:
 		return practice_ctl.dummy
@@ -285,6 +288,7 @@ func _ready() -> void:
 	# (the element's bar: player.gd's own arena switch lays it when it has one; until then laid here, as the duel does)
 	if player != null and player.get(&"arena") == null:
 		get_tree().create_timer(Hotbar.KIT_S + 0.3, false).timeout.connect(lay_bar)
+	net = RingNet.attach(self)
 	restart.call_deferred()
 
 
@@ -348,9 +352,12 @@ func restart() -> void:
 func next_round() -> void:
 	round += 1
 	player_end = (round - 1) % 2
+	if net != null and net.flipped():
+		player_end = 1 - player_end          # (online, this machine's side is the host's team 1: its end the host's other)
 	_skip = false
 	_count_said = -1
-	var keep := _keep_foe()
+	var human_foe := net != null and net.human_at(1, 0) != 0
+	var keep := not human_foe and _keep_foe()
 	if not keep:
 		_drop_foe()
 	if ring != null:
@@ -369,11 +376,13 @@ func next_round() -> void:
 		rules.add(player, 0)
 	if keep:
 		_ready_foe()
-	else:
+	elif not human_foe:
 		_spawn_foe()
 	if foe != null:
 		rules.add(foe, 1)
 	_team_bots()
+	if net != null:
+		net.place_humans()                   # (online: the remote humans' puppets at their slots, on the books)
 	rules.reset_round()
 	rules.soft_walls = not practice
 	if stock():
@@ -490,6 +499,11 @@ func _end(team: int) -> int:
 	return player_end if team == 0 else 1 - player_end
 
 
+## The deck end side `team` holds this game (RingNet places the remote humans with it).
+func end_of_team(team: int) -> int:
+	return _end(team)
+
+
 ## The fighters a side: the ring's format's (RingArena.format: 1, 2 or 4), a practice 1.
 func team_n() -> int:
 	return 1 if MatchSetup.practice() else MatchSetup.team_size(RingArena.format)
@@ -502,6 +516,8 @@ func _team_bots() -> void:
 	var want: Array[Dictionary] = []
 	for t in 2:
 		for slot in range(1, n):
+			if net != null and net.human_at(t, slot) != 0:
+				continue                         # (online: a remote human holds this slot)
 			var el := String(mate_elements[slot - 1] if t == 0 else foe_elements[slot])
 			var dice := _seed + round * 17 + 101 * (t + 1) + 7 * slot
 			var rec := {}

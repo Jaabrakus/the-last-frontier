@@ -471,6 +471,8 @@ func _physics_process(dt: float) -> void:
 		var b: Variant = st.get("body")
 		if not (b is Node3D) or not is_instance_valid(b) or bool(st.out):
 			continue
+		if (b as Node3D).has_meta(RingNet.PUPPET_META):
+			continue                             # (a remote body online: judged on its owner's machine, RingNet)
 		_judge(b as Node3D, st, dt)
 
 
@@ -1379,6 +1381,8 @@ func _stock_frame(_dt: float) -> void:
 		var body := b as Node3D
 		if bool(st.away) or bool(st.gone) or not body.is_inside_tree():
 			continue
+		if body.has_meta(RingNet.PUPPET_META):
+			continue                             # (a remote body online: judged on its owner's machine, RingNet)
 		if live:
 			absorb(body)
 		# the string over on his first free frame

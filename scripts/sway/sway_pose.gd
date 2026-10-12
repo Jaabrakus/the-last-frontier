@@ -1063,6 +1063,9 @@ func knock_wanted() -> String:
 	var p := caster.player
 	if p.is_dead or p.kneeling != null or p.riding != null or p.climbing != null:
 		return ""
+	var prm := RingMoves.of(p)
+	if prm != null and prm.puppet:
+		return prm.puppet_knock()               # (a remote body online: its owner's knock)
 	var kn := BendKnock.peek(p)
 	if kn == null:
 		return ""
