@@ -21,6 +21,11 @@
   "enabled": true,
   "classic_style": false,
   "nodes": {
+    "water.mud.delta": true,
+    "water.mud.mound": true,
+    "water.mud.mudslide": true,
+    "water.mud.lash": true,
+    "water.set.mud": true,
     "water.patch.wellspring": true,
     "water.wave.ride": true,
     "water.wave.pooling": true,
@@ -78,7 +83,12 @@
     "water.wave.pooling": "BendEffects.cone, _wave_talents (a puddle where the cone ends)",
     "water.wave.ride": "SwayCaster._cast (the Beat: BendR3.release beat), BendEffects._wave_talents, BendMotion.ride, NpcBending._on_beat",
     "water.skate.wet_trail": "BendEffects.dash, _wet_trail (the Skate's puddles, the wearer's only)",
-    "water.patch.wellspring": "SwayCaster._lock_time patch, BendZone.in_own_water, NpcBending.lock_for"
+    "water.patch.wellspring": "SwayCaster._lock_time patch, BendZone.in_own_water, NpcBending.lock_for",
+    "water.set.mud": "BendZone.make (his puddles mud pools), _mud_every (fire walls 2 s and the pool dried, seams quenched, rolling stones stopped), on_bolt mud (floor fire dies), mud_life",
+    "water.mud.lash": "BendBolt.meet (fire smothered, no steam), BendBolt.launch (clods); its numbers over the set's",
+    "water.mud.mudslide": "BendEffects._wave_talents (a 2 m mud pool where the cone ends)",
+    "water.mud.mound": "BendEffects.spout, _mud_mound (a low mud mound, 2 at once, never a wall)",
+    "water.mud.delta": "SwayCaster.passive_fill, BendZone.in_own_mud / home_fill, NpcBending.tick; set:mud.pool_life_s"
   },
   "live": [
     "air.ball.dense",
@@ -113,7 +123,12 @@
     "water.wave.pooling",
     "water.wave.ride",
     "water.skate.wet_trail",
-    "water.patch.wellspring"
+    "water.patch.wellspring",
+    "water.set.mud",
+    "water.mud.lash",
+    "water.mud.mudslide",
+    "water.mud.mound",
+    "water.mud.delta"
   ],
   "styles_live": ["boxing"]
 }

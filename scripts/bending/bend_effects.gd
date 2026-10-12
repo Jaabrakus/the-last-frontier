@@ -733,14 +733,18 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		s["up_mps"] = float(spec.get("up_mps", 12.0)) * (1.0 + (k - 1.0) / 3.0)
 		_cur["source"] = true
 	var rise := float(spec.get("rise_s", 0.35))
+	_cur["spout_at"] = at
 	if float(spec.get("bind_s", 0.0)) > 0.0:
 		# (Frost Geyser, a bind twist: ice closes round his feet where the water would throw him up; no water column)
 		BendLooks.bind_tell(at, "water", float(s.get("radius_m", 1.8)), rise)
 	elif not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
 		BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
 	var rec := _cur
+	var mound := BendLoadout.wears(p, MOUND)
 	if rise <= 0.0:
 		status_at(p, at, s)
+		if mound:
+			_cur["mound"] = _mud_mound(p, at)
 		return
 	p.get_tree().create_timer(rise, false).timeout.connect(func() -> void:
 		if not is_instance_valid(p) or not p.is_inside_tree():
@@ -748,7 +752,40 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		var keep := _cur
 		_cur = rec
 		status_at(p, at, s)
+		if mound:
+			_cur["mound"] = _mud_mound(p, at)
 		_cur = keep)
+
+
+## Mud Mound (a Mud set twist on the Geyser): the plug its water throws up settles where it rose as a low mound of mud
+## (MOUND_D: 1.5 m across, 0.7 m high, 3 s): floor fire and rolling stones stop at it, anyone may jump onto it. Low terrain,
+## never a wall (never counted in max_walls); MOUNDS_PER_CASTER of his at once, the oldest slumping first.
+const MOUND := "water.mud.mound"
+const MOUND_D := {"width_m": 1.5, "height_m": 0.7, "thick_m": 1.5, "life_s": 3.0, "rise_s": 0.2}
+const MOUNDS_PER_CASTER := 2
+static func _mud_mound(p: Node3D, at: Vector3) -> FormRaised:
+	var wd: Dictionary = SwayMoves.move("earth_wall").get("wall", {})
+	var wn := FormMatter.numbers(wd, FormMatter.entry("earth_wall", "mud"), "mud")
+	for k: String in MOUND_D:
+		wn[k] = MOUND_D[k]
+	var way := at - p.global_position
+	way.y = 0.0
+	way = way.normalized() if way.length_squared() > 1e-4 else -p.global_basis.z
+	var x := Vector3.UP.cross(way).normalized()
+	var r := FormRaised.raise(p.get_tree().current_scene, "wall", Transform3D(Basis(x, Vector3.UP, way), at), wn, absi(hash(at)) % 97)
+	r.set_meta(&"bend_by", p.get_instance_id())
+	r.set_meta(&"bend_mound", true)
+	BendLooks.burst(at + Vector3.UP * 0.4, "stone", 14, Vector3.UP, 70.0, 2.5, 0.3)
+	var mine: Array[FormRaised] = []
+	for n in p.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var w := n as FormRaised
+		if w != null and w.has_meta(&"bend_mound") and int(w.get_meta(&"bend_by", 0)) == p.get_instance_id() \
+				and w.state != FormRaised.State.CRUMBLING and not w.is_queued_for_deletion():
+			mine.append(w)
+	mine.sort_custom(func(a: FormRaised, b: FormRaised) -> bool: return a.get_instance_id() < b.get_instance_id())
+	while mine.size() > MOUNDS_PER_CASTER:
+		mine.pop_front().crumble("capped")
+	return r
 
 
 ## A source for a Geyser within `r` of `at`: a pool (Bending.POOLS: the ring's grates within their reach_m) or a puddle of

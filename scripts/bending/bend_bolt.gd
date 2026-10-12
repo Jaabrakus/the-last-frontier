@@ -162,6 +162,7 @@ var _swing_became := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
+var _mud_trail: GPUParticles3D
 var _q: PhysicsShapeQueryParameters3D
 
 
@@ -245,6 +246,8 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		# such a big wave to it")
 		var trail_r := b.look_r if String(spec.get("do", "")) == "wind_wave" else b.radius
 		b._trail = BendLooks.trail(b, b.kind, trail_r)
+		if b.is_lash() and BendLoadout.wears(by, MUD_LASH):
+			b._mud_trail = BendLooks.trail(b, "stone", b.radius * 0.7)     # (Mud Lash: clods flung off a brown lash)
 	elif b.kind == "air":
 		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
 	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
@@ -930,6 +933,8 @@ func _finish(why: String) -> void:
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)
 	BendLooks.stop_trail(_fire_trail)
+	if _mud_trail != null:
+		BendLooks.stop_trail(_mud_trail)
 	ended.emit(why)
 	queue_free()
 
@@ -1023,7 +1028,7 @@ func _end_look(why: String, at: Vector3, n: Vector3) -> void:
 			if not SbFx.fire(_by(), SbFx.key_of(info), "impact", {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}):
 				BendLooks.burst(at, kind, 16 if why != "wall" else 14, n, 80.0, 3.5)
 			BendLooks.sound(kind, "hit", at, -3.0)
-		"steam":
+		"steam", "quenched":
 			BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
 			BendLooks.sound("steam", "hit", at)
 		"broken":

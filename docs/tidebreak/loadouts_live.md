@@ -253,6 +253,11 @@ of `test_loadout_review.gd` still passes).
 | Ride the Wave | his Wave let go on the Beat (held, let go within 0.2 s of the click) carries him 3 m on behind the water, deck only; Wave lock 0.65 s | `SwayCaster._cast` (BendR3.release beat), `BendEffects._wave_talents`, `BendMotion.ride` |
 | Wet Trail | his Skate leaves 4 puddles of his for 7.2 s along its way (0.18 s apart) and travels 10.8 m/s | `BendEffects.dash`, `_wet_trail` |
 | Wellspring | Patch's ring lock 1.25 s in his own puddle or at a grate, 1.6 s anywhere else (as it begins) | `SwayCaster._lock_time`, `BendZone.in_own_water`, `NpcBending.lock_for` |
+| Mud (set) | his puddles (Downpour, Splashdown, Pooling Wave, Wet Trail, Mudslide) are mud pools of his for 8 s, still sources, 4 at once: a floor wave of fire dies in one, a fire wall over one burns 2 s and dries it in 1 s, a magma seam over one is quenched, a rolling stone stops; nobody is slowed; Splash 25.2, Lash 30.6 m/s | `BendZone.make`, `_mud_every`, `on_bolt` mud |
+| Mud Lash | (with the set) Lash 28 m/s, adds 10%, base 5.3; fire it meets is smothered, no steam; clods off it | `BendBolt.meet`, `BendBolt.launch` |
+| Mudslide | (with the set) Wave base 8.6 (grown 9.7), reach 7.5 m (10); a 2 m mud pool of his where it ends | `BendEffects._wave_talents` |
+| Mud Mound | (with the set) the Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose (a FormRaised of mud, never counted in max_walls, two at once): floor fire stops at it, anyone can stand on it; Geyser base 9.3 | `BendEffects.spout`, `_mud_mound` |
+| Delta | (with the set) his locks fill x1.15 standing in his own mud (a bot's tick too); his mud pools last 6.5 s | `SwayCaster.passive_fill`, `BendZone.in_own_mud`, `home_fill`, `NpcBending.tick` |
 
 Bots (never worn in a normal match): a bot wearing Whirl Turn holds the swing while the foe it aims at stands guarding and sends
 it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; a bot wearing Ride the Wave lets its Wave go on the Beat
@@ -277,3 +282,15 @@ BendLoadout, for these: the same number set twice by two worn nodes is no clash 
 Ice's and Mire's 0.8 s rise); a node that requires others folds after them and sets its numbers over theirs (Mud Lash's 28 m/s
 over the Mud set's 30.6); a `set:<set>.<key>` change of a behaviour talent is read from skill_tree.json skill_sets (Delta's mud
 life); a behaviour talent may set spec keys no Classic code reads (the Skate's puddles).
+
+The Mud set's other counters are built against the other lanes' interfaces: a magma seam is a `BendZone` of kind `seam` (fire's
+Magma set): over mud it ends "quenched" (its own code should leave no stone for that end); Live Water's grounding (fire's Forked
+Lightning) is not built here. Rolling stones roll only in the open world (in the % ring a hurled stone shatters where it lands),
+so in a ring match that counter has nothing to stop.
+
+Mire (water.mud.mire, a new skill on 4 tapped twice) is not built: it needs a per-body mode on water_shield (SwayCaster.modes_of is
+static and read by the HUD, the keys, the wheel and the bots) and its spec cannot go into moves.json (the Classic fingerprint
+lists every bend spec: a new one there is a Classic change). The plan: its spec as the node's own `new:mire.spec` dictionary
+(BendLoadout's tune part holds dictionaries), modes_of(id, body) adding a worn node's mode, the cast path (SwayCaster.spec_of,
+FormEffects/BendEffects.apply) reading that spec for the wearer, its lock 0.9 s from the spec, the Ice Wall's pose for its cast,
+and a bot option for a wearer (a mud pool before a fire foe's floor fire).

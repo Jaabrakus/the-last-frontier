@@ -62,6 +62,11 @@ extends Node3D
 ## _wind_push, on_bolt, guard_take, cone_mult, lightning_back); a guard's result is told on every machine (the "guard" word:
 ## report there), a body's share of it (a parry's cast reward, a whiff, Carried wind, a Wind Prison's catch) on its owner's
 ## machine (NetSpells.here). An end that is not its own (its life, its owner gone) is the host's word on the others.
+## SKILL TREE (water's talents, 2026-10-11; BendLoadout.wears: the wearer's own, Classic never here): mud (the Mud set: its
+## wearer's puddles made mud pools, mud_life long, pools_per_caster; floor fire dies in it, a fire wall over it burns 2 s and dries
+## it, a seam over it is quenched, a rolling stone stops; nobody slowed), gas (the Sulphur set's cloud, earth's: Washout's bolts and
+## Cleanse's Turn wash it out: wash), a Turn's Whirl (a held swing: whirl_held) and Eddy (report, eddy_fill), Steamcraft's drifting
+## steam, Wellspring's own water (in_own_water), Delta's home ground (in_own_mud, home_fill).
 
 const GROUP := &"bend_zones"
 const LIGHT := ["fire", "water", "ice", "air"]
@@ -90,6 +95,11 @@ const EDDY_META := &"bend_eddy_until"
 const EDDY_S := 1.2
 const EDDY_FILL := 0.4
 const EDDY_MOVES := ["water_whip", "ice"]
+## Water's Mud set (a skill tree skill set): its wearer's puddles are mud pools (make, _mud_every, on_bolt); Delta, its home
+## ground passive: his locks fill DELTA_FILL faster standing in his own mud (in_own_mud: SwayCaster.passive_fill, a bot's tick).
+const MUD_SET := "water.set.mud"
+const DELTA := "water.mud.delta"
+const DELTA_FILL := 1.15
 ## Guard results by element, for the soak and the HUD: {element: {perfect, late, whiff}}.
 static var counts := {}
 
@@ -141,6 +151,11 @@ var _caught := {}                  ## a Wind Prison: body id -> true once it has
 
 
 static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_way := Vector3.FORWARD) -> BendZone:
+	if p_kind == "puddle" and BendLoadout.wears(by, MUD_SET):
+		# (the Mud set, a skill tree skill set: his puddles are mud pools, mud_life long; what mud does: _mud_every, on_bolt)
+		p_kind = "mud"
+		spec = spec.duplicate()
+		spec["life_s"] = mud_life(by)
 	var z := BendZone.new()
 	z.name = "BendZone_" + p_kind
 	z.kind = p_kind
@@ -169,13 +184,15 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
-	if p_kind == "puddle":
+	if p_kind in ["puddle", "mud"]:
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)
 	NetSpells.tag(z)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(z)
 	var x := Vector3.UP.cross(z.way).normalized()
 	z.global_transform = Transform3D(Basis(x, Vector3.UP, z.way), at)
+	if p_kind == "mud":
+		_cap_mud(by)
 	z._look()
 	NetSpells.spawned(z, "zone", [by, p_kind, at, spec, p_way])     # (the host's own decision: made on the others too)
 	return z
@@ -355,6 +372,20 @@ func _look() -> void:
 			wet.position = Vector3.UP * 0.03
 			wet.set_instance_shader_parameter(&"t", 0.15)
 			wet.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			_grow(look, Vector3(0.2, 1.0, 0.2))
+		"mud":
+			# (the Mud set's pool: the scorch mark's browns with no embers, a wet sheen over them, slow bubbles rising)
+			var mud := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
+			mud.scale = Vector3(radius, 1.0, radius)
+			mud.position = Vector3.UP * 0.03
+			mud.set_instance_shader_parameter(&"t", 0.4)
+			mud.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			var sheen := _part(look, ToonFx.plane(), ToonFx.mat("mark_wet"))
+			sheen.scale = Vector3(radius * 0.85, 1.0, radius * 0.85)
+			sheen.position = Vector3.UP * 0.035
+			sheen.set_instance_shader_parameter(&"t", 0.15)
+			sheen.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			_fx.append(BendLooks.emitter(self, "foam", Vector3(radius * 0.6, 0.02, radius * 0.6), 6, 1.2, 0.25, 0.12))
 			_grow(look, Vector3(0.2, 1.0, 0.2))
 
 
@@ -549,6 +580,8 @@ func _every(dt: float) -> void:
 					and BendCaster.same_team(g.owner_node, owner_node)) \
 					and Vector2(g.global_position.x - global_position.x, g.global_position.z - global_position.z).length() <= radius + g.radius:
 				g.wash()
+	if kind == "mud":
+		_mud_every()
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -651,7 +684,80 @@ func on_bolt(b: BendBolt) -> bool:
 			if b.kind == "water" and washes(b):
 				wash()
 				return true
+		"mud":
+			# (the Mud set: a floor wave of fire dies in the mud; shots through the air pass over it)
+			if b.floor_wave and b.kind == "fire":
+				BendLooks.burst(b.global_position + Vector3.UP * 0.3, "steam", 14, Vector3.UP, 80.0, 2.0, 0.5)
+				BendLooks.sound("steam", "hit", b.global_position, -6.0)
+				b.end("quenched")
+				return true
 	return false
+
+
+# ---------------------------------------------------------------- the Mud set (skill_tree.json skill_sets.mud; water's)
+## How long `by`'s mud pools last: the set's pool_life_s (8 s), Delta's own over it (set:mud.pool_life_s).
+static func mud_life(by: Node) -> float:
+	return BendLoadout.tune_f(by, "set:mud.pool_life_s", _mud_rule("pool_life_s", 8.0))
+
+
+## A number of the Mud set's zone rules (skill_tree.json skill_sets.mud.zone), `def` when it has none.
+static func _mud_rule(key: String, def: float) -> float:
+	var v: Variant = BendLoadout.set_rule("mud." + key)
+	return float(v) if v is float or v is int else def
+
+
+## At most pools_per_caster mud pools of `by`'s at once: the oldest dry up.
+static func _cap_mud(by: Node) -> void:
+	var mine: Array[BendZone] = []
+	for z in by.get_tree().get_nodes_in_group(GROUP):
+		var m := z as BendZone
+		if m != null and m.kind == "mud" and m.owner_node == by and not m.is_queued_for_deletion():
+			mine.append(m)
+	mine.sort_custom(func(a: BendZone, b: BendZone) -> bool: return a.get_instance_id() < b.get_instance_id())
+	var cap := int(_mud_rule("pools_per_caster", 4.0))
+	while mine.size() > cap:
+		mine.pop_front().end("dried")
+
+
+## A mud pool each tick (see the set): a fire wall or burning ground over it burns fire_wall_life_on_mud_s from its making at
+## most, and dries the pool within dries_under_fire_s; a magma seam over it is quenched, no stone left (the fire set's seam,
+## built elsewhere: a BendZone of kind seam ended "quenched"); a stone rolling into it stops. Nobody is slowed, slid or rooted.
+var _drying := false
+func _mud_every() -> void:
+	for z in get_tree().get_nodes_in_group(GROUP):
+		var o := z as BendZone
+		if o == null or o == self or o.is_queued_for_deletion() or not _reaches(o):
+			continue
+		if o.kind in ["fire_wall", "burn"]:
+			o.life_s = minf(o.life_s, _mud_rule("fire_wall_life_on_mud_s", 2.0))
+			if not _drying:
+				_drying = true
+				life_s = minf(life_s, t + _mud_rule("dries_under_fire_s", 1.0))
+				BendLooks.burst(global_position + Vector3.UP * 0.3, "steam", 16, Vector3.UP, 70.0, 1.5, 0.6)
+		elif o.kind == "seam":
+			BendLooks.burst(o.global_position + Vector3.UP * 0.3, "steam", 18, Vector3.UP, 80.0, 2.0, 0.6)
+			o.end("quenched")
+	for s in get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := s as FormStone
+		if st == null or st.freeze or not inside(st.global_position):
+			continue
+		var v := st.linear_velocity
+		if Vector2(v.x, v.z).length() > 0.5:
+			st.linear_velocity = Vector3(0.0, minf(v.y, 0.0), 0.0)
+			st.angular_velocity = Vector3.ZERO
+			BendLooks.burst(st.global_position, "stone", 8, Vector3.UP, 60.0, 1.5, 0.2)
+
+
+## Whether zone `o` reaches over this one's ground: round ones by their radii, a wall or a strip by the nearest point of its
+## footprint.
+func _reaches(o: BendZone) -> bool:
+	var c := global_position
+	if o.kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
+			or o.kind in ROUND_NEW:
+		return Vector2(o.global_position.x - c.x, o.global_position.z - c.z).length() <= radius + o.radius
+	var l := o.global_transform.affine_inverse() * c
+	var near := Vector2(clampf(l.x, -o.size.x * 0.5, o.size.x * 0.5), clampf(l.z, -o.size.z * 0.5, o.size.z * 0.5))
+	return Vector2(l.x, l.z).distance_to(near) <= radius
 
 
 ## Whether bolt `b` washes out gas: a Splash or a Lash (not sent back) of a fighter who wears Washout.
@@ -969,6 +1075,25 @@ static func in_own_water(body: Node3D) -> bool:
 				and Vector2(n3.global_position.x - body.global_position.x, n3.global_position.z - body.global_position.z).length() <= float(n3.get_meta(&"reach_m")):
 			return true
 	return false
+
+
+## Whether `body` stands in a mud pool of his own now (Delta's home ground), on the deck.
+static func in_own_mud(body: Node3D) -> bool:
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return false
+	if body is CharacterBody3D and not (body as CharacterBody3D).is_on_floor():
+		return false
+	for z in body.get_tree().get_nodes_in_group(GROUP):
+		var m := z as BendZone
+		if m != null and m.kind == "mud" and m.owner_node == body and not m.is_queued_for_deletion() and m.inside(body.global_position):
+			return true
+	return false
+
+
+## The fill rate a lock of `body`'s takes from where he stands: Delta's in his own mud, else 1 (a bot's tick; the player's is
+## SwayCaster.passive_fill).
+static func home_fill(body: Node3D) -> float:
+	return DELTA_FILL if BendLoadout.wears(body, DELTA) and in_own_mud(body) else 1.0
 
 
 ## Whether `body` has a round-2 guard standing now (a catch, a Turn, a parry, a Wind Guard).

@@ -2741,6 +2741,8 @@ func _moving_mult(m: String) -> float:
 
 ## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.
 func passive_fill() -> float:
+	if elem() and BendLoadout.wears(player, BendZone.DELTA) and BendZone.in_own_mud(player):
+		return BendZone.DELTA_FILL                # (Delta, the Mud set's home ground: his locks fill faster in his own mud)
 	if not elem() or quick_element() != "earth" or not player.is_on_floor():
 		return 1.0
 	var pv := Bending.passive("earth")
@@ -2779,7 +2781,11 @@ func _hold(dt: float, q: Dictionary) -> void:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:
 				_rooted_t = 0.6
-				BendLooks.rooted_dust(player)      # (Rooted: a faint dust at his own feet while it helps)
+				if quick_element() == "earth":
+					BendLooks.rooted_dust(player)  # (Rooted: a faint dust at his own feet while it helps)
+				else:
+					# (Delta's home ground: ripples at his feet in his own mud)
+					BendLooks.burst(player.global_position + Vector3.UP * 0.05, "water", 6, Vector3.UP, 80.0, 0.8, 0.15)
 		fill = minf(fill + rate * dt, 1.0)
 		_raise_at_fill()
 		_charge_level()

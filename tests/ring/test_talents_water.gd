@@ -27,6 +27,18 @@ extends SceneTree
 ##                    a bot's own
 ##   Wellspring       Patch's ring lock (SwayCaster's, a bot's lock_for): 1.25 s in his own puddle or at a grate, 1.6 s dry or in
 ##                    another's puddle (1.5)
+##   the Mud set      his Downpour leaves a mud pool of his for 8 s (a puddle for 6 not worn), still a pool; a Kick's floor fire
+##                    dies in his mud and hits across a puddle; a Fire Wall over it burns 2 s and dries it in about 1 s; a
+##                    rolling stone stops in it; a seam (the fire set's interface, a stand-in) is quenched; four pools of his at
+##                    most; his Splash 25.2 and Lash 30.6 m/s (28, 34); a bot's Downpour its own mud
+##   Mud Lash         (with the set) the Lash flies 28 m/s; fire it meets is smothered, no steam (the set alone: steam); it adds
+##                    10 for 9 and launches harder; a bot's smothers too
+##   Mudslide         (with the set) the Wave reaches 7.5 m (9) and leaves a 2 m mud pool of his where it ends; launches harder;
+##                    a bot's own pool
+##   Mud Mound        (with the set) his Geyser leaves a mud mound 1.5 x 0.7 m for 3 s where it rose, never one of his walls: a
+##                    Kick's fire stops at it, a body stands on it, two at once; the Geyser launches lower; a bot's own
+##   Delta            (with the set) his mud lasts 6.5 s; in his own mud his locks fill x1.15 (another's or dry x1): the Lash's
+##                    real lock 0.400 s for 0.467; a bot's tick takes the same
 ## Last line "TALENTS WATER PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS WATER"
@@ -264,6 +276,11 @@ func _run() -> void:
 	await _ride()
 	await _wet_trail()
 	await _wellspring()
+	await _mud_set()
+	await _mud_lash()
+	await _mudslide()
+	await _mud_mound()
+	await _delta()
 	_end()
 
 
@@ -852,3 +869,369 @@ func _wellspring() -> void:
 			" and at a grate" if not grates.is_empty() else "", float(w.dry[0]), float(c.dry[0])])
 	_expect(absf(k.call(w.wet, c.wet, 1) - 1.25 / 1.5) < 0.01 and absf(k.call(w.dry, c.dry, 1) - 1.6 / 1.5) < 0.01,
 			"Wellspring on a bot: its Patch lock x%.3f in its own puddle, x%.3f out of it" % [k.call(w.wet, c.wet, 1), k.call(w.dry, c.dry, 1)])
+
+
+# ---------------------------------------------------------------- the Mud set
+## A puddle of `by`'s at `at` (BendZone.make: every puddle source's own path; the Mud set's wearer's comes out a mud pool).
+func _pool_at(by: Node3D, at: Vector3, r := 2.0) -> BendZone:
+	return BendZone.make(by, "puddle", FormEffects.ground_at(by, at), {"radius_m": r, "life_s": 6.0})
+
+
+func _end_pools() -> void:
+	for k: String in ["puddle", "mud", "fire_wall", "seam", "gas"]:
+		for z: BendZone in _zones(k).values():
+			z.end("test")
+	await _ticks(2)
+
+
+## The player's Downpour on the deck (BendEffects.apply wave/slam): the pool it left, read at once ({} none: a zone the next
+## _face_off clears reads as null after).
+func _downpour_pool() -> Dictionary:
+	await _face_off(10.0)
+	BendEffects.apply(pc, "wave", "slam", SwayMoves.move("wave").bend.slam)
+	var z: Variant = BendEffects.last_of(pc).get("puddle")
+	await _ticks(2)
+	if not (z is BendZone) or not is_instance_valid(z):
+		return {}
+	var bz := z as BendZone
+	return {"kind": bz.kind, "owner": bz.owner_node, "life": bz.life_s, "pool": bz.is_in_group(Bending.POOLS)}
+
+
+## The foe's Kick (a floor wave of fire) at the player across a pool of the player's midway: the % it added to him.
+func _kick_through_pool() -> float:
+	await _face_off(10.0)
+	RingRules.current().reset_pct(player, 0.0)
+	_pool_at(player, home, 2.0)
+	await _ticks(2)
+	BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
+	await _secs(1.0)
+	var got := RingRules.current().pct_of(player)
+	RingRules.current().reset_pct(player, 0.0)
+	await _end_pools()
+	return got
+
+
+## The foe's Fire Wall raised over a pool of the player's (where it places it, 6 m on toward him): {wall_life, pool_gone_s (how
+## long the pool lasted after the wall rose; -1 it stayed 1.5 s)}.
+func _fire_over_pool() -> Dictionary:
+	await _face_off(10.0)
+	var way := (player.global_position - foe.global_position).normalized()
+	var pool := _pool_at(player, foe.global_position + way * 6.0, 2.0)
+	await _ticks(2)
+	var before := _zones("fire_wall")
+	BendEffects.apply(fc, "fire_wall", "wall", SwayMoves.move("fire_wall").bend.wall)
+	var fw := _new_zone("fire_wall", before)
+	var gone := -1.0
+	for i in ceili(1.5 * Engine.physics_ticks_per_second):
+		await physics_frame
+		if not is_instance_valid(pool) or pool.is_queued_for_deletion():
+			gone = float(i + 1) / Engine.physics_ticks_per_second
+			break
+	var out := {"wall_life": fw.life_s if fw != null and is_instance_valid(fw) else -1.0, "pool_gone_s": gone}
+	await _end_pools()
+	return out
+
+
+## A stone rolled at 5 m/s into a pool of the player's 3 m off: {speed (m/s) and inside (whether it is in the pool) 1 s on}.
+func _roll_into_pool() -> Dictionary:
+	await _face_off(10.0)
+	var side := Vector3(1, 0, 0)
+	var pool := _pool_at(player, home + side * 3.0, 2.0)
+	var foot := FormEffects.ground_at(player, home)
+	var s := FormStone.ball(current_scene, foot, {"radius_m": 0.3, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0}, 7, "stone")
+	s.state = FormStone.State.RESTING
+	s.base = Transform3D(Basis.IDENTITY, foot + Vector3.UP * 0.32)
+	s.global_transform = s.base
+	s.freeze = false
+	s.linear_velocity = side * 5.0
+	await _secs(1.0)
+	var out := {"speed": Vector2(s.linear_velocity.x, s.linear_velocity.z).length(), "inside": is_instance_valid(pool) and pool.inside(s.global_position)}
+	s.queue_free()
+	await _end_pools()
+	return out
+
+
+func _mud_set() -> void:
+	var mud := ["water.set.mud"]
+	_wear(player, mud)
+	var dp: Dictionary = await _downpour_pool()
+	_expect(not dp.is_empty() and dp.kind == "mud" and dp.owner == player and _near(dp.life, 8.0) and bool(dp.pool),
+			"the Mud set: the wearer's Downpour leaves a mud pool of his for 8 s, still his source (%s)" % [dp])
+	var kick_w: float = await _kick_through_pool()
+	var fire_w: Dictionary = await _fire_over_pool()
+	var roll_w: Dictionary = await _roll_into_pool()
+	# a magma seam (the fire set's, built elsewhere: a BendZone of kind seam) over his mud is quenched
+	await _face_off(10.0)
+	_pool_at(player, home, 2.0)
+	var seam := BendZone.make(foe, "seam", FormEffects.ground_at(foe, home), {"width_m": 1.5, "height_m": 0.4, "thick_m": 4.0, "life_s": 3.0})
+	await _secs(0.4)
+	var seam_w := not is_instance_valid(seam) or seam.is_queued_for_deletion()
+	await _end_pools()
+	# four pools of his at once
+	await _face_off(10.0)
+	for i in 5:
+		_pool_at(player, home + Vector3(float(i) * 1.0 - 2.0, 0.0, 0.0), 1.2)
+	await _ticks(2)
+	var n_mud := 0
+	for z: BendZone in _zones("mud").values():
+		n_mud += 1 if z.owner_node == player else 0
+	await _end_pools()
+	# the trade: heavy water
+	await _face_off(10.0)
+	var sp := _cast(player, "water_jet", "splash")
+	var lp := _cast(player, "water_whip", "whip")
+	var sw := [sp.velocity.length() if sp != null else -1.0, lp.velocity.length() if lp != null else -1.0]
+	await _secs(1.0)
+	_wear(player, [])
+	var dp0: Dictionary = await _downpour_pool()
+	var kick_c: float = await _kick_through_pool()
+	var fire_c: Dictionary = await _fire_over_pool()
+	var roll_c: Dictionary = await _roll_into_pool()
+	await _face_off(10.0)
+	_pool_at(player, home, 2.0)
+	var seam0 := BendZone.make(foe, "seam", FormEffects.ground_at(foe, home), {"width_m": 1.5, "height_m": 0.4, "thick_m": 4.0, "life_s": 3.0})
+	await _secs(0.4)
+	var seam_c := not is_instance_valid(seam0) or seam0.is_queued_for_deletion()
+	await _end_pools()
+	await _face_off(10.0)
+	var sp0 := _cast(player, "water_jet", "splash")
+	var lp0 := _cast(player, "water_whip", "whip")
+	var sc0 := [sp0.velocity.length() if sp0 != null else -1.0, lp0.velocity.length() if lp0 != null else -1.0]
+	await _secs(1.0)
+	_expect(not dp0.is_empty() and dp0.kind == "puddle" and _near(dp0.life, 6.0), "the Mud set not worn: the Downpour's puddle as ever (%s)" % [dp0])
+	_expect(is_zero_approx(kick_w) and kick_c > 0.0, "the Mud set: a Kick's floor fire dies in his mud (+%.1f%%); across a plain puddle it hits (+%.1f%%)" % [kick_w, kick_c])
+	_expect(_near(fire_w.wall_life, 2.0) and float(fire_w.pool_gone_s) > 0.0 and float(fire_w.pool_gone_s) <= 1.3 and float(fire_c.wall_life) > 2.0
+			and float(fire_c.pool_gone_s) < 0.0, "the Mud set: a Fire Wall over his mud burns %.1f s and dries it in %.2f s; over a puddle %.1f s, the puddle stays" % [
+			float(fire_w.wall_life), float(fire_w.pool_gone_s), float(fire_c.wall_life)])
+	_expect(float(roll_w.speed) < 0.5 and bool(roll_w.inside) and (float(roll_c.speed) > 0.5 or not bool(roll_c.inside)),
+			"the Mud set: a rolling stone stops in his mud (%s); through a puddle it rolls on (%s)" % [roll_w, roll_c])
+	_expect(seam_w and not seam_c, "the Mud set: a magma seam over his mud is quenched (a stand-in seam: the fire set is built elsewhere); not over a puddle")
+	_expect(n_mud == 4, "the Mud set: four mud pools of his at most (%d)" % n_mud)
+	_expect(absf(float(sw[0]) - 25.2) < 0.05 and absf(float(sw[1]) - 30.6) < 0.05 and absf(float(sc0[0]) - 28.0) < 0.05 and absf(float(sc0[1]) - 34.0) < 0.05,
+			"the Mud set's trade: his Splash flies %.1f m/s and his Lash %.1f (28, 34 not worn)" % [float(sw[0]), float(sw[1])])
+	_wear(foe, mud)
+	await _face_off(10.0)
+	BendEffects.apply(fc, "wave", "slam", SwayMoves.move("wave").bend.slam)
+	var bz: Variant = BendEffects.last_of(fc).get("puddle")
+	_expect(bz is BendZone and is_instance_valid(bz) and (bz as BendZone).kind == "mud" and (bz as BendZone).owner_node == foe,
+			"the Mud set on a bot: its Downpour leaves its own mud")
+	_wear(foe, [])
+	await _end_pools()
+
+
+# ---------------------------------------------------------------- Mud Lash
+func _mud_lash() -> void:
+	var ml := ["water.set.mud", "water.mud.lash"]
+	_wear(player, ml)
+	await _face_off(10.0)
+	var b := _cast(player, "water_whip", "whip")
+	var v := b.velocity.length() if b != null else -1.0
+	await _secs(1.0)
+	var w: Dictionary = await _steam_of(player, foe)
+	var pw: float = await _pct_of_cast(player, foe, "water_whip", "whip")
+	_wear(player, ["water.set.mud"])
+	var c: Dictionary = await _steam_of(player, foe)
+	var pc0: float = await _pct_of_cast(player, foe, "water_whip", "whip")
+	_wear(player, [])
+	_expect(absf(v - 28.0) < 0.05, "Mud Lash: the Lash flies %.1f m/s (the set's heavier water included)" % v)
+	_expect(w.is_empty() and not c.is_empty(), "Mud Lash: fire it meets is smothered, no steam (with the set alone, steam: %s)" % [c])
+	_expect(pc0 > 0.0 and absf(pw / pc0 - 10.0 / 9.0) < 0.01, "Mud Lash: it adds %.2f%% for the %.2f (10 for 9)" % [pw, pc0])
+	_wear(player, ml)
+	var lw := _wave_launch(player, foe, "water_whip/whip")
+	_wear(player, ["water.set.mud"])
+	var lc := _wave_launch(player, foe, "water_whip/whip")
+	_wear(player, [])
+	_expect(lw > lc, "Mud Lash: it knocks harder, base 5.3 for 4.6 (launch %.2f m/s for %.2f)" % [lw, lc])
+	_wear(foe, ml)
+	var b2: Dictionary = await _steam_of(foe, player)
+	_wear(foe, [])
+	_expect(b2.is_empty(), "Mud Lash on a bot: the fire its Lash meets is smothered too")
+
+
+# ---------------------------------------------------------------- Mudslide
+func _mudslide() -> void:
+	var ms := ["water.set.mud", "water.mud.mudslide"]
+	_wear(player, ms)
+	await _face_off(8.0)
+	_wave_from = player.global_position
+	var before := _zones("mud")
+	_cast(player, "wave", "push")
+	await _ticks(3)
+	var pool := _new_zone("mud", before, player)
+	var d := Vector2(pool.global_position.x - _wave_from.x, pool.global_position.z - _wave_from.z).length() if pool != null else -1.0
+	var pool_r := pool.radius if pool != null else -1.0
+	var pool_life := pool.life_s if pool != null else -1.0
+	var reach := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
+	await _secs(0.8)
+	var lw := _wave_launch(player, foe, "wave/push")
+	_wear(player, ["water.set.mud"])
+	await _face_off(8.0)
+	var before0 := _zones("mud")
+	_cast(player, "wave", "push")
+	await _ticks(3)
+	var pool0_made := _new_zone("mud", before0, player) != null
+	var reach0 := float((BendEffects.last_of(pc).get("spec", {}) as Dictionary).get("range_m", -1.0))
+	await _secs(0.8)
+	var lc := _wave_launch(player, foe, "wave/push")
+	_wear(player, [])
+	_expect(_near(pool_r, 2.0) and _near(pool_life, 8.0) and d <= 7.5 + 0.3 and d >= 7.5 - 2.0 and _near(reach, 7.5),
+			"Mudslide: the Wave reaches %.1f m (9 not worn) and leaves a 2 m mud pool of his where it ends, %.1f m on" % [reach, d])
+	_expect(not pool0_made and _near(reach0, 9.0), "Mudslide not worn (the set alone): the Wave reaches %.1f m and leaves no pool" % reach0)
+	_expect(lw > lc, "Mudslide: it knocks 15%% harder, base 8.6 for 7.5 (launch %.2f m/s for %.2f)" % [lw, lc])
+	_wear(foe, ms)
+	await _face_off(8.0)
+	var bb := _zones("mud")
+	_cast(foe, "wave", "push")
+	await _ticks(3)
+	var bp := _new_zone("mud", bb, foe)
+	_wear(foe, [])
+	_expect(bp != null, "Mudslide on a bot: its Wave leaves its own mud pool")
+	await _end_pools()
+
+
+# ---------------------------------------------------------------- Mud Mound
+## The mounds of `by`'s standing now.
+func _mounds(by: Node) -> Array:
+	var out: Array = []
+	for n in get_nodes_in_group(FormRaised.GROUP):
+		var w := n as FormRaised
+		if w != null and w.has_meta(&"bend_mound") and int(w.get_meta(&"bend_by", 0)) == by.get_instance_id() \
+				and w.state != FormRaised.State.CRUMBLING and not w.is_queued_for_deletion():
+			out.append(w)
+	return out
+
+
+func _mud_mound() -> void:
+	var mm := ["water.set.mud", "water.mud.mound"]
+	_wear(player, mm)
+	await _face_off(8.0)
+	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	var at: Vector3 = BendEffects.last_of(pc).get("spout_at", Vector3.INF)
+	await _secs(0.8)
+	var ms := _mounds(player)
+	var m: FormRaised = ms[0] if not ms.is_empty() else null
+	var ok := m != null and m.matter == "mud" and _near(m.size.x, 1.5) and _near(m.size.y, 0.7) and _near(m.life_s, 3.0) \
+			and not m.has_meta(&"wall_n") and Vector2(m.global_position.x - at.x, m.global_position.z - at.z).length() < 1.0
+	_expect(ok, "Mud Mound: the wearer's Geyser leaves a low mud mound 1.5 m across, 0.7 m high, for 3 s where it rose, never one of his walls (%s)"
+			% ["%s %.1f x %.1f, %.1f s" % [m.matter, m.size.x, m.size.y, m.life_s] if m != null else "none"])
+	# floor fire stops at it: the foe's Kick at the player with the mound between them
+	if m != null:
+		player.global_position = m.global_position + (m.global_position - foe.global_position).normalized() * 3.0
+		player.velocity = Vector3.ZERO
+		foe.look_at(Vector3(player.global_position.x, foe.global_position.y, player.global_position.z), Vector3.UP)
+		RingRules.current().reset_pct(player, 0.0)
+		await _ticks(2)
+		BendEffects.apply(fc, "fire_kick", "kick", SwayMoves.move("fire_kick").bend.kick)
+		await _secs(0.8)
+	var kick_pct := RingRules.current().pct_of(player)
+	RingRules.current().reset_pct(player, 0.0)
+	_expect(m != null and is_zero_approx(kick_pct), "Mud Mound: a Kick's floor fire stops at the mound (+%.1f%%)" % kick_pct)
+	# anyone can jump onto it: the foe stood on its top stays there
+	if m != null and is_instance_valid(m):
+		foe.global_position = m.global_position + Vector3.UP * 1.0
+		foe.velocity = Vector3.ZERO
+		await _secs(0.5)
+	var on_top := m != null and is_instance_valid(m) and foe.global_position.y - m.global_position.y > 0.5
+	_expect(on_top, "Mud Mound: a body set on it stands on its top (%.2f m up)" % [foe.global_position.y - (m.global_position.y if m != null and is_instance_valid(m) else 0.0)])
+	await _secs(2.5)
+	_expect(_mounds(player).is_empty(), "Mud Mound: gone after its 3 s")
+	# two of his at once (one face-off: it clears the deck)
+	await _face_off(8.0)
+	var foe0 := foe.global_position
+	for i in 3:
+		foe.global_position = foe0 + Vector3(float(i) * 2.5 - 2.5, 0.0, 0.0)
+		foe.velocity = Vector3.ZERO
+		await _ticks(4)
+		BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+		await _secs(0.5)
+	_expect(_mounds(player).size() == 2, "Mud Mound: two of his at once (%d)" % _mounds(player).size())
+	var lw := _wave_launch(player, foe, "wave/spout")
+	_wear(player, ["water.set.mud"])
+	var lc := _wave_launch(player, foe, "wave/spout")
+	await _secs(3.0)
+	await _face_off(8.0)
+	BendEffects.apply(pc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	await _secs(0.8)
+	var none := _mounds(player).size()
+	_wear(player, [])
+	_expect(lw < lc, "Mud Mound's trade: the Geyser launches %.2f m/s for the %.2f (base 9.3 for 10.9)" % [lw, lc])
+	_expect(none == 0, "Mud Mound not worn (the set alone): the Geyser leaves no mound (%d)" % none)
+	await _secs(3.0)
+	_wear(foe, mm)
+	await _face_off(8.0)
+	BendEffects.apply(fc, "wave", "spout", SwayMoves.move("wave").bend.spout)
+	await _secs(0.8)
+	_expect(_mounds(foe).size() == 1, "Mud Mound on a bot: its Geyser leaves its own mound")
+	_wear(foe, [])
+	await _secs(3.0)
+
+
+# ---------------------------------------------------------------- Delta
+## The player's Lash lock (key 1, the aim held on the foe) from its start to its click (s), standing where he is.
+func _lash_lock_s() -> float:
+	var sc := SwayCaster.of(player)
+	for i in 120:
+		if sc.state == SwayCaster.State.IDLE and not sc._cast_wait() and player.is_on_floor():
+			break
+		await physics_frame
+	sc._wait_release = false
+	player.hotbar.select(0)
+	await _ticks(3)
+	sc.held_override = true
+	var n := 0
+	var began := false
+	for i in 120:
+		await physics_frame
+		if sc.state != SwayCaster.State.IDLE:
+			began = true
+		if began:
+			n += 1
+		if sc.state == SwayCaster.State.FULL:
+			break
+	sc.held_override = false
+	await _ticks(2)
+	sc.held_override = null
+	await _secs(0.8)
+	return float(n) / Engine.physics_ticks_per_second
+
+
+func _delta() -> void:
+	var dl := ["water.set.mud", "water.mud.delta"]
+	_wear(player, dl)
+	await _face_off(10.0)
+	var pool := _pool_at(player, player.global_position, 2.0)
+	await _ticks(2)
+	var life := pool.life_s
+	var pf := SwayCaster.of(player).passive_fill()
+	var t_mud: float = await _lash_lock_s()
+	pool.end("test")
+	var theirs := BendZone.make(foe, "mud", FormEffects.ground_at(player, player.global_position), {"radius_m": 2.0, "life_s": 8.0})
+	await _ticks(2)
+	var pf_theirs := SwayCaster.of(player).passive_fill()
+	theirs.end("test")
+	await _ticks(2)
+	var t_dry: float = await _lash_lock_s()
+	_wear(player, ["water.set.mud"])
+	await _face_off(10.0)
+	var pool0 := _pool_at(player, player.global_position, 2.0)
+	await _ticks(2)
+	var pf0 := SwayCaster.of(player).passive_fill()
+	var life0 := pool0.life_s
+	await _end_pools()
+	_wear(player, [])
+	_expect(_near(life, 6.5) and _near(life0, 8.0), "Delta's trade: his mud pools last %.1f s (8 with the set alone)" % life)
+	_expect(_near(pf, 1.15) and _near(pf_theirs, 1.0) and _near(pf0, 1.0), "Delta: in his own mud his locks fill x%.2f; in another's x%.2f; not worn x%.2f" % [pf, pf_theirs, pf0])
+	_expect(t_dry > 0.0 and absf(t_mud / t_dry - 1.0 / 1.15) < 0.06, "Delta: his Lash's real lock fills in %.3f s standing in his mud, %.3f s out of it" % [t_mud, t_dry])
+	_wear(foe, dl)
+	await _face_off(10.0)
+	var bp := _pool_at(foe, foe.global_position, 2.0)
+	for i in ceili(1.0 * Engine.physics_ticks_per_second):
+		if foe.is_on_floor():
+			break
+		await physics_frame
+	var bf := BendZone.home_fill(foe)
+	bp.end("test")
+	await _ticks(2)
+	var bf0 := BendZone.home_fill(foe)
+	_wear(foe, [])
+	_expect(_near(bf, 1.15) and _near(bf0, 1.0), "Delta on a bot: its lock fills x%.2f in its own mud, x%.2f out of it (NpcBending.tick)" % [bf, bf0])
