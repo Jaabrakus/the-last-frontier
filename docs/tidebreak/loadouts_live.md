@@ -300,3 +300,14 @@ the fire lane's Cauterize (`FireTalents.modes_for`, its spec in code) built thei
 sites. Merging, keep these generic lines: they read any move's `talent_bend` whose `talent` is worn, so Dust Cloud works
 through them as it is (its spec already has `talent`), and Cauterize once its spec moves to `patch.talent_bend.cauterize`.
 `kit_words.key_moves` and the radial wheel still show the static kit (no body to ask).
+
+**Picks worn together, as the tree says** (`BendLoadout.overlay_for`; the tree's `stacking` and `excludes`). Before, a number
+two picks both set was refused for the second ("set by the first only"), so Rubble Wall with Quarry or the Vent, or Clean
+Return with Return to Sender, silently lost one pick in a match. Now: two picks that change one number the same way from the
+same base multiply their ratios (Rubble Wall and Quarry: the rise 0.7 x 0.8/0.7 x 0.8/0.7 = 0.914 s; Clean Return and Return
+to Sender: the return lock 0.48 s), and a set twist's number is final for that move (the Vent with Rubble Wall: 0.8 s); two
+that pull it opposite ways, a pose or a whole class set twice, are still refused; a pick the tree's `excludes` keeps from one
+already worn (either way) is refused (Heave and Fuming Column, Thick and Brimstone Wall, Heavy and Sulphur Boulder: before,
+Heave and Fuming Column both applied, one a class and the other a Beat class). Each number keeps its `from` and whether a set
+twist set it beside it (`_put_n`, the resolve's `from`); `_fold_n` and `_stack` fold them. `test_loadout_apply.gd`'s clash
+check now pulls the opposite way and a second check stacks the same way; `test_talents_earth.gd` (combos) plays earth's.

@@ -52,8 +52,12 @@ extends SceneTree
 ##                     reaches 1.5x the cloud's round, IGNITED! called out; cones by kind (Breath lights, the Wave washes, the
 ##                     air Palm carries 4 m); a Fire Wall on a cloud lights it, a Wind Wall carries it off its face; lightning
 ##                     through a cloud charges it (half the strike's % on the bot inside, no launch, the gas stays)
+##   worn together     (pass 2: the tree's stacking and excludes) Rubble Wall and Quarry: the rise 0.7 x (0.8/0.7)^2; the
+##                     Vent with Rubble Wall: the Vent's 0.8 (a set twist's number is final); Clean Return with Return to
+##                     Sender: the return lock 0.48; Heave and Fuming Column, Thick and Brimstone Wall, Heavy and Sulphur
+##                     Boulder never worn together
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass. A user arg only=<part> (after --: thick_wall,
-## juggle, ..., sulphur_twists, vent, reactions) plays that part alone, for a quick look; the gate runs them all.
+## juggle, ..., sulphur_twists, vent, reactions, combos) plays that part alone, for a quick look; the gate runs them all.
 
 const NAME := "TALENTS EARTH"
 const BendGas := preload("res://scripts/bending/bend_gas.gd")
@@ -198,7 +202,7 @@ func _run() -> void:
 	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
 	player.pitch = 0.0
 	var parts: Array[Callable] = [_thick_wall, _juggle, _return_to_sender, _kick_up, _avalanche, _heave, _kiln_stone, _rubble, _quarry,
-			_reinforce, _sulphur_set, _sulphur_twists, _vent, _reactions]
+			_reinforce, _sulphur_set, _sulphur_twists, _vent, _reactions, _combos]
 	var only := ""
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("only="):
@@ -1631,3 +1635,42 @@ func _reactions() -> void:
 	_expect(BendGas.make(player, bot.global_position, "cloud") == null and BendGas.gas_of().is_empty(), "Classic: no gas, nothing for a reaction to touch")
 	rules.reset_pct(player, 0.0)
 	rules.reset_pct(bot, 0.0)
+
+
+# ---------------------------------------------------------------- earth's talents worn together (pass 2)
+## `ids` worn together by the player as an earth caster: the overlay (its ids and refusals).
+func _wear_ov(ids: Array) -> Dictionary:
+	BendLoadout.clear(player)
+	return BendLoadout.wear(player, ids, "", "earth")
+
+
+func _combos() -> void:
+	var S := BendGas.SET
+	await _stage(-4.5, 4.5)
+	# the tree's stacking: Rubble Wall and Quarry both slow the wall's rise the same way, their ratios multiply
+	var ov := _wear_ov(["earth.wall.rubble", "earth.wall.quarry"])
+	var w := await _wall_of(player, 3.0)
+	var rise := w.rise_s if w != null else -1.0
+	if w != null:
+		w.crumble("time")
+	await _secs(1.6)
+	_expect((ov.ids as Array).size() == 2 and _near(rise, 0.7 * (0.8 / 0.7) * (0.8 / 0.7), 0.005),
+			"Rubble Wall and Quarry worn together: both apply, the wall rises in %.3f s (0.7 x 0.8/0.7 x 0.8/0.7; %s)" % [rise, ov.refused])
+	# a set twist's number is final: the Sulphur Vent's 0.8 s with Rubble Wall
+	ov = _wear_ov([S, BendGas.VENT, "earth.wall.rubble"])
+	var nw := BendLoadout.wall_numbers(player, "wall", SwayMoves.move("earth_wall").wall, "earth")
+	_expect((ov.ids as Array).size() == 3 and _near(float(nw.rise_s), 0.8, 0.001),
+			"the Sulphur Vent and Rubble Wall worn together: both apply, the Vent's rise (a set twist's) stands, %.2f s (%s)" % [float(nw.rise_s), ov.refused])
+	# Clean Return and Return to Sender: a late catch's return lock, both the same way
+	ov = _wear_ov(["earth.catch.clean_return", "earth.catch.return_to_sender"])
+	var rl := float(BendLoadout.tune(player, "rules:guard_rules.return_lock_s", Bending.rule("return_lock_s", 0.35)))
+	_expect((ov.ids as Array).size() == 2 and _near(rl, 0.35 * (0.42 / 0.35) * (0.4 / 0.35), 0.002),
+			"Clean Return and Return to Sender worn together: both apply, the return lock %.3f s (0.35 x 0.42/0.35 x 0.4/0.35)" % rl)
+	# the tree's excludes: Heave with Fuming Column, Thick Wall with Brimstone Wall, Heavy Boulder with Sulphur Boulder
+	for pr: Array in [[[S, "earth.column.heave", BendGas.COLUMN], BendGas.COLUMN], [[S, "earth.wall.thick", BendGas.WALL], BendGas.WALL],
+			[[S, "earth.boulder.heavy", BendGas.BOULDER], BendGas.BOULDER]]:
+		ov = _wear_ov(pr[0])
+		var why := String((ov.refused as Dictionary).get(pr[1], ""))
+		_expect(not (ov.ids as Array).has(pr[1]) and (ov.ids as Array).size() == 2 and why.contains("exclude"),
+				"the tree's excludes: %s is not worn beside %s (%s)" % [pr[1], (pr[0] as Array)[1], why])
+	_wear(player, "")

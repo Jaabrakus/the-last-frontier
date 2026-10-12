@@ -28,7 +28,9 @@ extends RefCounted
 ##                                                   proposed_classes ask); volley_n only beside the node's own spec count
 ##       A node whose change touches a number nothing reads per wearer is refused whole (never half applied), and so is one whose
 ##       data drifted from its `from` (the move was retuned after the tree was written), and one that requires a node that is
-##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node).
+##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node). Picks worn together follow
+##       the tree (2026-10-11, earth p2): its excludes refuse a pick either way; two that change one number the same way from
+##       the same base multiply their ratios, a set twist's number final (overlay_for: _fold_n, _stack); the other way is refused.
 ## Classic (nothing worn) is no meta at all: every reader asks `overlay_of(body)` first and gets {} (the same dictionaries it
 ## read before), so a body that wears nothing reads exactly today's numbers. A hit's cost (the `_lock_s` a blow carries, the
 ## victim's lock set-back) stays the move's own data lock: a talent changes its wearer's lock, never what a blow costs whom it hits.
@@ -286,7 +288,8 @@ static func _resolve(id: String) -> Dictionary:
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
 	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {},
-			"class_new": {}, "class_beat": {}, "beat": false}
+			"class_new": {}, "class_beat": {}, "beat": false, "from": {},
+			"final": String(n.get("set", "")) != "" and String(n.get("kind", "")) != "skill_set"}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
@@ -355,7 +358,7 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 			return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
 		if not _consumed(mv, mode, sub):
 			return "%s: no code reads this number" % path
-		return _put(out.spec as Dictionary, ["%s/%s" % [mv, mode]] + sub, to)
+		return _put_n(out, "spec", ["%s/%s" % [mv, mode]] + sub, to, from)
 	if kind != "move":
 		return "%s: unknown kind" % path
 	# move:<move>.<key>...: the move's own data
@@ -374,12 +377,12 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 			return "%s: no single base lock for mode %s" % [path, md]
 		if not is_equal_approx(float(mdata.get("lock_s", -1.0)), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(mdata.get("lock_s")), str(from)]
-		return _put(out.lock as Dictionary, ["%s/%s" % [mv2, md]], to)
+		return _put_n(out, "lock", ["%s/%s" % [mv2, md]], to, from)
 	if tail[0] == "mode_lock_s" and tail.size() == 2:
 		var mlk2: Variant = mdata.get("mode_lock_s", {})
 		if not (mlk2 is Dictionary) or not (mlk2 as Dictionary).has(tail[1]) or not is_equal_approx(float((mlk2 as Dictionary)[tail[1]]), float(from)):
 			return "%s: the data does not hold from %s" % [path, str(from)]
-		return _put(out.lock as Dictionary, ["%s/%s" % [mv2, tail[1]]], to)
+		return _put_n(out, "lock", ["%s/%s" % [mv2, tail[1]]], to, from)
 	if mv2 == "earth_wall" and tail[0] == "wall":
 		# Earth Wall's numbers, or (rise_s, snow hits) Ice Wall's: the node's element says which builder reads them
 		var cur2: Variant = _dig(mdata, tail)
@@ -391,9 +394,9 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		if bucket == "":
 			return "%s: no wall builder of this element reads it per wearer" % path
 		if sub2.size() == 1 and sub2[0] in allowed:
-			return _put(out[bucket] as Dictionary, sub2, to)
+			return _put_n(out, bucket, sub2, to, from)
 		if bucket == "ice" and sub2.size() == 3 and sub2[0] == "materials" and sub2[1] == "snow" and sub2[2] == "hits":
-			return _put(out.ice as Dictionary, sub2, to)
+			return _put_n(out, "ice", sub2, to, from)
 		return "%s: no builder reads this per wearer" % path
 	return "%s: no code reads this number per wearer" % path
 
@@ -406,7 +409,7 @@ static func _take_tune(out: Dictionary, path: String, from: Variant, to: Variant
 		return "%s: the game holds no such number" % path
 	if not _same_shape_num(cur, from) or not _same_shape_num(from, to, true):
 		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-	return _put(out.tune as Dictionary, [path], to)
+	return _put_n(out, "tune", [path], to, from)
 
 
 ## The game's own number at tune path `path` (null: none).
@@ -505,8 +508,8 @@ static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: Stri
 		if not built:
 			return "%s: a Beat class needs its node's new code" % path
 		# (only a cast let go on the Beat sends it: hit_class reads it off a hit whose info says beat)
-		return _put(out["class_beat"] as Dictionary, [tag, key], to)
-	return _put(out["class"] as Dictionary, [tag, key], to)
+		return _put_n(out, "class_beat", [tag, key], to, from)
+	return _put_n(out, "class", [tag, key], to, from)
 
 
 ## Node `n`'s change at `path` ({} none).
@@ -550,6 +553,18 @@ static func _dig(d: Variant, keys: Array) -> Variant:
 	return cur
 
 
+## A number `to` at nested `keys` of part `part` of a node's resolve `out`, with [its `from` (the data's), whether the node is a
+## set twist] beside it under out.from (the tree's stacking reads them: overlay_for, _fold_n) ("" put, else why not).
+static func _put_n(out: Dictionary, part: String, keys: Array, to: Variant, from: Variant) -> String:
+	var why := _put(out[part] as Dictionary, keys, to)
+	if why == "" and (from is float or from is int) and (to is float or to is int):
+		var fr: Dictionary = out["from"]
+		if not fr.has(part):
+			fr[part] = {}
+		_put(fr[part] as Dictionary, keys, [from, bool(out.get("final", false))])
+	return why
+
+
 ## Value `v` at nested `keys` in `into` ("" put, else why not: a key already set).
 static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 	var cur := into
@@ -567,11 +582,13 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 
 # ---------------------------------------------------------------- the overlay of a set of picks
 ## The overlay of `picks` for a body that casts as `element` (""): {spec, lock, wall, ice, pose, class, ids (applied), refused
-## {id: why}}. A pick that is not live, of another element, worn without a node it requires, or that sets a number another
-## already set, applies nothing.
+## {id: why}}. A pick that is not live, of another element, worn without a node it requires, beside a node the tree's excludes
+## keep it from (either way), or that pulls a number another already set the other way (or sets a pose or a whole class twice),
+## applies nothing. Two picks that change one number the same way from the same base stack as the tree's "stacking" says
+## (_fold_n: their ratios multiply; a set twist's number is final).
 static func overlay_for(picks: Array, element := "") -> Dictionary:
 	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "class_beat": {},
-			"ids": [], "refused": {}}
+			"ids": [], "refused": {}, "from": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -585,15 +602,22 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 				if not q in picks:
 					why = "worn without %s" % String(q)
 					break
+		if why == "":
+			why = _excluded(id, out.ids as Array)
 		if why != "":
 			(out.refused as Dictionary)[id] = why
 			continue
 		var trial := {}
 		for part: String in PARTS:
 			trial[part] = (out[part] as Dictionary).duplicate(true)
+		var trial_from: Dictionary = (out["from"] as Dictionary).duplicate(true)
+		var rf: Dictionary = r.get("from", {})
 		var clash := ""
 		for part: String in PARTS:
-			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary)
+			if not (trial_from.get(part) is Dictionary):
+				trial_from[part] = {}
+			clash = _fold_n(trial[part] as Dictionary, r.get(part, {}) as Dictionary, trial_from[part] as Dictionary,
+					rf.get(part, {}) as Dictionary)
 			if clash != "":
 				break
 		if clash != "":
@@ -601,10 +625,79 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 			continue
 		for part: String in PARTS:
 			out[part] = trial[part]
+		out["from"] = trial_from
 		(out.ids as Array).append(id)
 		if bool(r.get("beat", false)):
 			out["beat"] = true
 	return out
+
+
+## Why node `id` may not be worn beside the nodes `worn` (the skill tree's excludes, either way; "" none).
+static func _excluded(id: String, worn: Array) -> String:
+	var ex: Variant = _node(id).get("excludes", [])
+	for x: Variant in (ex as Array if ex is Array else []):
+		if String(x) in worn:
+			return "excludes %s" % String(x)
+	for w: Variant in worn:
+		var wx: Variant = _node(String(w)).get("excludes", [])
+		if wx is Array and id in (wx as Array):
+			return "excluded by %s" % String(w)
+	return ""
+
+
+## `src` folded into `into` as the skill tree's "stacking" says: a number two nodes change the same way from the same base
+## multiplies their ratios (into x src / from: 0.7 s x 0.8/0.7 x 0.8/0.7), unless one of them is a set twist (its number is
+## final for that move: it stands, the other's is dropped); the other way, from another base, or not a number (a pose, a whole
+## class) is a clash: returns where, else "". `into_f` and `src_f` hold their [from, set twist] leaves (_put_n), kept beside.
+static func _fold_n(into: Dictionary, src: Dictionary, into_f: Dictionary, src_f: Dictionary) -> String:
+	for k: String in src:
+		if src[k] is Dictionary:
+			if into.has(k) and not (into[k] is Dictionary):
+				return k
+			if not into.has(k):
+				into[k] = {}
+			if not (into_f.get(k) is Dictionary):
+				into_f[k] = {}
+			var sf: Variant = src_f.get(k)
+			var why := _fold_n(into[k], src[k], into_f[k], sf as Dictionary if sf is Dictionary else {})
+			if why != "":
+				return "%s.%s" % [k, why]
+		elif into.has(k):
+			var st := _stack(into[k], src[k], into_f.get(k), src_f.get(k))
+			if st.is_empty():
+				return k
+			into[k] = st[0]
+			into_f[k] = st[1]
+		else:
+			into[k] = src[k]
+			if src_f.has(k):
+				into_f[k] = src_f[k]
+	return ""
+
+
+## Two nodes' numbers `a` (worn so far) and `b` for one key, with their [from, set twist] `fa` and `fb` (null: no from): [the
+## number worn, its [from, set twist]], or [] a clash (_fold_n).
+static func _stack(a: Variant, b: Variant, fa: Variant, fb: Variant) -> Array:
+	if not (fa is Array and fb is Array) or not (a is float or a is int) or not (b is float or b is int):
+		return []
+	var f := float((fa as Array)[0])
+	if absf(f) < 1e-9 or not is_equal_approx(f, float((fb as Array)[0])):
+		return []
+	var da := signf(float(a) - f)
+	if da == 0.0 or da != signf(float(b) - f):
+		return []                                  # (opposite pulls: never worn together)
+	var ta := bool((fa as Array)[1])
+	var tb := bool((fb as Array)[1])
+	if ta and tb:
+		return []
+	if ta:
+		return [a, fa]
+	if tb:
+		return [b, fb]
+	var v := float(a) * float(b) / f
+	if a is int and b is int and (fa as Array)[0] is int:
+		return [roundi(v), fa]
+	return [v, fa]
 
 
 ## `src` folded into `into` (a number set twice is a clash: returns where, else "").
