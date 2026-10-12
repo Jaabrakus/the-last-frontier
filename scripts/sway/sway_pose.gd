@@ -267,6 +267,12 @@ func strike_point() -> Vector3:
 	return _strike_at if phase != "" else Vector3.INF
 
 
+## The limb the move leaves from (the clip's "hand": l_palm, r_palm, both, l_foot, r_foot; a combo's other side when it
+## takes it), "" when no clip plays or it names none. BendCharge channels the element to it.
+func strike_limb() -> String:
+	return _hand if phase != "" else ""
+
+
 ## Seconds from now to the strike of the release a cast now would play (-1: no strike time known; the effect lands at once).
 func strike_wait() -> float:
 	if phase != "press" or _anim == null:

@@ -684,6 +684,12 @@ func shown_clip() -> String:
 	return k
 
 
+## The limb a cast leaves from (the pose's "hand": l_palm, r_palm, both, l_foot, r_foot), else the right palm. BendCharge
+## channels the element to it.
+func strike_limb() -> String:
+	return String(cast_pick.get("hand", "r_palm"))
+
+
 ## Where a cast leaves the body (world): the pose's limb (its "hand": l_palm, r_palm, both, l_foot, r_foot), else the
 ## right palm.
 func strike_point() -> Vector3:

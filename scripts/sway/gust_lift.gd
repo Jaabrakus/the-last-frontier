@@ -727,6 +727,9 @@ static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: Stri
 		var d := (out + side.rotated(out, a) * rng.randf_range(0.4, 1.0)).normalized()
 		var v0 := d * float(sd.get("chunk_mps", 5.5)) * rng.randf_range(0.6, 1.2) + Vector3.UP * float(sd.get("chunk_up_mps", 3.5)) * rng.randf_range(0.5, 1.1)
 		var spin := Vector3(rng.randf_range(-9, 9), rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+		# (the first few stay where they land on the deck, broken pieces an earth bender can pull in again: RockDebris)
+		var keep := ar != null and i < RockDebris.KEEP_PER_BURST
+		var fly_s := RockDebris.LAND_S if keep else life
 		var tw := mi.create_tween()
 		tw.tween_method(func(t: float) -> void:
 			if is_instance_valid(mi):
@@ -734,9 +737,21 @@ static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: Stri
 				if ar != null and is_instance_valid(ar) and ar.on_deck(p):
 					p.y = maxf(p.y, ar.deck_y() + ar.floor_at(p) + 0.05)    # (it lands on the deck, a piece, a step)
 				mi.global_position = p
-				mi.rotation = spin * t
-				mi.scale = Vector3.ONE * sz * clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0), 0.0, life, life)
-		tw.tween_callback(mi.queue_free)
+				mi.rotation = spin * (minf(t, 0.35) if keep else t)      # (a kept one stops turning as it lands)
+				mi.scale = Vector3.ONE * sz * (1.0 if keep else clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0)), 0.0, fly_s, fly_s)
+		if keep:
+			tw.tween_callback(func() -> void:
+				if not is_instance_valid(mi):
+					return
+				if is_instance_valid(ar) and ar.on_deck(mi.global_position) \
+						and mi.global_position.y <= ar.deck_y() + ar.floor_at(mi.global_position) + 0.1:
+					var deb := RockDebris.of(scn)
+					if deb != null:
+						deb.lay(mi)
+						return
+				mi.queue_free())
+		else:
+			tw.tween_callback(mi.queue_free)
 
 
 ## The hold broken: it falls where it hangs. In flight too (a Catch, a deflect, a cushion took it: BendZone): it stops there

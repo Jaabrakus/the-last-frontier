@@ -79,7 +79,8 @@ const AI_PATH := "res://data/npc/bend_ai.json"
 ## The one cast entry for any caster (BendCast, bend_cast.gd beside BendEffects' script): used when it exists and has its
 ## static cast().
 const BEND_CAST_FILE := "bend_cast.gd"
-## Its element's circle at its own feet while it locks (the owner allowed it: own side, own colour; never on anyone else).
+## Its element's circle at its own feet while it locks (the owner allowed it: own side, own colour; never on anyone else);
+## in the ring (BendR3.on) with BendCharge.SHOW its element round its own body instead, as the player's (the owner, 2026-10-12).
 const SHOW_LOCK_CIRCLE := true
 const CIRCLE_R := 0.9
 ## The old spells it casts its own way while BendCast is not there.
@@ -163,6 +164,7 @@ var _talent_mode := ""
 ## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
 var _cm_used := 1.0
 var circle: FormCircle
+var charge: BendCharge
 ## The ring's: where it may stand (pos -> pos), and metres to the open end (pos, dir -> m); invalid: no ring.
 var bounds_fn: Callable
 var edge_fn: Callable
@@ -677,6 +679,11 @@ func tick(dt: float) -> void:
 			circle.fill = fill
 			if fill >= 1.0 and not circle.full:
 				circle.full = true
+		if charge != null and is_instance_valid(charge):
+			charge.fill = fill
+			if fill >= 1.0 and not charge.full:
+				charge.full = true
+				charge.flash()
 		var t := brain.target
 		if t != null and is_instance_valid(t):
 			me.face_point(t.global_position)
@@ -1489,9 +1496,21 @@ func begin(id: String, md: String) -> void:
 		_raise_spike(t)
 	if SHOW_LOCK_CIRCLE and me.is_inside_tree():
 		var scn := me.get_tree().current_scene
-		if scn != null:
+		if BendCharge.SHOW and BendR3.on(me):
+			if charge != null and is_instance_valid(charge):
+				charge.end("break")
+			charge = BendCharge.make(me, element)
+			charge.limb_fn = _strike_limb              # (channelled to the limb its cast's clip leaves from)
+		elif scn != null:
 			var col := MatchSetup.color(element)
 			circle = FormCircle.make(scn, FormEffects.ground_at(me, me.global_position), Vector3.UP, CIRCLE_R, col)
+
+
+## The limb its locking cast's clip leaves from (NpcBody.strike_limb; "" none): its charge's channel.
+func _strike_limb() -> String:
+	if me == null or not is_instance_valid(me) or me.body == null or not is_instance_valid(me.body):
+		return ""
+	return me.body.strike_limb()
 
 
 func _release() -> void:
@@ -1504,6 +1523,9 @@ func _release() -> void:
 	if circle != null and is_instance_valid(circle):
 		circle.end("cast")
 	circle = null
+	if charge != null and is_instance_valid(charge):
+		charge.end("cast")
+	charge = null
 	_follow = FOLLOW_S
 	var t := brain.target
 	var pr := preset()
@@ -1905,6 +1927,9 @@ func _drop_lock(how: String) -> void:
 	if circle != null and is_instance_valid(circle):
 		circle.end(how)
 	circle = null
+	if charge != null and is_instance_valid(charge):
+		charge.end(how)
+	charge = null
 	_stone = null                                  # (a spike raised and not thrown stands where it rose)
 
 
