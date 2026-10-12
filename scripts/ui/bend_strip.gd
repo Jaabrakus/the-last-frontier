@@ -485,7 +485,7 @@ func column(i: int) -> Dictionary:
 	var out := {"key": i + 1, "head": "", "sub": "", "tap": "", "grow": "", "hidden": i >= KEYS or RingAssist.key_locked(player, i + 1),
 			"id": "", "mode": "", "label": "",
 			"other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false, "icon_id": "", "icon_mode": ""}
-	var ms := KitWords.key_moves(el, i)
+	var ms := KitWords.key_moves(el, i, player)        # (his worn talent's mode on an empty double tap too: the Sulphur Vent)
 	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
 	var k := String(heads.get(i, str(i + 1))) if s == "direction" else str(i + 1)
 	if i == 2 and s != "direction" and RingRules.stock_on():

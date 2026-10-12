@@ -774,7 +774,7 @@ func _key_tap(i: int) -> void:
 			return
 	var want := Bending.first_of(key)
 	if i == _tap_key and now - _tap_at <= Bending.rule("double_tap_s", 0.3):
-		var other := Bending.other_move(key, String(want.get("id", "")), String(want.get("mode", "")))
+		var other := Bending.other_move(key, String(want.get("id", "")), String(want.get("mode", "")), player)
 		if not other.is_empty():
 			want = other
 		_tap_key = -1                       # (a third tap is a first tap again)
@@ -794,7 +794,7 @@ func step_other() -> bool:
 	var k := Bending.key_of(el, spell)
 	if k < 0 or c == null:
 		return false
-	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, spell, c.base_mode_of(spell))
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, spell, c.base_mode_of(spell), player)
 	if nxt.is_empty():
 		return false
 	return ready_move(k, String(nxt.id), String(nxt.mode))

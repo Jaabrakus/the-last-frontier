@@ -152,8 +152,10 @@ func _run() -> void:
 	for id0: String in live:
 		only_known = only_known and id0 in _live_all()
 	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
-	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
-			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
+	_expect("earth.wall.thick" in live and BendLoadout.why_not("earth.wall.thick") == "",
+			"Thick Wall is on (2026-10-11: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down) (%s)" % BendLoadout.why_not("earth.wall.thick"))
+	_expect(not "water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "switched off",
+			"the Ice Wall the soak could not exercise is switched off in the json (%s)" % BendLoadout.why_not("water.wall.thick_ice"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
 	var all_on := {}
 	for id1: String in _live_all():
@@ -191,8 +193,10 @@ func _run() -> void:
 		var el := id.get_slice(".", 0)
 		var w := _body()
 		var bot := _body()
-		var ov := BendLoadout.wear(w, [id], "", el)
-		_expect((ov.ids as Array) == [id] and BendLoadout.picks_of(w) == [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
+		# (a node that requires another, a skill set's twist, is worn with it: alone it applies nothing)
+		var with: Array = ((n.get("requires", []) as Array) if n.get("requires") is Array else []) + [id]
+		var ov := BendLoadout.wear(w, with, "", el)
+		_expect((ov.ids as Array) == with and BendLoadout.picks_of(w) == with and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
 			var rest := path.get_slice(":", 1)
@@ -232,11 +236,13 @@ func _run() -> void:
 				var key0 := rest.get_slice("+", 1).get_slice(".", 1)
 				var base_c := RingRules.class_of(tag0)
 				var gs := RingRules.stock_num("growth_scale", 1.0) if key0 == "growth" else 1.0
-				var wc := BendLoadout.hit_class(w, base_c)
+				# (a class change with when <flag> is the wearer's on a hit whose info carries the flag: "beat", let go on the Beat
+				# (Heave's); "avalanche", the Avalanche's rolling stones)
+				var wc := BendLoadout.hit_class(w, base_c, {String(c.when): true} if String(c.get("when", "")) != "" else {})
 				var bc0 := BendLoadout.hit_class(bot, base_c)
 				_expect(_near(wc.get(key0), to * gs) and String(wc.get("tag", "")) == tag0,
 						"%s: the wearer's %s hits have %s %s, the tag kept (%s)" % [id, tag0, key0, to, wc.get(key0)])
-				_expect(is_same(bc0, base_c) and _near(bc0.get(key0), from * gs),
+				_expect(is_same(bc0, base_c) and _near(bc0.get(key0, from if bool(c.get("default_from", false)) else null), from * gs),
 						"%s: a body that wears nothing hits with the class as it is (%s %s)" % [id, key0, from])
 				var named_keys := {}
 				for c3: Dictionary in n.changes:
@@ -339,6 +345,7 @@ func _run() -> void:
 	t["test.nochange"] = {"id": "test.nochange", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": []}
 	t["test.rule"] = {"id": "test.rule", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "rules:guard_rules.whiff_lock_s", "from": 0.5, "to": 0.6}]}
 	t["test.clash"] = {"id": "test.clash", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "spec:air_blast/slice.mps", "from": 45.0, "to": 51.0}]}
+	t["test.pull"] = {"id": "test.pull", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "spec:air_blast/slice.mps", "from": 45.0, "to": 40.0}]}
 	t["test.volley"] = {"id": "test.volley", "kind": "enhance", "ring_legal": true, "mode": "embers",
 			"changes": [{"path": "class:fire_jab/embers+x.volley_n", "from": 7, "to": 6}]}
 	t["test.newhit"] = {"id": "test.newhit", "kind": "enhance", "ring_legal": true, "mode": "whip",
@@ -348,16 +355,21 @@ func _run() -> void:
 	t["test.cdrift"] = {"id": "test.cdrift", "kind": "enhance", "ring_legal": true, "mode": "whip",
 			"changes": [{"path": "class:water_whip/whip+x.d", "from": 8.0, "to": 10.0}]}
 	BendLoadout.config_override = {"live": ["test.unread", "test.drift", "test.nochange", "test.rule", "test.clash", "air.slice.keen",
-			"test.volley", "test.newhit", "test.what", "test.cdrift"], "nodes": all_on}
+			"test.volley", "test.newhit", "test.what", "test.cdrift", "test.pull"], "nodes": all_on}
 	# (a volley's count without the node's own spec count; a whole new class, a hit the node adds; a key that says what the hit
 	# is; a class number that drifted from the node's from)
 	for id2: String in ["test.unread", "test.drift", "test.nochange", "test.rule", "test.volley", "test.newhit", "test.what", "test.cdrift"]:
 		_expect(not bool(BendLoadout.resolve(id2).ok), "%s is refused (%s)" % [id2, BendLoadout.resolve(id2).why])
 	var wx := _body()
-	var ovx := BendLoadout.wear(wx, ["test.unread", "test.drift", "air.slice.keen", "test.clash"], "", "")
+	var ovx := BendLoadout.wear(wx, ["test.unread", "test.drift", "air.slice.keen", "test.pull"], "", "")
 	_expect((ovx.ids as Array) == ["air.slice.keen"] and _near(BendLoadout.spec(wx, "air_blast", "slice", base_slice).mps, 54.0)
-			and (ovx.refused as Dictionary).has("test.clash") and String(ovx.refused["test.clash"]).contains("mps"),
-			"a refused node leaves no half of itself, and a number two nodes both set is set by the first only (%s)" % [ovx.refused])
+			and (ovx.refused as Dictionary).has("test.pull") and String(ovx.refused["test.pull"]).contains("mps"),
+			"a refused node leaves no half of itself, and a number two nodes pull opposite ways is set by the first only (%s)" % [ovx.refused])
+	# (the skill tree's stacking, 2026-10-11 earth p2: two nodes that change one number the same way from the same base multiply
+	# their ratios: 45 x 54/45 x 51/45)
+	var ovs := BendLoadout.wear(wx, ["air.slice.keen", "test.clash"], "", "")
+	_expect((ovs.ids as Array) == ["air.slice.keen", "test.clash"] and _near(BendLoadout.spec(wx, "air_blast", "slice", base_slice).mps, 54.0 * 51.0 / 45.0),
+			"two nodes that change one number the same way stack, their ratios multiplied (%.2f; %s)" % [float(BendLoadout.spec(wx, "air_blast", "slice", base_slice).mps), ovs.refused])
 	BendLoadout.config_override = {"nodes": all_on}
 	BendLoadout.reload_data()
 	# a node that requires one that is not live (Mud Lash: the Mud set makes mud, not numbers) is not live itself, and a pick worn

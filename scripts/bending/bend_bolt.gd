@@ -653,6 +653,9 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		_end_look("wall" if who is FormRaised else "world", at, n)
 		_finish("wall" if who is FormRaised else "world")
 		return
+	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
+		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
+		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)
 		if not SbFx.fire(by, sbk, "impact", sbo):
@@ -704,11 +707,108 @@ func _drop_loose(at: Vector3) -> void:
 	FormStone.make_loose(s, _by())
 
 
+## Earth's Kick-Up (data/sway/skill_tree.json earth.pebbles.kick_up; the owner, 2026-10-11: "make sure all the talents work"):
+## its wearer's Pebbles volley that hits nobody (no pebble struck a body nor was taken by a guard) leaves one loose stone,
+## KICK_UP_R round, where its last pebble lands (the deck under where it ended; none off the deck), his own (FormStone.make_loose:
+## still loose_max at most). A Fissure that runs under it throws it on (_heave_loose), whoever's it is. Its spread is the node's.
+const KICK_UP := "earth.pebbles.kick_up"
+const KICK_UP_R := 0.16
+## A pebble that ended so met someone (a body, a guard).
+const MET_ENDS := ["hit", "caught", "cushioned", "dropped", "blocked", "absorbed", "drunk", "steam", "melted", "doused"]
+## The wearer's volleys in flight: volley id -> {n: pebbles ended, met: any met someone}.
+static var _kick := {}
+
+
+func _kick_up_end(why: String) -> void:
+	var vid := int(info.volley_id)
+	var e: Dictionary = _kick.get(vid, {"n": 0, "met": false})
+	e["n"] = int(e.n) + 1
+	if why in MET_ENDS or not guarded_by.is_empty():
+		e["met"] = true
+	_kick[vid] = e
+	if int(e.n) < int(info.get("volley_n", 1)):
+		if _kick.size() > 64:
+			_kick.clear()
+		return
+	_kick.erase(vid)
+	if bool(e.met):
+		return
+	var at := FormEffects.ground_at(self, global_position)
+	var ar := RingArena.find(get_tree())
+	if ar != null and not ar.on_deck(at):
+		return                                    # (its last pebble fell past the deck: into the water, no stone)
+	var s := FormStone.ball(get_tree().current_scene, at, {"radius_m": KICK_UP_R, "mass_kg": 15.0, "rise_s": 0.15, "life_s": 30.0,
+			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.set_meta(&"bend_weight", "medium")
+	FormStone.make_loose(s, _by())
+	BendLooks.burst(at + Vector3.UP * 0.1, "stone", 10, Vector3.UP, 90.0, 2.0, 0.2)
+	GatherFx.fall_dust(get_tree().current_scene, at, 0.4)
+
+
+## Earth's Quarry (data/sway/skill_tree.json earth.wall.quarry; the owner, 2026-10-11: "make sure all the talents work"): its
+## wearer's Fissure let go on the Beat (its info says beat: SwayCaster, NpcBending) that runs into his own wall (meta bend_by)
+## tears a chunk off it and throws the chunk on along the crack (FormEffects.gust_chunk at the wall's far side, the Fissure's own
+## hit info), the wave ending there unworn on it; the first chunk each wall costs the wall no hit (a brace for it), later ones a
+## hit each (gust_chunk's). True when it did. Its walls rise in 0.8 s (the node's rise_s).
+const QUARRY := "earth.wall.quarry"
+
+
+func _quarry(w: FormRaised, at: Vector3) -> bool:
+	var by := _by()
+	if by == null or not BendLoadout.wears(by, QUARRY) or int(w.get_meta(&"bend_by", 0)) != by.get_instance_id() \
+			or not w.is_up() or not NetSpells.decides():
+		return false
+	var first := not w.has_meta(&"quarry_torn")
+	w.set_meta(&"quarry_torn", int(w.get_meta(&"quarry_torn", 0)) + 1)
+	var had: Variant = w.get_meta(&"bend_brace") if w.has_meta(&"bend_brace") else null
+	if first:
+		w.set_meta(&"bend_brace", true)            # (the first chunk free: gust_chunk's hit taken by it)
+	var fwd := Vector3(velocity.x, 0.0, velocity.z)
+	fwd = fwd.normalized() if fwd.length_squared() > 1e-6 else -w.global_basis.z
+	var keep := BendR3.cur
+	BendR3.cur = info
+	var to := w.global_position + fwd * 20.0 + Vector3.UP * 1.2
+	var ch := FormEffects.gust_chunk(by, w, Vector3(at.x, w.global_position.y + 1.0, at.z), fwd, to)
+	BendR3.cur = keep
+	if first and is_instance_valid(w):
+		if had != null:
+			w.set_meta(&"bend_brace", had)
+		elif w.has_meta(&"bend_brace"):
+			w.remove_meta(&"bend_brace")
+	if ch != null:
+		BendLooks.burst(ch.global_position, "stone", 14)
+	return ch != null
+
+
+## Kiln Stone (BendZone.KILN_STONE): heated by fire it crossed (its hits' info says so: the launch base x KILN_MULT for its
+## thrower, BendLoadout.hit_class), a fire trail behind it; douse() makes it a plain stone again (a Turn).
+var heated := false
+
+
+func heat() -> void:
+	if heated:
+		return
+	heated = true
+	info["heated"] = true
+	if _fire_trail == null:
+		_fire_trail = BendLooks.trail(self, "fire", maxf(radius, 0.12))
+	BendLooks.burst(global_position, "fire", 8, -velocity.normalized(), 60.0, 2.0, 0.15)
+
+
+func douse() -> void:
+	if not heated:
+		return
+	heated = false
+	info.erase("heated")
+	BendLooks.stop_trail(_fire_trail)
+	_fire_trail = null
+	BendLooks.burst(global_position, "steam", 12, Vector3.UP, 90.0, 1.5, 0.4)
+
+
 ## A raised wall worn by this bolt (WEAR by its kind and the wall's matter; the water jet's erode on an earth wall).
 func wear(w: FormRaised, at: Vector3) -> void:
-	if w.has_meta(&"bend_brace"):
-		w.remove_meta(&"bend_brace")             # (braced: this one is taken free; Catch's brace)
-		return
+	if FormRaised.take_brace(w):
+		return                                    # (braced: this one is taken free; Catch's brace, Mend's, Reinforce's two)
 	var ice := w.has_meta(&"bend_ice") or w.matter == "snow"
 	var k := float((WEAR.get(kind, [1.0, 1.0]) as Array)[1 if ice else 0])
 	if kind == "water" and not ice:
@@ -745,6 +845,8 @@ func _meet_bolts() -> void:
 			continue
 		if b.global_position.distance_to(global_position) > radius + b.radius + 0.25:
 			continue
+		if bool(info.get("avalanche", false)) and bool(b.info.get("avalanche", false)) and b.info.get("volley_id") == info.get("volley_id"):
+			continue                              # (an Avalanche's three stones roll out together: GustLift.AVALANCHE)
 		meet(self, b)
 		if spent:
 			return
@@ -772,6 +874,7 @@ static func meet_lift(a: BendBolt, l: GustLift) -> void:
 	var wb := int(WEIGHTS.get(weight_of(l), 1))
 	if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
 		BendLooks.burst(at, "stone", 20)
+	BendZone.BendGas.clash(a._by(), l.by(), at)             # (the Sulphur set: a cloud where his stones clash with a foe's)
 	if wa <= wb:
 		a.end("broken")
 	if wb <= wa:
@@ -800,6 +903,7 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 			# (the bigger stone wins: light < medium < heavy; equal ones both break)
 			if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
 				BendLooks.burst(at, "stone", 24)
+			BendZone.BendGas.clash(a._by(), b._by(), at)         # (the Sulphur set: a cloud where his stones clash with a foe's)
 			var wa := int(WEIGHTS.get(a.weight, 1))
 			var wb := int(WEIGHTS.get(b.weight, 1))
 			if wa <= wb:
@@ -869,6 +973,9 @@ func _finish(why: String) -> void:
 	if spent:
 		return
 	spent = true
+	if kind == "stone" and info.has("volley_id") and String(info.get("tag", "")) == "rock_jab/pebbles" and is_inside_tree() \
+			and BendLoadout.wears(_by(), KICK_UP) and NetSpells.decides():
+		_kick_up_end(why)
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)

@@ -64,6 +64,10 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if bd.has(mode):
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
+	var ts := BendLoadout.talent_spec(c.player, m, mode)
+	if not ts.is_empty():
+		BendEffects.apply(c, m, mode, ts, t, at)         # (a worn new skill's own mode: the Sulphur Vent)
+		return
 	var keep := BendR3.cur
 	var bc0 := BendCaster.of(c.player)
 	var grew := bc0 != null and bc0.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary
@@ -349,6 +353,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 			th0.info = BendR3.cur.duplicate()
 		if String(th0.info.get("tag", "")).ends_with(".grown") and not th0.stone.has_meta(GROWN_META):
 			grow_raised(th0, "stone_form", mode, true)    # (grown with no stone swelled yet: at once)
+		_one_boulder(bc, th0, mode)
 		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
@@ -377,7 +382,16 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		th.follow = true
 	if th != null and String(BendR3.cur.get("tag", "")).ends_with(".grown"):
 		grow_raised(th, "stone_form", mode, true)     # (cast grown with no stone raised first: a bot's, a test's)
+	_one_boulder(bc, th, mode)
 	return s
+
+
+## Avalanche's wearer (GustLift.AVALANCHE: the node's class numbers, a volley of three at base 5.9, are the rolling stones' own,
+## class_when avalanche): the Boulder itself, until it lands, one stone whose hit is whole (its info volley_n 1; its class
+## Classic's). Anyone else's throw: untouched.
+static func _one_boulder(bc: BendCaster, th: Throw, mode: String) -> void:
+	if th != null and mode == "cannonball" and BendLoadout.wears(bc.body, GustLift.AVALANCHE) and not th.info.is_empty():
+		th.info["volley_n"] = 1
 
 
 ## Round 3: where an earth caster in the air off the deck tears his stone from (spec §6.1): the deck's face just under its
@@ -950,6 +964,13 @@ static func take_wood(p: Node, kind: String, n: int) -> bool:
 	return true
 
 
+## Earth's Reinforce (data/sway/skill_tree.json earth.mend.reinforce; the owner, 2026-10-11: "make sure all the talents work"):
+## a piece its wearer mends takes its next REINFORCE_N hits free (meta bend_brace an int: FormRaised.take_brace); Mend's lock
+## is the node's (2.6 s).
+const REINFORCE := "earth.mend.reinforce"
+const REINFORCE_N := 2
+
+
 ## Mend `t` by caster `c` (see the header): the stage it mended ("" none). The player pays the pack's wood; any other caster
 ## (a bot: BendCast.cast) mends only raised earth it raised itself (own()), worn, and pays nothing.
 static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
@@ -975,7 +996,8 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 		"worn":
 			(t as FormRaised).mend()
 			if not pack:
-				t.set_meta(&"bend_brace", true)          # (round 2: a mended piece takes its next hit free)
+				# (round 2: a mended piece takes its next hit free; Reinforce's wearer, its next REINFORCE_N)
+				t.set_meta(&"bend_brace", REINFORCE_N if BendLoadout.wears(bc.body, REINFORCE) else true)
 			_tell(bc, (t as FormRaised).mended_line)       # (by its matter: "The stones set again", "The logs set again")
 		"alight":
 			var fs := FireSpread.find(t.get_tree())

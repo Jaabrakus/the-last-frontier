@@ -26,9 +26,15 @@ extends RefCounted
 ##                                                   staling, the range exemption and every other reader of a tag see the move
 ##                                                   it is (the tree's variant tags fold back to their base, as its
 ##                                                   proposed_classes ask); volley_n only beside the node's own spec count
+##         class_when {flag: {tag: {key: number}}}   the same, only on the wearer's hits whose info carries `flag` (a class
+##                                                   change with "when": <flag>, a behaviour node's own hits): beat, a cast let
+##                                                   go on the Beat (Heave's Column); avalanche, the Avalanche's three rolling
+##                                                   stones (never the Boulder's own hit before it lands)
 ##       A node whose change touches a number nothing reads per wearer is refused whole (never half applied), and so is one whose
 ##       data drifted from its `from` (the move was retuned after the tree was written), and one that requires a node that is
-##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node).
+##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node). Picks worn together follow
+##       the tree (2026-10-11, earth p2): its excludes refuse a pick either way; two that change one number the same way from
+##       the same base multiply their ratios, a set twist's number final (overlay_for: _fold_n, _stack); the other way is refused.
 ## Classic (nothing worn) is no meta at all: every reader asks `overlay_of(body)` first and gets {} (the same dictionaries it
 ## read before), so a body that wears nothing reads exactly today's numbers. A hit's cost (the `_lock_s` a blow carries, the
 ## victim's lock set-back) stays the move's own data lock: a talent changes its wearer's lock, never what a blow costs whom it hits.
@@ -55,7 +61,7 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
 ## The overlay's parts (a number or a pose a node changes per wearer).
-const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new"]
+const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new", "class_when"]
 ## THE BEHAVIOUR TALENTS (2026-10-11, the owner: "make sure all the talents work and they work in game"): a node whose effect is
 ## new code (its changes hold a "new" or "new:<what>.<key>" entry, or a class:<tag>+<variant> with a whole new class) applies only
 ## once its id is in loadout_apply.json `behaviour` ({id: where the code is}): the game's code then asks wears(body, id) at the place
@@ -81,7 +87,13 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"stock:late_mult", "rules:passives.water.steer_dps", "rules:passives.water.steer_max_deg", "rules:passives.water.steer_s",
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
-		"move:stone_form.cannonball.radius_m"]
+		"move:stone_form.cannonball.radius_m"] + EARTH_TUNE_PATHS
+## Earth's (pass 1, 2026-10-11): the % ring's full-catch time (Juggle: RingRules.guard_outcome reads it for the guard's owner;
+## that is the spec's reference answer, which no game code calls today: the game's own Catch ends its full catches at the spec's
+## window_s, which the same node sets, so the per-wearer number here only keeps the reference agreeing with the game),
+## and a skill set's own rule (set:<set>.<key>, the tree's skill_sets.<set>.zone: Sulphur's clouds, read by BendGas for the
+## gas's owner; set_base).
+const EARTH_TUNE_PATHS := ["stock:guard_catch_s", "set:sulphur.cloud_life_s", "set:sulphur.cloud_radius_m"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -91,6 +103,7 @@ static var read_store_in_scripts := false
 
 static var _cfg: Dictionary = {}
 static var _tree: Dictionary = {}                ## id -> the skill tree's node
+static var _tree_root: Dictionary = {}           ## the skill tree as read (its beat, its skill sets)
 static var _styles: Dictionary = {}              ## fighting_styles.json "styles"
 static var _resolved: Dictionary = {}            ## id -> resolve()
 static var _lib_exists: Dictionary = {}          ## library path -> whether the file is there (asked once)
@@ -121,6 +134,7 @@ static func config() -> Dictionary:
 static func reload_data() -> void:
 	_cfg = {}
 	_tree = {}
+	_tree_root = {}
 	_styles = {}
 	_resolved = {}
 	_lib_exists = {}
@@ -236,6 +250,7 @@ static func _style_ok(style: String, element: String) -> bool:
 static func _node(id: String) -> Dictionary:
 	if _tree.is_empty():
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(TREE_PATH)) if FileAccess.file_exists(TREE_PATH) else null
+		_tree_root = d if d is Dictionary else {}
 		_index(d)
 		if _tree.is_empty():
 			_tree = {"_none": {}}
@@ -279,14 +294,42 @@ static func _resolve(id: String) -> Dictionary:
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
 	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {},
-			"class_new": {}}
+			"class_new": {}, "class_when": {}, "beat": false, "beat_on": [], "from": {},
+			"final": String(n.get("set", "")) != "" and String(n.get("kind", "")) != "skill_set"}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
 		var why := _take(out, n, c as Dictionary)
 		if why != "":
 			return _refused(why)
+	# (a built behaviour node whose new code is the Beat's: the held casts of its own move it pays on, beat_paid)
+	out["beat_on"] = _beat_on(n)
+	out["beat"] = not (out.beat_on as Array).is_empty()
 	return out
+
+
+## The held casts ("move/mode") Beat technique `n` pays on when let go on the Beat: loadout_apply.json `beat_on`[its id] when
+## that names them (Quarry: the Fissure it lets go into its wall; Return to Sender: none, its Beat is the Catch's E again,
+## BendZone.beat_return), else the node's own move and mode (Heave: "A Column let go on the Beat"; every "A <move> let go on the
+## Beat" technique of the tree). [] for a node that is no Beat technique (not built, or none of its new changes says Beat): its
+## wearer's other casts never pay, flash or carry info.beat (the tree's beat.pays: "only techniques").
+static func _beat_on(n: Dictionary) -> Array:
+	var id := String(n.get("id", ""))
+	if not id in behaviour():
+		return []
+	var says := false
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")).begins_with("new") \
+				and (String((c as Dictionary).get("what", "")) + String((c as Dictionary).get("where", ""))).contains("Beat"):
+			says = true
+	if not says:
+		return []
+	var bo: Variant = config().get("beat_on")
+	var named: Variant = (bo as Dictionary).get(id) if bo is Dictionary else null
+	if named is Array:
+		return (named as Array).duplicate()
+	var mv := String(n.get("extends_move", ""))
+	return ["%s/%s" % [mv, String(n.get("mode", ""))]] if mv != "" else []
 
 
 ## One change into `out` ("" taken, else why not).
@@ -344,7 +387,7 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 			return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
 		if not _consumed(mv, mode, sub):
 			return "%s: no code reads this number" % path
-		return _put(out.spec as Dictionary, ["%s/%s" % [mv, mode]] + sub, to)
+		return _put_n(out, "spec", ["%s/%s" % [mv, mode]] + sub, to, from)
 	if kind != "move":
 		return "%s: unknown kind" % path
 	# move:<move>.<key>...: the move's own data
@@ -355,19 +398,20 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 	if tail.is_empty() or mdata.is_empty():
 		return "%s: malformed" % path
 	if tail[0] == "lock_s" and tail.size() == 1:
-		# the move's lock, scoped to the node's own mode (Step's lock is not Hop's)
+		# the move's lock, scoped to the node's own mode (Step's lock is not Hop's); a move with no modes (Mend) its "" mode
 		var md := String(n.get("mode", ""))
 		var mlk: Variant = mdata.get("mode_lock_s", {})
-		if md == "" or (mlk is Dictionary and (mlk as Dictionary).has(md)):
+		var modeless := md == "" and SwayCaster.modes_of(mv2).is_empty()
+		if (md == "" and not modeless) or (mlk is Dictionary and (mlk as Dictionary).has(md)):
 			return "%s: no single base lock for mode %s" % [path, md]
 		if not is_equal_approx(float(mdata.get("lock_s", -1.0)), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(mdata.get("lock_s")), str(from)]
-		return _put(out.lock as Dictionary, ["%s/%s" % [mv2, md]], to)
+		return _put_n(out, "lock", ["%s/%s" % [mv2, md]], to, from)
 	if tail[0] == "mode_lock_s" and tail.size() == 2:
 		var mlk2: Variant = mdata.get("mode_lock_s", {})
 		if not (mlk2 is Dictionary) or not (mlk2 as Dictionary).has(tail[1]) or not is_equal_approx(float((mlk2 as Dictionary)[tail[1]]), float(from)):
 			return "%s: the data does not hold from %s" % [path, str(from)]
-		return _put(out.lock as Dictionary, ["%s/%s" % [mv2, tail[1]]], to)
+		return _put_n(out, "lock", ["%s/%s" % [mv2, tail[1]]], to, from)
 	if mv2 == "earth_wall" and tail[0] == "wall":
 		# Earth Wall's numbers, or (rise_s, snow hits) Ice Wall's: the node's element says which builder reads them
 		var cur2: Variant = _dig(mdata, tail)
@@ -379,9 +423,9 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		if bucket == "":
 			return "%s: no wall builder of this element reads it per wearer" % path
 		if sub2.size() == 1 and sub2[0] in allowed:
-			return _put(out[bucket] as Dictionary, sub2, to)
+			return _put_n(out, bucket, sub2, to, from)
 		if bucket == "ice" and sub2.size() == 3 and sub2[0] == "materials" and sub2[1] == "snow" and sub2[2] == "hits":
-			return _put(out.ice as Dictionary, sub2, to)
+			return _put_n(out, "ice", sub2, to, from)
 		return "%s: no builder reads this per wearer" % path
 	return "%s: no code reads this number per wearer" % path
 
@@ -394,7 +438,7 @@ static func _take_tune(out: Dictionary, path: String, from: Variant, to: Variant
 		return "%s: the game holds no such number" % path
 	if not _same_shape_num(cur, from) or not _same_shape_num(from, to, true):
 		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-	return _put(out.tune as Dictionary, [path], to)
+	return _put_n(out, "tune", [path], to, from)
 
 
 ## The game's own number at tune path `path` (null: none).
@@ -418,7 +462,39 @@ static func tune_base(path: String) -> Variant:
 			if v2 == null and keys.size() == 2 and String(keys[1]) in ["sputter_s", "release_s"]:
 				return Bending.rule("sputter_s", 0.7) if keys[1] == "sputter_s" else SwayMoves.lock_rule("release_s", 1.0)
 			return v2
+		"set":
+			if keys.size() == 2:
+				return set_rule(String(keys[0]), String(keys[1]))
 	return null
+
+
+## A skill set's own rule (data/sway/skill_tree.json skill_sets.<set>.zone.<key>: Sulphur's cloud_radius_m, cloud_life_s, ...),
+## null none. The game's number for everyone wearing the set; a node's set:<set>.<key> change makes it the wearer's own.
+static func set_rule(set_name: String, key: String) -> Variant:
+	_node("_")                                   # (the tree read)
+	var z: Variant = _dig(_tree_root, ["skill_sets", set_name, "zone", key])
+	return z if (z is float or z is int) else null
+
+
+## The Beat (the skill tree's beat: a held cast let go within window_s after its lock fills; a Catch's E again within it of a
+## clean catch): its window (s). It pays only a worn technique (beat_paid).
+static func beat_s() -> float:
+	_node("_")
+	var w: Variant = _dig(_tree_root, ["beat", "window_s"])
+	return float(w) if (w is float or w is int) else 0.2
+
+
+## Whether `body` wears a live technique that pays on the Beat for a held cast of move `m` at `mode` (its beat_on: the node's
+## own move, _beat_on); `m` "": any of his casts (whether he wears a Beat technique at all). Classic, every other loadout and
+## every other move: false, the Beat does nothing and shows nothing.
+static func beat_paid(body: Object, m := "", mode := "") -> bool:
+	if not _wears(body):
+		return false
+	var ov := overlay_of(body)
+	if m == "":
+		return bool(ov.get("beat", false))
+	var on: Variant = ov.get("beat_on")
+	return on is Array and ("%s/%s" % [m, mode]) in (on as Array)
 
 
 ## Whether `a` and `b` are the same number (or arrays of the same numbers; `shape_only`: only the same shape).
@@ -456,11 +532,38 @@ static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: Stri
 	if not (base is Dictionary):
 		return "%s: no class %s" % [path, tag]
 	var cur: Variant = (base as Dictionary).get(key)
+	var c := _change_of(n, path)
+	if cur == null and bool(c.get("default_from", false)) and key == "volley_n":
+		cur = 1                                    # (a class with no volley_n is one projectile: the node's from is that default)
 	if cur == null or not is_equal_approx(float(cur), float(from)):
 		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-	if key == "volley_n" and not _counts_with(n, tag, to):
+	var built := String(n.get("id", "")) in behaviour()
+	if key == "volley_n" and not _counts_with(n, tag, to) and not (built and _has_new(n)):
 		return "%s: no spec count of the node's own beside it" % path
-	return _put(out["class"] as Dictionary, [tag, key], to)
+	var when := String(c.get("when", ""))
+	if when != "":
+		if not built:
+			return "%s: a class when %s needs its node's new code" % [path, when]
+		# (only the node's own hits whose info says so take it: hit_class; beat, a cast let go on the Beat (Heave); avalanche,
+		# the Avalanche's rolling stones)
+		return _put_n(out, "class_when", [when, tag, key], to, from)
+	return _put_n(out, "class", [tag, key], to, from)
+
+
+## Node `n`'s change at `path` ({} none).
+static func _change_of(n: Dictionary, path: String) -> Dictionary:
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")) == path:
+			return c as Dictionary
+	return {}
+
+
+## Whether node `n` has a "new" change (its own code makes what the number is of: the Avalanche's three stones).
+static func _has_new(n: Dictionary) -> bool:
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")).begins_with("new"):
+			return true
+	return false
 
 
 ## Whether node `n` also changes the spec count of the move and mode `tag` names to `to`.
@@ -488,6 +591,18 @@ static func _dig(d: Variant, keys: Array) -> Variant:
 	return cur
 
 
+## A number `to` at nested `keys` of part `part` of a node's resolve `out`, with [its `from` (the data's), whether the node is a
+## set twist] beside it under out.from (the tree's stacking reads them: overlay_for, _fold_n) ("" put, else why not).
+static func _put_n(out: Dictionary, part: String, keys: Array, to: Variant, from: Variant) -> String:
+	var why := _put(out[part] as Dictionary, keys, to)
+	if why == "" and (from is float or from is int) and (to is float or to is int):
+		var fr: Dictionary = out["from"]
+		if not fr.has(part):
+			fr[part] = {}
+		_put(fr[part] as Dictionary, keys, [from, bool(out.get("final", false))])
+	return why
+
+
 ## Value `v` at nested `keys` in `into` ("" put, else why not: a key already set).
 static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 	var cur := into
@@ -505,11 +620,13 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 
 # ---------------------------------------------------------------- the overlay of a set of picks
 ## The overlay of `picks` for a body that casts as `element` (""): {spec, lock, wall, ice, pose, class, ids (applied), refused
-## {id: why}}. A pick that is not live, of another element, worn without a node it requires, or that sets a number another
-## already set, applies nothing.
+## {id: why}}. A pick that is not live, of another element, worn without a node it requires, beside a node the tree's excludes
+## keep it from (either way), or that pulls a number another already set the other way (or sets a pose or a whole class twice),
+## applies nothing. Two picks that change one number the same way from the same base stack as the tree's "stacking" says
+## (_fold_n: their ratios multiply; a set twist's number is final).
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "ids": [],
-			"refused": {}}
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "class_when": {},
+			"ids": [], "refused": {}, "from": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -523,15 +640,22 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 				if not q in picks:
 					why = "worn without %s" % String(q)
 					break
+		if why == "":
+			why = _excluded(id, out.ids as Array)
 		if why != "":
 			(out.refused as Dictionary)[id] = why
 			continue
 		var trial := {}
 		for part: String in PARTS:
 			trial[part] = (out[part] as Dictionary).duplicate(true)
+		var trial_from: Dictionary = (out["from"] as Dictionary).duplicate(true)
+		var rf: Dictionary = r.get("from", {})
 		var clash := ""
 		for part: String in PARTS:
-			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary)
+			if not (trial_from.get(part) is Dictionary):
+				trial_from[part] = {}
+			clash = _fold_n(trial[part] as Dictionary, r.get(part, {}) as Dictionary, trial_from[part] as Dictionary,
+					rf.get(part, {}) as Dictionary)
 			if clash != "":
 				break
 		if clash != "":
@@ -539,8 +663,84 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 			continue
 		for part: String in PARTS:
 			out[part] = trial[part]
+		out["from"] = trial_from
 		(out.ids as Array).append(id)
+		if bool(r.get("beat", false)):
+			out["beat"] = true
+			if not (out.get("beat_on") is Array):
+				out["beat_on"] = []
+			for k: Variant in (r.get("beat_on", []) as Array):
+				if not k in (out.beat_on as Array):
+					(out.beat_on as Array).append(k)
 	return out
+
+
+## Why node `id` may not be worn beside the nodes `worn` (the skill tree's excludes, either way; "" none).
+static func _excluded(id: String, worn: Array) -> String:
+	var ex: Variant = _node(id).get("excludes", [])
+	for x: Variant in (ex as Array if ex is Array else []):
+		if String(x) in worn:
+			return "excludes %s" % String(x)
+	for w: Variant in worn:
+		var wx: Variant = _node(String(w)).get("excludes", [])
+		if wx is Array and id in (wx as Array):
+			return "excluded by %s" % String(w)
+	return ""
+
+
+## `src` folded into `into` as the skill tree's "stacking" says: a number two nodes change the same way from the same base
+## multiplies their ratios (into x src / from: 0.7 s x 0.8/0.7 x 0.8/0.7), unless one of them is a set twist (its number is
+## final for that move: it stands, the other's is dropped); the other way, from another base, or not a number (a pose, a whole
+## class) is a clash: returns where, else "". `into_f` and `src_f` hold their [from, set twist] leaves (_put_n), kept beside.
+static func _fold_n(into: Dictionary, src: Dictionary, into_f: Dictionary, src_f: Dictionary) -> String:
+	for k: String in src:
+		if src[k] is Dictionary:
+			if into.has(k) and not (into[k] is Dictionary):
+				return k
+			if not into.has(k):
+				into[k] = {}
+			if not (into_f.get(k) is Dictionary):
+				into_f[k] = {}
+			var sf: Variant = src_f.get(k)
+			var why := _fold_n(into[k], src[k], into_f[k], sf as Dictionary if sf is Dictionary else {})
+			if why != "":
+				return "%s.%s" % [k, why]
+		elif into.has(k):
+			var st := _stack(into[k], src[k], into_f.get(k), src_f.get(k))
+			if st.is_empty():
+				return k
+			into[k] = st[0]
+			into_f[k] = st[1]
+		else:
+			into[k] = src[k]
+			if src_f.has(k):
+				into_f[k] = src_f[k]
+	return ""
+
+
+## Two nodes' numbers `a` (worn so far) and `b` for one key, with their [from, set twist] `fa` and `fb` (null: no from): [the
+## number worn, its [from, set twist]], or [] a clash (_fold_n).
+static func _stack(a: Variant, b: Variant, fa: Variant, fb: Variant) -> Array:
+	if not (fa is Array and fb is Array) or not (a is float or a is int) or not (b is float or b is int):
+		return []
+	var f := float((fa as Array)[0])
+	if absf(f) < 1e-9 or not is_equal_approx(f, float((fb as Array)[0])):
+		return []
+	var da := signf(float(a) - f)
+	if da == 0.0 or da != signf(float(b) - f):
+		return []                                  # (opposite pulls: never worn together)
+	var ta := bool((fa as Array)[1])
+	var tb := bool((fb as Array)[1])
+	if ta and tb:
+		return []
+	if ta:
+		return [a, fa]
+	if tb:
+		return [b, fb]
+	var v := float(a) * float(b) / f
+	if a is int and b is int and (fa as Array)[0] is int:
+		return [roundi(v), fa]
+	return [v, fa]
 
 
 ## `src` folded into `into` (a number set twice is a clash: returns where, else "").
@@ -698,16 +898,34 @@ static func pose_of(body: Object, m: String, mode: String) -> String:
 
 ## The class `cls` (RingRules.class_of's: tagged, its growth scaled) of a hit by `body`, with the wearer's own numbers for its
 ## tag over it (`cls` itself for Classic or a tag he changes nothing of: no copy). A growth is scaled as class_of scales the
-## data's. The tag stays the move's.
-static func hit_class(body: Object, cls: Dictionary) -> Dictionary:
+## data's. The tag stays the move's. `info` the hit's: one whose info carries a node's flag takes the wearer's class_when for it
+## over that (info.beat, sent on the Beat by SwayCaster's release and BendR3.info_for: Heave's Column; info.avalanche: the
+## Avalanche's rolling stones, GustLift._avalanche). A returned hit's class (RingRules.return_class: its tag
+## "<origin>.return", which no node's class change names) asks here too: only a Kiln Stone's heat reaches it (info.heated).
+static func hit_class(body: Object, cls: Dictionary, info := {}) -> Dictionary:
 	if cls.is_empty() or not _wears(body):
 		return cls
-	var over: Variant = (overlay_of(body).get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
-	if not (over is Dictionary):
+	var ov := overlay_of(body)
+	var tag := String(cls.get("tag", ""))
+	var over: Variant = (ov.get("class", {}) as Dictionary).get(tag)
+	# (a node's class "when" <flag>: only on his hits whose info carries the flag; beat: let go on the Beat, Heave's Column)
+	var whens: Array = [over]
+	var cw: Variant = ov.get("class_when")
+	if cw is Dictionary:
+		for f: String in (cw as Dictionary):
+			if bool(info.get(f, false)) and ((cw as Dictionary)[f] as Dictionary).get(tag) is Dictionary:
+				whens.append(((cw as Dictionary)[f] as Dictionary)[tag])
+	# (Kiln Stone: a stone of his heated by fire it crossed, BendZone.KILN_STONE: its launch base higher)
+	var heated := bool(info.get("heated", false)) and wears(body, BendZone.KILN_STONE)
+	if not (over is Dictionary) and whens.size() == 1 and not heated:
 		return cls
 	var out := cls.duplicate()
-	for k: String in over:
-		out[k] = float(over[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
+	for o: Variant in whens:
+		if o is Dictionary:
+			for k: String in o:
+				out[k] = float(o[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
+	if heated:
+		out["base"] = float(out.get("base", 0.0)) * BendZone.KILN_MULT
 	return out
 
 
@@ -770,3 +988,85 @@ static func wall_numbers(body: Object, kind: String, base: Dictionary, matter: S
 		for k: String in (mats as Dictionary)[matter]:
 			entry[k] = (mats as Dictionary)[matter][k]
 	return FormMatter.numbers(b, entry, matter)
+
+
+# ---------------------------------------------------------------- the new skills (a worn talent's own mode of a move)
+## THE NEW SKILLS (2026-10-11, the owner's yes to the tree's draft: new skills on the empty double taps): a node of kind
+## new_skill (its slot: key, tap twice, on <move>) adds a mode of its move for its wearer alone. Its spec is moves.json
+## <move>.talent_bend.<mode>: a bend spec with `talent` (the node's id: only its wearer casts it), its own `lock_s`, `label` (its
+## name on the bar) and `pose_as` (the move's mode whose pose it is cast with). Never in the move's modes or bend, so the Classic
+## fingerprint, the static kit (SwayCaster.modes_of: the HUD's key words, the quick spell, the radial wheel, Bending.first_of) and
+## every bot of a normal match never see it; built once for every element (any move's talent_bend, any node). The seams ask here
+## with the body, and a body that wears nothing answers each with one meta lookup:
+##   modes_for(body, id, base)          SwayCaster.my_modes, Bending.other_move (4 tapped twice, a wheel step), BodyBendCaster
+##                                      .mode_of, a bot's options (NpcBending._build_options: talent_pairs)
+##   talent_spec(body, m, mode)         SwayCaster.spec_of, FormEffects.apply, BendCast.cast (the player's cast and a bot's)
+##   talent_lock(body, m, mode, base)   SwayCaster._lock_time, NpcBending.lock_for
+##   pose_mode(body, m, mode)           BendPoses.pick (the body's pose)
+##   talent_label(m, mode)              SwayCaster.mode_label's fallback
+## The first: earth's Sulphur Vent (earth.sulphur.vent: earth_wall.talent_bend.vent, BendGas.vent).
+static func talent_modes(body: Object, id: String) -> Array:
+	if not _wears(body):
+		return []
+	var tb: Variant = SwayMoves.move(id).get("talent_bend")
+	if not (tb is Dictionary):
+		return []
+	var out: Array = []
+	for md: String in (tb as Dictionary):
+		var s: Variant = (tb as Dictionary)[md]
+		if not md.begins_with("_") and s is Dictionary and wears(body, String((s as Dictionary).get("talent", ""))):
+			out.append(md)
+	return out
+
+
+## Move `id`'s ring modes for `body`: `base` (null: SwayCaster.modes_of(id), the move's) and the modes his worn talents add after
+## them (`base` itself, never a copy, when he adds none: Classic reads the very array it read before).
+static func modes_for(body: Object, id: String, base: Variant = null) -> Array:
+	var ms: Array = base as Array if base is Array else SwayCaster.modes_of(id)
+	var ex := talent_modes(body, id)
+	return ms if ex.is_empty() else ms + ex
+
+
+## Every [move, mode] of element `el`'s keys a worn talent of `body`'s adds ([] Classic): a bot's own options.
+static func talent_pairs(body: Object, el: String) -> Array:
+	var out: Array = []
+	if not _wears(body):
+		return out
+	for key: Variant in Bending.keys(el):
+		for id: Variant in (key as Array):
+			for md: String in talent_modes(body, String(id)):
+				out.append([String(id), md])
+	return out
+
+
+## The spec of move `m`'s talent mode `mode` when `body` wears its node ({} else: Classic, another mode, not worn). Shared and
+## read-only (BendEffects.apply copies it before it reads it).
+static func talent_spec(body: Object, m: String, mode: String) -> Dictionary:
+	if not _wears(body) or mode == "":
+		return {}
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if not (tb is Dictionary) or not ((tb as Dictionary).get(mode) is Dictionary):
+		return {}
+	var s: Dictionary = (tb as Dictionary)[mode]
+	return s if wears(body, String(s.get("talent", ""))) else {}
+
+
+## A worn talent mode's own lock (its spec's lock_s; the caller's stretch, tier and lock_mult still apply), else `base`.
+static func talent_lock(body: Object, m: String, mode: String, base: float) -> float:
+	var s := talent_spec(body, m, mode)
+	return float(s.get("lock_s", base)) if not s.is_empty() else base
+
+
+## The mode whose cast pose a worn talent mode plays (its spec's pose_as: one of the move's own), else `mode`.
+static func pose_mode(body: Object, m: String, mode: String) -> String:
+	var s := talent_spec(body, m, mode)
+	return String(s.get("pose_as", mode)) if not s.is_empty() else mode
+
+
+## A talent mode's name (its spec's label: "Sulphur Vent"), else `mode` (SwayCaster.mode_label's fallback: no body asked, a
+## name is no number).
+static func talent_label(m: String, mode: String) -> String:
+	var tb: Variant = SwayMoves.move(m).get("talent_bend")
+	if tb is Dictionary and (tb as Dictionary).get(mode) is Dictionary:
+		return String(((tb as Dictionary)[mode] as Dictionary).get("label", mode))
+	return mode

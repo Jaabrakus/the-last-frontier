@@ -418,6 +418,10 @@ var _step_lock := false
 var _cm_used := 1.0
 ## The last lock's start (BendStatus.now()) and its source, for the tests.
 var lock_began_at := -INF
+## The Beat (the skill tree's timing rule; only for a wearer of a technique it pays, BendLoadout.beat_paid): this cast was let
+## go within beat_s of its lock filling (the release's info says beat: BendR3.info_for), and the last such cast's time (tests).
+var _beat_go := false
+var beat_at := -INF
 var _rooted_t := 0.0
 ## Another machine's fighter online (RingNet's puppet, docs/tidebreak/ring_netcode.md): it never locks or casts by itself;
 ## its owner's lock is played on it (net_lock: its state and signals, for its SwayPose) and his casts run through it
@@ -814,7 +818,7 @@ func key3_press() -> bool:
 ## Key 3's lock turned to the key's other move (a second tap within key3_min_s), the time kept; its pose shown
 ## switch_hold_s before it may go, and never before key3_min_s from the first press.
 func _dash_switch(key: Array) -> void:
-	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")))
+	var nxt := Bending.other_move(key, String(_dash.get("id", "")), String(_dash.get("mode", "")), player)
 	if nxt.is_empty():
 		return
 	var spent := fill * lock_s
@@ -1219,7 +1223,7 @@ static func world_modes_of(id: String) -> Array:
 
 ## This caster's modes of `id`: the ring's (modes_of) with an element, the open world's (world_modes_of) without.
 func my_modes(id: String) -> Array:
-	return modes_of(id) if elem() else world_modes_of(id)
+	return BendLoadout.modes_for(player, id, modes_of(id)) if elem() else world_modes_of(id)   # (a worn new skill's mode too)
 
 
 ## Spell `id`'s mode now ("" when it has none; its first by default). While the quick spell is held, locking or landing,
@@ -1291,7 +1295,7 @@ func step_mode(dir: int) -> String:
 
 
 static func mode_label(id: String, m: String) -> String:
-	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, m))
+	return String((SwayMoves.move(id).get("mode_labels", {}) as Dictionary).get(m, BendLoadout.talent_label(id, m)))
 
 
 ## Mode `m`'s name in the open world ("world_mode_labels" where it has its own: "boulder", "free"), else mode_label.
@@ -1609,7 +1613,11 @@ func _physics_process(dt: float) -> void:
 				elif _cast_wait():
 					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
+					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer of a technique that pays on
+					# this move and mode (Heave's Column, Quarry's Fissure: BendLoadout.beat_paid); never a click, never his other casts)
+					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player, move, mode_of(move))
 					_cast()
+					_beat_go = false
 			State.LOCKING:
 				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
 					_queued = true                # (a click: it goes the moment the lock is full)
@@ -2433,6 +2441,7 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	if mlk.has(mode_of(m)) and not holds_stone(m, t):
 		base = float(mlk[mode_of(m)])              # (a variation's own lock: the fireball's, lightning's)
 	if not holds_stone(m, t):
+		base = BendLoadout.talent_lock(player, m, mode_of(m), base)   # (a worn new skill's own lock: the Sulphur Vent's)
 		base = BendLoadout.lock(player, m, mode_of(m), base)      # (a worn loadout's own lock for this mode; Classic: base)
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
@@ -2458,6 +2467,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 func spec_of(m: String) -> Dictionary:
 	var b: Variant = SwayMoves.move(m).get("bend", {})
 	var s: Variant = (b as Dictionary).get(mode_of(m), {}) if b is Dictionary else {}
+	if not (s is Dictionary) or (s as Dictionary).is_empty():
+		s = BendLoadout.talent_spec(player, m, mode_of(m))   # (a worn new skill's own mode; Classic {})
 	return s if s is Dictionary else {}
 
 
@@ -2575,7 +2586,7 @@ func step_other() -> bool:
 	var k := Bending.key_of(el, move)
 	if k < 0:
 		return false
-	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move))
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, move, mode_of(move), player)
 	if nxt.is_empty():
 		return false
 	var keep := [readied_spell, String(modes.get(String(nxt.id), ""))]
@@ -2722,11 +2733,13 @@ func _moving_mult(m: String) -> float:
 
 ## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.
 func passive_fill() -> float:
+	# (Sulphur Heart: in his own gas his locks fill faster, the higher of it and Rooted, never times: BendGas.home_mult)
+	var home := BendZone.BendGas.home_mult(player) if elem() else 1.0
 	if not elem() or quick_element() != "earth" or not player.is_on_floor():
-		return 1.0
+		return home
 	var pv := Bending.passive("earth")
 	var fm := BendLoadout.tune_f(player, "rules:passives.earth.fill_mult", float(pv.get("fill_mult", 1.2)))
-	return fm if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0
+	return maxf(fm if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0, home)
 
 
 func _hold(dt: float, q: Dictionary) -> void:
@@ -3101,6 +3114,10 @@ func _cast() -> void:
 		if jbc != null:
 			jbc.jab_step_until = -INF             # (round 3: the step spent by this jab; its own hit owes the next one's)
 	var rel := {"air": airborne(), "at": BendStatus.now()} if r3_on else {}
+	if _beat_go and r3_on:
+		rel["beat"] = true                        # (let go on the Beat: its hits' info says so; a flash on his own hands)
+		beat_at = BendStatus.now()
+		BendLooks.beat_flash(self, Bending.element_of(m))
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

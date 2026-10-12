@@ -147,6 +147,9 @@ var element := "earth"
 ## Every option: {id, mode, key "id/mode", spec, do, hint, water, knock, old, grow (its spec grows), guard (its element's
 ## guard), jab}.
 var options: Array[Dictionary] = []
+## The worn new skills' [move, mode] its options were built with (BendLoadout.talent_pairs: a test's bot wearing one; [] Classic,
+## every bot of a normal match).
+var _talent_built: Array = []
 ## The lock: the move locking ("" none), its mode, whether it is held to grow, how full (0..1), its time and how long it has
 ## filled.
 var casting := ""
@@ -403,10 +406,12 @@ func _build_options() -> void:
 	options.clear()
 	var gd := guard_of(element)
 	var jb := jab_of(element)
-	for pr: Array in pairs_of(element):
+	for pr: Array in pairs_of(element) + _talent_built:
 		var id := String(pr[0])
 		var md := String(pr[1])
 		var spec := spec_of(id, md)
+		if spec.is_empty():
+			spec = BendLoadout.talent_spec(me, id, md)     # (a worn new skill's own mode: its talent_bend spec; Classic {})
 		var o := {"id": id, "mode": md, "key": id + "/" + md, "spec": spec, "old": spec.is_empty(),
 				"do": String(spec.get("do", "old")),
 				"knock": float(spec.get("knock_mps", 0.0)), "grow": spec.get("grow") is Dictionary \
@@ -445,6 +450,10 @@ static func hint_of(id: String, md: String, spec: Dictionary) -> Dictionary:
 	var mv: Dictionary = ((d.get("moves", {}) as Dictionary).get(id, {}) as Dictionary).get(md, {})
 	for k: String in mv:
 		h[k] = mv[k]
+	var ta: Variant = spec.get("ai")
+	if ta is Dictionary:
+		for k: String in (ta as Dictionary):
+			h[k] = ta[k]                           # (a worn new skill's own hint, in its talent_bend spec: the Sulphur Vent's)
 	if not h.has("role"):
 		h["role"] = "offence"
 	return h
@@ -477,6 +486,7 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 	else:
 		if mlk.has(md):
 			base = float(mlk[md])
+		base = BendLoadout.talent_lock(who, id, md, base)  # (a worn new skill's own lock: the Sulphur Vent's; else base)
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
 	var stretch := 1.0
 	if not self_cast(id, md):
@@ -627,7 +637,7 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		lock_t += dt
+		lock_t += dt * BendZone.BendGas.home_mult(me)    # (Sulphur Heart worn: faster in its own gas; else x1)
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -637,6 +647,8 @@ func tick(dt: float) -> void:
 		if t != null and is_instance_valid(t):
 			me.face_point(t.global_position)
 		if lock_t >= lock_s - 1e-5:
+			if _beat_late > 0.0 and lock_t < lock_s + _beat_late:
+				return                             # (a missed Beat: the full lock held past its window, then let go)
 			if stock():
 				# (round 3: never a hit into a safety; a lock held full for its moment, called off past hold_max_s)
 				var go := mind().allow_release(_option(casting + "/" + mode), dt)
@@ -701,7 +713,17 @@ func _forced() -> Dictionary:
 	return {}
 
 
+## Its options built again when what it wears adds or drops a new skill's mode (BendLoadout.talent_pairs: a test's bot; a bot
+## of a normal match wears nothing and never rebuilds).
+func _talent_options() -> void:
+	var tp := BendLoadout.talent_pairs(me, element)
+	if tp != _talent_built:
+		_talent_built = tp
+		_build_options()
+
+
 func _choose(t: Node3D, d: float) -> Dictionary:
+	_talent_options()
 	var f := _forced()
 	if not f.is_empty():
 		return f
@@ -827,6 +849,8 @@ func _when(c: String, t: Node3D, d: float) -> bool:
 			return edge_fn.is_valid() and _room(-_way(t)) < 4.0
 		"ice_near":
 			return _ice_near(8.0)
+		"foe_not_gassed":
+			return not BendZone.BendGas.in_gas_of(t, me)   # (no vent where its own gas already stands on him)
 	return false
 
 
@@ -1015,6 +1039,38 @@ func _stone_from_pop() -> void:
 	if held and not _held_seen:
 		_answer_catch()
 	_held_seen = held
+	if BendLoadout.wears(me, BendZone.JUGGLE):
+		# (Juggle worn: one of its two held stones thrown, the other thrown next, as E again)
+		var n := BendZone.held_stones(me).size()
+		if held and n < _juggle_n:
+			_answer_catch()
+		_juggle_n = n
+
+
+## Juggle's wearer: how many stones it held at the last tick (_stone_from_pop).
+var _juggle_n := 0
+## Its last cast let go on the Beat (a technique's wearer only: _release), for the tests.
+var beat_at := -INF
+## The Beat for a bot wearing a technique that pays on a cast (a test's bot: bots wear no loadout in a match): how often it hits
+## it, the skill tree's beat.bots (bend_ai.json presets.<difficulty>.beat_rate: easy 0, normal 0.2, hard 0.5), rolled once a
+## lock (_beat_roll); >= 0 here (a test's) over the preset's.
+var beat_rate := -1.0
+## This lock's missed Beat: it is held full this long past its lock filling before it goes (beat_s and a little: a late hand), 0
+## on the Beat or with no technique that pays on it.
+var _beat_late := 0.0
+## How far past the Beat window a missed Beat lets go (s).
+const BEAT_MISS_S := 0.08
+
+
+## Whether this lock (or this catch's E again) lands on the Beat: beat_rate rolled on its own dice (its seed and its casts so
+## far, as the grow's roll: every other choice the bot makes stays the same).
+func _beat_roll() -> bool:
+	var r := beat_rate if beat_rate >= 0.0 else float(preset().get("beat_rate", 0.0))
+	if r <= 0.0:
+		return false
+	if r >= 1.0:
+		return true
+	return float(absi(hash(Vector2i(me.rng_seed, casts + 13))) % 10000) / 10000.0 < r
 
 
 ## The stone it holds (caught: BendZone.held_stone, the player's own reckoning), null none.
@@ -1326,6 +1382,8 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
+	# (a Beat technique worn that pays on this cast: on a missed roll it lets go past the window; Classic never asks)
+	_beat_late = BendLoadout.beat_s() + BEAT_MISS_S if BendLoadout.beat_paid(me, id, md) and not _beat_roll() else 0.0
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
@@ -1412,7 +1470,18 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
+	# (the Beat, for a bot wearing a technique that pays on this cast (a test's; bots wear no loadout in a match): let go within
+	# beat_s of its lock filling (its beat_rate's roll: begin), its hits' info says so, as the player's: BendR3.info_for; a flash
+	# on its own hands)
+	var keep_rel := BendR3.release
+	var beat := BendLoadout.beat_paid(me, id, md) and took - lock_s <= BendLoadout.beat_s()
+	if beat:
+		BendR3.release = {"beat": true}
+		beat_at = _now()
+		BendLooks.beat_flash(me, element)
 	var ok := _cast(id, md, t)
+	if beat:
+		BendR3.release = keep_rel
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0
@@ -1604,6 +1673,18 @@ func _answer_catch() -> void:
 	_cool.erase(key)
 	_guard_until = minf(_guard_until, at)
 	_rest_until = minf(_rest_until, at)
+	var held := _held_stone()
+	if BendLoadout.wears(me, BendZone.RETURN_TO_SENDER) and held != null and bool(held.get_meta(&"bend_clean", false)):
+		if not _beat_roll():
+			# (Return to Sender worn, its Beat missed (beat_rate): E again past the window, a plain return)
+			_next[key] = maxf(at, _now() + BendLoadout.beat_s() + BEAT_MISS_S)
+			return
+		# (Return to Sender worn (a test's bot), its Beat rolled: a clean catch's E again pressed on the Beat, not at the next think)
+		var d := clampf(float(preset().get("reaction_s", 0.4)) * 0.25, 0.05, BendLoadout.beat_s() * 0.6)
+		me.get_tree().create_timer(d, false).timeout.connect(func() -> void:
+			if is_instance_valid(me) and not me.is_dead() and casting == "" and _held_stone() == held and is_instance_valid(held):
+				_next.erase(key)
+				begin(String(g[0]), String(g[1])))
 
 
 ## A guard of its own told its result (BendCaster.guarded, from BendZone: the same as the player's): perfect (on the beat:
@@ -1859,6 +1940,10 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 	var tp := t.global_position
 	me.crouch(false)
 	var straight := me.on_deck or edge_fn.is_valid()
+	var out := BendZone.BendGas.way_out(me)
+	if out != Vector3.INF:
+		me.go(_clamp(out), NpcFighter.RUN_SPEED, 0.3, straight)   # (in a foe's gas: out of it, as out of smoke; BendGas)
+		return
 	var keep: Variant = ((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("keep_m", [8.0, 15.0])
 	var band := Vector2(float(keep[0]), float(keep[1])) if keep is Array else Vector2(8.0, 15.0)
 	if stock():

@@ -68,6 +68,8 @@ var mended_line := "The earth packed again"
 var _t := 0.0
 var _shape: CollisionShape3D
 var _crumble_why := ""
+## Where its last counted hit struck (Brimstone Wall's cloud rises on that side).
+var _last_hit_at := Vector3.INF
 ## Raised over water entirely (dry_span: none of it dry): never seen, gone the next step.
 var drowned := false
 ## The width it was asked for before the water cut it (m).
@@ -285,10 +287,10 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null
 		return
 	if not NetSpells.decide(self, "wall_hit", [damage, point, dir]):
 		return
-	if has_meta(&"bend_brace"):
-		remove_meta(&"bend_brace")            # (mended or braced: this hit is taken free; round 2's Mend)
-		return
+	if take_brace(self):
+		return                                # (mended or braced: this hit is taken free; round 2's Mend)
 	hits += 1
+	_last_hit_at = point
 	if is_inside_tree():
 		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
 		if not SbFx.fire(null, String(get_meta(&"sbfx_key", "")), "hit", {"at": point, "normal": nrm, "dir": nrm, "node": self}):
@@ -311,6 +313,19 @@ func _chips(scn: Node, point: Vector3, normal: Vector3, n: int) -> void:
 			GatherFx.soil(scn, point, normal, n)
 		_:
 			GatherFx.stone_chips(scn, point, normal, n)
+
+
+## A brace on `w` (meta bend_brace: true takes one hit free, as Mend and the Catch's brace give; an int n takes n: Reinforce's
+## two, FormEffects.mend) spent on one hit: true when it took it.
+static func take_brace(w: Node) -> bool:
+	if w == null or not w.has_meta(&"bend_brace"):
+		return false
+	var v: Variant = w.get_meta(&"bend_brace")
+	if v is int and int(v) > 1:
+		w.set_meta(&"bend_brace", int(v) - 1)
+	else:
+		w.remove_meta(&"bend_brace")
+	return true
 
 
 ## Worn by shot (mend can pack it again).
@@ -365,7 +380,47 @@ func crumble(why: String) -> void:
 		if why == "shot" and kind == "wall" and matter != "wood" and not sbr:
 			BendLooks.shatter(at, size, global_basis.z.normalized(), "ice" if matter == "snow" else "earth")
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
+		if why in ["shot", "capped"] and kind == "wall":
+			_rubble_stones()
+		if why == "shot" and kind == "wall":
+			_brimstone()
 	crumbled.emit(self, why)
+
+
+## Brimstone Wall (the Sulphur set, BendZone.BendGas.WALL): its wearer's wall shot down (never his third's cap) vents a gas cloud
+## 1 m out from its face on the side the last shot came from.
+func _brimstone() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not (by is Node3D) or not BendLoadout.wears(by, BendZone.BendGas.WALL):
+		return
+	var face := global_basis.z.normalized()
+	var side := signf((_last_hit_at - global_position).dot(face)) if _last_hit_at.is_finite() else 1.0
+	if side == 0.0:
+		side = 1.0
+	BendZone.BendGas.make(by as Node3D, global_position + face * side * (size.z * 0.5 + 1.0), "cloud")
+
+
+## Earth's Rubble Wall (data/sway/skill_tree.json earth.wall.rubble; the owner, 2026-10-11: "make sure all the talents work"):
+## a wall raised by its wearer (meta bend_by) that crumbles shot down or broken by his third (the cap: "capped") leaves RUBBLE_N
+## loose stones at its foot, rising out of the ground as it sinks: his (FormStone.make_loose: still loose_max at most). A
+## Fissure that runs under them throws them on, whoever's they are (BendBolt._heave_loose). Its rise is the node's (0.8 s).
+const RUBBLE := "earth.wall.rubble"
+const RUBBLE_N := 2
+const RUBBLE_R := 0.2
+
+
+func _rubble_stones() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, RUBBLE) or not NetSpells.decides():
+		return
+	var scn := get_tree().current_scene
+	for i in RUBBLE_N:
+		var across := (float(i) - float(RUBBLE_N - 1) * 0.5) * size.x * 0.5
+		var foot := FormEffects.ground_at(self, base * Vector3(across, 0.4, 0.0))
+		var s := FormStone.ball(scn, foot, {"radius_m": RUBBLE_R, "mass_kg": 20.0, "rise_s": 0.6, "life_s": 30.0, "sink_s": 1.0},
+				absi(hash(Vector3i(foot * 10.0))) % 97, matter if matter in ["earth", "stone", "mud", "snow"] else "stone")
+		s.set_meta(&"bend_weight", "medium")
+		FormStone.make_loose(s, by)
 
 
 ## Wall `r` (raised by the caster in its meta bend_by) counted against the ring's cap: past max_walls of that caster's

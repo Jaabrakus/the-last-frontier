@@ -461,6 +461,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 				bz.end()
 		if bool(spec.get("melt", false)):
 			melt(p, p.global_position + flat * r * 0.5, r * 0.7)
+	if BendZone.BendGas.live_n > 0:
+		BendZone.BendGas.cone(p, flat, r, deg, kind, ring)   # (Sulphur's gas it reaches: fire lights, water washes, wind carries)
 	if float(spec.get("smoke_s", 0.0)) > 0.0 and not ring:
 		# (Breath: the smoke where it burned, a screen a bot cannot see through)
 		var at := FormEffects.ground_at(p, p.global_position + flat * r * 0.6)
@@ -613,6 +615,13 @@ static func zone(c: Variant, a: Dictionary, spec: Dictionary) -> BendZone:
 			at = FormEffects.place_point(c, spec.get("place", {}))
 			way = FormEffects.way_to(c, at)
 	var zk := String(spec.get("zone", "bubble"))
+	if zk == "gas":
+		# (Sulphur's gas from a cast, a worn new skill's (the Sulphur Vent): BendGas makes it, one vent of his at a time, his
+		# other clouds kept)
+		var gz: BendZone = BendZone.BendGas.vent(p, at, spec)
+		_cur["zone"] = gz
+		_cur["zone_kind"] = zk
+		return gz
 	if bool(spec.get("one_at_a_time", false)) or (zk in ["fire_wall", "wind_wall"] and BendStatus.element_mode(p)):
 		for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 			var old := z as BendZone
@@ -751,6 +760,8 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	if not SbFx.fire(p, lk, "strike", {"at": from, "to": end, "dir": dir}):
 		BendLooks.lightning(from, end)
 	BendLooks.sound("lightning", "cast", from)
+	if BendZone.BendGas.live_n > 0:
+		BendZone.BendGas.live(p, from, end, spec.get("_info", {}))   # (Live Gas: the strike charges the gas it crosses)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
 	rec["hit"] = 0
 	rec["struck_at"] = BendStatus.now()
@@ -864,6 +875,9 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
 			"damage": float(spec.get("damage", 10.0)), "kind": "stone", "_lock_s": float(spec.get("_lock_s", -1.0)),
 			"_info": spec.get("_info", {}), "lift_m": float(wn.get("height_m", 3.0)) if r != null else 0.0}
+	if BendLoadout.wears(p, BendZone.BendGas.COLUMN):
+		# (Fuming Column: a gas plume where the pillar rose, its rise and tell the Column's: BendGas)
+		BendZone.BendGas.make(p, at, "plume", BendZone.BendGas.PLUME_R, BendZone.BendGas.PLUME_S)
 	if rise <= 0.0:
 		status_at(p, at, sa)
 		return r

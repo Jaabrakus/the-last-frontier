@@ -2,6 +2,7 @@
   "format": "tidebreak-loadout-apply",
   "version": 1,
   "_doc": [
+    "Earth's talents, pass 1 (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): earth.wall.thick (Thick Wall) is switched ON: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down (5 hits from 4, 2.5 m wide from 3), worn and not worn. The behaviour talents built for earth are in `behaviour` (each id: where its code is), at the end of `live`, and on in `nodes`; the same test plays each worn and not worn.",
     "The tuning talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): Clean Return, Open Hands, Steady Point, Swift Lance, Heavy Boulder, Deep Roots, Swift Roots, Patient Turn, Lazy River, Rapids, Reaching Parry, Long Carry, Gale Force change a guard rule, a passive, a % ring rule or Stone Form's own number for the wearer (BendLoadout's tune part: each read where the game reads it for him). Live unsoaked; tests/ring/test_talents_tune.gd plays each worn and not worn in a ring.",
     "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
@@ -15,7 +16,9 @@
     "fire.lightning.pistol (Lightning Pistol, 2026-10-11, the owner: \"we want both moves the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons\"): fire's Storm twist. Worn, Lightning is cast from the game's standing pistol aim (its change pose:fire_arc/lightning, BendLoadout's pose overlay) and charges in 1.5 s (from 2.2), its flash 0.4 s before the strike (from 0.25); not worn, the original two-handed Lightning plays as before. Live on the owner's word for him to try; its numbers are starting values and have not been through the soak yet.",
     "The class numbers (2026-10-11, the owner on the tree: \"fix it\"): a node's change class:<tag>+<variant>.<key> sets one number (d, base, growth, angle, set_stun; volley_n only beside the node's own spec count) of the % ring class of the wearer's own hits with that tag (BendLoadout's class part, RingRules.on_hit through BendLoadout.hit_class); the hit keeps its tag, so staling and the range exemption still see the move. That made nine more nodes whole, live on the owner's word and NOT yet through the soak (their numbers are the tree's starting values): earth.fissure.deep (Deep Fissure), water.spear.cold_hands (Cold Hands), water.spear.heavy (Heavy Spear), water.downpour.pooling (Pooling Downpour), fire.punch.snap (Snap Punch), fire.lightning.short_fuse (Short Fuse), fire.embers.tight (Tight Embers), air.palm.shoving (Shoving Palm), air.gust.rising (Rising Gust). water.mud.lash is not live: it requires the Mud set (new mud pools, not numbers) and its smother is not in its changes; a node whose required node is not live is refused (BendLoadout.why_not).",
     "The binds (2026-10-11, the owner: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: the feet only, as a skill tree twist, fire's a lightning shock): Stone Grip (earth.column.grip), Frost Geyser (water.geyser.frost), Static Shock (fire.lightning.shock) and Tripwind (air.pull.trip). Each sets its move's new spec key bind_s (from none: BendLoadout.NEW_SPEC_KEYS) to 0.7: its hit holds the feet (BendStatus.bind: no run, jump, roll, dodge or dash; aim, casts and the guard free; weaker each time on the same body, rules.json stock.bind) in place of its launch, and lowers its %. Live on the owner's word, not yet soaked.",
-    "Wind Prison (air.wall.prison) and Drenching Wave (water.wave.drench), 2026-10-11 (the owner: \"air should have air prisons where they can catch someone mid flight and water should be able slowdown\"; both as twists): spec keys Classic lacks, prison_s 1.0 (BendZone: the Wind Wall holds whoever it touches in the air, helpless, and turns no shot aside; its wall 4.5 m tall from 2.5, so it reaches a knock-up's float) and drench_s 1.5 (the Wave's hit soaks him: 30% slower, BendStatus.drench). Live on the owner's word, not soaked."
+    "Wind Prison (air.wall.prison) and Drenching Wave (water.wave.drench), 2026-10-11 (the owner: \"air should have air prisons where they can catch someone mid flight and water should be able slowdown\"; both as twists): spec keys Classic lacks, prison_s 1.0 (BendZone: the Wind Wall holds whoever it touches in the air, helpless, and turns no shot aside; its wall 4.5 m tall from 2.5, so it reaches a knock-up's float) and drench_s 1.5 (the Wave's hit soaks him: 30% slower, BendStatus.drench). Live on the owner's word, not soaked.",
+    "earth.catch.juggle (Juggle) is switched OFF (2026-10-12, earth fix): as its text reads it is a downgrade. Its plus, \"Your Catch can hold two stones from one window. E throws the first, E again the second\", is what the Classic Catch already does (it holds every stone of its window and E throws one each), so worn it only adds limits: a third stone is dropped at his feet as its thrower's loose stone, and his full catches end at 0.8 s (from 1.0). Its code is built and tested (tests/ring/test_talents_earth.gd turns it on with config_override) and waits for the owner's call on what its plus should be; until then a loadout that picks it applies nothing of it.",
+    "beat_on (2026-10-12, earth fix): the held casts (\"move/mode\") a Beat technique pays on (BendLoadout._beat_on, beat_paid(body, move, mode)). A built behaviour node whose new change says Beat pays on its own move and mode (the tree's \"A <move> let go on the Beat\": Heave's Column) unless this map names others: Quarry's is the Fissure it lets go into its wall; Return to Sender's is none (its Beat is the Catch's E again, BendZone.beat_return). Every other cast of the wearer gets no Beat: no flash, no click, no info.beat."
   ],
   "enabled": true,
   "classic_style": false,
@@ -26,7 +29,7 @@
     "earth.burrow.lie_low": true,
     "water.skate.wet_trail": false,
     "fire.step.quick": true,
-    "earth.wall.thick": false,
+    "earth.wall.thick": true,
     "water.wall.thick_ice": false,
     "fire.lightning.pistol": true,
     "earth.fissure.deep": true,
@@ -56,9 +59,48 @@
     "water.passive.rapids": true,
     "fire.parry.reaching": true,
     "air.passive.long_carry": true,
-    "air.passive.gale_force": true
+    "air.passive.gale_force": true,
+    "earth.catch.juggle": false,
+    "earth.catch.return_to_sender": true,
+    "earth.pebbles.kick_up": true,
+    "earth.boulder.avalanche": true,
+    "earth.column.heave": true,
+    "earth.stone.kiln_stone": true,
+    "earth.wall.rubble": true,
+    "earth.wall.quarry": true,
+    "earth.mend.reinforce": true,
+    "earth.set.sulphur": true,
+    "earth.sulphur.spike": true,
+    "earth.sulphur.boulder": true,
+    "earth.sulphur.fuming_column": true,
+    "earth.sulphur.brimstone_wall": true,
+    "earth.sulphur.flint_pebbles": true,
+    "earth.sulphur.heart": true,
+    "earth.sulphur.vent": true
   },
-  "behaviour": {},
+  "beat_on": {
+    "earth.wall.quarry": ["earth_shove/push"],
+    "earth.catch.return_to_sender": []
+  },
+  "behaviour": {
+    "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s per wearer (the Catch's full catches: the game's own) and stock:guard_catch_s (RingRules.guard_outcome, the spec's reference, which no game code calls); switched off in nodes, waiting for the owner's call (see _doc)",
+    "earth.catch.return_to_sender": "BendZone.return_stone (a clean catch thrown back on the Beat x1.15: beat_return, lock_began); the Beat in SwayCaster (_beat_go) and NpcBending (_release, _answer_catch on the Beat); return_lock_s per wearer (guard_lock_s)",
+    "earth.pebbles.kick_up": "BendBolt._finish / _kick_up_end (a volley that met nobody leaves one loose stone where its last pebble lands; the Fissure's _heave_loose throws it on); spread per wearer (spec)",
+    "earth.boulder.avalanche": "GustLift._land / _avalanche (where the wearer's Boulder lands on the deck: three low rolling stone bolts fanned 15 deg, one volley of 3); FormEffects._one_boulder (the Boulder's own hit whole); BendZone catch (one of a volley held, the rest dropped at the catcher's feet); class base and volley_n per wearer",
+    "earth.column.heave": "the Beat (SwayCaster _beat_go, NpcBending._release: the hit's info beat) and BendLoadout.hit_class's class_beat (the node's class change, when beat: base 11.3 only on a Beat Column); Column lock 1.7 per wearer",
+    "earth.stone.kiln_stone": "BendZone.on_bolt (a stone bolt through a fire_wall or burn: BendBolt.heat) and GustLift._kiln_check (a hurled stone); BendLoadout.hit_class (info.heated: base x1.15); BendZone parry (perfect sends it back: _straight_back, _lift_back) and Turn (douse)",
+    "earth.wall.rubble": "FormRaised.crumble / _rubble_stones (shot down or capped: two loose stones of the raiser's at its foot); rise_s per wearer (wall_numbers)",
+    "earth.wall.quarry": "BendBolt._hit / _quarry (a Beat Fissure into his own wall: FormEffects.gust_chunk thrown on along the crack, the first chunk each wall free); the Beat (info.beat); rise_s per wearer (wall_numbers)",
+    "earth.mend.reinforce": "FormEffects.mend (a mended piece's brace 2: REINFORCE_N) and FormRaised.take_brace (BendBolt.wear, apply_hit: a counted brace); Mend's lock 2.6 per wearer (move:mend.lock_s, its one mode)",
+    "earth.set.sulphur": "scripts/bending/bend_gas.gd (BendZone gas: ticks, look, reactions; the Boulder's end GustLift._gas_end, stone clashes BendBolt.meet/meet_lift, GustLift._meet_lifts; bots step out NpcBending._move; pass 2: cones BendEffects.cone -> BendGas.cone, fire and wind walls BendZone._every -> BendGas.every, Live Gas BendEffects._strike -> BendGas.live, IGNITED! a RingHighlights moment); Pebbles class d per wearer",
+    "earth.sulphur.spike": "BendGas.stone_end (a puff where his Spike stops: GustLift._shatter/_land); class d per wearer",
+    "earth.sulphur.boulder": "BendGas.stone_end (three puffs along the Boulder's flight); class d per wearer",
+    "earth.sulphur.fuming_column": "BendEffects.column (a plume where the pillar rose: BendGas.make); class base per wearer",
+    "earth.sulphur.brimstone_wall": "FormRaised.crumble / _brimstone (shot down: a cloud 1 m out on the shooter's side); wall hits per wearer (wall_numbers)",
+    "earth.sulphur.flint_pebbles": "BendGas.react (his Pebbles light his own gas: ignite, his); set:sulphur.cloud_life_s per wearer (BendGas.num)",
+    "earth.sulphur.heart": "BendGas.home_mult (SwayCaster.passive_fill, NpcBending lock fill: x1.15 in his own gas, the higher with Rooted); set:sulphur.cloud_radius_m per wearer (BendGas.num)",
+    "earth.sulphur.vent": "a new skill, 4 tapped twice: earth_wall's talent mode vent (moves.json earth_wall.talent_bend.vent) through BendLoadout's new skills (modes_for: SwayCaster.my_modes, Bending.other_move, the hotbar's double tap; talent_spec: FormEffects.apply, BendCast.cast; talent_lock: SwayCaster._lock_time, NpcBending.lock_for; pose_mode: BendPoses.pick; talent_label); BendEffects.zone hands a gas zone to BendGas.vent (one at a time); a bot's option (NpcBending._build_options: talent_pairs, its spec's ai hint); rise_s per wearer (wall_numbers)"
+  },
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -82,6 +124,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce", "earth.set.sulphur", "earth.sulphur.spike", "earth.sulphur.boulder", "earth.sulphur.fuming_column", "earth.sulphur.brimstone_wall", "earth.sulphur.flint_pebbles", "earth.sulphur.heart", "earth.sulphur.vent"],
   "styles_live": ["boxing"]
 }

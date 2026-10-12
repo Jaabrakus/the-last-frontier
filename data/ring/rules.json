@@ -119,6 +119,8 @@
 			"air_gust/pull": {"d": 7.0, "base": 6.0, "growth": 0.0, "angle": 15, "set": true, "set_stun": 0.4, "dir": "to_caster", "pull": true},
 			"fire_wall/wall": {"d": 6.0, "base": 5.0, "growth": 0.0, "angle": 50, "set": true, "once_s": 1.0},
 			"fire_wall/tick": {"d": 2.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true},
+			"matter/gas": {"d": 1.0, "base": 0.0, "growth": 0.0, "angle": 0, "set": true, "no_flinch": true},
+			"reaction/ignited_gas": {"d": 6.0, "base": 6.0, "growth": 0.0, "angle": 45, "set": true},
 			"air_wall/wall": {"d": 0.0, "base": 4.0, "growth": 0.0, "angle": 10, "set": true},
 			"rise/pillar": {"d": 8.0, "base": 9.0, "growth": 0.0, "angle": 80, "set": true, "dir": "up"},
 			"rise/fountain": {"d": 3.0, "base": 6.0, "growth": 0.0, "angle": 20, "set": true},

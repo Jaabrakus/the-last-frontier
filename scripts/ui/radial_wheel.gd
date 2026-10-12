@@ -164,11 +164,12 @@ func blocks_fire() -> bool:
 
 # --- open, pick, ready ------------------------------------------------------------------------------------------
 
-## The element's key moves: each key's first move and its second (a tap twice), key by key (Patch and Mend on 5 last).
-static func items_for(el: String) -> Array:
+## The element's key moves: each key's first move and its second (a tap twice), key by key (Patch and Mend on 5 last). `body`
+## (the player's): a worn talent's mode on an empty double tap too (KitWords.key_moves); null, the static kit.
+static func items_for(el: String, body: Node = null) -> Array:
 	var out: Array = []
 	for i in Bending.keys(el).size():
-		for m: Dictionary in KitWords.key_moves(el, i):
+		for m: Dictionary in KitWords.key_moves(el, i, body):
 			out.append({"id": String(m.id), "mode": String(m.mode), "label": KitWords.move_name(String(m.id), String(m.mode)),
 					"key": i + 1, "role": KitWords.role(el, i)})
 	return out
@@ -178,7 +179,7 @@ func open() -> void:
 	var p := _player()
 	if p == null:
 		return
-	items = items_for(caster.quick_element())
+	items = items_for(caster.quick_element(), p)
 	if items.is_empty():
 		return
 	is_open = true

@@ -833,10 +833,11 @@ static func hitstun_of(v: float) -> float:
 ## element `guard_el` taking move `tag` `since_s` after it stood: "catch" (earth against a stone, within guard_catch_s: a full
 ## catch, 0%), "perfect" (within guard_perfect_s: 0%, no launch; Lightning only by fire), else "late" (half the % and half the
 ## launch, a slide on the feet).
-static func guard_outcome(guard_el: String, tag: String, since_s: float) -> String:
+static func guard_outcome(guard_el: String, tag: String, since_s: float, guard_by: Node = null) -> String:
 	var stone := tag.begins_with("stone_form/") or tag.begins_with("rock_jab/") or tag.ends_with(".return")
 	if guard_el == "earth" and stone:
-		return "catch" if since_s <= stock_num("guard_catch_s", 1.0) + 1e-4 else "late"
+		# (`guard_by` the guard's owner: his own full-catch time, a skill tree node's: Juggle; Classic: the stock's)
+		return "catch" if since_s <= BendLoadout.tune_f(guard_by, "stock:guard_catch_s", stock_num("guard_catch_s", 1.0)) + 1e-4 else "late"
 	if since_s > stock_num("guard_perfect_s", 0.3) + 1e-4:
 		return "late"
 	if tag == "fire_arc/lightning" and guard_el != "fire":
@@ -1186,9 +1187,12 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var cls: Dictionary
 	if returned:
 		cls = return_class(String(info.get("origin_tag", "")), float(info.get("ret_mult", 0.0)))
+		# (the returner's worn numbers: only a Kiln Stone's heat reaches a return, a stone of his thrown back through fire,
+		# info.heated; its ".return" tag is no class a node changes. Classic: as is)
+		cls = BendLoadout.hit_class(by, cls, info)
 	elif tag != "":
 		cls = class_of(tag)
-		cls = BendLoadout.hit_class(by, cls)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
+		cls = BendLoadout.hit_class(by, cls, info)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
 	var untagged := cls.is_empty()
 	if untagged:
 		cls = _untagged_class(info)

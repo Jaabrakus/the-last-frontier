@@ -84,7 +84,7 @@ func held_move() -> Vector2:
 
 
 func mode_of(id: String) -> String:
-	var ms := SwayCaster.modes_of(id)
+	var ms := BendLoadout.modes_for(body, id)      # (a worn new skill's own mode too: a bot's, a test's)
 	var m := String(modes.get(id, ""))
 	if m in ms:
 		return m

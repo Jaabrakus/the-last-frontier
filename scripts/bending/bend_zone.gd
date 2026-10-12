@@ -64,6 +64,8 @@ extends Node3D
 ## machine (NetSpells.here). An end that is not its own (its life, its owner gone) is the host's word on the others.
 
 const GROUP := &"bend_zones"
+## Earth's Sulphur set: its gas (kind "gas": the ticks, the look, the reactions), loaded by its path.
+const BendGas := preload("res://scripts/bending/bend_gas.gd")
 const LIGHT := ["fire", "water", "ice", "air"]
 const GUARDS := ["catch", "deflect", "cushion", "redirect", "return", "parry", "spin", "absorb", "wind_guard"]
 ## The earth guards: they take stones.
@@ -154,6 +156,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
+	if p_kind == "gas":
+		BendGas.live_n += 1                      # (Sulphur's gas, counted where it is made: the host's BendGas.make, a joiner's net word)
 	if p_kind == "puddle":
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)
@@ -250,6 +254,10 @@ func _look() -> void:
 			fr.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
+		"gas":
+			var gl := BendGas.look(self)             # (Sulphur's gas: a yellow-green haze over its round)
+			if gl != null:
+				_fx.append(gl)
 		"smoke", "dust", "spray":
 			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
 					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
@@ -494,7 +502,7 @@ func _wind_push() -> void:
 ## Who it holds now: everyone within it (round) or in its box.
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
-	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "gas"] \
 			or kind in GUARDS:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
@@ -522,7 +530,11 @@ func _every(dt: float) -> void:
 			"tornado":
 				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
+			"gas":
+				BendGas.tick(self, n)                # (Sulphur's gas: % ticks only, BendGas)
 	_inside_was = now_in
+	if kind == "gas":
+		BendGas.every(self)                      # (Sulphur's gas: a fire wall on it lights it, a wind wall carries it)
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -536,6 +548,12 @@ func _every(dt: float) -> void:
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
 ## passes as its owner's own does: a guard never sends a teammate's bolt back or eats it.
 func on_bolt(b: BendBolt) -> bool:
+	if kind in KILN_FIRES and b.kind == "stone" and not b.heated and not b.spent and inside(b.global_position) \
+			and BendLoadout.wears(b._by(), KILN_STONE):
+		b.heat()                                 # (Kiln Stone: a stone of the wearer's through any fire comes out heated)
+	if kind == "gas":
+		# (Sulphur's gas: fire lights it, water washes it, wind carries it, his own Pebbles with Flint light it: BendGas)
+		return not b.spent and inside(b.global_position) and BendGas.react(self, b)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -699,10 +717,22 @@ func _guard_bolt(b: BendBolt) -> bool:
 				took += 1
 				_result("late", what)
 				return true
+			if bool(b.info.get("avalanche", false)):
+				# (an Avalanche's rolling stones, GustLift.AVALANCHE: a Catch holds one of its three, the rest drop at the catcher's
+				# feet, the thrower's loose stones)
+				var vid := int(b.info.get("volley_id", 0))
+				if _avalanche_took.has(vid):
+					_avalanche_drop(b)
+					took += 1
+					_result("perfect" if perfect else "late", what, shooter)
+					return true
+				_avalanche_took[vid] = true
 			_take_bolt(b, perfect)
 			_result("perfect" if perfect else "late", what, shooter)
 			return true
 		"redirect":
+			if what == "stone" and b.heated:
+				b.douse()                           # (Kiln Stone: a Turn douses a heated stone to a plain one, then takes it as stone)
 			# (the Air Lance, the only air spear: the Turn takes it as water and ice, and it leaves as ice)
 			var lance := what == "air" and b.shape == "spear"
 			if what in ["water", "ice"] or lance:
@@ -722,7 +752,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 			else:
 				return _shield_bolt(b, perfect, what)
 		"parry":
-			if what == "fire":
+			if what == "fire" or (what == "stone" and b.heated):
+				# (a heated stone burns: a Parry takes it as fire, Kiln Stone)
 				if perfect:
 					_straight_back(b)
 				else:
@@ -819,6 +850,27 @@ func _straight_back(b: BendBolt) -> void:
 	BendLooks.burst(b.global_position, b.kind, 12)
 
 
+## The Avalanche volleys this Catch held a stone of (volley id -> true).
+var _avalanche_took := {}
+
+
+## An Avalanche stone past the one this Catch holds: stopped and dropped at the catcher's feet, a loose stone of its thrower's.
+func _avalanche_drop(b: BendBolt) -> void:
+	var by: Node = b._by()
+	var side := Vector3.UP.cross(b.velocity).normalized() if Vector3.UP.cross(b.velocity).length_squared() > 1e-6 else Vector3.RIGHT
+	var off := side * (0.6 if stones.size() % 2 == 0 else -0.6)
+	b.end("dropped")
+	var foot := FormEffects.ground_at(owner_node, owner_node.global_position + off)
+	var s := FormStone.ball(get_tree().current_scene, foot, {"radius_m": clampf(b.radius, 0.12, 0.45), "mass_kg": 20.0, "rise_s": 0.01,
+			"life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(foot * 10.0))) % 97, "stone")
+	s.state = FormStone.State.RESTING
+	s.freeze = false
+	s.set_meta(&"bend_weight", b.weight)
+	stones.append(s)
+	FormStone.make_loose(s, by)
+	BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 10)
+
+
 ## A stone bolt cushioned on the beat (the Wind Guard): it stops and drops at the guard's feet, a loose stone of whoever
 ## threw it (FormStone.make_loose).
 func _cushion(b: BendBolt) -> void:
@@ -903,15 +955,44 @@ static func guard_lock_s(body: Node, base: float) -> float:
 	return base
 
 
-## The stone `body` caught and holds (a catch's: meta bend_held_by; not one flying or lifted), null none.
+## The stone `body` caught and holds (a catch's: meta bend_held_by; not one flying or lifted), null none. Juggle's wearer (a
+## skill tree twist: two held from one window) gets the one he caught first: E throws the oldest, E again the other.
 static func held_stone(body: Node) -> Node3D:
 	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
 		return null
 	var id := body.get_instance_id()
+	var juggle := BendLoadout.wears(body, JUGGLE)
+	var best: Node3D = null
 	for s in body.get_tree().get_nodes_in_group(FormStone.GROUP):
 		if int((s as Node).get_meta(&"bend_held_by", -1)) == id and not GustLift.busy(s) and not (s as Node).is_queued_for_deletion():
-			return s as Node3D
-	return null
+			if not juggle:
+				return s as Node3D
+			if best == null or float((s as Node).get_meta(&"bend_caught_at", 0.0)) < float(best.get_meta(&"bend_caught_at", 0.0)):
+				best = s as Node3D
+	return best
+
+
+## Earth's Juggle (data/sway/skill_tree.json earth.catch.juggle; the owner, 2026-10-11: "make sure all the talents work"): its
+## wearer's Catch holds up to JUGGLE_MAX stones from one window, side by side before him (the second JUGGLE_SIDE_M beside the
+## first); E throws the one caught first (held_stone), E again the other; one more reaching it then is stopped and dropped at
+## his feet, a loose stone of its thrower's. Its full-catch time is the node's own (spec window_s, stock guard_catch_s).
+const JUGGLE := "earth.catch.juggle"
+const JUGGLE_MAX := 2
+const JUGGLE_SIDE_M := 0.6
+
+
+## Every stone `body` holds from a catch (oldest first).
+static func held_stones(body: Node) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return out
+	var id := body.get_instance_id()
+	for s in body.get_tree().get_nodes_in_group(FormStone.GROUP):
+		if int((s as Node).get_meta(&"bend_held_by", -1)) == id and not GustLift.busy(s) and not (s as Node).is_queued_for_deletion():
+			out.append(s as Node3D)
+	out.sort_custom(func(a: Node3D, b: Node3D) -> bool:
+		return float(a.get_meta(&"bend_caught_at", 0.0)) < float(b.get_meta(&"bend_caught_at", 0.0)))
+	return out
 
 
 ## A caught stone `s` held by caster `c` thrown back along its aim (E again, or Shove: spec §2.6): its own weight, speed,
@@ -934,6 +1015,10 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	var fm: Array = floor_d.get("mps", [24.0, 24.0])
 	var fd: Array = floor_d.get("damage", [60.0, 60.0])
 	var mps := maxf(float(own.get("mps", 0.0)) * mult, float(fm[fm.size() - 1]))
+	var on_beat := bool(fs.get_meta(&"bend_clean", false)) and BendLoadout.wears(bc.body, RETURN_TO_SENDER) and beat_return(bc.body, fs)
+	if on_beat:
+		mps *= RTS_MULT                          # (Return to Sender: a clean catch thrown back on the Beat flies faster)
+		BendLooks.beat_flash(_hands_of(bc.body), "earth")
 	var dmg := maxf(float(own.get("damage", 0.0)) * mult, float(fd[fd.size() - 1]))
 	var knock := maxf(float(own.get("knock_mps", 0.0)) * mult, float(floor_d.get("knock_mps", GustLift.KNOCK_MPS)))
 	var hd := floor_d.duplicate()
@@ -949,7 +1034,7 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 			Bending.rule("rally_step", 0.1)))
 	fs.set_meta(&"bend_rally", rally)
 	fs.set_meta(&"bend_returns", int(fs.get_meta(&"bend_returns", 0)) + 1)
-	fs.set_meta(&"bend_return", {"mps": mps, "damage": dmg, "knock_mps": knock, "mult": mult, "clean": clean})
+	fs.set_meta(&"bend_return", {"mps": mps, "damage": dmg, "knock_mps": knock, "mult": mult, "clean": clean, "beat": on_beat})
 	for k: StringName in [&"bend_held_by", &"bend_clean", FormStone.LOOSE_META]:
 		if fs.has_meta(k):
 			fs.remove_meta(k)
@@ -976,6 +1061,38 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	BendLooks.burst(fs.global_position, "stone", 12)
 	BendSounds.play(&"earth_cast_crack", fs.global_position, 1.0 if clean else -1.0)
 	return th
+
+
+## Earth's Return to Sender (data/sway/skill_tree.json earth.catch.return_to_sender; the owner, 2026-10-11: "make sure all the
+## talents work"): a cleanly caught stone its wearer throws back on the Beat (the E that throws it pressed within
+## BendLoadout.beat_s of the clean catch: beat_return) flies RTS_MULT faster, a flash on his own hands. Its late return's lock is
+## the node's own number (rules:guard_rules.return_lock_s, guard_lock_s).
+const RETURN_TO_SENDER := "earth.catch.return_to_sender"
+const RTS_MULT := 1.15
+
+
+## Whether the lock that throws held stone `s` back began within the Beat of its catch (its press at or after the catch, at
+## most BendLoadout.beat_s after it): the player's E (SwayCaster.lock_began_at), a bot's (NpcBending's lock start).
+static func beat_return(body: Node, s: Node) -> bool:
+	var caught := float(s.get_meta(&"bend_caught_at", -INF))
+	var pressed := lock_began(body)
+	return pressed >= caught - 0.02 and pressed - caught <= BendLoadout.beat_s() + 1e-3
+
+
+## When `body`'s lock now began (BendStatus.now() when it has none: a cast with no lock).
+static func lock_began(body: Node) -> float:
+	var sc := SwayCaster.of(body)
+	if sc != null:
+		return sc.lock_began_at
+	if body is NpcFighter and (body as NpcFighter).brain != null and (body as NpcFighter).brain.bending != null:
+		return float((body as NpcFighter).brain.bending.get(&"_lock_at"))
+	return BendStatus.now()
+
+
+## What a Beat flash on `body` is drawn at: the player's SwayCaster (his hands), else the body (its chest).
+static func _hands_of(body: Node) -> Node:
+	var sc := SwayCaster.of(body)
+	return sc if sc != null else body
 
 
 ## Earth's Pop stone held in the hand (BendR3.pop_stone) thrown along the aim (E, or Shove; `toward` INF: the aim): its own
@@ -1072,6 +1189,7 @@ func _take_bolt(b: BendBolt, perfect := false) -> void:
 	var rad := clampf(b.radius, 0.12, 0.45)
 	var own: Dictionary = b.stone_d if not b.stone_d.is_empty() else {"mps": v.length(), "damage": b.damage,
 			"knock_mps": b.knock_mps, "gravity": b.gravity, "pierce": false, "weight": b.weight}
+	var thrower := b._by()
 	b.end("caught" if kind == "catch" else "cushioned")
 	var s := FormStone.ball(get_tree().current_scene, at - Vector3.UP * rad, {"radius_m": rad, "mass_kg": 20.0, "rise_s": 0.01,
 			"life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
@@ -1085,7 +1203,7 @@ func _take_bolt(b: BendBolt, perfect := false) -> void:
 		s.set_meta(&"bend_rally", b.rally)
 		s.set_meta(BendR3.ORIGIN_META, String(b.info.get("origin_tag", b.info.get("tag", "stone_form/spike"))))
 	stones.append(s)
-	_take_stone(s, v, perfect)
+	_take_stone(s, v, perfect, thrower)
 
 
 ## What burns in it goes out: fire walls and burning ground (steam), campfires, torches not in its owner's hand. How many.
@@ -1143,6 +1261,20 @@ func _stones() -> void:
 		var lead := lift._lead() if BendR3.stock() else Vector3.ZERO
 		if (lift.stone.global_position + lead).distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
 			continue
+		if r2 and BendR3.stock() and kind in ["redirect", "parry"] and lift.heated:
+			# (Kiln Stone: a heated stone burns: a Turn douses it to a plain stone (then as any stone, below); a Parry takes it
+			# as fire: on the beat sent straight back along his aim, his now; late, half through)
+			if kind == "redirect":
+				lift.douse()
+			else:
+				var thrower_h := _body_of(lift.caster)
+				if perfect:
+					_lift_back(lift)
+				else:
+					_late_lift(lift)
+				took += 1
+				_result("perfect" if perfect else "late", "stone", thrower_h)
+				continue
 		if r2 and BendR3.stock() and kind in ["redirect", "parry"]:
 			# (round 3, every guard a shield: a stone met on the beat drops where it is, nothing through, no reward; late,
 			# half as a slide)
@@ -1200,7 +1332,7 @@ func _stones() -> void:
 					"pierce": bool(hd.get("pierce", false))})
 		var thrower2 := _body_of(lift.caster)
 		lift.drop(false)
-		_take_stone(s, v, perfect)
+		_take_stone(s, v, perfect, thrower2)
 		if r2 and kind == "catch":
 			_result("perfect" if perfect else "late", "stone", thrower2)
 	for f in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
@@ -1217,6 +1349,37 @@ func _stones() -> void:
 			_take_stone(s, v, perfect)
 			if r2:
 				_result("perfect" if perfect else "late", "stone", shooter)
+
+
+## Earth's Kiln Stone (data/sway/skill_tree.json earth.stone.kiln_stone; the owner, 2026-10-11: "make sure all the talents work"):
+## a stone of its wearer's (a bolt: Pebbles, the Fissure's crack; a hurled Spike, Boulder or caught stone: GustLift) that passes
+## through fire (KILN_FIRES: any Fire Wall, burning ground or magma seam, whoever's) comes out heated until it lands: a fire
+## trail, its launch base x KILN_MULT for him (BendLoadout.hit_class, info.heated). A heated stone counts as fire for the guards:
+## a Parry on the beat sends it back, a Turn douses it to a plain stone. A magma seam is the fire lane's Magma set's zone kind
+## "seam" (FireTalents, another branch: wired here by its kind alone; a seam is low on the deck, so a stone rolling or skimming
+## over it is heated, one flying at chest height is not). The same fires light Sulphur's gas (BendGas.every).
+const KILN_STONE := "earth.stone.kiln_stone"
+const KILN_MULT := 1.15
+const KILN_FIRES := ["fire_wall", "burn", "seam"]
+
+
+## A heated flying stone parried on the beat (Kiln Stone): straight back along the guard's aim, perfect_mult faster, his now (a
+## return: his class, never the thrower's).
+func _lift_back(lift: GustLift) -> void:
+	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
+	var at := lift.stone.global_position
+	var to := guard_aim(owner_node, at)
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	lift.velocity = (to - at).normalized() * lift.velocity.length() * k
+	var bc := BendCaster.of(owner_node)
+	if bc != null and bc.valid():
+		lift.caster = bc
+		lift._ex = bc.exclude()
+		if lift.stone is CollisionObject3D:
+			lift._ex.append((lift.stone as CollisionObject3D).get_rid())
+	lift.hit = {}
+	lift.set_meta(&"bend_info", return_info(lift.get_meta(&"bend_info", {}), owner_node, at, k))
+	BendLooks.burst(at, "fire", 12)
 
 
 ## A flying stone met late by a guard that halves (the Wind Guard): late_mult of its damage and its knock go on (its hurl's
@@ -1237,7 +1400,7 @@ func _late_lift(lift: GustLift) -> void:
 	lift.d = d
 
 
-func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
+func _take_stone(s: Node3D, v: Vector3, perfect := false, thrower: Node = null) -> void:
 	took += 1
 	var rb := s as RigidBody3D
 	match kind:
@@ -1246,6 +1409,15 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 			var out := Vector3(-v.x, 0.0, -v.z)
 			out = out.normalized() if out.length_squared() > 1e-6 else -owner_node.global_basis.z
 			var front := owner_node.global_position + out * 1.3 + Vector3.UP * 1.1
+			if r2 and BendLoadout.wears(owner_node, JUGGLE):
+				# (Juggle: two held side by side; one more is stopped and dropped at his feet, its thrower's loose stone)
+				var have := held_stones(owner_node)
+				have.erase(s)
+				if have.size() >= JUGGLE_MAX:
+					_juggle_drop(s, v, thrower)
+					return
+				if have.size() == 1:
+					front = have[0].global_position + Vector3.UP.cross(out).normalized() * JUGGLE_SIDE_M
 			if rb != null:
 				rb.freeze = true
 			if s is FormStone and (s as FormStone).kind == "spike":
@@ -1283,6 +1455,21 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 			BendLooks.burst(s.global_position, "air", 18)
 
 
+## Juggle's wearer holding two already (see JUGGLE): stone `s` stopped and dropped at his feet, lying loose (whoever's it was).
+func _juggle_drop(s: Node3D, v: Vector3, by: Node = null) -> void:
+	var flat := Vector3(v.x, 0.0, v.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else -owner_node.global_basis.z
+	s.global_position = FormEffects.ground_at(owner_node, owner_node.global_position - flat * 0.8) + Vector3.UP * 0.25
+	var rb := s as RigidBody3D
+	if rb != null:
+		rb.freeze = false
+		rb.linear_velocity = Vector3.DOWN * 0.5
+	if s is FormStone:
+		(s as FormStone).rest_again()
+	FormStone.make_loose(s, by)
+	BendLooks.burst(s.global_position, "stone", 10)
+
+
 func end(why := "ended") -> void:
 	if is_queued_for_deletion():
 		return
@@ -1293,6 +1480,8 @@ func end(why := "ended") -> void:
 		whiffed(owner_node)
 		_result("whiff", "")
 	remove_from_group(GROUP)
+	if kind == "gas":
+		BendGas.ended(self)
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)
