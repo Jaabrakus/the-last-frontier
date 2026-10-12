@@ -461,6 +461,8 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 				bz.end()
 		if bool(spec.get("melt", false)):
 			melt(p, p.global_position + flat * r * 0.5, r * 0.7)
+	if BendZone.BendGas.live_n > 0:
+		BendZone.BendGas.cone(p, flat, r, deg, kind, ring)   # (Sulphur's gas it reaches: fire lights, water washes, wind carries)
 	if float(spec.get("smoke_s", 0.0)) > 0.0 and not ring:
 		# (Breath: the smoke where it burned, a screen a bot cannot see through)
 		var at := FormEffects.ground_at(p, p.global_position + flat * r * 0.6)
@@ -758,6 +760,8 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	if not SbFx.fire(p, lk, "strike", {"at": from, "to": end, "dir": dir}):
 		BendLooks.lightning(from, end)
 	BendLooks.sound("lightning", "cast", from)
+	if BendZone.BendGas.live_n > 0:
+		BendZone.BendGas.live(p, from, end, spec.get("_info", {}))   # (Live Gas: the strike charges the gas it crosses)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
 	rec["hit"] = 0
 	rec["struck_at"] = BendStatus.now()

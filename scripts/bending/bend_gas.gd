@@ -11,10 +11,13 @@ extends RefCounted
 ##                % only (RingRules.add_pct: no knock, no stun, no lock set-back, no string, never staled); his own gas never
 ##                hurts its owner, allies never (BendStatus.can_take)
 ##   reactions    a bolt through a cloud (BendZone.on_bolt): fire lights it (the Ignited Sulphur burst: reaction/ignited_gas, a
-##                set knock away from its middle on everyone in it but the lighter's side, owned by the lighter; the cloud
-##                gone), water washes it (gone), wind carries it (moved on along the bolt, CARRY_M, the mover's now); the
-##                wearer's own Pebbles light his own gas with Flint Pebbles (his gas only). (Lightning's Live Gas and the cone
-##                moves' reactions are not built in this pass.)
+##                set knock away from its middle on everyone within BURST_K of its round but the lighter's side, owned by the
+##                lighter; the cloud gone; IGNITED! at the callouts' spot), water washes it (gone), wind carries it (moved on
+##                along the bolt, CARRY_M 4 m, the mover's now); the wearer's own Pebbles light his own gas with Flint Pebbles
+##                (his gas only). Pass 2: a cone that reaches it the same by its kind (cone: Breath, a fire Sweep or ring, the
+##                Lash, the Wave); a Fire Wall or burning ground on it lights it, a Wind Wall on it carries it away from its
+##                face once (every: its own look round, each 0.25 s); lightning through it charges it (live, Live Gas: everyone
+##                inside takes LIVE_K of the strike's %, % only; the gas stays)
 ##   the sources  the set: his Boulder's end (a cloud where it bursts) and a stone clash with a foe's (a cloud where they met);
 ##                Sulphur Spike: a puff where his Spike stops; Sulphur Boulder: three puffs along its flight; Fuming Column:
 ##                a plume where his pillar rose; Brimstone Wall: a cloud 1 m out on the shooter's side of his wall shot down;
@@ -42,9 +45,16 @@ const IGNITE_TAG := "reaction/ignited_gas"
 const TICK_META := &"bend_matter_tick_at"
 ## The gas's colour (its smoke puffs tinted: a yellow-green haze).
 const COLOR := Color(0.78, 0.84, 0.3, 0.85)
-## Wind carries a cloud this far along its way (m), over CARRY_S.
-const CARRY_M := 3.0
+## Wind carries a cloud this far along its way (m; the tree's world rule Wind Carries Clouds: 4 m), over CARRY_S.
+const CARRY_M := 4.0
 const CARRY_S := 0.4
+## The Ignited Sulphur burst reaches this far past the cloud's middle, a share of its round (the tree's world rule Ignited
+## Sulphur: "a burst 1.5x the cloud's size").
+const BURST_K := 1.5
+## Live Gas (the tree's world rule: lightning through a cloud charges it): everyone inside takes this share of the strike's %
+## (proposed_classes reaction/live d_of_strike), % only; the gas stays.
+const LIVE_K := 0.5
+const LIVE_TAG := "reaction/live"
 ## Sulphur Heart's fill in his own gas, and the plume (Fuming Column) and the Boulder's trail puffs' numbers from the nodes.
 const HEART_MULT := 1.15
 const PLUME_R := 2.0
@@ -175,9 +185,11 @@ static func react(z: BendZone, b: BendBolt) -> bool:
 static func ignite(z: BendZone, lighter: Node3D, at: Vector3) -> void:
 	var c := z.global_position
 	var hit: Array = []
-	for e in BendCaster.near(lighter if lighter != null else z.owner_node, c, z.radius + 1.0):
+	var reach := z.radius * BURST_K
+	for e in BendCaster.near(lighter if lighter != null else z.owner_node, c, reach + 1.0):
 		var n: Node3D = e[0]
-		if not z.inside(n.global_position) or not BendStatus.can_take(n, lighter):
+		var l := n.global_position - c
+		if Vector2(l.x, l.z).length() > reach or l.y < -1.0 or l.y > 3.5 or not BendStatus.can_take(n, lighter):
 			continue
 		var away := n.global_position - c
 		away.y = 0.0
@@ -188,9 +200,14 @@ static func ignite(z: BendZone, lighter: Node3D, at: Vector3) -> void:
 				{"tag": IGNITE_TAG, "move": "reaction", "mode": "ignited_gas", "from": c})
 		hit.append(n)
 	z.set_meta(&"gas_ignited", hit.size())
-	BendLooks.burst(c + Vector3.UP * 0.8, "fire", 40, Vector3.UP, 180.0, 5.0, 0.5)
-	BendLooks.burst(c + Vector3.UP * 0.4, "fire", 20, Vector3.UP, 120.0, 3.0, 0.15)
+	BendLooks.burst(c + Vector3.UP * 0.8, "fire", 40, Vector3.UP, 180.0, 5.0 * BURST_K, 0.5)
+	BendLooks.burst(c + Vector3.UP * 0.4, "fire", 20, Vector3.UP, 120.0, 3.0 * BURST_K, 0.15)
+	BendSounds.play(&"fire_whoomph", c, 2.0)
 	BendSounds.play(&"fire_crackle", c, 2.0)
+	# (the reaction called out at the callouts' own spot, IGNITED!, the lighter's colour: RingHighlights' moment; nothing on anyone)
+	var hl := RingHighlights.find(z.get_tree()) if z.is_inside_tree() else null
+	if hl != null:
+		hl.moment.emit("ignited", lighter, {"at": c, "hit": hit.size()})
 	z.end("ignited")
 
 
@@ -210,6 +227,134 @@ static func carry(z: BendZone, way: Vector3, mover: Node3D) -> void:
 	z.set_meta(&"gas_carried", true)
 	var tw := z.create_tween()
 	tw.tween_property(z, "global_position", to, CARRY_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## A cone of `kind` cast by `p` along `flat`, `r` long and `deg` wide (`ring`: all round him; BendEffects.cone: Breath, a fire
+## Sweep, the Lash, the Wave's push, a fire ring) over the gas it reaches: fire lights it (his burst), water washes it, wind
+## carries it on away from him (his now). A cloud is reached when its round comes within the cone. Classic never has gas.
+static func cone(p: Node3D, flat: Vector3, r: float, deg: float, kind: String, ring: bool) -> void:
+	if live_n <= 0 or p == null or not is_instance_valid(p) or not kind in ["fire", "water", "air"]:
+		return
+	for z: BendZone in gas_of():
+		if z.is_queued_for_deletion():
+			continue
+		var to := z.global_position - p.global_position
+		if absf(to.y) > 3.0:
+			continue
+		to.y = 0.0
+		var d := to.length()
+		if d - z.radius > r:
+			continue
+		if not ring and d > z.radius:
+			var slack := rad_to_deg(asin(clampf(z.radius / d, 0.0, 1.0)))
+			if rad_to_deg(to.normalized().angle_to(flat)) > deg * 0.5 + slack:
+				continue
+		var way := to.normalized() if d > 0.3 else flat
+		match kind:
+			"fire":
+				ignite(z, p, z.global_position - way * minf(z.radius, d))
+			"water":
+				wash(z)
+			"air":
+				carry(z, way, p)
+
+
+## Gas zone `z`'s look round (BendZone._every, each 0.25 s, the host's): a Fire Wall or burning ground on it lights it (its
+## owner the lighter: a fire wall raised on a cloud, a cloud carried into one); a Wind Wall standing on it carries it on away
+## from the wall's face, once a wall (its owner the mover now).
+static func every(z: BendZone) -> void:
+	if z.is_queued_for_deletion() or not z.is_inside_tree():
+		return
+	for o in z.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var w := o as BendZone
+		if w == null or w == z or w.is_queued_for_deletion() or not (w.kind in BendZone.KILN_FIRES or w.kind == "wind_wall"):
+			continue
+		var at := _touch(w, z)
+		if not at.is_finite():
+			continue
+		if w.kind != "wind_wall":
+			ignite(z, w.owner_node as Node3D, at)
+			return
+		var key := "gas_blown_%d" % w.get_instance_id()
+		if z.has_meta(key):
+			continue
+		z.set_meta(key, true)
+		var side := signf((w.global_transform.affine_inverse() * z.global_position).z)
+		carry(z, w.global_basis.z.normalized() * (side if absf(side) > 0.0 else 1.0), w.owner_node as Node3D)
+		return
+
+
+## Where zone `w` (a Fire Wall's, burning ground's or a Wind Wall's box: BendZone.inside's box, its width by its thickness and
+## the same 0.3 m of slack) stands on gas zone `z`'s round: the box's nearest point to the cloud's middle when that is within
+## its round (INF none).
+static func _touch(w: BendZone, z: BendZone) -> Vector3:
+	var l := w.global_transform.affine_inverse() * z.global_position
+	if l.y < -1.5 or l.y > w.size.y + 0.5:
+		return Vector3.INF
+	var hx := w.size.x * 0.5
+	var hz := w.size.z * 0.5 + 0.3
+	var near := Vector3(clampf(l.x, -hx, hx), l.y, clampf(l.z, -hz, hz))
+	if Vector2(l.x - near.x, l.z - near.z).length() > z.radius:
+		return Vector3.INF
+	return w.global_transform * near
+
+
+## Live Gas (see the header): `by`'s lightning from `from` to `to` (BendEffects._strike) through gas charges each cloud it
+## crosses: everyone inside whom his blows reach takes LIVE_K of the strike's % (its class's d, his own numbers: info's tag),
+## % only (RingRules.add_pct: no launch, no stun, no set-back); the gas stays, crackling.
+static func live(by: Node3D, from: Vector3, to: Vector3, info: Dictionary) -> void:
+	if live_n <= 0 or by == null or not is_instance_valid(by):
+		return
+	var cls := BendLoadout.hit_class(by, RingRules.class_of(String(info.get("tag", ""))), info)
+	var d := float(cls.get("d", 0.0)) * LIVE_K * RingRules.stock_num("pct_scale", 1.0)
+	var rr := RingRules.current()
+	for z: BendZone in gas_of():
+		if z.is_queued_for_deletion() or not _crosses(z, from, to):
+			continue
+		var hit := 0
+		for e in BendCaster.near(by, z.global_position, z.radius + 1.0):
+			var n: Node3D = e[0]
+			if not z.inside(n.global_position) or not BendStatus.can_take(n, by):
+				continue
+			if rr != null and RingRules.stock_on() and d > 0.0:
+				rr.add_pct(n, d, by, LIVE_TAG)
+			hit += 1
+		z.set_meta(&"gas_live", int(z.get_meta(&"gas_live", 0)) + 1)
+		z.set_meta(&"gas_live_hit", hit)
+		_live_look(z)
+
+
+## Whether the line `from` -> `to` passes through gas zone `z` (its round, from the deck to 3.5 m over it).
+static func _crosses(z: BendZone, from: Vector3, to: Vector3) -> bool:
+	var seg := to - from
+	var l2 := seg.length_squared()
+	var t := clampf((z.global_position - from).dot(seg) / l2, 0.0, 1.0) if l2 > 1e-6 else 0.0
+	var q := from + seg * t
+	var l := q - z.global_position
+	if Vector2(l.x, l.z).length() > z.radius:
+		return false
+	if l.y >= -1.0 and l.y <= 3.5:
+		return true
+	# (a strike from high: the nearest flat point may sit above it; the line's height where it is over the round's middle)
+	var flat := Vector2(seg.x, seg.z)
+	if flat.length_squared() < 1e-6:
+		return false
+	var tf := clampf(Vector2(z.global_position.x - from.x, z.global_position.z - from.z).dot(flat) / flat.length_squared(), 0.0, 1.0)
+	var y := from.y + seg.y * tf - z.global_position.y
+	return y >= -1.0 and y <= 3.5
+
+
+## A charged cloud's look: arcs crackling through it and sparks, a charge heard (nothing on anyone).
+static func _live_look(z: BendZone) -> void:
+	var c := z.global_position
+	BendSounds.play(&"lightning_charge", c, 0.0)
+	BendLooks.burst(c + Vector3.UP * 0.9, "lightning", 16, Vector3.UP, 180.0, 3.0, 0.15)
+	if not BendLooks.live():
+		return
+	for i in 3:
+		var a := c + Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0)) * z.radius * 0.7 + Vector3.UP * randf_range(0.3, 1.4)
+		var b := c + Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0)) * z.radius * 0.7 + Vector3.UP * randf_range(0.3, 1.4)
+		BendLooks.lightning(a, b)
 
 
 ## Whether `body` stands in a gas zone of `by`'s.

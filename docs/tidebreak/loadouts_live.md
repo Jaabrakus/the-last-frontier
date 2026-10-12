@@ -263,8 +263,13 @@ glow on the caster's own hands (`BendLooks.beat_flash`). Classic: nothing, not e
 beside a node's own new code, and a modeless move's lock (Mend). `test_loadout_apply.gd` wears a node with the nodes it
 requires, reads a Beat class on a Beat hit and a `default_from`'s default.
 
-Not built: lightning's Live Gas and the reactions of cone moves (Breath, the Wave) on gas; magma seams heating a Kiln Stone
-(the Magma set).
+Pass 2 finished the set's reactions as its text and the tree's world rules say: a cone reaches gas by its kind (Breath and a
+fire Sweep or ring light it, the Lash and the Wave wash it, the air Palm carries it); a Fire Wall or burning ground on a cloud
+lights it and a Wind Wall on one carries it off its face once (`BendGas.every`, the cloud's own look round); lightning through
+a cloud charges it (Live Gas: half the strike's % on everyone inside, % only, the gas stays: `BendGas.live` from
+`BendEffects._strike`); the burst reaches 1.5x the cloud's round; wind carries a cloud 4 m (was 3); IGNITED! is called out at
+the callouts' own spot (`data/ring/callouts.json` `ignited`, a RingHighlights moment). Every hook asks `BendGas.live_n > 0`
+first, so Classic (no gas ever) is untouched. Not built: magma seams heating a Kiln Stone (the Magma set is another lane's).
 
 ## Earth's behaviour talents (pass 2, 2026-10-11): the Sulphur Vent, and new skills for every element
 

@@ -10,7 +10,7 @@
   "look": {"size": 76, "outline": 14, "shadow": 6, "anchor_y": 0.63, "punch": 1.7, "punch_s": 0.14, "overshoot": 1.12, "tilt_deg": -5.0, "fade_s": 0.22, "drift_px": 14.0},
   "_colors": "The element colours (the one whose moment it is), and the colour of a moment of no one's (the last life).",
   "colors": {"earth": "#f0b13c", "water": "#4cb8ff", "fire": "#ff6a1f", "air": "#eaf6ff", "none": "#ffffff"},
-  "_calls": "Each callout: its word, priority (higher first) and whose moments show it (mine: the player's side only; any: either side).",
+  "_calls": "Each callout: its word, priority (higher first) and whose moments show it (mine: the player's side only; any: either side). ignited: a gas cloud lit (the skill tree's Ignited Sulphur, a reaction: worn matter only, so Classic never calls it; BendGas.ignite).",
   "calls": {
     "splash": {"word": "SPLASH!", "priority": 5, "who": "any"},
     "caught": {"word": "CAUGHT!", "priority": 6, "who": "mine", "within_s": 0.15},
@@ -18,7 +18,8 @@
     "rise": {"word": "RISE!", "priority": 4, "who": "mine", "deep_third": 0.6667},
     "clash": {"word": "CLASH!", "priority": 2, "who": "any"},
     "comeback": {"word": "COMEBACK!", "priority": 8, "who": "mine"},
-    "last_life": {"word": "LAST LIFE", "priority": 7, "who": "any"}
+    "last_life": {"word": "LAST LIFE", "priority": 7, "who": "any"},
+    "ignited": {"word": "IGNITED!", "priority": 2, "who": "any"}
   },
   "row": {"label": "Callouts: %s", "line": "Big words for big moments", "on": "On", "off": "Off"},
   "_clash": "A clash (two attacks meeting): a two-colour burst of each element's bits (n each, size, speed m/s, spread deg), a flash and two shockwave rings standing in the air at the meeting point (life s, scale from .. to), a light, one sound ([id, gain dB, pitch]: the clash id when the sounds have one, else the loudest hit), and a shared hold of both casters' poses through BendImpact when it is there (hold_s).",

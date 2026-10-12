@@ -48,8 +48,12 @@ extends SceneTree
 ##                     fire lights it; his Earth Wall rises in 0.8 s (0.7); a bot wearing it has it as an option, locks it
 ##                     0.9 s, places it on the player in a real fight, and never while its gas stands on him (a bot wearing
 ##                     nothing has no vent)
+##   the set's gas     (pass 2: the reactions the set's text names, Ignited Sulphur, Live Gas, Wind Carries Clouds) the burst
+##                     reaches 1.5x the cloud's round, IGNITED! called out; cones by kind (Breath lights, the Wave washes, the
+##                     air Palm carries 4 m); a Fire Wall on a cloud lights it, a Wind Wall carries it off its face; lightning
+##                     through a cloud charges it (half the strike's % on the bot inside, no launch, the gas stays)
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass. A user arg only=<part> (after --: thick_wall,
-## juggle, ..., sulphur_twists, vent) plays that part alone, for a quick look; the gate runs them all.
+## juggle, ..., sulphur_twists, vent, reactions) plays that part alone, for a quick look; the gate runs them all.
 
 const NAME := "TALENTS EARTH"
 const BendGas := preload("res://scripts/bending/bend_gas.gd")
@@ -194,7 +198,7 @@ func _run() -> void:
 	pitch_sign = 1.0 if (-player.camera.global_basis.z).y > 0.0 else -1.0
 	player.pitch = 0.0
 	var parts: Array[Callable] = [_thick_wall, _juggle, _return_to_sender, _kick_up, _avalanche, _heave, _kiln_stone, _rubble, _quarry,
-			_reinforce, _sulphur_set, _sulphur_twists, _vent]
+			_reinforce, _sulphur_set, _sulphur_twists, _vent, _reactions]
 	var only := ""
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("only="):
@@ -1536,5 +1540,94 @@ func _vent_bot() -> void:
 	nb._talent_options()
 	_expect(nb._option("earth_wall/vent").is_empty(), "Sulphur Vent off the bot: its options are its kit's again")
 	await _no_gas()
+	rules.reset_pct(player, 0.0)
+	rules.reset_pct(bot, 0.0)
+
+
+# ---------------------------------------------------------------- the Sulphur set's reactions (pass 2)
+## The player's cast of `m` at `md` through BendEffects (the cast's own path), his crosshair on `p`.
+func _cast_at(m: String, md: String, p: Vector3) -> void:
+	await _aim_at(p)
+	BendEffects.apply(pc, m, md, (SwayMoves.move(m).bend as Dictionary)[md])
+
+
+func _reactions() -> void:
+	var S := BendGas.SET
+	var scale := RingRules.stock_num("pct_scale", 1.0)
+	_wear_all(player, [S])
+	_wear_all(bot, [S])
+	# the burst reaches 1.5x the cloud's round: the bot 3.2 m from a 2.5 m cloud's middle is launched; IGNITED! called out
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	var way := bot.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var side := way.cross(Vector3.UP)
+	var zc := BendGas.make(bot, bot.global_position - way * 3.2, "cloud")
+	var n_said := Callouts.shown.count("IGNITED!")
+	_bolt_across(player, "fire", zc.global_position, side)
+	var ig: Array = await _pct_over(bot, 0.6, BendGas.IGNITE_TAG)
+	_expect(not is_instance_valid(zc) and bool(ig[1]), "Ignited Sulphur: the burst reaches 1.5x the cloud's round (the bot 3.2 m from a 2.5 m cloud's middle launched)")
+	_expect(Callouts.shown.count("IGNITED!") == n_said + 1, "Ignited Sulphur: IGNITED! called out at the callouts' own spot (%d)" % (Callouts.shown.count("IGNITED!") - n_said))
+	# cones: Breath lights it, the Wave washes it, the air Palm carries it on away from him
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	var zb := BendGas.make(bot, player.global_position + way * 2.5, "cloud")
+	rules.reset_pct(bot, 0.0)
+	await _cast_at("fire_breath", "breath", zb.global_position + Vector3.UP * 0.8)
+	await _ticks(3)
+	_expect(not is_instance_valid(zb), "the set's gas: his Breath (a cone) lights the bot's cloud before him")
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	var zw := BendGas.make(bot, player.global_position + way * 4.0, "cloud")
+	await _cast_at("wave", "push", zw.global_position + Vector3.UP * 0.8)
+	await _ticks(3)
+	_expect(not is_instance_valid(zw), "the set's gas: his Wave (a cone) washes it away")
+	var za := BendGas.make(bot, player.global_position + way * 2.5, "cloud")
+	var a0 := za.global_position
+	await _cast_at("air_palm", "palm", za.global_position + Vector3.UP * 0.8)
+	await _secs(0.7)
+	var moved := (za.global_position - a0).dot(way) if is_instance_valid(za) else -1.0
+	_expect(is_instance_valid(za) and _near(moved, BendGas.CARRY_M, 0.5) and za.owner_node == player,
+			"the set's gas: his air Palm (a cone) carries it %.1f m on away from him (4), his now" % moved)
+	await _no_gas()
+	# a Fire Wall raised on a cloud lights it (the wall's owner the lighter); a Wind Wall standing on one carries it off its face
+	await _stage(-4.5, 4.5)
+	rules.reset_pct(player, 0.0)
+	var zf := BendGas.make(player, player.global_position + way * 1.0, "cloud")
+	var fw := BendZone.make(bot, "fire_wall", zf.global_position + side * 1.0, {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 2.0}, way)
+	var fl: Array = await _pct_over(player, 0.8, BendGas.IGNITE_TAG)
+	_expect(not is_instance_valid(zf) and bool(fl[1]), "the set's gas: a Fire Wall raised on his cloud lights it, the burst the wall's owner's (it launches him)")
+	if is_instance_valid(fw):
+		fw.end("test")
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	var zn := BendGas.make(player, player.global_position + way * 3.0, "cloud")
+	var n0 := zn.global_position
+	var ww := BendZone.make(bot, "wind_wall", zn.global_position - way * 1.0, {"width_m": 3.0, "height_m": 2.5, "thick_m": 0.6, "life_s": 2.0}, -way)
+	await _secs(1.0)
+	var blown := _flat(zn.global_position, n0) if is_instance_valid(zn) else -1.0
+	_expect(is_instance_valid(zn) and _near(blown, BendGas.CARRY_M, 0.5) and zn.owner_node == bot,
+			"the set's gas: a Wind Wall standing on his cloud carries it %.1f m off its face, once, the wall's owner's now" % blown)
+	if is_instance_valid(ww):
+		ww.end("test")
+	await _no_gas()
+	# Live Gas: his lightning through the bot's own cloud (past the bot, 2 m to its side) charges it: the bot inside takes
+	# half the strike's % and is not launched; the gas stays
+	await _stage(-4.5, 4.5)
+	rules.reset_pct(bot, 0.0)
+	var zl := BendGas.make(bot, bot.global_position, "cloud")          # (the bot's own: its ticks never touch it)
+	var d_strike := float(RingRules.class_of("fire_arc/lightning").get("d", 0.0))
+	await _cast_at("fire_arc", "lightning", FormEffects.ground_at(bot, bot.global_position + side * 2.0))
+	var lv: Array = await _pct_over(bot, 0.8)
+	var lp := rules.pct_of(bot)
+	_expect(is_instance_valid(zl) and int(zl.get_meta(&"gas_live", 0)) == 1 and not bool(lv[1]) and d_strike > 0.0
+			and _near(lp, d_strike * BendGas.LIVE_K * scale, 0.05),
+			"Live Gas: lightning through the cloud charges it: the bot inside takes %.2f%% (half the strike's %.1f x the pace), no launch, the gas stays" % [lp, d_strike])
+	# Classic: none of it (no gas is ever made: a wall, a cone and a strike change nothing)
+	_wear(player, "")
+	_wear(bot, "")
+	await _no_gas()
+	_expect(BendGas.make(player, bot.global_position, "cloud") == null and BendGas.gas_of().is_empty(), "Classic: no gas, nothing for a reaction to touch")
 	rules.reset_pct(player, 0.0)
 	rules.reset_pct(bot, 0.0)

@@ -531,6 +531,8 @@ func _every(dt: float) -> void:
 			"gas":
 				BendGas.tick(self, n)                # (Sulphur's gas: % ticks only, BendGas)
 	_inside_was = now_in
+	if kind == "gas":
+		BendGas.every(self)                      # (Sulphur's gas: a fire wall on it lights it, a wind wall carries it)
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):

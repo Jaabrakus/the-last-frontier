@@ -86,7 +86,7 @@
     "earth.wall.rubble": "FormRaised.crumble / _rubble_stones (shot down or capped: two loose stones of the raiser's at its foot); rise_s per wearer (wall_numbers)",
     "earth.wall.quarry": "BendBolt._hit / _quarry (a Beat Fissure into his own wall: FormEffects.gust_chunk thrown on along the crack, the first chunk each wall free); the Beat (info.beat); rise_s per wearer (wall_numbers)",
     "earth.mend.reinforce": "FormEffects.mend (a mended piece's brace 2: REINFORCE_N) and FormRaised.take_brace (BendBolt.wear, apply_hit: a counted brace); Mend's lock 2.6 per wearer (move:mend.lock_s, its one mode)",
-    "earth.set.sulphur": "scripts/bending/bend_gas.gd (BendZone gas: ticks, look, reactions; the Boulder's end GustLift._gas_end, stone clashes BendBolt.meet/meet_lift, GustLift._meet_lifts; bots step out NpcBending._move); Pebbles class d per wearer",
+    "earth.set.sulphur": "scripts/bending/bend_gas.gd (BendZone gas: ticks, look, reactions; the Boulder's end GustLift._gas_end, stone clashes BendBolt.meet/meet_lift, GustLift._meet_lifts; bots step out NpcBending._move; pass 2: cones BendEffects.cone -> BendGas.cone, fire and wind walls BendZone._every -> BendGas.every, Live Gas BendEffects._strike -> BendGas.live, IGNITED! a RingHighlights moment); Pebbles class d per wearer",
     "earth.sulphur.spike": "BendGas.stone_end (a puff where his Spike stops: GustLift._shatter/_land); class d per wearer",
     "earth.sulphur.boulder": "BendGas.stone_end (three puffs along the Boulder's flight); class d per wearer",
     "earth.sulphur.fuming_column": "BendEffects.column (a plume where the pillar rose: BendGas.make); class base per wearer",
