@@ -884,21 +884,23 @@ func _magma() -> void:
 	var stones := FormStone.loose_of(p).filter(func(s: Node) -> bool: return s.has_meta(&"talent_obsidian"))
 	_expect((not is_instance_valid(bz) or bz.is_queued_for_deletion()) and stones.size() >= 1 and FormStone.loose_of(p).size() > loose0,
 			"Magma: water on a seam cools it to a loose obsidian stone of his (%d)" % stones.size())
-	# the Axe Kick's wave into a wall: a seam too
+	# the Axe Kick's wave into a wall: a seam too (a real Slam, 1 m up: the game's own cast of it, BendEffects.apply's Strike, its
+	# deck and the wave it runs on as)
 	await _calm()
 	_wear_all(["fire.set.magma"])
 	var dir := bc.facing()
 	var w := _wall_at(p.global_position, dir, 3.5)
 	await _secs(0.8)
-	var ws: Dictionary = ((((SwayMoves.move("fire_kick").bend as Dictionary).slam as Dictionary).wave) as Dictionary).duplicate()
-	var wsp := BendLoadout.spec(p, "fire_kick", "slam", (SwayMoves.move("fire_kick").bend as Dictionary).slam as Dictionary)
-	var winfo := BendR3.info_for(bc, "fire_kick", "slam", false, wsp)
-	winfo["tag"] = String(winfo.tag) + "_wave"
-	ws["_info"] = winfo
-	ws["mps"] = float(((wsp.wave) as Dictionary).mps)
-	var wb := BendBolt.launch(p, p.global_position + dir * 0.5, dir, ws)
+	p.global_position += Vector3.UP * 1.0
+	p.velocity = Vector3.ZERO
+	BendEffects.apply(bc, "fire_kick", "slam", (SwayMoves.move("fire_kick").bend as Dictionary).slam as Dictionary)
+	var srec := BendEffects.last_of(bc)
+	var wb: Variant = srec.get("wave")
+	var w_mps := (wb as BendBolt).velocity.length() if wb is BendBolt and is_instance_valid(wb) else -1.0
+	var w_tag := String((wb as BendBolt).info.get("tag", "")) if wb is BendBolt and is_instance_valid(wb) else ""
 	await _secs(0.8)
-	_expect(_seams_of(p).size() == 1 and is_equal_approx(ws.mps, 14.2), "Magma: the Axe Kick's wave (%.1f m/s) dying on a wall leaves a seam too (%d)" % [ws.mps, _seams_of(p).size()])
+	_expect(bool(srec.get("deck", false)) and w_tag == "fire_kick/slam_wave" and absf(w_mps - 14.2) < 0.05 and _seams_of(p).size() == 1,
+			"Magma: a real Axe Kick's wave (%s, %.1f m/s) dying on a wall leaves a seam too (%d)" % [w_tag, w_mps, _seams_of(p).size()])
 	if is_instance_valid(w):
 		w.queue_free()
 	# a bot wearing the set: its own Kick's wave into a wall
