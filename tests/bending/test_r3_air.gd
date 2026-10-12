@@ -137,6 +137,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	BendCombo.enabled = false                    # (the combo and the guard's gauge off: their own test, test_combo_gauge.gd)
 	MatchSetup._aim_help = "strong"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("only="):
@@ -790,9 +791,10 @@ func _air_timing() -> void:
 			and c.uses_of("stone_form") == uses_before,
 			"landing keeps .60 earned seconds, pending release, stone, source and release-window timer without a free cast")
 	var switched := c.step_other()
-	_expect(switched and c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, 1.1)
+	var boulder_s := _boulder_lock()
+	_expect(switched and c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, boulder_s)
 			and is_equal_approx(c.fill * c.lock_s, 0.6),
-			"landing then switching to Boulder cannot turn .60s of Spike charge into 1.10s")
+			"landing then switching to Boulder cannot turn .60s of Spike charge into its %.2fs" % boulder_s)
 	c.speed_override = null
 	c.stun_override = null
 	c.drop_all()
@@ -840,9 +842,9 @@ func _air_timing() -> void:
 	c.speed_override = 4.5
 	c.held_override = true
 	await _secs(0.3)
-	_expect(c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, 1.1)
+	_expect(c.mode_of("stone_form") == "cannonball" and is_equal_approx(c.lock_s, _boulder_lock())
 			and c.fill < 0.2 and is_equal_approx(c._moving_mult("stone_form"), 0.5),
-			"Boulder keeps its original 1.10s lock and moving penalty in air (fill %.3f)" % c.fill)
+			"Boulder keeps its own %.2fs lock and moving penalty in air (fill %.3f)" % [_boulder_lock(), c.fill])
 	c.speed_override = null
 	c.held_override = false
 	c.drop_all()
@@ -1397,3 +1399,8 @@ func _gate_off() -> void:
 	var share := float(air_casts.size()) / maxf(float(released.size()), 1.0)
 	metrics["air_release_share"] = snappedf(share, 0.01)
 	_expect(released.size() == 6 and air_casts.size() == 2, "a scripted string of 6 casts, 2 let go in the air: air_cast fired for those (%d of %d)" % [air_casts.size(), released.size()])
+
+
+## The Boulder's own lock (moves.json stone_form.mode_lock_s.cannonball: 0.8 s since the owner's "faster", 2026-10-12).
+func _boulder_lock() -> float:
+	return float((SwayMoves.move("stone_form").get("mode_lock_s", {}) as Dictionary).get("cannonball", 1.1))

@@ -91,6 +91,8 @@ static func keys(element: String) -> Array:
 ## The number 3 key's own moves for `element` (moves.json elements.key3: water's Ice Tomahawk since 2026-10-12); [] when it
 ## has none (3 stays the movement spell, keys()' third, which Shift + a direction casts either way).
 static func key3(element: String) -> Array:
+	if MatchSetup.basic():
+		return []                    # (the Basic controls keep 3 the dash: the beginner's few keys, as 4 and 5 wait for a first win)
 	var k: Variant = (data().get("key3", {}) as Dictionary).get(element, [])
 	return k if k is Array else []
 

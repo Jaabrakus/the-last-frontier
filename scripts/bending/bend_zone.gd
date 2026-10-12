@@ -235,6 +235,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 		_cap_mud(by)
 	z._look()
 	NetSpells.spawned(z, "zone", [by, p_kind, at, spec, p_way])     # (the host's own decision: made on the others too)
+	if z.r2 and BendR3.stock():
+		BendCombo.guard_stood(by, z)             # (the guard's gauge: its tap spent; empty, broken at once)
 	return z
 
 
@@ -563,6 +565,10 @@ func _physics_process(dt: float) -> void:
 		_stones()
 	if kind == "wind_wall" and decides:
 		_wind_push()
+	if r2 and BendR3.stock() and not is_queued_for_deletion():
+		BendCombo.guard_tick(owner_node, self, dt)   # (held past its window the gauge drains; empty, the guard breaks)
+		if is_queued_for_deletion():
+			return
 	if t >= life_s:
 		end("life")
 
@@ -680,6 +686,10 @@ func on_bolt(b: BendBolt) -> bool:
 		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
 	if kind == "seam" and b.kind == "water" and not b.spent:
 		FireTalents.seam_bolt(self, b)               # (water on a Magma seam cools it to obsidian)
+	if kind == "fire_wall" and b.kind == "fire" and not b.spent and not b.wall_boosted and BendR3.stock() \
+			and (b.caster == owner_node or BendCaster.same_team(b.caster, owner_node)) and inside(b.global_position):
+		b.wall_boost("fire")                         # (his fire through his own Fire Wall: bigger, faster; the owner 2026-10-12)
+		return false
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -730,6 +740,13 @@ func on_bolt(b: BendBolt) -> bool:
 			if b.kind == "fire":
 				AirTalents.melt_snow(self)           # (Blizzard: fire melts it out in a second)
 		"wind_wall":
+			if BendR3.stock() and b.kind == "ice" and b.shape == "spear":
+				# (the Ice Spear slices through a wind wall, the owner 2026-10-12: its cut in the wind, flying on as it was)
+				if not b.guarded_by.has(get_instance_id()):
+					b.guarded_by.append(get_instance_id())
+					BendLooks.burst(b.global_position, "air", 14, b.velocity.normalized().cross(Vector3.UP), 90.0, 4.0, 0.2, false)
+					BendLooks.burst(b.global_position, "ice", 8, b.velocity.normalized(), 40.0, 3.0, 0.2, false)
+				return false
 			if AirTalents.wall_shards(self, b):
 				return true                          # (Frostwind: his Wind Wall drops water and ice as shards)
 			if b.kind in LIGHT and not b.guarded_by.has(get_instance_id()) and prison_s <= 0.0:
@@ -1802,6 +1819,8 @@ func end(why := "ended") -> void:
 		whiffed(owner_node)
 		_result("whiff", "")
 	remove_from_group(GROUP)
+	if r2 and owner_node != null and is_instance_valid(owner_node):
+		BendCombo.guard_fell(owner_node)         # (the gauge's refill waits from now)
 	if kind == "gas":
 		BendGas.ended(self)
 	if kind == "wind_wall":

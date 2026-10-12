@@ -1866,7 +1866,8 @@ func _guard_waits() -> bool:
 	if not r3():
 		return false
 	var rm := RingMoves.of(player)
-	return frozen() or (rm != null and rm.in_landing_lag())
+	# (the guard's gauge broken: no guard until it is back, BendCombo; the owner 2026-10-12: "so no one can spam it")
+	return frozen() or (rm != null and rm.in_landing_lag()) or not BendCombo.can_guard(player)
 
 
 ## Q held (with an element): past quick_reset_s the left button is the jab again (reset_quick), once a hold.

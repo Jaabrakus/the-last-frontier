@@ -65,6 +65,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	BendCombo.enabled = false                    # (the combo and the guard's gauge off: their own test, test_combo_gauge.gd)
 	MatchSetup._aim_help = "strong"
 	seed(1750)
 	create_timer(WATCHDOG_S, true, false, true).timeout.connect(func() -> void:
@@ -312,7 +313,8 @@ func _shield() -> void:
 ## A cone, a Column and a flying Spike against a guard: perfect nothing, late half as a slide.
 func _other_shapes() -> void:
 	var wave: Dictionary = ((SwayMoves.move("wave").bend as Dictionary).push as Dictionary).duplicate()
-	for wait: float in [0.2, 0.6]:
+	# (the guard raised 0.05 s before the Wave on the beat: its water then travels 3 m at travel_mps, 0.17 s, inside perfect_s)
+	for wait: float in [0.05, 0.6]:
 		await _calm("earth")
 		var foot := p.global_position
 		RingLevel.place(foe, Transform3D(Basis.IDENTITY, foot + (_foe_at - foot).normalized() * 3.0))
@@ -324,6 +326,8 @@ func _other_shapes() -> void:
 		var flat := (p.global_position - foe.global_position)
 		flat.y = 0.0
 		BendEffects.cone(foe, foe.global_position + Vector3.UP, flat.normalized(), s)
+		# (the Wave travels since 2026-10-12, its hits landing as its water reaches each body: 3 m at travel_mps)
+		await _until(func() -> bool: return not _hits_on(p).is_empty() or z.results.has("perfect") or z.results.has("late"), 0.8)
 		await _ticks(2)
 		var hs := _hits_on(p)
 		if wait < 0.3:

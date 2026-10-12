@@ -509,7 +509,25 @@ func _physics_process(dt: float) -> void:
 		_q.motion = Vector3.ZERO
 		var info := space.get_rest_info(_q)
 		var col := instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
-		if not (ghost and _ghost_through(col, info)):
+		for _i in 4:
+			if not _deck_brushed(col, at):
+				break
+			# (a wide spell over the deck, its middle well above it and not coming down: the deck brushing its underside never
+			# stops it; that piece passed for the rest of its flight. Which pieces it brushed hung on where the deck's seams fell:
+			# the 2v2 deck drawn in, 2026-10-12, ended a Gust 0.6 m out)
+			_ghost_ex.append(info.rid)
+			_q.exclude = _exclude()
+			_q.transform = Transform3D(Basis.IDENTITY, from)
+			_q.motion = step
+			frac = space.cast_motion(_q)
+			col = null
+			if frac.size() == 2 and frac[1] < 1.0:
+				at = from + step * frac[1]
+				_q.transform = Transform3D(Basis.IDENTITY, at)
+				_q.motion = Vector3.ZERO
+				info = space.get_rest_info(_q)
+				col = instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
+		if col != null and not (ghost and _ghost_through(col, info)):
 			global_position = from + step * frac[0]
 			_hit(col, at, Vector3(info.get("normal", -velocity.normalized())))
 			return
@@ -694,6 +712,66 @@ func _exclude() -> Array[RID]:
 	return ex
 
 
+# ---------------------------------------------------------------- the walls' boosts (the owner, 2026-10-12)
+## A spell of its caster's (or his side's) through his own wall of its matter, once (the new ring; rules.json stock.wall_boost):
+## "fire" through a Fire Wall (BendZone.on_bolt) or "ice", water through an Ice Wall turned to ice (_through_ice_wall): faster,
+## bigger, its hit harder (info wall_boost: RingRules.on_hit's d and growth).
+var wall_boosted := false
+
+
+func wall_boost(el: String) -> void:
+	if wall_boosted or spent:
+		return
+	wall_boosted = true
+	var wb := RingRules.stock_block("wall_boost")
+	velocity *= float(wb.get("speed", 1.25))
+	var k := float(wb.get("size", 1.4))
+	radius *= k
+	damage *= float(wb.get("d", 1.25))
+	knock_mps *= float(wb.get("knock", 1.2))
+	range_m += 6.0
+	info["wall_boost"] = el
+	var holder: Node3D = spin if spin != null else _look
+	if holder != null and is_instance_valid(holder):
+		holder.scale *= k
+	BendLooks.stop_trail(_trail)
+	_trail = BendLooks.trail(self, kind, radius)
+	BendLooks.burst(global_position, kind, 18, velocity.normalized(), 40.0, 5.0, 0.2, false)
+	BendLooks.sound(kind, "cast", global_position, 0.0)
+
+
+## Water of his through his own (or his side's) Ice Wall (the new ring): frozen to ice on the way through, the wall passed, the
+## boost; true when it went through.
+func _through_ice_wall(w: FormRaised) -> bool:
+	if kind != "water" or wall_boosted or not BendR3.stock() or not bool(w.get_meta(&"bend_ice", false)):
+		return false
+	var by := _by()
+	var wb := int(w.get_meta(&"bend_by", 0))
+	var whose: Variant = instance_from_id(wb) if wb != 0 else null
+	if by == null or not (wb == by.get_instance_id() or (whose is Node and BendCaster.same_team(by, whose as Node))):
+		return false
+	_ghost_ex.append(w.get_rid())                # (its own wall passed)
+	become("ice")
+	wall_boost("ice")
+	BendLooks.burst(global_position, "ice", 22, velocity.normalized(), 70.0, 4.0, 0.3, false)
+	BendSounds.play(&"ice_freeze", global_position, -2.0)
+	return true
+
+
+## A frozen one's end on the deck: a frost patch of its caster's where it stopped (the ring's ice_patch: slows who walks it).
+func _frost_where_ended() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var g := FormEffects.ground_at(self, global_position)
+	if global_position.y - g.y > 3.0 or global_position.y < g.y - 0.6:
+		return
+	var wb := RingRules.stock_block("wall_boost")
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	BendZone.make(by, "ice_patch", g, {"radius_m": float(wb.get("frost_r", 1.5)), "life_s": float(wb.get("frost_s", 4.0))},
+			flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
+
+
 func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 	var who := _taker(col)
 	var by := _by()
@@ -707,6 +785,8 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
 		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
 		return
+	if who is FormRaised and _through_ice_wall(who as FormRaised):
+		return                                     # (his water through his own Ice Wall: frozen, faster, flying on)
 	if who is FormRaised and kind == "fire" and AirTalents.melt_crust(who as FormRaised):
 		BendLooks.burst(at, "steam", 14, n, 70.0, 2.0, 0.5)
 		end("melted")                             # (Frostwind's crust melted back by fire)
@@ -1041,6 +1121,8 @@ func end(why: String) -> void:
 		return
 	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
 		return                                    # (a ghost's: the host's word ends it, net_end)
+	if why in ["hit", "wall", "world"] and String(info.get("wall_boost", "")) == "ice" and NetSpells.decides():
+		_frost_where_ended()
 	if (why in ["hit", "wall", "world"] or zone_wall) and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
 		_splashdown()
 	if (why in ["hit", "wall", "world"] or zone_wall) and not splash.is_empty() and NetSpells.decides():
@@ -1132,6 +1214,18 @@ var _net_sig: Array = []
 
 ## A ghost's flight meeting `col` (`info` the shape's rest info): true when it passes (a body, a stone, a prop: the host's
 ## to decide), the thing's RID kept out of its flight from now; false: the world or a raised wall, it ends there.
+## Whether `col` is a piece of the ring's deck brushing a wide spell's underside (`at` where they touch): its radius 0.5 m or
+## more, its middle more than DECK_BRUSH_M over the deck there, level or rising.
+const DECK_BRUSH_M := 0.25
+func _deck_brushed(col: Node, at: Vector3) -> bool:
+	if col == null or radius < 0.5 or low or floor_wave or velocity.y < -0.5 or not (col is StaticBody3D):
+		return false
+	var ra := RingArena.find(get_tree()) if is_inside_tree() else null
+	if ra == null or not ra.decks.has(col):
+		return false
+	return at.y - ra.top() > DECK_BRUSH_M
+
+
 func _ghost_through(col: Node, info: Dictionary) -> bool:
 	var who := _taker(col)
 	if who is FormRaised:

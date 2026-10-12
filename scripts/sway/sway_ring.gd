@@ -16,6 +16,11 @@ extends Control
 ## (nothing is spent: dots that never change would only be noise, and could never say the belt is out) and a sail's hold
 ## shows its wind whole (no mote's time running down).
 ## No text.
+## The new ring's meters (BendCombo; the owner, 2026-10-12: "the combo meter on the cursor like a gauge that fills up with each
+## succefull action", "and also on when the e parry is on its on the cursor gauge", "and it drains"): two brackets just
+## outside the lock ring, each filling from the bottom up. Left, gold: the combo, a tick a stack, swelling as one is gained and
+## draining as BendCombo's level does. Right: the guard's gauge while a guard of his stands, or while it is broken (pale;
+## orange under back_at; the track red while broken). Each fades in and out (METER_IN_S, METER_OUT_S).
 
 const RADIUS := 21.0
 const WIDTH := 2.5
@@ -29,6 +34,15 @@ const FLASH_S := 0.28
 const END_S := 0.35
 const BELT_SHOW_S := 2.5
 const PULSE_S := 0.16
+const METER_R := 31.0
+const METER_SPAN := 1.9            ## each bracket's arc (rad)
+const METER_W := 3.0
+const METER_IN_S := 0.12
+const METER_OUT_S := 0.45
+const COMBO_COL := Color(1.0, 0.8, 0.35)
+const GAUGE_COL := Color(0.86, 0.93, 1.0)
+const GAUGE_LOW_COL := Color(0.98, 0.62, 0.22)
+const BROKEN_COL := Color(0.95, 0.25, 0.18)
 
 var caster: SwayCaster
 var _t := 0.0
@@ -38,6 +52,12 @@ var _end := {}                  ## an ended lock fading: {kind, f, art, t}
 var _belt_t := 0.0
 var _art := "breath"
 var _pulse := 0.0
+var _combo_a := 0.0
+var _combo_v := 0.0
+var _combo_pop := 0.0
+var _gauge_a := 0.0
+var _gauge_v := 1.0
+var _broken := false
 
 
 func _ready() -> void:
@@ -87,6 +107,7 @@ func _process(dt: float) -> void:
 	_flash = maxf(_flash - dt / FLASH_S, 0.0)
 	_pulse = maxf(_pulse - dt / PULSE_S, 0.0)
 	_belt_t = maxf(_belt_t - dt, 0.0)
+	_meters_tick(dt)
 	if not _end.is_empty():
 		_end.t = float(_end.t) + dt
 		if float(_end.t) >= END_S:
@@ -148,6 +169,7 @@ func _draw() -> void:
 			_:
 				var g := Color(0.62, 0.62, 0.62, 0.7 * (1.0 - k))
 				_ring(c, RADIUS, float(_end.f), g, es, WIDTH)
+	_draw_meters(c)
 	if (caster.readied or on or _belt_t > 0.0) and not SwayCaster.free_use():     # (free use: no belt)
 		var ba := 1.0 if (caster.readied or on) else clampf(_belt_t / 0.5, 0.0, 1.0)
 		var short := caster.hint == "motes"
@@ -162,6 +184,54 @@ func _draw() -> void:
 				draw_circle(p, BELT_R, Color(mc.r, mc.g, mc.b, 0.95 * ba))
 			else:
 				draw_arc(p, BELT_R - 0.4, 0.0, TAU, 12, Color(mc.r, mc.g, mc.b, 0.75 * ba), 1.0, true)
+
+
+# ---------------------------------------------------------------- the meters (BendCombo)
+func _meters_tick(dt: float) -> void:
+	var body: Node = caster.player if caster != null else null
+	var on := BendCombo.on() and body != null and is_instance_valid(body)
+	var lv := BendCombo.level(body) if on else 0.0
+	if lv > _combo_v + 0.5:
+		_combo_pop = 1.0                       # (a stack gained: it swells)
+	_combo_v = lv
+	_combo_pop = maxf(_combo_pop - dt / 0.25, 0.0)
+	_combo_a = move_toward(_combo_a, 1.0 if lv > 0.01 else 0.0, dt / (METER_IN_S if lv > 0.01 else METER_OUT_S))
+	_broken = on and BendCombo.broken(body)
+	_gauge_v = BendCombo.gauge(body) if on else 1.0
+	var show := on and (caster.guard_up() or _broken)
+	_gauge_a = move_toward(_gauge_a, 1.0 if show else 0.0, dt / (METER_IN_S if show else METER_OUT_S))
+
+
+func _draw_meters(c: Vector2) -> void:
+	if _combo_a > 0.005:
+		var mx := maxf(float(RingRules.stock_block("combo").get("max", 5)), 1.0)
+		var r := METER_R + 2.5 * _combo_pop
+		var col := COMBO_COL.lerp(Color.WHITE, 0.5 * _combo_pop)
+		_bracket(c, r, PI, clampf(_combo_v / mx, 0.0, 1.0), Color(col.r, col.g, col.b, 0.95 * _combo_a), Color(0, 0, 0, 0.4 * _combo_a))
+		for i in range(1, int(mx)):
+			var a := PI - METER_SPAN * 0.5 + METER_SPAN * float(i) / mx
+			var dv := Vector2(cos(a), sin(a))
+			draw_line(c + dv * (r - METER_W), c + dv * (r + METER_W), Color(0, 0, 0, 0.55 * _combo_a), 1.2, true)
+	if _gauge_a > 0.005:
+		var g := clampf(_gauge_v, 0.0, 1.0)
+		var back_at := float(RingRules.stock_block("guard_gauge").get("back_at", 0.4))
+		var col := BROKEN_COL if _broken else (GAUGE_LOW_COL if g < back_at else GAUGE_COL)
+		var track := Color(BROKEN_COL.r * 0.5, BROKEN_COL.g * 0.5, BROKEN_COL.b * 0.5, 0.7 * _gauge_a) if _broken else Color(0, 0, 0, 0.4 * _gauge_a)
+		_bracket(c, METER_R, 0.0, g, Color(col.r, col.g, col.b, 0.95 * _gauge_a), track)
+
+
+## A bracket round `c` centred on angle `mid` (PI the left, 0 the right): its track whole, `f` of it filled from the bottom up.
+func _bracket(c: Vector2, r: float, mid: float, f: float, col: Color, track: Color) -> void:
+	var lo := mid + METER_SPAN * 0.5 if mid == 0.0 else mid - METER_SPAN * 0.5     # (the bottom end: screen y down)
+	var way := -1.0 if mid == 0.0 else 1.0
+	draw_arc(c, r, lo, lo + way * METER_SPAN, 32, track, METER_W + 2.0, true)
+	if f > 0.0:
+		draw_arc(c, r, lo, lo + way * METER_SPAN * f, 32, col, METER_W, true)
+
+
+## The meters now, for tests: {combo (level), combo_a, gauge, gauge_a, broken}.
+func meters() -> Dictionary:
+	return {"combo": _combo_v, "combo_a": _combo_a, "gauge": _gauge_v, "gauge_a": _gauge_a, "broken": _broken}
 
 
 ## The ring of `shape` at `r`, `f` (0..1) of it from the top, clockwise.

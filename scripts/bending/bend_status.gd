@@ -492,6 +492,7 @@ static func parry_reward(n: Node, by: Node) -> void:
 	var k := float(RingRules.stock_block("parry").get("k", 0.15))
 	if n != null and is_instance_valid(n):
 		give_cast_mult(n, 1.0 - k)
+		BendCombo.gain(n)                        # (a perfect guard: a stack of his combo, the owner 2026-10-12)
 	if by != null and is_instance_valid(by) and by != n and not BendCaster.same_team(n, by):
 		give_cast_mult(by, 1.0 + k)
 
@@ -505,12 +506,16 @@ static func give_cast_mult(n: Node, mult: float) -> void:
 	n.set_meta(CAST_MULT_META, {"mult": mult, "until": until})
 
 
-## The share of its lock time `n`'s next cast takes now (1: none; parry_reward).
+## The share of its lock time `n`'s next cast takes now (1: none; parry_reward), and his combo's (BendCombo.cast_share: its
+## stacks, the new ring's; never spent by a cast).
 static func cast_mult(n: Node) -> float:
-	if n == null or not is_instance_valid(n) or not n.has_meta(CAST_MULT_META):
+	if n == null or not is_instance_valid(n):
 		return 1.0
+	var combo := BendCombo.cast_share(n)
+	if not n.has_meta(CAST_MULT_META):
+		return combo
 	var c: Dictionary = n.get_meta(CAST_MULT_META)
-	return float(c.get("mult", 1.0)) if now() < float(c.get("until", -INF)) else 1.0
+	return (float(c.get("mult", 1.0)) if now() < float(c.get("until", -INF)) else 1.0) * combo
 
 
 ## `n`'s cast reward or penalty spent (a cast went with it).

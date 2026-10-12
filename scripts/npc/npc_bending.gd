@@ -1149,12 +1149,20 @@ func _guard_lock(ls: float) -> float:
 
 ## Whether hint `h` is a guard's: a reaction's, or any option's that answers something (Earth Grip's anchor; a dodge). Only a
 ## reaction's starts the guard cool (guard_cool_s).
+## Whether `id` is its element's guard (guard_of).
+func _is_guard_id(id: String) -> bool:
+	var gd := guard_of(element)
+	return gd.size() >= 1 and id == String(gd[0])
+
+
 static func is_guard(h: Variant) -> bool:
 	return h is Dictionary and (String((h as Dictionary).get("role", "")) == "reaction" or (h as Dictionary).has("answers"))
 
 
 ## Whether guard `o` may be begun now: its hint's guard_when (bend_ai.json's when) held, a dash with room for it.
 func _guard_fits(o: Dictionary, t: Node3D) -> bool:
+	if stock() and _is_guard_id(String(o.get("id", ""))) and not BendCombo.can_guard(me):
+		return false                                 # (its guard's gauge broken: another answer, BendCombo)
 	var h: Dictionary = o.hint
 	for c: String in h.get("guard_when", []):
 		if not _when(c, t, _flat_d(t)):
@@ -1401,6 +1409,8 @@ static func _caster_body(c: Variant) -> Node:
 ## The lock of (id, md) begun (its time: lock_for; its pose; its circle).
 func begin(id: String, md: String) -> void:
 	_sync_options()
+	if stock() and _is_guard_id(id) and not BendCombo.can_guard(me):
+		return                                       # (its guard's gauge broken: no guard until it is back, BendCombo)
 	if casting != "":
 		_cancel()
 	var t := brain.target

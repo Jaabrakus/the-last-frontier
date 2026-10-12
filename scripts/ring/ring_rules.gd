@@ -265,6 +265,7 @@ func set_ends(e0: int) -> void:
 func reset_round() -> void:
 	for id in state:
 		var st := state[id] as Dictionary
+		BendCombo.reset(st.get("body") as Node if st.get("body") is Node and is_instance_valid(st.get("body")) else null)
 		st["confined"] = 1
 		st["out"] = false
 		st["by"] = null
@@ -1306,6 +1307,11 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		_once[okey] = now
 	if info.has("growth_mult"):
 		cls["growth"] = float(cls.get("growth", 0.0)) * float(info.growth_mult)     # (the Geyser from a grate or a puddle)
+	if String(info.get("wall_boost", "")) != "":
+		# (a spell through its caster's own wall, BendBolt.wall_boost / GustLift.wall_boost: harder; the owner 2026-10-12)
+		var wb := stock_block("wall_boost")
+		cls["d"] = float(cls.get("d", 0.0)) * float(wb.get("d", 1.25))
+		cls["growth"] = float(cls.get("growth", 0.0)) * float(wb.get("growth", 1.15))
 	# a volley: one hit (its d spread over its n projectiles; only the first knocks, stuns and counts)
 	var vn := maxi(int(info.get("volley_n", cls.get("volley_n", 1))), 1)
 	var vid: Variant = info.get("volley_id", null)
@@ -1336,6 +1342,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 			_prune_volleys(now)
 	var d_add := d / float(vn)
 	add_pct(n, d_add, by, String(cls.tag))
+	if first and not late and d_add > 0.0 and not bool(info.get("no_hurt", false)) and not bool(info.get("wall_tick", false)):
+		BendCombo.landed(by, n)                  # (the combo: a stack of the hitter's, all of the struck one's; the owner 2026-10-12)
 	var res := {"none": true, "d": d_add, "tag": String(cls.tag)}
 	if not first or bool(cls.get("no_flinch", false)):
 		return res

@@ -101,6 +101,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	BendCombo.enabled = false                    # (the combo and the guard's gauge off: their own test, test_combo_gauge.gd)
 	seed(1760)
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("%s FAILED (watchdog)" % NAME)

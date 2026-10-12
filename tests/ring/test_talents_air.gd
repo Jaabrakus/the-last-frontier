@@ -92,6 +92,7 @@ func _expect(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	BendCombo.enabled = false                    # (the combo and the guard's gauge off: their own test, test_combo_gauge.gd)
 	seed(1757)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("only="):

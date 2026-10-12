@@ -402,7 +402,13 @@ func _fly(dt: float) -> void:
 				velocity *= 0.65                    # (a ball knocks a man down and goes on, slowed)
 			_place(to)
 			return
-		# the world (a raised wall too: struck, then it stops there)
+		# the world (a raised wall too: struck, then it stops there; a Boulder through its thrower's own Earth Wall tears a piece
+		# off it and flies on bigger: _through_wall)
+		if who is FormRaised and _through_wall(who as FormRaised, c_at):
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
 		if who != null:
 			_strike(col, who, c_at)
 		_land(from + (to - from) * frac[0], Vector3(info.get("normal", Vector3.UP)), Vector3(info.get("point", c_at)))     # (the touch itself)
@@ -447,6 +453,47 @@ func _place(p: Vector3) -> void:
 
 
 ## The damage of a strike at the speed it has now.
+## The Boulder through its thrower's own (or his side's) Earth Wall (the new ring; the owner, 2026-10-12: "if a boulder hits it
+## ... tears off a piece of the wall and it continues"; rules.json stock.wall_boost): the wall takes a hit where it went through
+## (its crack, its chips), the Boulder flies on bigger, harder and a little faster (its hit info wall_boost "earth": RingRules'
+## d and growth), once. True when it went through.
+var wall_boosted := false
+var _knock_k := 1.0
+
+
+func _through_wall(w: FormRaised, at: Vector3) -> bool:
+	if kind != "cannonball" or wall_boosted or not RingRules.stock_on() or not NetSpells.decides() or bool(w.get_meta(&"bend_ice", false)):
+		return false
+	var src := by()
+	var wb := int(w.get_meta(&"bend_by", 0))
+	var whose: Variant = instance_from_id(wb) if wb != 0 else null
+	if src == null or not (wb == src.get_instance_id() or (whose is Node and BendCaster.same_team(src, whose as Node))):
+		return false
+	wall_boosted = true
+	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else -w.global_basis.z
+	w.apply_hit(maxf(w.hit_min, 60.0), at, dir, src)          # (a piece torn out: its crack and chips; worn a hit)
+	if is_instance_valid(w):
+		_ex.append(w.get_rid())
+		w._chips(w.get_tree().current_scene, at, -dir, 18)
+	BendLooks.burst(at, "stone", 22, dir, 70.0, 6.0, 0.35, false)
+	FormEffects.sfx("strike", at, 0.0, 0.7)
+	BendSounds.play(&"earth_crumble", at, 0.0)
+	var b := RingRules.stock_block("wall_boost")
+	var k := float(b.get("size", 1.4))
+	velocity *= float(b.get("stone_speed", 1.1))
+	power = minf(power + float(b.get("stone_power", 0.35)), 1.0)
+	_knock_k = float(b.get("knock", 1.2)) * 1.15
+	radius *= k
+	if _q != null and _q.shape is SphereShape3D:
+		(_q.shape as SphereShape3D).radius = radius * 0.85
+	if stone != null and is_instance_valid(stone) and stone.mesh_instance != null and is_instance_valid(stone.mesh_instance):
+		stone.mesh_instance.scale *= k
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf["wall_boost"] = "earth"
+	set_meta(&"bend_info", inf)
+	return true
+
+
 func damage_now() -> float:
 	var hd := _hurl_d()
 	var dm: Array = hd.get("damage", [20.0, 60.0])
@@ -467,7 +514,7 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 		# (round 3, the % ring: the hit with its info, meta bend_info from its Throw: BendR3.deliver; AIR)
 		var fl := Vector3(dir.x, 0.0, dir.z).normalized() if Vector2(dir.x, dir.z).length_squared() > 1e-6 else Vector3.FORWARD
 		var hd0 := _hurl_d()
-		BendR3.deliver(who, dmg, p, dir, src, -1.0, fl * float(hd0.get("knock_mps", KNOCK_MPS)) + Vector3.UP * float(hd0.get("knock_up_mps", KNOCK_UP_MPS)),
+		BendR3.deliver(who, dmg, p, dir, src, -1.0, (fl * float(hd0.get("knock_mps", KNOCK_MPS)) + Vector3.UP * float(hd0.get("knock_up_mps", KNOCK_UP_MPS))) * _knock_k,
 				get_meta(&"bend_info", {}))
 		struck.emit(who, dmg)
 		FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)
