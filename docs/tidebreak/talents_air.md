@@ -86,7 +86,10 @@ Notes:
   freezes and carries nothing more for anyone); Hail Ball reads its wearer at the ball's end (a ball a non-wearer sent back
   drops no hail).
 - A frost crust is a FormRaised of kind `wall` 0.4 m high: a foe bot's `NpcBending._wall_on_line` (its High Kick's
-  `foe_up_or_walled`) does not count it as a wall.
+  `foe_up_or_walled`) does not count it as a wall. Nobody walks over it (no step-up on the deck): the player jumps it, and a bot
+  running at one across its way jumps it (`AirTalents.crust_ahead` in `NpcFighter._ring_move`; 2026-10-12: a bot ran into it
+  and stood there till it melted). While no crust stands, `crust_ahead` returns at once (`_crusts_up`, counted by the crusts'
+  `CrustWatch`), so a Classic match reads nothing of it.
 - Toxic Gale needs a test after the merge with earth's lane (nothing makes gas in this branch; the test makes a gas zone by
   hand): the stolen cloud's ticks hurting its old owner (BendGas.tick reads `owner_node` and `inside`), the order of
   `BendZone.on_bolt`'s first lines (Toxic Gale before `BendGas.react`), and a stolen cloud not counted in `BendGas._cap`'s 4 a

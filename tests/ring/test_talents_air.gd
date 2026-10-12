@@ -40,7 +40,8 @@ extends SceneTree
 ##                      him from the foe; a new one ends the old; his Wind Wall 3.5 s (4); a bot wearing it casts it (BendCast)
 ##   Frostwind          his Gust or Wind Ball over a puddle turns it to crust (a snow ridge 0.4 x 3 m across its way, 4 s; not
 ##                      worn: it stays a puddle); two of his at once; a floor wave stops at it, a stone rolled at it stops, the
-##                      player jumps it, a foe bot reads it as no wall; fire melts it back into the puddle; over a grate: no water
+##                      player jumps it, a foe bot reads it as no wall and jumps one across its run; fire melts it back into the
+##                      puddle; over a grate: no water
 ##                      source till a Fire Wall on it melts it, or the round's reset (RingArena.clear_dropped) clears it (a
 ##                      Blizzard's frozen grate too); turned by the foe his Wind Ball freezes nothing (turned by himself it does);
 ##                      steam his Gust crosses clears; his Wind Wall drops water as shards; his Wind Wall 3.5 s; a bot's too
@@ -1692,6 +1693,25 @@ func _frostwind() -> void:
 	var start_side := signf((ccr.global_transform.affine_inverse() * (ccr.global_position - cway * 1.5)).z)
 	_expect(signf(over) == -start_side and absf(over) > 0.3, "Frostwind: the player jumps the crust (%.2f m past it)" % absf(over))
 	await _secs(0.5)
+	# a foe bot (wearing nothing) running at a crust across its way gets past it (over or round) well within its 4 s
+	await _clear_crusts()
+	await _stage(9.0)
+	var kway := player.global_position - foe.global_position
+	kway.y = 0.0
+	kway = kway.normalized()
+	var bcr := AirTalents.make_crust(player, FormEffects.ground_at(foe, foe.global_position + kway * 2.0), kway, 8.0)
+	await _secs(0.3)
+	foe.held = false
+	foe._think_t = 1e6                                # (its mind's own picks still: only the run)
+	_bot_goal = foe.global_position + kway * 4.5
+	physics_frame.connect(_bot_go)
+	var past := await _until(func() -> bool:
+		return (bcr.global_transform.affine_inverse() * foe.global_position).z > 0.4, 3.0)
+	physics_frame.disconnect(_bot_go)
+	foe.halt()
+	foe.held = true
+	foe._think_t = 0.0
+	_expect(past < 3.0, "Frostwind: a foe bot running at a crust across its way gets past it (%.2f s)" % past)
 	await _clear_crusts()
 
 	# steam his wind crosses falls as snow and clears

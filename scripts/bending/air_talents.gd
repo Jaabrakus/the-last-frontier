@@ -34,7 +34,8 @@ extends RefCounted
 ##   Frostwind (air.set.frostwind)      the skill set: frosts / frost_step (BendBolt.launch, its flight): his Gust or Wind Ball
 ##                                      turns a puddle or a grate it crosses into crust (freeze_pool, make_crust: a snow
 ##                                      FormRaised ridge CRUST_W x CRUST_H for CRUST_S, CRUST_CAP of his at once; floor waves and
-##                                      rolling stones stop at it, anyone can jump it, never slippery); a frozen grate is out of
+##                                      rolling stones stop at it, anyone can jump it: a bot running at one jumps it,
+##                                      crust_ahead in NpcFighter._ring_move; never slippery); a frozen grate is out of
 ##                                      Bending.POOLS (no source) till its crust goes, however it goes (the round's reset frees
 ##                                      it: CrustWatch._exit_tree); only while the bolt is still his (frost_step: sent back or
 ##                                      turned, it freezes nothing); steam it crosses falls as snow and clears;
@@ -689,6 +690,38 @@ static func is_crust(r: Node) -> bool:
 	return r is FormRaised and r.has_meta(CRUST_META)
 
 
+## How many crusts stand in the scene now (their CrustWatch counts them; 0 in every Classic match: crust_ahead's early out).
+static var _crusts_up := 0
+
+
+## Whether a bot `body` on the deck going along `move` (its pad's move) is about to run into a crust lying across its way
+## (CRUST_AHEAD_M from its near side): it jumps it (NpcFighter._ring_move), as the node says anyone can. False at once while
+## no crust stands.
+static func crust_ahead(body: Node3D, move: Vector3) -> bool:
+	if _crusts_up <= 0 or body == null or not body.is_inside_tree():
+		return false
+	var flat := Vector3(move.x, 0.0, move.z)
+	if flat.length() < 0.3:
+		return false
+	flat = flat.normalized()
+	for w in body.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var fr := w as FormRaised
+		if fr == null or not fr.has_meta(CRUST_META) or fr.state == FormRaised.State.CRUMBLING:
+			continue
+		var l := fr.global_transform.affine_inverse() * body.global_position
+		if absf(l.x) > fr.size.x * 0.5 + 0.3 or l.y > fr.size.y or l.y < -0.6:
+			continue
+		var gap := absf(l.z) - fr.size.z * 0.5                    # (from its near side)
+		var toward := -signf(l.z) * flat.dot(fr.global_basis.z.normalized())
+		if gap >= -0.1 and gap <= CRUST_AHEAD_M and toward > 0.3:
+			return true
+	return false
+
+
+## A bot jumps a crust this near its near side (m).
+const CRUST_AHEAD_M := 0.9
+
+
 ## A fire bolt meeting `r` (BendBolt._hit): a crust melts back (its puddle again, a grate's grate). True when it did.
 static func melt_crust(r: FormRaised) -> bool:
 	if not is_crust(r) or not r.is_up():
@@ -727,8 +760,10 @@ class CrustWatch extends Node:
 	func _ready() -> void:
 		_crust_id = get_parent().get_instance_id()
 		(get_parent() as FormRaised).crumbled.connect(_gone)
+		AirTalents._crusts_up += 1
 
 	func _exit_tree() -> void:
+		AirTalents._crusts_up = maxi(AirTalents._crusts_up - 1, 0)
 		_thaw()
 
 	## The grate it froze a water source again (once; only while the grate is still this crust's).
