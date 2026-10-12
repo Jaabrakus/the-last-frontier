@@ -881,6 +881,45 @@
       "ai_factor": 1.0,
       "mastery_uses": [0, 8, 30]
     },
+    "ice_axe": {
+      "_doc": "The Ice Tomahawk, water's key 3 (the owner, 2026-10-12: \"then we can have icy tomahawk\", \"is a Aoe spell? that puts water on the ground\"; his picks: water's key 3, a water puddle, chop plus splash). The Frontier tomahawk's own model in ice floats over the throwing arm while it locks (poses.json held ice_axe, BendLooks.FloatSpear), thrown from there with our own sidearm throw, spinning end over end; a body it strikes is chopped, and where it ends it splashes (BendBolt splash): everyone else within 2 m pushed out a little, and a puddle of the caster's (a Geyser's source) left on the deck.",
+      "label": "Ice Tomahawk",
+      "art": "tide",
+      "element": "water",
+      "lock_s": 0.45,
+      "motes": 0,
+      "range_m": 28.0,
+      "targets": ["ground"],
+      "named_only": false,
+      "needs_grant": true,
+      "readied_only": true,
+      "far_stretch": 1.0,
+      "moving_mult": 0.75,
+      "circle_m": 0.7,
+      "self_lock": true,
+      "modes": ["axe"],
+      "mode_labels": {"axe": "Ice Tomahawk"},
+      "bend": {
+        "axe": {
+          "do": "throw",
+          "kind": "ice",
+          "shape": "tomahawk",
+          "flight": "spinning",
+          "spin_rate": 30.0,
+          "mps": 26.0,
+          "gravity": 7.0,
+          "damage": 14.0,
+          "knock_mps": 3.0,
+          "up_mps": 1.5,
+          "radius_m": 0.2,
+          "range_m": 28.0,
+          "float_from": true,
+          "splash": {"radius_m": 2.0, "damage": 6.0, "knock_mps": 4.0, "up_mps": 1.5, "puddle": {"radius_m": 1.6, "life_s": 6.0}}
+        }
+      },
+      "ai_factor": 1.0,
+      "mastery_uses": [0, 8, 30]
+    },
     "frost": {
       "label": "Frost",
       "art": "tide",
@@ -1863,6 +1902,7 @@
     "_doc": "Each element's keys (skills_r2 spec 2.1-2.2, the owner's answers of 2026-10-05): 1 STRIKE, 2 PUSH (its first move grows if held: grow), 3 DASH, 4 WALL, 5 HEAL. A key is [id] (one move, or one move whose two variations are the key's two moves) or [id, id] (two moves of one variation each). A tap readies the key's first move, a second tap within guard_rules.double_tap_s the other; nothing is remembered. Fire's 4 holds Fire Wall and Breath (the owner kept Breath), fire's 1 grows too (Punch held: the Fireball). Bending.keys; the jab on the left button and the guard on E are their own blocks (jabs, guards). A move's 'modes' are only what the ring offers; specs of variations it no longer offers stay under 'bend' for whoever still casts them. The open world's Form spells keep theirs in 'world_modes' and 'world_mode_labels' (Stone Form's disc, the earth wall's column and shell, the pillar's free and ramp: SwayCaster.world_modes_of), and the pillar's footfall boost stays the open world's (the ring's Lift reads sink_s and run_mult instead).",
     "earth": [["stone_form"], ["earth_shove"], ["earth_skate", "pillar"], ["earth_wall"], ["patch", "mend"]],
     "water": [["water_whip", "ice"], ["wave"], ["flow"], ["water_shield"], ["patch", "mend"]],
+    "key3": {"_doc": "The number 3 key's own moves (Bending.key3), for an element that has one: since the movement spells went to Shift + a direction (the owner, 2026-10-11; the keys' third above stays the movement spell, Shift's), 3 readies these as 1, 2, 4 and 5 ready theirs. Water's: the Ice Tomahawk (the owner, 2026-10-12). An element without one keeps 3 as the movement spell.", "water": ["ice_axe"]},
     "fire": [
       ["fire_blast", "fire_arc"],
       ["fire_kick"],

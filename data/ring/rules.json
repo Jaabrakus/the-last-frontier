@@ -96,6 +96,8 @@
 			"fire_blast/punch.grown": {"d": 20.0, "base": 5.8, "growth": 13.2, "angle": 30},
 			"stone_form/spike.grown": {"d": 18.5, "base": 7.2, "growth": 13.8, "angle": 32},
 			"ice/spear.grown": {"d": 18.0, "base": 6.6, "growth": 12.6, "angle": 28},
+			"ice_axe/axe": {"d": 10.0, "base": 4.8, "growth": 11.5, "angle": 32},
+			"ice_axe/axe.splash": {"d": 4.0, "base": 3.6, "growth": 7.0, "angle": 30},
 			"stone_form/cannonball.grown": {"d": 21.0, "base": 9.0, "growth": 13.0, "angle": 38},
 			"fire_arc/lightning": {"d": 25.0, "base": 6.9, "growth": 12.1, "angle": 30},
 			"air_blast/ball": {"d": 11.0, "base": 8.0, "growth": 14.5, "angle": 35},

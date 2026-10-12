@@ -2467,6 +2467,8 @@ func _lock_looks(m: String) -> void:
 		charge = BendLooks.charge(player, self)
 	elif elem() and _held_look(m) == "ice_spear":
 		charge = BendLooks.float_spear(player, self)         # (the Ice Spear: the Frontier spear in ice, floating over the arm)
+	elif elem() and _held_look(m) == "ice_axe":
+		charge = BendLooks.float_spear(player, self, "tomahawk")   # (the Ice Tomahawk: the Frontier tomahawk in ice, the same)
 	elif elem() and _held_look(m) == "water_spear":
 		charge = BendLooks.held_spear(player, self)          # (the rifle hold's water spear in the hands)
 	elif elem():

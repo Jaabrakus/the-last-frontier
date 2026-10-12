@@ -88,6 +88,13 @@ static func keys(element: String) -> Array:
 	return data().get(element, [])
 
 
+## The number 3 key's own moves for `element` (moves.json elements.key3: water's Ice Tomahawk since 2026-10-12); [] when it
+## has none (3 stays the movement spell, keys()' third, which Shift + a direction casts either way).
+static func key3(element: String) -> Array:
+	var k: Variant = (data().get("key3", {}) as Dictionary).get(element, [])
+	return k if k is Array else []
+
+
 ## The key (0-based) holding move `id` for `element` (-1 none).
 static func key_of(element: String, id: String) -> int:
 	var ks := keys(element)

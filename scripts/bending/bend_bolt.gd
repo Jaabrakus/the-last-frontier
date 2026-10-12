@@ -132,6 +132,10 @@ var deck_y := 0.0
 var _wave_look: Node3D
 ## The pull (a Pull wave): whom it strikes is knocked toward its caster.
 var pull := false
+## Where it ends it bursts (spec "splash": {radius_m, damage, knock_mps, up_mps, puddle {radius_m, life_s}}; the Ice
+## Tomahawk, the owner 2026-10-12 "is a Aoe spell? that puts water on the ground"): everyone else within radius_m pushed out
+## (its hit info's tag + ".splash"), and a puddle of its caster's on the deck there (a Geyser's source). _splash.
+var splash := {}
 ## Round 3: the hit info it carries (BendR3.info_for: tag, from, air, a volley's id and size; slide_only once a late guard
 ## halved it; returned, ret_mult, origin_tag once a guard sent it back). Read only by the % rules.
 var info := {}
@@ -207,6 +211,7 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.weight = String(spec.get("weight", weight_by_size(b.kind, b.radius, String(spec.get("flight", "")))))
 	b.lock_s = float(spec.get("_lock_s", -1.0))
 	b.pull = bool(spec.get("pull", false))
+	b.splash = (spec.splash as Dictionary).duplicate() if spec.get("splash") is Dictionary else {}
 	var inf: Variant = spec.get("_info", {})
 	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
 	b.frosts = AirTalents.frosts(by, b.info)        # (Frostwind worn: its wind freezes water it crosses; Classic false)
@@ -1038,7 +1043,43 @@ func end(why: String) -> void:
 		return                                    # (a ghost's: the host's word ends it, net_end)
 	if (why in ["hit", "wall", "world"] or zone_wall) and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
 		_splashdown()
+	if (why in ["hit", "wall", "world"] or zone_wall) and not splash.is_empty() and NetSpells.decides():
+		_splash()
 	_finish(why)
+
+
+## Its splash where it ended (`splash`, see the var): the ice bursting, everyone of another side within radius_m but the one it
+## struck pushed out from it (its hit info's tag + ".splash": the % ring's class), and a puddle of its caster's on the deck
+## under it (none when the deck is far under: off the ring).
+func _splash() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var at := global_position
+	var r := float(splash.get("radius_m", 2.0))
+	BendLooks.burst(at, "ice", 26, Vector3.UP, 150.0, 4.0, 0.3, false)
+	BendLooks.burst(at, "water", 22, Vector3.UP, 120.0, 3.0, 0.3, false)
+	BendSounds.play(&"ice_freeze", at, -2.0)
+	var inf := info.duplicate()
+	inf["tag"] = String(info.get("tag", "")) + ".splash"
+	for e in BendCaster.near(by, at, r):
+		var n: Node3D = e[0]
+		if n == struck_who:
+			continue                              # (the one it chopped took its own hit)
+		var out := n.global_position - at
+		out.y = 0.0
+		out = out.normalized() if out.length_squared() > 1e-4 else Vector3(velocity.x, 0.0, velocity.z).normalized()
+		BendR3.deliver(n, float(splash.get("damage", 0.0)), n.global_position + Vector3.UP, out, by, -1.0,
+				out * float(splash.get("knock_mps", 3.0)) + Vector3.UP * float(splash.get("up_mps", 1.0)), inf)
+	var pd: Variant = splash.get("puddle")
+	if pd is Dictionary:
+		var g := FormEffects.ground_at(self, at)
+		if at.y - g.y <= 3.0 and at.y >= g.y - 0.6:
+			if BendR3.stock():
+				g = BendR3.off_lip(get_tree(), g, float((pd as Dictionary).get("radius_m", 1.6)) * 0.5)   # (on the deck)
+			var flat := Vector3(velocity.x, 0.0, velocity.z)
+			BendZone.make(by, "puddle", g, {"radius_m": float((pd as Dictionary).get("radius_m", 1.6)),
+					"life_s": float((pd as Dictionary).get("life_s", 6.0))}, flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
 
 
 ## A Lash of its caster's own (water_whip/whip, not sent back by a guard).

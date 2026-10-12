@@ -266,6 +266,15 @@ def water_spear():
             line([(32, 54), (32, 48)], S3), line([(29, 51), (35, 51)], S3)]
 
 
+def water_tomahawk():
+    return [line([(12, 52), (38, 13)], S1),
+            P("M33 20 L 39 11 L 53 18 C 58 24, 56 31, 49 34 Z", S2, FILL),
+            facet("M38 17 L 51 26"),
+            line([(37, 14), (31, 8)], S2),
+            P("M30 58 C 36 51, 54 51, 60 58", S2),
+            dot(37, 47, 1.7), dot(45, 43, 1.5), dot(54, 46, 1.6)]
+
+
 def water_wave():
     return [P("M4 50 C 14 50, 18 30, 34 24 C 46 20, 56 26, 54 36 C 52 42, 44 42, 43 35", S1),
             P("M8 57 L 58 57", S2), P("M14 50 C 22 48, 28 40, 36 36", S3),
@@ -864,6 +873,7 @@ ICONS = {
     "water_redirect__redirect": (water_turn, "water", "a stream turned round"),
     "water_whip__whip": (water_lash, "water", "a lash cracking"),
     "ice__spear": (water_spear, "water", "a long ice shard"),
+    "ice_axe__axe": (water_tomahawk, "water", "an ice tomahawk over its splash"),
     "wave__push": (water_wave, "water", "a breaking crest"),
     "wave__spout": (water_geyser, "water", "a column of water bursting up"),
     "flow__skate": (water_skate, "water", "a ribbon of water underfoot"),

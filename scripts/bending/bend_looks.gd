@@ -108,6 +108,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 	if shape == "crescent":
 		_crescent_body(parent, kind, r)
 		return
+	if shape == "tomahawk" and kind == "ice" and live():
+		ice_axe_model(parent)                     # (the Ice Tomahawk: the one that floated, spinning: BendBolt's flight)
+		return
 	if shape == "spear" and kind == "ice" and live():
 		ice_spear_model(parent, FloatSpear.LEN_M * clampf(r / 0.16, 1.0, 1.4))   # (the Ice Spear: the spear that floated, flying)
 		return
@@ -1795,10 +1798,11 @@ static func held_spear(body: Node3D, sway: Node = null) -> HeldSpear:
 
 ## FloatSpear over `body`, the Ice Spear's lock look (SwayCaster._lock_looks, a pose whose pick says "held": "ice_spear"), fed the
 ## lock's fill as its `level`.
-static func float_spear(body: Node3D, sway: Node = null) -> FloatSpear:
+static func float_spear(body: Node3D, sway: Node = null, kind := "spear") -> FloatSpear:
 	var fs := FloatSpear.new()
-	fs.name = "BendFloatSpear"
+	fs.name = "BendFloatSpear" if kind == "spear" else "BendFloatAxe"
 	fs.sway = sway
+	fs.model_kind = kind
 	body.add_child(fs)
 	return fs
 
@@ -1808,20 +1812,40 @@ static func float_spear(body: Node3D, sway: Node = null) -> FloatSpear:
 ## a soft ice light on it (the Ice Spear's lance: the one that floated over the arm, flying). Under `parent`.
 const ICE_SPEAR_THICK := 3.0
 static func ice_spear_model(parent: Node3D, length: float, thick := ICE_SPEAR_THICK) -> Node3D:
+	return ice_weapon_model(parent, "spear", length, thick)
+
+
+## The Ice Tomahawk's: the Frontier tomahawk's own model (ThrowableModels "tomahawk", tools/models/tomahawk.py) in ice, its haft
+## along -Z (the butt behind, the head ahead), its blade's edge up, `length` m butt to head, `thick` times its girth.
+const ICE_AXE_LEN := 0.62
+const ICE_AXE_THICK := 1.7
+static func ice_axe_model(parent: Node3D, length := ICE_AXE_LEN, thick := ICE_AXE_THICK) -> Node3D:
+	return ice_weapon_model(parent, "tomahawk", length, thick)
+
+
+## A Frontier throwable's model (`kind`: "spear", butt to tip; "tomahawk", butt to head with the edge up) in ToonFx's ice, its
+## long way along -Z, centred, `length` m long and `thick` times its girth, a soft ice light on it. Under `parent`.
+static func ice_weapon_model(parent: Node3D, kind: String, length: float, thick: float) -> Node3D:
 	var pivot := Node3D.new()
-	pivot.name = "IceSpear"
+	pivot.name = "Ice" + kind.to_pascal_case()
 	parent.add_child(pivot)
-	var m := ThrowableModels.build("spear")
-	var tip := ThrowableModels.marker_pos(m, "Tip")
+	var m := ThrowableModels.build(kind)
 	var butt := ThrowableModels.marker_pos(m, "Butt")
-	var axis := tip - butt
+	var front := ThrowableModels.marker_pos(m, "Tip" if kind == "spear" else "Head")
+	var axis := front - butt
 	if axis.length_squared() < 1e-6:
 		axis = Vector3(0.0, 0.0, -1.0)
-	var k := length / maxf(axis.length(), 0.01)
 	var q := Quaternion(axis.normalized(), Vector3(0.0, 0.0, -1.0))
+	if kind == "tomahawk":
+		# (its blade's edge turned up about the haft)
+		var e := Basis(q) * (ThrowableModels.marker_pos(m, "Edge") - front)
+		e.z = 0.0
+		if e.length_squared() > 1e-6:
+			q = Quaternion(Vector3(0.0, 0.0, -1.0), -atan2(-e.x, e.y)) * q
+	var k := length / maxf(axis.length(), 0.01)
 	var b := Basis.from_scale(Vector3(k * thick, k * thick, k)) * Basis(q)
 	m.basis = b
-	m.position = -(b * ((tip + butt) * 0.5))
+	m.position = -(b * ((front + butt) * 0.5))
 	pivot.add_child(m)
 	var l := OmniLight3D.new()
 	l.light_color = ICE
@@ -2328,6 +2352,8 @@ class FloatSpear:
 
 	var sway: Node
 	var level := 0.0
+	## "spear" (the Ice Spear) or "tomahawk" (the Ice Tomahawk, water's key 3: the same float, its own model).
+	var model_kind := "spear"
 	const ABOVE_M := 0.3
 	const LEN_M := 1.3
 	const CHARGED_K := 1.25
@@ -2358,7 +2384,11 @@ class FloatSpear:
 		if _sk != null:
 			_sk.skeleton_updated.connect(_on_skeleton_updated)
 		if BendLooks.live():
-			_spear = BendLooks.ice_spear_model(self, LEN_M)
+			_spear = BendLooks.ice_axe_model(self) if model_kind == "tomahawk" else BendLooks.ice_spear_model(self, LEN_M)
+			if model_kind == "tomahawk":
+				# (stood up as it is cocked to throw: the haft up, the blade's edge to the aim; lying along the aim it read as a
+				# pickaxe)
+				_spear.basis = Basis(Vector3(0.0, 0.0, 1.0), PI) * Basis(Vector3(1.0, 0.0, 0.0), -PI / 2.0)
 			_light = OmniLight3D.new()
 			_light.light_color = BendLooks.ICE
 			_light.light_energy = 0.0
@@ -2410,8 +2440,9 @@ class FloatSpear:
 		if b == null:
 			return
 		var hand := _hand if _hand.is_finite() else b.global_position + Vector3.UP * 1.5 - b.global_basis.z * 0.2
-		# (over the arm: between the shoulder and the hand, a cocked throw's hand being high behind the head)
-		var over := hand.lerp(_shoulder, 0.5) if _shoulder.is_finite() else hand
+		# (over the arm: between the shoulder and the hand, a cocked throw's hand being high behind the head; the tomahawk over
+		# the hand itself, out to the side in the sidearm throw, clear of the head)
+		var over := hand.lerp(_shoulder, 0.5) if _shoulder.is_finite() and model_kind != "tomahawk" else hand
 		var want := over + Vector3.UP * ABOVE_M
 		if _grown_t >= 0.0:
 			var a := TREMBLE_M * clampf((_t - _grown_t) / TREMBLE_S, 0.0, 1.0)
@@ -2424,7 +2455,11 @@ class FloatSpear:
 		visible = grow > 0.01 and not _gone
 		_k = lerpf(_k, CHARGED_K if _grown_t >= 0.0 else 1.0, minf(1.0, dt * 8.0))
 		if _spear != null:
-			_spear.scale = Vector3(lerpf(0.35, 1.0, grow), lerpf(0.35, 1.0, grow), maxf(grow, 0.02) * _k) * (1.0 + 0.1 * (_k - 1.0))
+			var sc := Vector3(lerpf(0.35, 1.0, grow), lerpf(0.35, 1.0, grow), maxf(grow, 0.02) * _k) * (1.0 + 0.1 * (_k - 1.0))
+			if model_kind == "tomahawk":
+				_spear.basis = Basis(Vector3(0.0, 0.0, 1.0), PI) * Basis(Vector3(1.0, 0.0, 0.0), -PI / 2.0) * Basis.from_scale(sc)
+			else:
+				_spear.scale = sc
 		if _light != null:
 			_light.light_energy = (1.6 + 0.6 * sin(_t * 18.0)) * (_k - 1.0) / (CHARGED_K - 1.0) if _grown_t >= 0.0 else 0.0
 		if visible:

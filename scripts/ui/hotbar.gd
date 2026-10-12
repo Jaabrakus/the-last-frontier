@@ -615,6 +615,13 @@ func select(i: int) -> void:
 	_follow_caster()
 	sync()
 	if i == 2 and RingRules.stock_on():
+		# (an element with a key-3 move of its own, Bending.key3 (water's Ice Tomahawk, 2026-10-12): 3 readies it as the other
+		# keys ready theirs; Shift + a direction still casts the movement spell, _shift_dir)
+		var k3 := Bending.key3(_element())
+		if not k3.is_empty():
+			var w3 := Bending.first_of(k3)
+			ready_move(2, String(w3.get("id", "")), String(w3.get("mode", "")))
+			return
 		# (round 3, spec §0: in the % ring 3 acts at once, a dash or the air dodge, and never readies a move: every scheme)
 		var c3 := SwayCaster.of(player)
 		if c3 != null and c3.key3_press():
@@ -699,7 +706,12 @@ func _shift_dir() -> void:
 	for a: StringName in [&"move_forward", &"move_back", &"move_left", &"move_right"]:
 		fresh = fresh or c.just_pressed(a)
 	if fresh or (c.just_pressed(&"sprint") and c.move_vector().length() > 0.3):
-		select(2)
+		# (the movement spell, never key 3's own move: SwayCaster.key3_press as select(2) gives it an element without one)
+		_follow_caster()
+		sync()
+		var c3 := SwayCaster.of(player)
+		if c3 != null:
+			c3.key3_press()
 
 
 ## The player's key event (FrontierPlayer._unhandled_input): true when it was a slot key or the wheel.

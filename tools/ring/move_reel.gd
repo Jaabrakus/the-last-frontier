@@ -169,6 +169,11 @@ func _shots_of(el: String) -> Array:
 					g["label"] = _name(id, md) + "  ▲ grown"
 					g["detail"] = "held on past full until it grows"
 					out_s.append(g)
+	for id: String in Bending.key3(el):
+		# (key 3's own move, Bending.key3: water's Ice Tomahawk; readied by 3 itself, cast as any key's)
+		for md: String in (SwayCaster.modes_of(id) if not SwayCaster.modes_of(id).is_empty() else [""]):
+			out_s.append({"kind": "cast", "key": 3, "id": id, "mode": md, "label": _name(id, md),
+					"detail": "3, right-click held on him, let go when full"})
 	out_s.append({"kind": "guard", "id": "", "mode": "", "label": "Guard", "detail": "E held as his strike comes; E again throws back what it holds"})
 	return out_s
 
@@ -410,7 +415,9 @@ func _eta(_by: Node3D) -> float:
 func _cast_one(id: String, md: String, grown: bool) -> void:
 	var sc := SwayCaster.of(player)
 	var k := Bending.key_of(_el, id)
-	if k >= 0:
+	if id in Bending.key3(_el):
+		await _key(&"weapon_3")                          # (key 3's own move: 3 readies it, Hotbar.select)
+	elif k >= 0:
 		var a := StringName("weapon_%d" % (k + 1))
 		await _key(a)                                    # (the key, as a player presses it: the strip lights it)
 		var first := Bending.first_of(Bending.keys(_el)[k])
@@ -418,6 +425,7 @@ func _cast_one(id: String, md: String, grown: bool) -> void:
 			await _key(a)                                # (the key's other move: tapped twice, as a player does; the hotbar
 			                                             # keeps the key's own readied, so a direct ready would not stand)
 	if sc.readied_spell != id:
+		print("MOVE REEL READY FALLBACK %s (the keys readied %s)" % [id, sc.readied_spell])
 		sc.ready_spell(id)
 	if md != "" and sc.mode_of(id) != md:
 		sc.set_mode(id, md)
