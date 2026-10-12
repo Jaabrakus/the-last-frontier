@@ -627,7 +627,7 @@ func tick(dt: float) -> void:
 				reactions_by[String(g.kind)] = int(reactions_by.get(String(g.kind), 0)) + 1
 				begin(String(g.id), String(g.mode))
 				return
-		lock_t += dt
+		lock_t += dt * BendZone.BendGas.home_mult(me)    # (Sulphur Heart worn: faster in its own gas; else x1)
 		fill = clampf(lock_t / maxf(lock_s, 0.001), 0.0, 1.0)
 		if circle != null and is_instance_valid(circle):
 			circle.fill = fill
@@ -1889,6 +1889,10 @@ func _move(dt: float, t: Node3D, d: float) -> void:
 	var tp := t.global_position
 	me.crouch(false)
 	var straight := me.on_deck or edge_fn.is_valid()
+	var out := BendZone.BendGas.way_out(me)
+	if out != Vector3.INF:
+		me.go(_clamp(out), NpcFighter.RUN_SPEED, 0.3, straight)   # (in a foe's gas: out of it, as out of smoke; BendGas)
+		return
 	var keep: Variant = ((ai().get("elements", {}) as Dictionary).get(element, {}) as Dictionary).get("keep_m", [8.0, 15.0])
 	var band := Vector2(float(keep[0]), float(keep[1])) if keep is Array else Vector2(8.0, 15.0)
 	if stock():

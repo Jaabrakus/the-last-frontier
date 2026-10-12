@@ -68,6 +68,8 @@ var mended_line := "The earth packed again"
 var _t := 0.0
 var _shape: CollisionShape3D
 var _crumble_why := ""
+## Where its last counted hit struck (Brimstone Wall's cloud rises on that side).
+var _last_hit_at := Vector3.INF
 ## Raised over water entirely (dry_span: none of it dry): never seen, gone the next step.
 var drowned := false
 ## The width it was asked for before the water cut it (m).
@@ -288,6 +290,7 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null
 	if take_brace(self):
 		return                                # (mended or braced: this hit is taken free; round 2's Mend)
 	hits += 1
+	_last_hit_at = point
 	if is_inside_tree():
 		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
 		if not SbFx.fire(null, String(get_meta(&"sbfx_key", "")), "hit", {"at": point, "normal": nrm, "dir": nrm, "node": self}):
@@ -379,7 +382,22 @@ func crumble(why: String) -> void:
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
 		if why in ["shot", "capped"] and kind == "wall":
 			_rubble_stones()
+		if why == "shot" and kind == "wall":
+			_brimstone()
 	crumbled.emit(self, why)
+
+
+## Brimstone Wall (the Sulphur set, BendZone.BendGas.WALL): its wearer's wall shot down (never his third's cap) vents a gas cloud
+## 1 m out from its face on the side the last shot came from.
+func _brimstone() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not (by is Node3D) or not BendLoadout.wears(by, BendZone.BendGas.WALL):
+		return
+	var face := global_basis.z.normalized()
+	var side := signf((_last_hit_at - global_position).dot(face)) if _last_hit_at.is_finite() else 1.0
+	if side == 0.0:
+		side = 1.0
+	BendZone.BendGas.make(by as Node3D, global_position + face * side * (size.z * 0.5 + 1.0), "cloud")
 
 
 ## Earth's Rubble Wall (data/sway/skill_tree.json earth.wall.rubble; the owner, 2026-10-11: "make sure all the talents work"):

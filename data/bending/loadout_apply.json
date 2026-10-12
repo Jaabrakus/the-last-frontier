@@ -66,7 +66,14 @@
     "earth.stone.kiln_stone": true,
     "earth.wall.rubble": true,
     "earth.wall.quarry": true,
-    "earth.mend.reinforce": true
+    "earth.mend.reinforce": true,
+    "earth.set.sulphur": true,
+    "earth.sulphur.spike": true,
+    "earth.sulphur.boulder": true,
+    "earth.sulphur.fuming_column": true,
+    "earth.sulphur.brimstone_wall": true,
+    "earth.sulphur.flint_pebbles": true,
+    "earth.sulphur.heart": true
   },
   "behaviour": {
     "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)",
@@ -77,7 +84,14 @@
     "earth.stone.kiln_stone": "BendZone.on_bolt (a stone bolt through a fire_wall or burn: BendBolt.heat) and GustLift._kiln_check (a hurled stone); BendLoadout.hit_class (info.heated: base x1.15); BendZone parry (perfect sends it back: _straight_back, _lift_back) and Turn (douse)",
     "earth.wall.rubble": "FormRaised.crumble / _rubble_stones (shot down or capped: two loose stones of the raiser's at its foot); rise_s per wearer (wall_numbers)",
     "earth.wall.quarry": "BendBolt._hit / _quarry (a Beat Fissure into his own wall: FormEffects.gust_chunk thrown on along the crack, the first chunk each wall free); the Beat (info.beat); rise_s per wearer (wall_numbers)",
-    "earth.mend.reinforce": "FormEffects.mend (a mended piece's brace 2: REINFORCE_N) and FormRaised.take_brace (BendBolt.wear, apply_hit: a counted brace); Mend's lock 2.6 per wearer (move:mend.lock_s, its one mode)"
+    "earth.mend.reinforce": "FormEffects.mend (a mended piece's brace 2: REINFORCE_N) and FormRaised.take_brace (BendBolt.wear, apply_hit: a counted brace); Mend's lock 2.6 per wearer (move:mend.lock_s, its one mode)",
+    "earth.set.sulphur": "scripts/bending/bend_gas.gd (BendZone gas: ticks, look, reactions; the Boulder's end GustLift._gas_end, stone clashes BendBolt.meet/meet_lift, GustLift._meet_lifts; bots step out NpcBending._move); Pebbles class d per wearer",
+    "earth.sulphur.spike": "BendGas.stone_end (a puff where his Spike stops: GustLift._shatter/_land); class d per wearer",
+    "earth.sulphur.boulder": "BendGas.stone_end (three puffs along the Boulder's flight); class d per wearer",
+    "earth.sulphur.fuming_column": "BendEffects.column (a plume where the pillar rose: BendGas.make); class base per wearer",
+    "earth.sulphur.brimstone_wall": "FormRaised.crumble / _brimstone (shot down: a cloud 1 m out on the shooter's side); wall hits per wearer (wall_numbers)",
+    "earth.sulphur.flint_pebbles": "BendGas.react (his Pebbles light his own gas: ignite, his); set:sulphur.cloud_life_s per wearer (BendGas.num)",
+    "earth.sulphur.heart": "BendGas.home_mult (SwayCaster.passive_fill, NpcBending lock fill: x1.15 in his own gas, the higher with Rooted); set:sulphur.cloud_radius_m per wearer (BendGas.num)"
   },
   "live": [
     "air.ball.dense",
@@ -102,6 +116,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender", "earth.pebbles.kick_up", "earth.boulder.avalanche", "earth.column.heave", "earth.stone.kiln_stone", "earth.wall.rubble", "earth.wall.quarry", "earth.mend.reinforce", "earth.set.sulphur", "earth.sulphur.spike", "earth.sulphur.boulder", "earth.sulphur.fuming_column", "earth.sulphur.brimstone_wall", "earth.sulphur.flint_pebbles", "earth.sulphur.heart"],
   "styles_live": ["boxing"]
 }

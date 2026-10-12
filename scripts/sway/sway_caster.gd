@@ -2729,11 +2729,13 @@ func _moving_mult(m: String) -> float:
 
 ## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.
 func passive_fill() -> float:
+	# (Sulphur Heart: in his own gas his locks fill faster, the higher of it and Rooted, never times: BendGas.home_mult)
+	var home := BendZone.BendGas.home_mult(player) if elem() else 1.0
 	if not elem() or quick_element() != "earth" or not player.is_on_floor():
-		return 1.0
+		return home
 	var pv := Bending.passive("earth")
 	var fm := BendLoadout.tune_f(player, "rules:passives.earth.fill_mult", float(pv.get("fill_mult", 1.2)))
-	return fm if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0
+	return maxf(fm if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0, home)
 
 
 func _hold(dt: float, q: Dictionary) -> void:

@@ -64,6 +64,8 @@ extends Node3D
 ## machine (NetSpells.here). An end that is not its own (its life, its owner gone) is the host's word on the others.
 
 const GROUP := &"bend_zones"
+## Earth's Sulphur set: its gas (kind "gas": the ticks, the look, the reactions), loaded by its path.
+const BendGas := preload("res://scripts/bending/bend_gas.gd")
 const LIGHT := ["fire", "water", "ice", "air"]
 const GUARDS := ["catch", "deflect", "cushion", "redirect", "return", "parry", "spin", "absorb", "wind_guard"]
 ## The earth guards: they take stones.
@@ -250,6 +252,10 @@ func _look() -> void:
 			fr.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
+		"gas":
+			var gl := BendGas.look(self)             # (Sulphur's gas: a yellow-green haze over its round)
+			if gl != null:
+				_fx.append(gl)
 		"smoke", "dust", "spray":
 			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
 					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
@@ -494,7 +500,7 @@ func _wind_push() -> void:
 ## Who it holds now: everyone within it (round) or in its box.
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
-	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "gas"] \
 			or kind in GUARDS:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
@@ -522,6 +528,8 @@ func _every(dt: float) -> void:
 			"tornado":
 				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
+			"gas":
+				BendGas.tick(self, n)                # (Sulphur's gas: % ticks only, BendGas)
 	_inside_was = now_in
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
@@ -539,6 +547,9 @@ func on_bolt(b: BendBolt) -> bool:
 	if kind in KILN_FIRES and b.kind == "stone" and not b.heated and not b.spent and inside(b.global_position) \
 			and BendLoadout.wears(b._by(), KILN_STONE):
 		b.heat()                                 # (Kiln Stone: a stone of the wearer's through any fire comes out heated)
+	if kind == "gas":
+		# (Sulphur's gas: fire lights it, water washes it, wind carries it, his own Pebbles with Flint light it: BendGas)
+		return not b.spent and inside(b.global_position) and BendGas.react(self, b)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -1463,6 +1474,8 @@ func end(why := "ended") -> void:
 		whiffed(owner_node)
 		_result("whiff", "")
 	remove_from_group(GROUP)
+	if kind == "gas":
+		BendGas.ended(self)
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)

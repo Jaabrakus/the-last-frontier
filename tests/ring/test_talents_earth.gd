@@ -32,9 +32,19 @@ extends SceneTree
 ##                     the wall worn as ever (Classic on the Beat the same); his walls rise in 0.8 s; the bot's Beat Fissure too
 ##   Reinforce         his wall shot once and Mended (the cast's builder): the next two shots free, the third counts (Classic:
 ##                     one free); Mend's lock x2.6/2.2 through his own lock time; the bot's Mend the same
+##   Sulphur (set)     his Pebbles add 4% (5); his Boulder landing leaves a 2.5 m, 3 s cloud there (Classic none); a cloud on the
+##                     bot ticks 1% x the pace each 0.5 s, 6 at most, no knock, no slow (one tick a 0.5 s in two clouds); his
+##                     own gas never hurts him; his stone clashing with the bot's raises a cloud; fire lights it (the burst,
+##                     the lighter's), water washes it, wind carries it on (the mover's); the bot steps out of his gas; the
+##                     bot wearing the set leaves its own
+##   Sulphur twists    (each worn with the set) Spike: a 1.5 m puff where it stops, 12%; Boulder: three puffs along its flight,
+##                     13%; Fuming Column: a 2 m plume where it rose, base 9.3; Brimstone Wall: 3 hits, shot down a cloud on
+##                     the shooter's side; Flint Pebbles: his pebbles light his own gas (his burst), never the bot's; his clouds
+##                     2.5 s; Sulphur Heart: his clouds 2 m, his locks fill x1.15 in his own gas (the bot's too)
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
+const BendGas := preload("res://scripts/bending/bend_gas.gd")
 const LIMIT_S := 600.0
 ## A water bolt that wears an earth wall one hit (BendBolt.WEAR) and counts (FormRaised.hit_min 10).
 const SHOT := {"kind": "water", "mps": 30.0, "damage": 20.0, "knock_mps": 0.0, "up_mps": 0.0, "radius_m": 0.15, "range_m": 20.0}
@@ -185,6 +195,8 @@ func _run() -> void:
 	await _rubble()
 	await _quarry()
 	await _reinforce()
+	await _sulphur_set()
+	await _sulphur_twists()
 	_end()
 
 
@@ -1026,6 +1038,293 @@ func _reinforce() -> void:
 	var b: Array = await _mend_and_shoot(bot, player)
 	_expect(String(b[0]) == "worn" and b[1] == [0, 0, 1], "Reinforce on the bot: its mended wall takes two shots free (%s)" % [b[1]])
 	_wear(bot, "")
+
+
+# ---------------------------------------------------------------- the Sulphur set
+## `body` wears `ids` together as an earth caster.
+func _wear_all(body: Node, ids: Array) -> void:
+	BendLoadout.clear(body)
+	var ov := BendLoadout.wear(body, ids, "", "earth")
+	if (ov.ids as Array).size() != ids.size():
+		_expect(false, "%s worn (refused: %s)" % [ids, str(ov.refused)])
+
+
+## Every gas cloud gone (between the checks).
+func _no_gas() -> void:
+	for z in BendGas.gas_of():
+		(z as BendZone).end("test")
+	await _ticks(2)
+
+
+## `n`'s % gained over `s` seconds, and whether he was launched meanwhile (tag `tag`, any when "").
+func _pct_over(n: Node3D, s: float, tag := "") -> Array:
+	var p0 := rules.pct_of(n)
+	var got := [false]
+	var cb := func(b: Node3D, _v: Vector3, _st: float, _by: Node, t: String) -> void:
+		if b == n and (tag == "" or t == tag):
+			got[0] = true
+	rules.launched.connect(cb)
+	await _secs(s)
+	rules.launched.disconnect(cb)
+	return [rules.pct_of(n) - p0, got[0]]
+
+
+## A bolt of `kind` `by` sends across point `at` from `from_m` m to its side (it passes through `at`).
+func _bolt_across(by: Node3D, kind: String, at: Vector3, side: Vector3, from_m := 4.0) -> BendBolt:
+	var from := at + side.normalized() * from_m + Vector3.UP * 1.0
+	return BendBolt.launch(by, from, (at + Vector3.UP * 1.0 - from).normalized(), {"kind": kind, "mps": 25.0, "damage": 4.0,
+			"knock_mps": 0.0, "up_mps": 0.0, "radius_m": 0.15, "range_m": from_m * 2.0})
+
+
+func _sulphur_set() -> void:
+	var id := BendGas.SET
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "the Sulphur set is live, its code built (%s)" % BendLoadout.why_not(id))
+	await _stage(-4.5, 4.5)
+	await _no_gas()
+	_wear_all(player, [id])
+	var pc_cls := BendLoadout.hit_class(player, RingRules.class_of("rock_jab/pebbles"))
+	_expect(_near(float(pc_cls.d), 4.0, 0.001) and _near(float(BendLoadout.hit_class(bot, RingRules.class_of("rock_jab/pebbles")).d), 5.0, 0.001),
+			"Sulphur: his Pebbles add 4% (the bot's 5)")
+	# his Boulder's end: a cloud where it lands
+	var deck := _deck_off(5.0, 60.0)
+	var clouds := {}
+	for wid: Array in [[], [id]]:
+		_wear_all(player, wid)
+		await _no_gas()
+		await _boulder_at(deck)
+		await _secs(1.4)
+		clouds[wid.size()] = BendGas.gas_of(player).duplicate()
+	var c0: Array = clouds[0]
+	var c1: Array = clouds[1]
+	var z1: BendZone = c1[0] if c1.size() == 1 else null
+	_expect(c0.is_empty(), "Classic: the Boulder leaves no gas")
+	_expect(z1 != null and _near(z1.radius, 2.5, 0.01) and _near(z1.life_s, 3.0, 0.01) and Vector2(z1.global_position.x - deck.x, z1.global_position.z - deck.z).length() < 2.0,
+			"Sulphur: his Boulder leaves a 2.5 m cloud for 3 s where it lands (%s)" % [str([z1.radius, z1.life_s]) if z1 != null else str(c1.size())])
+	await _no_gas()
+	# the ticks: on the bot 1% x the pace each 0.5 s, 6 at most, no knock, no slow; his own never hurts him
+	await _stage(-4.5, 1.5)
+	BendGas.make(player, bot.global_position, "cloud")
+	BendGas.make(player, player.global_position, "cloud")
+	var pb: Array = await _pct_over(bot, 4.0)
+	var pp0 := rules.pct_of(player)
+	_expect(_near(float(pb[0]), 6.0 * RingRules.stock_num("pct_scale", 1.0), 0.02) and not bool(pb[1]) and BendStatus.until(bot, &"bend_slow") <= 0.0,
+			"Sulphur: his cloud on the bot adds %.2f%% over its life (6 ticks of 1%% x the pace), no knock, no slow" % pb[0])
+	_expect(_near(rules.pct_of(player), pp0, 0.001), "Sulphur: his own gas never hurts him")
+	await _no_gas()
+	BendGas.make(player, bot.global_position, "cloud")
+	BendGas.make(player, bot.global_position + Vector3(0.5, 0.0, 0.0), "cloud")
+	var p2: Array = await _pct_over(bot, 1.6)
+	_expect(float(p2[0]) <= 4.0 * RingRules.stock_num("pct_scale", 1.0) + 0.01, "Sulphur: in two clouds the bot still takes one tick each 0.5 s (%.2f%% in 1.6 s)" % p2[0])
+	await _no_gas()
+	# a clash: his stone and the bot's meet, a cloud rises there
+	await _stage(-4.5, 1.5)
+	var mid := (player.global_position + bot.global_position) * 0.5
+	var way := (bot.global_position - player.global_position).normalized()
+	BendBolt.launch(player, mid - way * 2.0 + Vector3.UP * 1.2, way, STONE)
+	BendBolt.launch(bot, mid + way * 2.0 + Vector3.UP * 1.2, -way, STONE)
+	await _secs(0.5)
+	_expect(BendGas.gas_of(player).size() == 1 and BendGas.gas_of(bot).is_empty(), "Sulphur: his stone clashing with the bot's raises his cloud there (%d)" % BendGas.gas_of(player).size())
+	await _no_gas()
+	# the reactions: fire lights it (the burst, the lighter's), water washes it, wind carries it on (the mover's)
+	await _stage(-4.5, 4.5)
+	var side := way.cross(Vector3.UP)
+	var zc := BendGas.make(player, player.global_position + side * 1.0, "cloud")
+	_bolt_across(bot, "fire", zc.global_position, way)
+	var ig: Array = await _pct_over(player, 0.6, BendGas.IGNITE_TAG)
+	_expect(not is_instance_valid(zc) and bool(ig[1]) and _near(float(ig[0]), 6.0 * RingRules.stock_num("pct_scale", 1.0), 0.05),
+			"Sulphur: a fire bolt through his cloud lights it: the burst launches him (%.2f%%, the bot's), the cloud gone" % ig[0])
+	await _stage(-4.5, 4.5)
+	var zw := BendGas.make(player, player.global_position + side * 3.0, "cloud")
+	_bolt_across(bot, "water", zw.global_position, way)
+	await _secs(0.6)
+	_expect(not is_instance_valid(zw), "Sulphur: a water bolt through it washes it away")
+	var za := BendGas.make(player, player.global_position + side * 3.0, "cloud")
+	var at0 := za.global_position
+	_bolt_across(bot, "air", za.global_position, way)
+	await _secs(0.8)
+	_expect(is_instance_valid(za) and za.owner_node == bot and _near(at0.distance_to(za.global_position), BendGas.CARRY_M, 0.4),
+			"Sulphur: wind through it carries it %.1f m on, the mover's now" % (at0.distance_to(za.global_position) if is_instance_valid(za) else -1.0))
+	await _no_gas()
+	# the bot steps out of his gas
+	await _stage(-4.5, 4.5)
+	BendGas.make(player, bot.global_position, "cloud")
+	var zb: BendZone = BendGas.gas_of(player)[0]
+	bot.held = false
+	var out := false
+	for i in 30:
+		await _secs(0.1)
+		if not zb.inside(bot.global_position):
+			out = true
+			break
+	bot.held = true
+	_expect(out, "Sulphur: the bot steps out of his gas")
+	await _no_gas()
+	_wear(player, "")
+	# the bot wearing the set: its Boulder leaves its own cloud
+	_wear_all(bot, [id])
+	await _stage(2.0, 9.0)
+	player.set_meta(&"bend_under_until", BendStatus.now() + 3.0)
+	BendCast.cast(BendCaster.of(bot), "stone_form", "cannonball", player, player.global_position)
+	await _secs(2.0)
+	player.remove_meta(&"bend_under_until")
+	_expect(BendGas.gas_of(bot).size() >= 1, "Sulphur on the bot: its Boulder leaves its own cloud (%d)" % BendGas.gas_of(bot).size())
+	_wear(bot, "")
+	await _no_gas()
+
+
+# ---------------------------------------------------------------- the Sulphur twists
+## `by`'s gas zones of kind `kind` ("cloud", "puff", "plume").
+func _gas_kind(by: Node3D, kind: String) -> Array:
+	return BendGas.gas_of(by).filter(func(z: Variant) -> bool: return String((z as Node).get_meta(&"gas_kind", "")) == kind)
+
+
+## The bot's real lock of the Fissure (its own begin, its fill each frame), timed from begin to release (s).
+func _bot_lock_time() -> float:
+	var nb: NpcBending = bot.brain.bending
+	bot.held = false
+	var t0 := BendStatus.now()
+	nb.begin("earth_shove", "push")
+	var t1 := -1.0
+	for i in 400:
+		await _ticks(1)
+		if nb.casting == "":
+			t1 = BendStatus.now()
+			break
+	bot.held = true
+	return t1 - t0
+
+
+func _sulphur_twists() -> void:
+	var S := BendGas.SET
+	for tw: String in [BendGas.SPIKE, BendGas.BOULDER, BendGas.COLUMN, BendGas.WALL, BendGas.FLINT, BendGas.HEART]:
+		_expect(BendLoadout.why_not(tw) == "" and tw in BendLoadout.behaviour(), "%s is live with the set, its code built (%s)" % [tw, BendLoadout.why_not(tw)])
+	# Sulphur Spike: a puff where it stops, 12%
+	await _stage(-4.5, 1.5)
+	var spk := {}
+	for wid: Array in [[S], [S, BendGas.SPIKE]]:
+		_wear_all(player, wid)
+		await _no_gas()
+		await _aim_at(NpcSenses.chest_of(bot))
+		sc.set_mode("stone_form", "spike")
+		FormEffects.apply(sc, "stone_form", null, bot.global_position)
+		await _secs(1.2)
+		var pf := _gas_kind(player, "puff")
+		spk[wid.size()] = [pf.size(), (pf[0] as BendZone) if pf.size() == 1 else null, BendLoadout.hit_class(player, RingRules.class_of("stone_form/spike")).d]
+		await _stage(-4.5, 1.5)
+	var sz: BendZone = spk[2][1]
+	_expect(int(spk[1][0]) == 0 and _near(float(spk[1][2]), 14.0, 0.001), "the set alone: his Spike leaves no gas, 14%")
+	_expect(sz != null and _near(sz.radius, 1.5, 0.01) and _near(sz.life_s, 2.5, 0.01) and _near(float(spk[2][2]), 12.0, 0.001),
+			"Sulphur Spike: where it stops a 1.5 m puff for 2.5 s; it adds 12%% (%s)" % [str([sz.radius, sz.life_s]) if sz != null else str(spk[2][0])])
+	await _no_gas()
+	# Sulphur Boulder: three puffs along its flight, 13%
+	await _stage(-4.5, 4.5)
+	_wear_all(player, [S, BendGas.BOULDER])
+	var deck := _deck_off(5.0, 60.0)
+	await _boulder_at(deck)
+	await _secs(1.4)
+	var bp := _gas_kind(player, "puff")
+	var bc := _gas_kind(player, "cloud")
+	var behind := bc.size() == 1
+	for z: Variant in bp:
+		behind = behind and (z as Node3D).global_position.distance_to(player.global_position) < (bc[0] as Node3D).global_position.distance_to(player.global_position)
+	_expect(bp.size() == 3 and behind and _near(float(BendLoadout.hit_class(player, RingRules.class_of("stone_form/cannonball")).d), 13.0, 0.001),
+			"Sulphur Boulder: three puffs along its flight before its landing cloud; it adds 13%% (%d puffs, %d cloud)" % [bp.size(), bc.size()])
+	await _no_gas()
+	# Fuming Column: a 2 m plume where it rose, base 9.3
+	await _stage(-3.0, 3.0)
+	var fum := {}
+	for wid: Array in [[S], [S, BendGas.COLUMN]]:
+		_wear_all(player, wid)
+		await _no_gas()
+		await _aim_at(bot.global_position + Vector3.UP * 0.05)
+		BendEffects.apply(pc, "earth_shove", "column", SwayMoves.move("earth_shove").bend.column)
+		await _secs(0.3)
+		var pl := _gas_kind(player, "plume")
+		fum[wid.size()] = (pl[0] as BendZone) if pl.size() == 1 else null
+		await _secs(1.0)
+		await _stage(-3.0, 3.0)
+	var fz: BendZone = fum[2]
+	_expect(fum[1] == null, "the set alone: his Column leaves no plume")
+	_expect(fz != null and _near(fz.radius, 2.0, 0.01) and _near(fz.life_s, 3.0, 0.01)
+			and _near(float(BendLoadout.hit_class(player, RingRules.class_of("earth_shove/column")).base), 9.3, 0.001),
+			"Fuming Column: a 2 m plume for 3 s where it rose; it launches with base 9.3")
+	await _no_gas()
+	# Brimstone Wall: 3 hits; shot down, a cloud 1 m out on the shooter's side
+	await _stage(-4.5, 4.5)
+	var brim := {}
+	for wid: Array in [[S], [S, BendGas.WALL]]:
+		_wear_all(player, wid)
+		await _no_gas()
+		var r := await _wall_of(player, 3.0)
+		var at := r.global_position
+		var face := r.global_basis.z
+		var shots := await _shoot_down(r, bot)
+		await _secs(0.3)
+		var cl := _gas_kind(player, "cloud")
+		var toward := (bot.global_position - at)
+		toward.y = 0.0
+		var off := ((cl[0] as Node3D).global_position - at).dot(face.normalized() * signf(toward.dot(face))) if cl.size() == 1 else -1.0
+		brim[wid.size()] = [shots, cl.size(), off]
+		await _secs(1.4)
+	_expect(int(brim[1][0]) == 4 and int(brim[1][1]) == 0, "the set alone: his wall takes 4 shots and leaves no gas")
+	_expect(int(brim[2][0]) == 3 and int(brim[2][1]) == 1 and float(brim[2][2]) > 1.0 and float(brim[2][2]) < 1.8,
+			"Brimstone Wall: shot down by the 3rd, a cloud %.2f m out on the shooter's side" % brim[2][2])
+	await _no_gas()
+	# Flint Pebbles: his pebbles light his own gas (his burst); the bot's gas they leave alone; his clouds last 2.5 s
+	await _stage(-4.5, 1.5)
+	_wear_all(player, [S])
+	var life_set := BendGas.make(player, player.global_position + Vector3(0, 0, 4), "cloud").life_s
+	_wear_all(player, [S, BendGas.FLINT])
+	var life_fl := BendGas.make(player, player.global_position + Vector3(0, 0, 4), "cloud").life_s
+	_expect(_near(life_set, 3.0) and _near(life_fl, 2.5), "Flint Pebbles: his clouds last %.1f s (the set's %.1f)" % [life_fl, life_set])
+	await _no_gas()
+	var zf := BendGas.make(player, bot.global_position, "cloud")
+	await _aim_at(NpcSenses.chest_of(bot))
+	BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+	var fl: Array = await _pct_over(bot, 0.8, BendGas.IGNITE_TAG)
+	_expect(not is_instance_valid(zf) and bool(fl[1]), "Flint Pebbles: his pebbles light his own cloud on the bot: his burst launches it")
+	await _stage(-4.5, 1.5)
+	_wear_all(bot, [S])
+	var zb := BendGas.make(bot, bot.global_position, "cloud")
+	await _aim_at(NpcSenses.chest_of(bot))
+	BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+	var fb: Array = await _pct_over(bot, 0.8, BendGas.IGNITE_TAG)
+	_expect(is_instance_valid(zb) and not bool(fb[1]), "Flint Pebbles: the bot's gas his pebbles leave alone")
+	_wear_all(player, [S])
+	var zs := BendGas.make(player, bot.global_position + Vector3(0, 0, 0.1), "cloud")
+	await _aim_at(NpcSenses.chest_of(bot))
+	BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
+	await _secs(0.6)
+	_expect(is_instance_valid(zs), "the set alone: his pebbles do not light his gas")
+	_wear(bot, "")
+	await _no_gas()
+	# Sulphur Heart: his clouds 2 m; his locks fill x1.15 in his own gas (the higher with Rooted); the bot's too
+	await _stage(-4.5, 4.5)
+	_wear_all(player, [S, BendGas.HEART])
+	var hz := BendGas.make(player, player.global_position, "cloud")
+	var hr := hz.radius
+	player.velocity = Vector3(2.0, 0.0, 0.0)
+	var in_moving := sc.passive_fill()
+	player.velocity = Vector3.ZERO
+	var in_still := sc.passive_fill()
+	hz.end("test")
+	await _ticks(2)
+	player.velocity = Vector3(2.0, 0.0, 0.0)
+	var out_moving := sc.passive_fill()
+	player.velocity = Vector3.ZERO
+	_expect(_near(hr, 2.0, 0.01), "Sulphur Heart: his clouds are 2 m (%.1f)" % hr)
+	_expect(_near(in_moving, 1.15, 0.001) and _near(in_still, 1.2, 0.001) and _near(out_moving, 1.0, 0.001),
+			"Sulphur Heart: in his own gas his locks fill x%.2f (standing still Rooted's x%.2f, the higher; out of it x%.2f)" % [in_moving, in_still, out_moving])
+	_wear(player, "")
+	_wear_all(bot, [S, BendGas.HEART])
+	await _stage(-4.5, 4.5)
+	var t_out := await _bot_lock_time()
+	await _secs(0.6)
+	BendGas.make(bot, bot.global_position, "cloud")
+	var t_in := await _bot_lock_time()
+	_expect(t_out > 0.0 and t_in > 0.0 and _near(t_out / t_in, 1.15, 0.06), "Sulphur Heart on the bot: its lock fills x%.2f in its own gas (%.2f s, out %.2f s)" % [t_out / maxf(t_in, 0.01), t_in, t_out])
+	_wear(bot, "")
+	await _no_gas()
 
 
 ## A body made to wear `id` (a stand-in for the checks of what a wearer's overlay says).

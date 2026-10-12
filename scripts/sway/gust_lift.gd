@@ -304,6 +304,7 @@ func hurl(toward := Vector3.INF) -> void:
 	velocity = dir * lerpf(float(mps[0]), float(mps[1]), power)
 	phase = Phase.FLIGHT
 	_fly_t = 0.0
+	_hurl_from = from
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
 	GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
 	# (the Spellbreak flight, SbFx: visual only, keyed by its Throw's hit info; a held stone thrown back by the catch's own)
@@ -424,6 +425,7 @@ func _meet_lifts() -> bool:
 		var mid := (stone.global_position + l.stone.global_position) * 0.5
 		if not SbFx.fire(by(), "clash/stone", "clash", {"at": mid, "el": "earth", "node": stone}):
 			BendLooks.burst(mid, "stone", 22)
+		BendZone.BendGas.clash(by(), l.by(), mid)          # (the Sulphur set: a cloud where his stones clash with a foe's)
 		if wb <= wa:
 			l.drop()
 		if wa <= wb:
@@ -494,6 +496,7 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 		_shatter(contact, n)                     # (the ring: it bursts on what it met, nothing left lying)
 		return
 	phase = Phase.DONE
+	_gas_end(contact)
 	var scn := get_tree().current_scene
 	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
 	SbFx.stop(self, "flight")
@@ -534,6 +537,16 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 ## lands; douse() a plain stone again (a Turn).
 var heated := false
 var _kiln_trail: GPUParticles3D
+## Where its flight began (hurl), for Sulphur Boulder's trail (BendZone.BendGas.stone_end).
+var _hurl_from := Vector3.INF
+
+
+## Its stone stopped at `at` (a burst on a body, the deck, a wall; a landing): the Sulphur set's gas where a wearer's own Spike
+## or Boulder stops (BendGas.stone_end; never a returned stone).
+func _gas_end(at: Vector3) -> void:
+	var inf: Dictionary = get_meta(&"bend_info", {})
+	if String(inf.get("tag", "")).begins_with("stone_form/") and not bool(inf.get("returned", false)) and NetSpells.decides():
+		BendZone.BendGas.stone_end(by() as Node3D, kind, at, _hurl_from)
 
 
 func _kiln_check() -> void:
@@ -641,6 +654,7 @@ static func shatter_d() -> Dictionary:
 func _shatter(at: Vector3, n: Vector3) -> void:
 	phase = Phase.DONE
 	SbFx.stop(self, "flight")
+	_gas_end(at)
 	var sd := shatter_d()
 	var k := float(stone.get_meta(FormEffects.GROWN_META, 1.0)) if stone != null and is_instance_valid(stone) else 1.0
 	var scn := get_tree().current_scene

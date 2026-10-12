@@ -193,8 +193,10 @@ func _run() -> void:
 		var el := id.get_slice(".", 0)
 		var w := _body()
 		var bot := _body()
-		var ov := BendLoadout.wear(w, [id], "", el)
-		_expect((ov.ids as Array) == [id] and BendLoadout.picks_of(w) == [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
+		# (a node that requires another, a skill set's twist, is worn with it: alone it applies nothing)
+		var with: Array = ((n.get("requires", []) as Array) if n.get("requires") is Array else []) + [id]
+		var ov := BendLoadout.wear(w, with, "", el)
+		_expect((ov.ids as Array) == with and BendLoadout.picks_of(w) == with and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
 			var rest := path.get_slice(":", 1)

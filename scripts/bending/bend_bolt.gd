@@ -874,6 +874,7 @@ static func meet_lift(a: BendBolt, l: GustLift) -> void:
 	var wb := int(WEIGHTS.get(weight_of(l), 1))
 	if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
 		BendLooks.burst(at, "stone", 20)
+	BendZone.BendGas.clash(a._by(), l.by(), at)             # (the Sulphur set: a cloud where his stones clash with a foe's)
 	if wa <= wb:
 		a.end("broken")
 	if wb <= wa:
@@ -902,6 +903,7 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 			# (the bigger stone wins: light < medium < heavy; equal ones both break)
 			if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
 				BendLooks.burst(at, "stone", 24)
+			BendZone.BendGas.clash(a._by(), b._by(), at)         # (the Sulphur set: a cloud where his stones clash with a foe's)
 			var wa := int(WEIGHTS.get(a.weight, 1))
 			var wb := int(WEIGHTS.get(b.weight, 1))
 			if wa <= wb:

@@ -864,6 +864,9 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
 			"damage": float(spec.get("damage", 10.0)), "kind": "stone", "_lock_s": float(spec.get("_lock_s", -1.0)),
 			"_info": spec.get("_info", {}), "lift_m": float(wn.get("height_m", 3.0)) if r != null else 0.0}
+	if BendLoadout.wears(p, BendZone.BendGas.COLUMN):
+		# (Fuming Column: a gas plume where the pillar rose, its rise and tell the Column's: BendGas)
+		BendZone.BendGas.make(p, at, "plume", BendZone.BendGas.PLUME_R, BendZone.BendGas.PLUME_S)
 	if rise <= 0.0:
 		status_at(p, at, sa)
 		return r
