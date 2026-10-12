@@ -365,7 +365,32 @@ func crumble(why: String) -> void:
 		if why == "shot" and kind == "wall" and matter != "wood" and not sbr:
 			BendLooks.shatter(at, size, global_basis.z.normalized(), "ice" if matter == "snow" else "earth")
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
+		if why in ["shot", "capped"] and kind == "wall":
+			_rubble_stones()
 	crumbled.emit(self, why)
+
+
+## Earth's Rubble Wall (data/sway/skill_tree.json earth.wall.rubble; the owner, 2026-10-11: "make sure all the talents work"):
+## a wall raised by its wearer (meta bend_by) that crumbles shot down or broken by his third (the cap: "capped") leaves RUBBLE_N
+## loose stones at its foot, rising out of the ground as it sinks: his (FormStone.make_loose: still loose_max at most). A
+## Fissure that runs under them throws them on, whoever's they are (BendBolt._heave_loose). Its rise is the node's (0.8 s).
+const RUBBLE := "earth.wall.rubble"
+const RUBBLE_N := 2
+const RUBBLE_R := 0.2
+
+
+func _rubble_stones() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, RUBBLE) or not NetSpells.decides():
+		return
+	var scn := get_tree().current_scene
+	for i in RUBBLE_N:
+		var across := (float(i) - float(RUBBLE_N - 1) * 0.5) * size.x * 0.5
+		var foot := FormEffects.ground_at(self, base * Vector3(across, 0.4, 0.0))
+		var s := FormStone.ball(scn, foot, {"radius_m": RUBBLE_R, "mass_kg": 20.0, "rise_s": 0.6, "life_s": 30.0, "sink_s": 1.0},
+				absi(hash(Vector3i(foot * 10.0))) % 97, matter if matter in ["earth", "stone", "mud", "snow"] else "stone")
+		s.set_meta(&"bend_weight", "medium")
+		FormStone.make_loose(s, by)
 
 
 ## Wall `r` (raised by the caster in its meta bend_by) counted against the ring's cap: past max_walls of that caster's

@@ -25,6 +25,8 @@ extends SceneTree
 ##   Kiln Stone        a Fire Wall (the bot's) between them: the player's Pebbles and Spike thrown through it come out heated
 ##                     (Classic: plain) and knock the bot with base x1.15; the bot's Parry on the beat sends heated pebbles back
 ##                     (plain ones it only stops); its Turn douses them; the bot wearing it heats its own Spike the same
+##   Rubble Wall       the wearer's wall rises in 0.8 s (0.7); shot down it leaves two loose stones of his at its foot, broken
+##                     by his third (the cap) the same (Classic none); the bot's Fissure throws them on; the bot's own walls too
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -175,6 +177,7 @@ func _run() -> void:
 	await _avalanche()
 	await _heave()
 	await _kiln_stone()
+	await _rubble()
 	_end()
 
 
@@ -788,6 +791,102 @@ func _kiln_stone() -> void:
 	if is_instance_valid(fw):
 		fw.end("test")
 	await _stage(-4.5, 4.5)
+
+
+# ---------------------------------------------------------------- Rubble Wall
+## An Earth Wall of `by`'s (the builder its cast calls) `dist` m toward the other fighter, risen.
+func _wall_of(by: Node3D, dist: float) -> FormRaised:
+	var other: Node3D = bot if by == player else player
+	var way := other.global_position - by.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var r := FormEffects.earth_wall(BendCaster.of(by), by.global_position + way * dist, SwayMoves.move("earth_wall"), "earth")
+	await _secs(1.0)
+	return r
+
+
+## Wall `r` shot down by water bolts from its far side (from `by`'s foe's side); the shots it took (-1: still up).
+func _shoot_down(r: FormRaised, shooter: Node3D) -> int:
+	var shots := 0
+	if r == null:
+		return -1
+	var mid := r.global_position + Vector3.UP * 1.0
+	var way := shooter.global_position - mid
+	way.y = 0.0
+	way = way.normalized()
+	while is_instance_valid(r) and r.state != FormRaised.State.CRUMBLING and shots < 10:
+		BendBolt.launch(shooter, mid + way * 4.0, -way, SHOT)
+		shots += 1
+		await _secs(0.35)
+	return shots if not is_instance_valid(r) or r.state == FormRaised.State.CRUMBLING else -1
+
+
+## `by`'s loose stones within `m` of `at`.
+func _loose_near(by: Node3D, at: Vector3, m := 2.5) -> Array:
+	return FormStone.loose_of(by).filter(func(s: Variant) -> bool: return (s as Node3D).global_position.distance_to(at) <= m)
+
+
+func _rubble() -> void:
+	var id := "earth.wall.rubble"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Rubble Wall is live, its code built (%s)" % BendLoadout.why_not(id))
+	var got := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		await _stage(-4.5, 4.5)
+		await _clear_held(player)
+		var r := await _wall_of(player, 3.0)
+		var rise := r.rise_s if r != null else -1.0
+		var at := r.global_position if r != null else Vector3.ZERO
+		var shots := await _shoot_down(r, bot)
+		await _secs(1.0)
+		got[wid] = [rise, shots, _loose_near(player, at).size()]
+	_expect(_near(float(got[""][0]), 0.7) and _near(float(got[id][0]), 0.8), "Rubble Wall: the wearer's wall rises in %.1f s (Classic %.1f)" % [got[id][0], got[""][0]])
+	_expect(int(got[""][1]) == 4 and int(got[""][2]) == 0, "Classic: a wall shot down leaves no stones (%d shots, %d)" % [got[""][1], got[""][2]])
+	_expect(int(got[id][1]) == 4 and int(got[id][2]) == 2, "Rubble Wall: shot down it leaves two loose stones of his at its foot (%d shots, %d)" % [got[id][1], got[id][2]])
+	# broken by his third (the cap of two standing): the oldest's two stones
+	await _clear_held(player)
+	var first := await _wall_of(player, 2.5)
+	var at1 := first.global_position
+	await _wall_of(player, 4.0)
+	var third := await _wall_of(player, 5.5)
+	await _secs(0.8)
+	_expect(not is_instance_valid(first) or first.state == FormRaised.State.CRUMBLING, "(his third wall broke his first: the cap)")
+	_expect(_loose_near(player, at1, 1.8).size() == 2, "Rubble Wall: broken by his third, his first leaves two stones (%d)" % _loose_near(player, at1, 1.8).size())
+	for w in get_nodes_in_group(FormRaised.GROUP):
+		if w is FormRaised and int((w as Node).get_meta(&"bend_by", 0)) == player.get_instance_id():
+			(w as FormRaised).crumble("time")
+	await _secs(1.6)
+	# a mirror: the bot's Fissure run under them throws them on
+	await _clear_held(player)
+	var r2 := await _wall_of(player, 4.5)
+	var at2 := r2.global_position
+	await _shoot_down(r2, bot)
+	await _secs(1.2)
+	var mine := _loose_near(player, at2)
+	BendEffects.apply(BendCaster.of(bot), "earth_shove", "push", SwayMoves.move("earth_shove").bend.push)
+	var taken := 0
+	for i in 60:
+		await _ticks(2)
+		taken = 0
+		for s: Variant in mine:
+			if not is_instance_valid(s) or GustLift.busy(s as Node) or not (s as Node).has_meta(FormStone.LOOSE_META):
+				taken += 1
+		if taken == mine.size():
+			break
+	_expect(mine.size() == 2 and taken == 2, "Rubble Wall: the bot's Fissure run under his rubble throws it on (%d of %d)" % [taken, mine.size()])
+	_wear(player, "")
+	await _secs(1.0)
+	# the bot wearing it: its own wall shot down leaves its stones
+	_wear(bot, id)
+	await _stage(-4.5, 4.5)
+	var rb := await _wall_of(bot, 3.0)
+	var atb := rb.global_position if rb != null else Vector3.ZERO
+	await _shoot_down(rb, player)
+	await _secs(1.0)
+	_expect(_loose_near(bot, atb).size() == 2, "Rubble Wall on the bot: its wall shot down leaves two stones of its own (%d)" % _loose_near(bot, atb).size())
+	_wear(bot, "")
+	await _clear_held(bot)
+	await _clear_held(player)
 
 
 ## A body made to wear `id` (a stand-in for the checks of what a wearer's overlay says).
