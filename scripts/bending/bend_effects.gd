@@ -786,8 +786,9 @@ static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 				continue
 			k = float(g.mult)
 			inf = g.info
-		BendR3.deliver(n, float(spec.get("damage", 0.0)) * k, n.global_position + Vector3.UP * 0.3, Vector3.UP, p,
-				float(spec.get("_lock_s", -1.0)), Vector3.UP * float(spec.get("up_mps", 0.0)) * k, inf)
+		var kd: Vector3 = spec.get("kv_dir", Vector3.UP)          # (a leaning Column's throw: its way, BendVariants)
+		BendR3.deliver(n, float(spec.get("damage", 0.0)) * k, n.global_position + Vector3.UP * 0.3, kd, p,
+				float(spec.get("_lock_s", -1.0)), kd * float(spec.get("up_mps", 0.0)) * k, inf)
 		if float(spec.get("root_s", 0.0)) > 0.0:
 			BendStatus.root(n, float(spec.root_s))
 		if float(spec.get("slow_s", 0.0)) > 0.0:
@@ -1069,17 +1070,35 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	if float(spec.get("sink_s", 0.0)) > 0.0:
 		wn["life_s"] = float(spec.sink_s)         # (it sinks back sink_s after; never a wall: count_wall never sees it)
 	var r: FormRaised = null
+	# (its way, BendVariants: up as ever; leaning right or left, it rises tilted and throws them that way; out of the nearest
+	# Earth Wall by the mark, a piston from its face. The owner, 2026-10-12: "the column ramp left to shoot them right")
+	var lean := _column_way(p, at, spec)
+	var xf := Transform3D(Basis.IDENTITY, at)
+	if not lean.is_empty():
+		xf = lean.xf
+		if lean.has("len_m"):
+			wn["height_m"] = float(lean.len_m)    # (the wall's piston: out to just short of the mark, never through him)
+		else:
+			wn["height_m"] = float(wn.get("height_m", 3.0)) * float(lean.get("h_k", 1.0))
 	if float(spec.get("bind_s", 0.0)) > 0.0:
 		# (Stone Grip, a bind twist: stone closes round his feet where the Column would throw him up; no pillar to stand on)
 		BendLooks.bind_tell(at, "earth", float(spec.get("radius_m", 1.3)), rise)
 	else:
-		r = FormRaised.raise(p.get_tree().current_scene, "pillar", Transform3D(Basis.IDENTITY, at), wn, absi(hash(at)) % 97)
+		r = FormRaised.raise(p.get_tree().current_scene, "pillar", xf, wn, absi(hash(at)) % 97)
 		r.set_meta(&"bend_by", p.get_instance_id())
 	# (lift_m: the pillar carries whom it rises under up onto its top, where its throw must find him; the owner 2026-10-11, "i
 	# dont think the knock column knocks someone up right?": it was looked for within 3 m of the deck, the pillar 3 m tall)
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
 			"damage": float(spec.get("damage", 10.0)), "kind": "stone", "_lock_s": float(spec.get("_lock_s", -1.0)),
 			"_info": spec.get("_info", {}), "lift_m": float(wn.get("height_m", 3.0)) if r != null else 0.0}
+	if not lean.is_empty():
+		var inf: Dictionary = (spec.get("_info", {}) as Dictionary).duplicate()
+		if inf.has("tag"):
+			inf["tag"] = String(inf.tag) + String(lean.suffix)       # (its own class: earth_shove/column.lean, .wall)
+		inf["dir"] = lean.flat
+		sa["_info"] = inf
+		sa["kv_dir"] = lean.kv_dir
+		sa["lift_m"] = 0.0                       # (it carries no one up: he is thrown where he stands)
 	if BendLoadout.wears(p, BendZone.BendGas.COLUMN):
 		# (Fuming Column: a gas plume where the pillar rose, its rise and tell the Column's: BendGas)
 		BendZone.BendGas.make(p, at, "plume", BendZone.BendGas.PLUME_R, BendZone.BendGas.PLUME_S)
@@ -1095,6 +1114,65 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 		status_at(p, at, sa)
 		_cur = keep)
 	return r
+
+
+## The Column's way for `p`'s cast at `at` (BendVariants.of: up, right, left, wall): {} up as ever; else {xf (the pillar's place,
+## tilted), flat (the throw's way on the deck), kv_dir, suffix (its class's), h_k}. Right and left are the caster's at the cast
+## (his facing's); wall finds the nearest Earth Wall (anyone's, not ice) within COLUMN_WALL_M of the mark, the piston from its
+## face toward the mark, else up.
+const COLUMN_LEAN_DEG := 35.0
+const COLUMN_WALL_M := 3.5
+## The wall's piston stops this short of the mark (m): it strikes and throws him, never pins him against itself.
+const COLUMN_PISTON_SHORT_M := 0.5
+static func _column_way(p: Node3D, at: Vector3, spec: Dictionary) -> Dictionary:
+	var info: Dictionary = spec.get("_info", {})
+	var m := String(info.get("move", "earth_shove"))
+	var md := String(info.get("mode", "column"))
+	var way := BendVariants.of(p, m, md)
+	if way in ["", "up"]:
+		return {}
+	var bc := BendCaster.wrap(p)
+	var fwd := bc.facing() if bc != null and bc.valid() else -p.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized() if fwd.length_squared() > 1e-4 else Vector3.FORWARD
+	var right := fwd.cross(Vector3.UP).normalized()
+	if way in ["right", "left"]:
+		var flat := right if way == "right" else -right
+		var tilt := deg_to_rad(COLUMN_LEAN_DEG)
+		var up := (Vector3.UP * cos(tilt) + flat * sin(tilt)).normalized()
+		var base := at - flat * 0.75
+		var z := flat.cross(up).normalized()
+		var b := Basis(up.cross(z).normalized(), up, z)
+		var a := deg_to_rad(40.0)
+		return {"xf": Transform3D(b, base), "flat": flat, "kv_dir": (flat * cos(a) + Vector3.UP * sin(a)).normalized(),
+				"suffix": ".lean", "h_k": 0.8}
+	# wall: the nearest Earth Wall by the mark
+	var best: FormRaised = null
+	var best_d := INF
+	for n in p.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var w := n as FormRaised
+		if w == null or not is_instance_valid(w) or w.kind != "wall" or not w.is_up() or bool(w.get_meta(&"bend_ice", false)):
+			continue
+		var d := Vector2(w.global_position.x - at.x, w.global_position.z - at.z).length()
+		if d < best_d and d <= COLUMN_WALL_M:
+			best = w
+			best_d = d
+	if best == null:
+		return {}                                 # (no wall near the mark: up as ever)
+	var face := best.global_basis.z
+	face.y = 0.0
+	face = face.normalized() if face.length_squared() > 1e-4 else Vector3.FORWARD
+	if (at - best.global_position).dot(face) < 0.0:
+		face = -face                              # (out of the face the mark is on)
+	var side := best.global_basis.x.normalized()
+	var off := clampf((at - best.global_position).dot(side), -best.size.x * 0.4, best.size.x * 0.4)
+	var base2 := best.global_position + side * off + face * (best.size.z * 0.5) + Vector3.UP * 0.9
+	var up2 := (face * cos(deg_to_rad(10.0)) + Vector3.UP * sin(deg_to_rad(10.0))).normalized()
+	var z2 := side.cross(up2).normalized()
+	var b2 := Basis(up2.cross(z2).normalized(), up2, z2)
+	var a2 := deg_to_rad(25.0)
+	return {"xf": Transform3D(b2, base2), "flat": face, "kv_dir": (face * cos(a2) + Vector3.UP * sin(a2)).normalized(),
+			"suffix": ".wall", "len_m": clampf(Vector2(at.x - base2.x, at.z - base2.z).length() - COLUMN_PISTON_SHORT_M, 0.5, 3.5)}
 
 
 static func _wall(p: Node3D, xf: Transform3D, matter: String, life := -1.0, w := -1.0, ice := false) -> FormRaised:

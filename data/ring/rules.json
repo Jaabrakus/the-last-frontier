@@ -116,6 +116,8 @@
 			"air_gust/gust": {"d": 10.0, "base": 7.2, "growth": 13.2, "angle": 30},
 			"air_gust/gust.grown": {"d": 12.0, "base": 7.8, "growth": 14.5, "angle": 30},
 			"earth_shove/column": {"d": 9.0, "base": 10.3, "growth": 5.0, "angle": 85, "dir": "up", "launcher": true, "float_s": 0.8},
+			"earth_shove/column.lean": {"d": 9.0, "base": 9.5, "growth": 5.5, "angle": 40},
+			"earth_shove/column.wall": {"d": 10.0, "base": 12.0, "growth": 6.5, "angle": 25},
 			"wave/spout": {"d": 7.0, "base": 10.9, "growth": 5.0, "angle": 85, "dir": "up", "launcher": true, "float_s": 0.8},
 			"fire_kick/high_kick": {"d": 12.0, "base": 6.9, "growth": 8.0, "angle": 65, "launcher": true},
 			"flow/surf": {"d": 7.0, "base": 6.9, "growth": 8.8, "angle": 20},

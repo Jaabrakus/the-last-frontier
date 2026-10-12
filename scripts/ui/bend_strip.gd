@@ -506,6 +506,9 @@ func column(i: int) -> Dictionary:
 	out.id = String(shown.id)
 	out.mode = String(shown.mode)
 	out.label = KitWords.move_name(out.id, out.mode)
+	var vv := BendVariants.of(player, out.id, out.mode) if player != null else ""
+	if vv != "" and vv != "up":
+		out.label += " · " + String(BendVariants.WORDS.get(vv, vv))      # (its way, BendVariants: the Column's)
 	out.icon_id = out.id
 	out.icon_mode = out.mode
 	if ms.size() > 1 and s != "first_moves":

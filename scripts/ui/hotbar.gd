@@ -232,6 +232,7 @@ func _physics_process(dt: float) -> void:
 	_follow_caster()
 	_follow_scheme()
 	_shift_dir()
+	_key_dir()
 	if not kit_placed:
 		_kit_t += dt
 		if _kit_t >= KIT_S:
@@ -716,6 +717,31 @@ func _shift_dir() -> void:
 			c3.key3_press()
 
 
+## A readied move's own variants (BendVariants: the Column's way) picked with its key held and a direction pressed (the owner,
+## 2026-10-12: "maybe hold the key and then hit a direction keey?"; the wheel picks them too, wheel()): W up, A left, D right,
+## S from a wall.
+const KEY_DIR := {&"move_forward": "up", &"move_left": "left", &"move_right": "right", &"move_back": "wall"}
+func _key_dir() -> void:
+	if player == null or spell == "" or not player.arena or player.is_dead:
+		return
+	var vc := SwayCaster.of(player)
+	if vc == null:
+		return
+	var md := vc.mode_of(spell)
+	var l := BendVariants.list(spell, md)
+	if l.is_empty():
+		return
+	var k := Bending.key_of(_element(), spell)
+	var c := player.controls
+	if k < 0 or c == null or not c.pressed(StringName(ACTION % (k + 1))):
+		return
+	for a: StringName in KEY_DIR:
+		if c.just_pressed(a) and String(KEY_DIR[a]) in l:
+			BendVariants.set_to(player, spell, md, String(KEY_DIR[a]))
+			_dirty_strip()
+			return
+
+
 ## The player's key event (FrontierPlayer._unhandled_input): true when it was a slot key or the wheel.
 func handle_input(event: InputEvent) -> bool:
 	for i in SLOTS:
@@ -766,6 +792,12 @@ func readied_key() -> int:
 ## The mouse wheel a step (`dir` 1 down, -1 up): first moves, the next of the four; an element's keys, the readied move's
 ## other (step_other); else the readied spell's next mode, or the next slot.
 func wheel(dir: int) -> void:
+	# (a readied move with variants of its own, BendVariants (the Column's way): the wheel picks among them, idle or locking)
+	var vc := SwayCaster.of(player) if player != null else null
+	if vc != null and spell != "" and not BendVariants.list(spell, vc.mode_of(spell)).is_empty():
+		BendVariants.cycle(player, spell, vc.mode_of(spell), dir)
+		_dirty_strip()
+		return
 	if _first_only():
 		step_skill(dir)
 	elif _element_keys():
@@ -1120,3 +1152,8 @@ func _in_pack(kind: String) -> bool:
 func _gather() -> GatherTools:
 	var g: GatherTools = player.gather if player != null else null
 	return g if g != null and is_instance_valid(g) else null
+
+
+## The strip told a variant changed (its words are read at its next look).
+func _dirty_strip() -> void:
+	changed.emit()

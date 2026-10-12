@@ -170,6 +170,7 @@ func _draw() -> void:
 				var g := Color(0.62, 0.62, 0.62, 0.7 * (1.0 - k))
 				_ring(c, RADIUS, float(_end.f), g, es, WIDTH)
 	_draw_meters(c)
+	_draw_way(c)
 	if (caster.readied or on or _belt_t > 0.0) and not SwayCaster.free_use():     # (free use: no belt)
 		var ba := 1.0 if (caster.readied or on) else clampf(_belt_t / 0.5, 0.0, 1.0)
 		var short := caster.hint == "motes"
@@ -227,6 +228,38 @@ func _bracket(c: Vector2, r: float, mid: float, f: float, col: Color, track: Col
 	draw_arc(c, r, lo, lo + way * METER_SPAN, 32, track, METER_W + 2.0, true)
 	if f > 0.0:
 		draw_arc(c, r, lo, lo + way * METER_SPAN * f, 32, col, METER_W, true)
+
+
+## The readied move's way (BendVariants: the Column's), a small arrow under the ring while it is readied or locking: up, up and
+## to the right or left, or a bar with an arrow out of it (from a wall). No arrow for a move with none.
+func _draw_way(c: Vector2) -> void:
+	var body: Node = caster.player
+	var m := caster.lock_spell() if caster.state != SwayCaster.State.IDLE else (caster.readied_spell if caster.readied else "")
+	if m == "" or body == null:
+		return
+	var v := BendVariants.of(body, m, caster.mode_of(m))
+	if v == "":
+		return
+	var o := c + Vector2(0.0, RADIUS + 13.0)
+	var col := Color(SwayMoves.art_color(_art), 0.9)
+	var sh := Color(0, 0, 0, 0.5)
+	var d := Vector2.UP
+	match v:
+		"right":
+			d = Vector2(0.7, -0.7)
+		"left":
+			d = Vector2(-0.7, -0.7)
+		"wall":
+			d = Vector2.RIGHT
+	var tail := o - d * 6.0
+	var tip := o + d * 6.0
+	if v == "wall":
+		draw_line(tail + Vector2(-1.5, -6.0), tail + Vector2(-1.5, 6.0), sh, 4.0, true)
+		draw_line(tail + Vector2(-1.5, -6.0), tail + Vector2(-1.5, 6.0), col, 2.0, true)
+	for w: Array in [[sh, 3.6], [col, 1.8]]:
+		draw_line(tail, tip, w[0], w[1], true)
+		draw_line(tip, tip - d.rotated(0.6) * 4.5, w[0], w[1], true)
+		draw_line(tip, tip - d.rotated(-0.6) * 4.5, w[0], w[1], true)
 
 
 ## The meters now, for tests: {combo (level), combo_a, gauge, gauge_a, broken}.
