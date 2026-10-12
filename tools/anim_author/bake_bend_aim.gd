@@ -1,8 +1,10 @@
 extends SceneTree
-## Lightning on the game's own standing pistol aim (the owner, 2026-10-11: "use our musket and pistol tech that we built in
-## frontiers over", "the lighting seems not like the pistol stand aim we have"): frontier-pistol-lightning in
-## animations_extra/Frontier_Bend_Aim.res, on the timeline of our own Lightning (own-bend-fire-lightning: its length, hold_s,
-## strike_s and back_s, so the cast takes the time it always did):
+## The Ice Spear on the game's own standing pistol aim (the owner, 2026-10-12: "the lightning pistol... we dont have that skill
+## and use that animation for the ice or water rifle spear for water? and we keep the orignal lightning animation"; first
+## built 2026-10-11 for the Lightning Pistol twist on "use our musket and pistol tech that we built in frontiers over"):
+## frontier-pistol-ice in animations_extra/Frontier_Bend_Aim.res, on the timeline of the Ice Spear's rifle clip
+## (own-bend-water-ice-rifle: its length, hold_s, strike_s and back_s, so the cast takes the time it always did); the old
+## frontier-pistol-lightning taken out of the library (REMOVED):
 ##   the body   the pistol's standing aim as PlayerAnim builds it: the twisted stance (Frontier_Downgraded.res
 ##              actor_b-p-pistol-aim-idle, mocap_downgrade_all._twisted_stance), its right arm the bow's aim mirrored
 ##              (PlayerAnim.STAND_AIM_ARM own-pistol-bow-arm at its start, as PlayerAnim takes it), its left arm the plain idle's
@@ -10,28 +12,31 @@ extends SceneTree
 ##              clavicle-to-fingertips turns as LeftArmPose sets them
 ##   the hand   our own two fingers out (own-bend-fire-lightning-duel's right hand at its strike), turned at the wrist so they go
 ##              straight on along the forearm (_straight_hand: the bow's grip cocks the wrist)
-##   the time   raised from fire's stance (own-bend-stance-fire) over RAISE_S, held on the aim through the charge and the strike,
-##              the kick at the strike (KICK_DEG up at the shoulder, the wrist a share of it, in over KICK_IN_S and back over
-##              KICK_BACK_S), lowered from back_s to the stance by the end
+##   the time   raised from water's stance (own-bend-stance-water) over RAISE_S, held on the aim through the lock and the
+##              strike, the kick at the strike (KICK_DEG up at the shoulder, the wrist a share of it, in over KICK_IN_S and back
+##              over KICK_BACK_S), lowered from back_s to the stance by the end
 ## In the game SwayPose plays it (the pick's "aim": "pistol": standing the whole body, moving the right arm alone over the jog's
 ## body, as the pistol's own aims) and BendAimArm turns the arm onto the crosshair and the head toward it after it (the jog aim's
-## JogAimArm, the two fingers for the muzzle), the kick put back after the turn from the clip's kick metas. A bot plays the clip
-## as it is (its body faces its mark).
+## JogAimArm, the two fingers for the muzzle), the kick put back after the turn from the clip's kick metas. The water spear
+## (BendLooks.HeldSpear, its row's "held") forms out from the pointing hand. A bot plays the clip as it is (its body faces its
+## mark).
 ## Provenance: the body and both arms come from the Frontier pistol aim's clips (the base library's lineage: animations/SOURCE.md);
 ## the hand and the timing are ours. Named frontier- (not own-) in a library of its own: BendPoses plays it as Frontier tech the
 ## owner picked (poses.json "frontier_tech").
 ##   Godot --headless --path . -s tools/anim_author/bake_bend_aim.gd
 
 const OUT_LIB := "res://animations_extra/Frontier_Bend_Aim.res"
-const NAME := "frontier-pistol-lightning"
+const NAME := "frontier-pistol-ice"
+## Taken out of the library as this bake saves it (the Lightning Pistol twist, gone 2026-10-12).
+const REMOVED := ["frontier-pistol-lightning"]
 const DOWN_LIB := "res://animations_extra/Frontier_Downgraded.res"
 const NATIVE_LIB := "res://animations/Actor_B.res"
 const BEND_LIB := "res://animations_extra/Frontier_Bend.res"
 ## The standing aim's body (PlayerAnim.JOG_AIM_ARM.pistol, the graph's clip as the downgraded library has it: the twisted stance).
 const STANCE := "actor_b-p-pistol-aim-idle"
 const LEFT_ARM := "actor_b-p-relax-idle"
-const FIRE_STANCE := "own-bend-stance-fire"
-const TIMING := "own-bend-fire-lightning"
+const FROM_STANCE := "own-bend-stance-water"
+const TIMING := "own-bend-water-ice-rifle"
 const HAND := "own-bend-fire-lightning-duel"
 const FPS := 30.0
 const RAISE_S := 0.3
@@ -45,14 +50,14 @@ const HAND_KEYS := ["palm", "index", "middle", "ring", "pinky", "thumb"]
 const FINGERS := ["index", "middle", "ring", "pinky", "thumb"]
 ## The kick's curve (BendAimArm.kick_curve: the game puts the same back after its turn).
 const BEND_AIM_ARM := preload("res://scripts/bending/bend_aim_arm.gd")
-const AUTHORED := "Frontier tech composite (tools/anim_author/bake_bend_aim.gd): the pistol's standing aim (Frontier_Downgraded.res actor_b-p-pistol-aim-idle twisted stance and own-pistol-bow-arm, built from the base library animations/Actor_B.res; Actor_B.res actor_b-p-relax-idle for the hanging left arm) with our own two-finger hand (own-bend-fire-lightning-duel) on our own Lightning's timing (own-bend-fire-lightning)"
+const AUTHORED := "Frontier tech composite (tools/anim_author/bake_bend_aim.gd): the pistol's standing aim (Frontier_Downgraded.res actor_b-p-pistol-aim-idle twisted stance and own-pistol-bow-arm, built from the base library animations/Actor_B.res; Actor_B.res actor_b-p-relax-idle for the hanging left arm) with our own two-finger hand (own-bend-fire-lightning-duel) on our own Ice Spear's timing (own-bend-water-ice-rifle), raised from our water stance (own-bend-stance-water)"
 
 
 func _initialize() -> void:
 	var down := load(DOWN_LIB) as AnimationLibrary
 	var native := load(NATIVE_LIB) as AnimationLibrary
 	var bend := load(BEND_LIB) as AnimationLibrary
-	for need: Array in [[down, STANCE], [down, PlayerAnim.STAND_AIM_ARM], [native, LEFT_ARM], [bend, FIRE_STANCE], [bend, TIMING],
+	for need: Array in [[down, STANCE], [down, PlayerAnim.STAND_AIM_ARM], [native, LEFT_ARM], [bend, FROM_STANCE], [bend, TIMING],
 			[bend, HAND]]:
 		if need[0] == null or not (need[0] as AnimationLibrary).has_animation(String(need[1])):
 			push_error("bake_bend_aim: missing %s" % need[1])
@@ -61,7 +66,7 @@ func _initialize() -> void:
 	var stance := down.get_animation(STANCE)
 	var bow_arm := down.get_animation(PlayerAnim.STAND_AIM_ARM)
 	var left := native.get_animation(LEFT_ARM)
-	var fire := bend.get_animation(FIRE_STANCE)
+	var fire := bend.get_animation(FROM_STANCE)
 	var timing := bend.get_animation(TIMING)
 	var hand := bend.get_animation(HAND)
 	var ch := (load("res://characters/Actor_B.tscn") as PackedScene).instantiate() as Node3D
@@ -148,8 +153,9 @@ func _initialize() -> void:
 	var lib := AnimationLibrary.new()
 	if ResourceLoader.exists(OUT_LIB):
 		lib = (load(OUT_LIB) as AnimationLibrary).duplicate(true) as AnimationLibrary
-	if lib.has_animation(NAME):
-		lib.remove_animation(NAME)
+	for old: String in REMOVED + [NAME]:
+		if lib.has_animation(old):
+			lib.remove_animation(old)
 	lib.add_animation(NAME, a)
 	var err := ResourceSaver.save(lib, OUT_LIB, ResourceSaver.FLAG_COMPRESS)
 	print("BEND AIM saved %d -> %s: %s %.3f s, hold %.3f strike %.3f back %.3f, %d bones" % [err, OUT_LIB, NAME, length, hold,

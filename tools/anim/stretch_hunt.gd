@@ -1,7 +1,7 @@
 extends SceneTree
 ## Stretch hunt (the owner, 2026-10-11: "sometime the body like glitches it turns elastic why is this"): real % ring matches,
-## headless, the player played by the film's expert input model (tools/ring/highlight_input.gd) against a real bot, fire's
-## player wearing the Lightning Pistol (as the owner's save has it). Every drawn frame, in each fighter skeleton's own
+## headless, the player played by the film's expert input model (tools/ring/highlight_input.gd) against a real bot, nothing
+## worn (the pistol's aim, once the Lightning Pistol twist the owner's save wore, is water's Ice Spear's own since 2026-10-12). Every drawn frame, in each fighter skeleton's own
 ## skeleton_updated (the final pose, after every modifier: read anywhere else the bones are the tree's pose), it looks for
 ## what makes a skinned body stretch:
 ##   ORDER    an active modifier after the body (CharacterBodyMesh): its helpers (the shoulder and forearm twist, the armpit,
@@ -27,7 +27,6 @@ const LEN_M := 0.02
 const SCALE_K := 0.02
 const TWIST_DEG := 150.0
 const TWISTS := [["r_elbow", "r_wrist"], ["l_elbow", "l_wrist"], ["r_knee", "r_ankle"], ["l_knee", "l_ankle"]]
-const PISTOL := "fire.lightning.pistol"
 ## The skin's twist bones and the bone each hangs off (CharacterBodyMesh: 30/60/90 % of the wrist's roll; 1/3, 2/3 of the
 ## upper arm's twist), and the one-frame turn about the limb that counts as a snap.
 ## [helper, the bone it is measured against, the limb's line from, to]
@@ -106,10 +105,7 @@ func _run() -> void:
 
 
 func _wear() -> void:
-	if el_now == "fire":
-		BendLoadout.wear(player, [PISTOL], "", "fire")
-	else:
-		BendLoadout.clear(player)
+	BendLoadout.clear(player)
 
 
 func _hunt(el: String, sd: int) -> void:

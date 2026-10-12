@@ -1,21 +1,23 @@
 extends SceneTree
-## The gun-style casts (2026-10-11, the owner: Embers the pistol, the Ice Spear the rifle with the water spear forming in the
-## hands, Lightning on the game's own standing pistol aim as fire's Storm twist, "have this or that and each has it perks and
-## cons"), headless, in the ring:
-##   the picks       Classic: Embers' gun clips (each hand) timed as the sweep they replaced, the Ice Spear's rifle timed as the
-##                   overhand throw, Lightning the original; worn, fire.lightning.pistol casts frontier-pistol-lightning (aim
-##                   "pistol") and charges in 1.5 s, its flash 0.4 s; the body that wears nothing casts the original
-##   the aim         a Lightning lock worn so: BendAimArm right after the cast pose (before the body's helpers), the two
-##                   fingers on the crosshair's point and the head turned toward it while it is held; the kick after the strike;
-##                   off once the cast is over
-##   the water spear the Ice Spear's lock holds the water spear (BendLooks.HeldSpear) between the hands, drawn out as the lock
-##                   fills; cast, it stays in the hands to the strike and is gone after it; a broken lock drops it
+## The gun-style casts (2026-10-11, the owner: Embers the pistol, the Ice Spear with the water spear forming in the hands;
+## 2026-10-12: "the lightning pistol... we dont have that skill and use that animation for the ice or water rifle spear for
+## water? and we keep the orignal lightning animation"), headless, in the ring:
+##   the picks       Embers' gun clips (each hand) timed as the sweep they replaced; the Ice Spear on the game's own standing
+##                   pistol aim (frontier-pistol-ice, aim "pistol", the water spear held) timed as the overhand throw; Lightning
+##                   the original; the Lightning Pistol twist gone (not in the tree, not live)
+##   the aim         an Ice Spear lock: BendAimArm right after the cast pose (before the body's helpers), the two fingers on the
+##                   crosshair's point and the head turned toward it while it is held; the kick after the strike; off once the
+##                   cast is over
+##   the water spear the Ice Spear's lock holds the water spear (BendLooks.HeldSpear) out from the pointing hand along its
+##                   forearm, drawn out as the lock fills; cast, it stays in the hand to the strike and is gone after it; a
+##                   broken lock drops it
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_gun_casts.gd
 ## Ends with "GUN CASTS TEST PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "GUN CASTS TEST"
 const LIMIT_S := 240.0
 const PISTOL := "fire.lightning.pistol"
+const ICE_CLIP := "frontier-pistol-ice"
 ## The two fingers point within this of the crosshair's point; the head's face within HEAD_DEG of it.
 const AIM_DEG := 6.0
 const HEAD_DEG := 12.0
@@ -102,28 +104,17 @@ func _run() -> void:
 			float(em.strike_s), float(em.back_s), float(em.get("end_s", -1.0))])
 	var sp := BendPoses.pick("ice", "spear", "water")
 	var over := BendPoses._filled({"clip": "own-bend-throw-overhand"}, BendPoses.data())
-	_expect(String(sp.clip) == "own-bend-water-ice-rifle" and String(sp.hand) == "l_palm" and String(sp.get("held", "")) == "water_spear"
+	_expect(String(sp.clip) == ICE_CLIP and String(sp.hand) == "r_palm" and String(sp.get("aim", "")) == "pistol"
+			and String(sp.get("held", "")) == "water_spear"
 			and _near(sp.hold_s, over.hold_s) and _near(sp.strike_s, over.strike_s) and _near(sp.back_s, over.back_s)
 			and _near(sp.get("end_s"), BendPoses.animation("own-bend-throw-overhand").length),
-			"Ice Spear: the rifle, the water spear held, timed as the overhand throw (strike %.2f s), the bolt from the barrel hand" % float(sp.strike_s))
+			"Ice Spear: the pistol's aim, the water spear held, timed as the overhand throw (strike %.2f s), the bolt from the pointing hand" % float(sp.strike_s))
 	_expect(BendPoses.body_strike_s(em) == float(BendPoses.animation("own-bend-fire-embers-gun").get_meta(&"strike_s")),
 			"a bot plays the gun clip straight through: its strike is the clip's own (%.3f s)" % BendPoses.body_strike_s(em))
 	_expect(String(BendPoses.pick("fire_arc", "lightning", "fire").clip) == "own-bend-fire-lightning",
-			"Classic's Lightning is the original two-handed charge")
-	_expect(BendLoadout.why_not(PISTOL) == "" and PISTOL in BendLoadout.live_ids(), "the Lightning Pistol is live (%s)" % BendLoadout.why_not(PISTOL))
-	var r := BendLoadout.resolve(PISTOL)
-	_expect(bool(r.ok) and String((r.pose as Dictionary).get("fire_arc/lightning", "")) == "frontier-pistol-lightning"
-			and _near((r.lock as Dictionary).get("fire_arc/lightning"), 1.5) and _near(((r.spec as Dictionary).get("fire_arc/lightning", {}) as Dictionary).get("flash_s"), 0.4),
-			"the Lightning Pistol: its pose, a 1.5 s charge, a 0.4 s flash (%s)" % [r])
-	# (this or that: the window's rules; Short Fuse and Long Lightning set the same charge, Forked Lightning is the other twist)
-	var lo := AdvancementLoadout.new("fire")
-	_expect(lo.wear(PISTOL) == "", "the window lets the Lightning Pistol be worn (%s)" % lo.why_not(PISTOL))
-	_expect(lo.why_not_code("fire.lightning.short_fuse") == "excludes" and lo.why_not_code("fire.lightning.long") == "excludes",
-			"worn, Short Fuse and Long Lightning cannot be (%s, %s)" % [lo.why_not_code("fire.lightning.short_fuse"), lo.why_not_code("fire.lightning.long")])
-	_expect(lo.why_not_code("fire.lightning.forked") == "twist", "worn, Forked Lightning cannot be: one twist per move (%s)" % lo.why_not_code("fire.lightning.forked"))
-	var lo2 := AdvancementLoadout.new("fire")
-	lo2.wear("fire.lightning.forked")
-	_expect(lo2.why_not_code(PISTOL) == "twist", "and the other way: Forked worn, the Lightning Pistol cannot be (%s)" % lo2.why_not_code(PISTOL))
+			"Lightning is the original two-handed charge")
+	_expect(AdvancementData.node(PISTOL).is_empty() and not PISTOL in BendLoadout.live_ids(),
+			"the Lightning Pistol twist is gone: not in the tree, not live")
 
 	# ---------------------------------------------------------------- the ring
 	MatchSetup.incoming = true
@@ -148,33 +139,24 @@ func _run() -> void:
 		mode.foe.held = true
 		mode.foe.global_position = Vector3(0.0, 60.0, -400.0)
 	await _frames(30)
-	await _lightning_checks()
+	await _aim_checks()
 	await _spear_checks()
 	_end()
 
 
-## A Lightning lock worn with the pistol: the arm and the head on the crosshair, the kick, off after.
-func _lightning_checks() -> void:
-	Bending.of(player).element = "fire"
-	BendLoadout.wear(player, [PISTOL], "", "fire")
-	_expect(String(BendPoses.pick("fire_arc", "lightning", "fire", player).clip) == "frontier-pistol-lightning"
-			and String(BendPoses.pick("fire_arc", "lightning", "fire", mode.foe).clip) == "own-bend-fire-lightning",
-			"worn: the player's Lightning is the pistol's, the bot's the original")
-	_pin("fire_arc", "lightning")
-	var classic_lock := 0.0
-	BendLoadout.clear(player)
-	classic_lock = sc._lock_time("fire_arc", null, 0.0, 40.0)
-	BendLoadout.wear(player, [PISTOL], "", "fire")
-	var worn_lock := sc._lock_time("fire_arc", null, 0.0, 40.0)
-	_expect(_near(BendLoadout.lock(player, "fire_arc", "lightning", 2.2), 1.5) and worn_lock < classic_lock
-			and _near(worn_lock / classic_lock, 1.5 / 2.2),
-			"worn: Lightning charges in 1.5 s against the original's 2.2 (the caster's lock %.2f s, the original's %.2f s)" % [worn_lock, classic_lock])
+## An Ice Spear lock on the pistol's aim: the arm and the head on the crosshair, the kick, off after.
+func _aim_checks() -> void:
+	Bending.of(player).element = "water"
+	_expect(String(BendPoses.pick("ice", "spear", "water", player).clip) == ICE_CLIP
+			and String(BendPoses.pick("ice", "spear", "water", mode.foe).clip) == ICE_CLIP,
+			"the player's Ice Spear and the bot's are both the pistol's aim")
+	_pin("ice", "spear")
 	var sk := player.skeleton
 	sk.skeleton_updated.connect(_sample_aim)
-	pose._on_started("fire_arc", null)
-	_expect(String(pose.anim_name) == "frontier-pistol-lightning" and String(pose.pick.get("aim", "")) == "pistol",
+	pose._on_started("ice", null)
+	_expect(String(pose.anim_name) == ICE_CLIP and String(pose.pick.get("aim", "")) == "pistol",
 			"the lock plays the pistol's aim (%s)" % pose.anim_name)
-	await _frames(45)                      # (0.75 s: raised, held on the aim)
+	await _frames(30)                      # (0.5 s: raised, held on the aim)
 	var arm: Node = pose._aim_arm
 	_expect(arm != null and is_instance_valid(arm) and arm.get_parent() == sk and arm.get_index() == pose._pose.get_index() + 1,
 			"BendAimArm sits right after the cast pose")
@@ -191,7 +173,7 @@ func _lightning_checks() -> void:
 	_struck_frame = -1
 	_frame = 0
 	pose.struck.connect(_on_struck, CONNECT_ONE_SHOT)
-	pose._on_cast("fire_arc", null)
+	pose._on_cast("ice", null)
 	var kick_max := 0.0
 	var guard := 0
 	while pose.phase != "" and guard < 400:
@@ -206,8 +188,6 @@ func _lightning_checks() -> void:
 	_expect(arm != null and is_instance_valid(arm) and float(arm.get(&"weight")) == 0.0, "the cast over: the arm's aim is off")
 	sk.skeleton_updated.disconnect(_sample_aim)
 	sc._pinning = false
-	BendLoadout.clear(player)
-	_expect(String(BendPoses.pick("fire_arc", "lightning", "fire", player).clip) == "own-bend-fire-lightning", "taken off: the original again")
 
 
 func _sample_aim() -> void:
@@ -226,7 +206,8 @@ func _sample_aim() -> void:
 	_face_deg = rad_to_deg((hg.basis.orthonormalized() * face_local).angle_to(target - hg.origin))
 
 
-## The Ice Spear's water spear: between the hands while the lock fills, kept to the strike, gone after; a broken lock drops it.
+## The Ice Spear's water spear: out from the pointing hand while the lock fills, kept to the strike, gone after; a broken lock
+## drops it.
 func _spear_checks() -> void:
 	Bending.of(player).element = "water"
 	_pin("ice", "spear")
@@ -239,7 +220,7 @@ func _spear_checks() -> void:
 	if spear == null:
 		return
 	pose._on_started("ice", null)
-	_expect(String(pose.anim_name) == "own-bend-water-ice-rifle", "the lock plays the rifle (%s)" % pose.anim_name)
+	_expect(String(pose.anim_name) == ICE_CLIP, "the lock plays the pistol's aim (%s)" % pose.anim_name)
 	var shown_at := -1.0
 	for i in 36:                            # (0.6 s: the lock's fill rising to full)
 		spear.set(&"level", clampf(float(i + 1) / 36.0, 0.0, 1.0))
@@ -253,19 +234,20 @@ func _spear_checks() -> void:
 	var cb := func() -> void:
 		if is_instance_valid(spear):
 			_spear_seen = {"rp": sk.global_transform * sk.get_bone_global_pose(sk.find_bone("r_palm")).origin,
-					"lp": sk.global_transform * sk.get_bone_global_pose(sk.find_bone("l_palm")).origin,
+					"re": sk.global_transform * sk.get_bone_global_pose(sk.find_bone("r_elbow")).origin,
 					"at": spear.global_position, "way": -spear.global_basis.z}
 	sk.skeleton_updated.connect(cb)
 	await _frames(2)
 	sk.skeleton_updated.disconnect(cb)
 	var rp: Vector3 = _spear_seen.get("rp", Vector3.ZERO)
-	var lp: Vector3 = _spear_seen.get("lp", Vector3.ZERO)
+	var re: Vector3 = _spear_seen.get("re", Vector3.ZERO)
 	var way: Vector3 = _spear_seen.get("way", Vector3.FORWARD)
-	var off := (Vector3(_spear_seen.get("at", Vector3.ZERO)) - (rp + lp) * 0.5).length()
-	var ang := rad_to_deg(way.angle_to(lp - rp))
-	print("  (spear: palms r %s l %s, %.2f m apart, %.2f m up; its way %s; the body's ahead %s)" % [rp, lp, rp.distance_to(lp),
-			(rp.y + lp.y) * 0.5 - player.global_position.y, way, -player.global_basis.z])
-	_expect(off < 0.35 and ang < 20.0, "it lies along the rifle hold, the stock hand to the barrel hand (%.2f m off their middle, %.0f deg off their line)" % [off, ang])
+	var fore := (rp - re).normalized()
+	var off := (Vector3(_spear_seen.get("at", Vector3.ZERO)) - rp).length()
+	var ang := rad_to_deg(way.angle_to(fore))
+	print("  (spear: palm %s, %.2f m up; its way %s; the forearm's %s; the body's ahead %s)" % [rp, rp.y - player.global_position.y,
+			way, fore, -player.global_basis.z])
+	_expect(off < 0.4 and ang < 20.0, "it runs out from the pointing hand along its forearm (its middle %.2f m from the palm, %.0f deg off the forearm)" % [off, ang])
 	# cast: in the hands to the strike, then gone
 	_struck_frame = -1
 	_frame = 0

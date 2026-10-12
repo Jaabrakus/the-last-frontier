@@ -1,21 +1,18 @@
 extends SceneTree
-## Stills of the gun-style casts (2026-10-11, the owner: Embers the pistol, the Ice Spear the rifle with the water spear in the
-## hands, Lightning on the game's own standing pistol aim as fire's Storm twist next to the original): a Practice ring, the
+## Stills of the gun-style casts (2026-10-11, the owner: Embers the pistol, the Ice Spear with the water spear in the hands;
+## 2026-10-12 the Ice Spear on the game's own standing pistol aim, the Lightning Pistol twist gone): a Practice ring, the
 ## player against a standing dummy 8 m off, the crosshair on its chest. Each cast is played as the game plays it (the lock's
 ## looks, SwayCaster._began; its pose, SwayPose; the effect launched on the pose's strike, BendCast.cast), from beside the
-## player and through his own camera: the original Lightning, the Lightning Pistol (fire.lightning.pistol worn), Embers and
-## the Ice Spear. Windowed (a normal window, never on top):
+## player and through his own camera: Lightning (the original), Embers and the Ice Spear. Windowed (a normal window, never on top):
 ##   zsh tools/loop/godot_run.sh --path . --resolution 1600x900 --fixed-fps 60 -s tools/ring/gun_cast_shots.gd -- out=<dir>
 ## Writes <dir>/<take>_<view>_<moment>.png and <dir>/gun_casts.png (the sheet), prints GUN SHOTS DONE.
 
 const FxStage := preload("res://tools/fx/fx_stage.gd")
 const CaptureKit := preload("res://tools/ui_audit/capture_kit.gd")
-const PISTOL := "fire.lightning.pistol"
 ## [take, move, mode, element, worn nodes]
-const TAKES := [["lightning", "fire_arc", "lightning", "fire", []], ["pistol", "fire_arc", "lightning", "fire", [PISTOL]],
-		["embers", "fire_jab", "embers", "fire", []], ["spear", "ice", "spear", "water", []]]
-const LABELS := {"lightning": "Lightning (original)", "pistol": "Lightning Pistol (twist)", "embers": "Embers (pistol)",
-		"spear": "Ice Spear (rifle)"}
+const TAKES := [["lightning", "fire_arc", "lightning", "fire", []], ["embers", "fire_jab", "embers", "fire", []],
+		["spear", "ice", "spear", "water", []]]
+const LABELS := {"lightning": "Lightning (original)", "embers": "Embers (pistol)", "spear": "Ice Spear (pistol aim)"}
 const MOMENTS := ["lock 40%", "lock full", "strike", "after"]
 const CELL := Vector2i(400, 225)
 

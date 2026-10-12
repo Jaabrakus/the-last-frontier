@@ -28,8 +28,7 @@ const BOXING_LIB := "res://animations_extra/Frontier_Style_Boxing.res"
 ## The nodes whose numbers can be applied (resolve ok: the plan's eight less Skate's Wet Trail) and, of them, those the soak left
 ## live in loadout_apply.json (the two walls are switched off: the soak's bots never raise a wall; Full Sail since 2026-10-10: it
 ## widens the plain Gust now that the grown one is the Air Lance, not yet soaked; flip them in the json, not here).
-## Since 2026-10-11 also fire's Storm twist Lightning Pistol (the owner's "have this or that": its own pose, a quicker charge and
-## a longer flash), live on the owner's word for him to try, and the nine nodes the class numbers made whole (a change
+## Since 2026-10-11 also the nine nodes the class numbers made whole (a change
 ## class:<tag>+<variant>.<key>: the % ring class of the wearer's own hits; the owner on the tree: "fix it"), live unsoaked,
 ## and the four binds the same day (a spec key Classic lacks, bind_s, from none; tests/ring/test_binds.gd plays them), with Wind
 ## Prison and Drenching Wave (prison_s, drench_s; tests/ring/test_knockups.gd plays them).
@@ -43,8 +42,8 @@ const TUNE_NODES := ["earth.catch.clean_return", "earth.catch.open_hands", "eart
 		"earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient",
 		"water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"]
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
-		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES + BIND_NODES + TUNE_NODES
-const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES \
+		"earth.wall.thick", "water.wall.thick_ice"] + CLASS_NODES + BIND_NODES + TUNE_NODES
+const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick"] + CLASS_NODES \
 		+ BIND_NODES + TUNE_NODES
 
 var checks := 0
@@ -151,7 +150,7 @@ func _run() -> void:
 	var only_known := true
 	for id0: String in live:
 		only_known = only_known and id0 in _live_all()
-	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
+	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
 	_expect("earth.wall.thick" in live and BendLoadout.why_not("earth.wall.thick") == "",
 			"Thick Wall is on (2026-10-11: tests/ring/test_talents_earth.gd raises it in a ring and shoots it down) (%s)" % BendLoadout.why_not("earth.wall.thick"))
 	_expect("water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "",

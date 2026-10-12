@@ -2081,11 +2081,13 @@ class HeldSpear:
 	var _drips: GPUParticles3D
 	var _glint: MeshInstance3D
 	var _bones := Vector2i(-2, -2)       ## r_palm, l_palm
+	var _elbow := -2                     ## r_elbow (the pistol's pointing arm)
 	## The caster's skeleton, and the two hands (world) as its last update left them: after every modifier, the cast's pose
 	## included (read in its skeleton_updated, as SwayPose reads the palms; outside it the bones are the tree's own pose).
 	var _sk: Skeleton3D
 	var _rp := Vector3.INF
 	var _lp := Vector3.INF
+	var _re := Vector3.INF
 	var _t := 0.0
 	var _ending := false
 	var _end_t := 0.0
@@ -2119,6 +2121,9 @@ class HeldSpear:
 			return
 		_rp = _sk.global_transform * _sk.get_bone_global_pose(_bones.x).origin
 		_lp = _sk.global_transform * _sk.get_bone_global_pose(_bones.y).origin
+		if _elbow == -2:
+			_elbow = _sk.find_bone("r_elbow")
+		_re = _sk.global_transform * _sk.get_bone_global_pose(_elbow).origin if _elbow >= 0 else Vector3.INF
 		if not _gone:
 			_place()
 
@@ -2142,8 +2147,19 @@ class HeldSpear:
 		_glint = BendLooks._mesh(self, ToonFx.quad(), ToonFx.mat("star_still"))
 		_glint.visible = false
 
-	## The stock hand and the barrel hand (world; INF before the skeleton's first update).
+	## The stock hand and the barrel hand (world; INF before the skeleton's first update). On the pistol's aim (the pose's pick
+	## "aim": "pistol", the Ice Spear since 2026-10-12) one hand: the spear runs out from the pointing hand along its forearm,
+	## ONE_HAND_BACK_M behind the palm to ONE_HAND_AHEAD_M past it.
+	const ONE_HAND_BACK_M := 0.12
+	const ONE_HAND_AHEAD_M := 0.42
 	func _hands() -> Array:
+		var p: Node = sway.get(&"pose") if sway != null and is_instance_valid(sway) else null
+		var pk: Variant = p.get(&"pick") if p != null and is_instance_valid(p) else null
+		if pk is Dictionary and String((pk as Dictionary).get("aim", "")) == "pistol" and _rp.is_finite() and _re.is_finite():
+			var fore := _rp - _re
+			if fore.length_squared() > 1e-4:
+				fore = fore.normalized()
+				return [_rp - fore * ONE_HAND_BACK_M, _rp + fore * ONE_HAND_AHEAD_M]
 		return [_rp, _lp]
 
 	func _place() -> void:

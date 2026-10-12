@@ -298,8 +298,8 @@ static func _style_pick(st: String, m: String, mode: String, element: String) ->
 	return out
 
 
-## A worn twist's own pose for move `m` at `mode` (BendLoadout.pose_of: a node's pose change, the Lightning Pistol's
-## frontier-pistol-lightning), filled as any pick; {} when the body wears none for it or its clip is not usable. Before the
+## A worn twist's own pose for move `m` at `mode` (BendLoadout.pose_of: a node's pose change; the Lightning Pistol's was
+## the first, 2026-10-11, gone 2026-10-12), filled as any pick; {} when the body wears none for it or its clip is not usable. Before the
 ## fighting style's: the twist is the move's own choice, the style its look.
 static func _node_pick(body: Node, m: String, mode: String, element := "") -> Dictionary:
 	var pa := String(BendLoadout.new_mode(body, m, mode).get("pose_as", ""))

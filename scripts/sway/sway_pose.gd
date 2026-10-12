@@ -89,8 +89,8 @@ const STILL_MPS := Vector2(0.35, 1.2)
 const HOLD_CREEP_S := 0.12
 const CATCH_S := 0.05
 ## THE PISTOL'S AIM (the owner, 2026-10-11: "use our musket and pistol tech that we built in frontiers over", Lightning "not
-## like the pistol stand aim we have"): a pose whose pick says "aim": "pistol" (frontier-pistol-lightning, BendPoses'
-## Frontier tech) is shown as the pistol's own aims are: standing still the whole clip (the twisted stance, the straight arm,
+## like the pistol stand aim we have"; since 2026-10-12 the Ice Spear's): a pose whose pick says "aim": "pistol"
+## (frontier-pistol-ice, BendPoses' Frontier tech) is shown as the pistol's own aims are: standing still the whole clip (the twisted stance, the straight arm,
 ## the other arm hanging), moving its right arm alone over the locomotion's body (PlayerAnim's jog aim: the torso and the
 ## other arm the jog's), no spine lean; then BendAimArm (the pistol's JogAimArm on the two fingers) turns the arm onto the
 ## crosshair and the head toward it, weighted by the cast's weight and the clip's aim (in over its aim_in_s, out from back_s

@@ -14,8 +14,8 @@ extends RefCounted
 ##         wall   {hits, width_m, rise_s, ...}       Earth Wall's numbers (FormEffects.earth_wall, tree_wall; a bot's wall)
 ##         ice    {hits, rise_s, materials{snow}}    Ice Wall's numbers (BendEffects.ice_wall)
 ##         pose   {"move/mode": clip}                a twist's own cast pose (a change pose:<move>/<mode>, from the element's
-##                                                   clip to the twist's: the Lightning Pistol, the owner 2026-10-11 "have this
-##                                                   or that and each has it perks and cons"); BendPoses.pick reads it for the
+##                                                   clip to the twist's: the Lightning Pistol's was the first, 2026-10-11,
+##                                                   gone 2026-10-12, none worn now); BendPoses.pick reads it for the
 ##                                                   wearer (pose_of) before his fighting style
 ##         tune   {path: number}                     a guard rule, passive, % ring rule or move number per wearer
 ##                                                   (TUNE_PATHS; tune(body, path, base) at each seam that reads it)

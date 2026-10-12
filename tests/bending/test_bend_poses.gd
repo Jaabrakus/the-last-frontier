@@ -84,7 +84,7 @@ func _provenance() -> void:
 		var a := BendPoses.animation(nm)
 		var lib := BendPoses.library_of(nm)
 		var why := ""
-		# (the owner's one pick of Frontier tech, 2026-10-11: the Lightning Pistol's clip, built from the game's own pistol aim; not
+		# (the owner's one pick of Frontier tech, 2026-10-11, the Ice Spear's since 2026-10-12: built from the game's own pistol aim; not
 		# ours, so held to its own rule: its own library, named frontier-, listed by name in poses.json, its lineage in its metas)
 		var frontier := BendPoses.frontier_tech(nm)
 		if a == null:
@@ -110,7 +110,8 @@ func _provenance() -> void:
 	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md (or the owner's listed Frontier tech, in its own library with its lineage)%s"
 			% [names.size(), "" if bad.is_empty() else " -- " + "; ".join(bad)])
 	var ft: Array = BendPoses.data().get("frontier_tech", [])
-	_expect(ft == ["frontier-pistol-lightning"] and BendPoses.usable("frontier-pistol-lightning") and not BendPoses.usable("frontier-unlisted")
+	_expect(ft == ["frontier-pistol-ice"] and BendPoses.usable("frontier-pistol-ice") and not BendPoses.usable("frontier-pistol-lightning")
+			and not BendPoses.usable("frontier-unlisted")
 			and String(BendPoses.pick("fire_arc", "lightning", "fire").get("clip", "")) == "own-bend-fire-lightning",
 			"Frontier tech: only the listed clip may be a pose (%s), and Classic's Lightning is still the original" % [ft])
 	var ex: Array = BendPoses.data().get("exclude", [])

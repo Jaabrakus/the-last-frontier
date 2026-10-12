@@ -21,7 +21,7 @@ Built 10 October 2026 for the Character Advancement window's phases B1 and B2 (`
 
 The numbers are read from `data/sway/skill_tree.json` `changes[]` (the one place they live). A node applies only when every change in it can be applied per wearer and the move's data still holds the change's `from` (so a retuned move refuses the node instead of silently applying a stale absolute). Taking the node out of `live` or flipping its switch gives the move's own numbers back.
 
-**Added 11 October 2026: the Lightning Pistol** (`fire.lightning.pistol`, fire's Storm twist; the owner: "we want both moves
+**Removed 12 October 2026** (the owner: "we dont have that skill"; its pistol aim is the Ice Spear's now). **Added 11 October 2026: the Lightning Pistol** (`fire.lightning.pistol`, fire's Storm twist; the owner: "we want both moves
 the orignal one and the lightning pistol it will be a skill tree thing have this or that and each has it perks and cons").
 Live, not yet soaked. Its changes: `pose:fire_arc/lightning` from `own-bend-fire-lightning` to `frontier-pistol-lightning`
 (a new change kind: `BendLoadout`'s `pose` overlay, read by `BendPoses.pick` for the wearer before his fighting style), the
