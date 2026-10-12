@@ -552,7 +552,7 @@ static func rooted_mult(n: Node) -> float:
 	var v := (n as CharacterBody3D).velocity
 	if Vector2(v.x, v.z).length() >= float(pv.get("still_mps", 0.3)) or not (n as CharacterBody3D).is_on_floor():
 		return 1.0
-	return float(pv.get("knock_mult", 0.85))
+	return BendLoadout.tune_f(n, "rules:passives.earth.knock_mult", float(pv.get("knock_mult", 0.85)))
 
 
 ## How far a lock of the struck `n` is pushed back by its last blow (spec §2.3: what the blow cost its caster, at least

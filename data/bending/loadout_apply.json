@@ -2,6 +2,7 @@
   "format": "tidebreak-loadout-apply",
   "version": 1,
   "_doc": [
+    "The tuning talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): Clean Return, Open Hands, Steady Point, Swift Lance, Heavy Boulder, Deep Roots, Swift Roots, Patient Turn, Lazy River, Rapids, Reaching Parry, Long Carry, Gale Force change a guard rule, a passive, a % ring rule or Stone Form's own number for the wearer (BendLoadout's tune part: each read where the game reads it for him). Live unsoaked; tests/ring/test_talents_tune.gd plays each worn and not worn in a ring.",
     "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
     "nodes: one switch per node id (absent counts as on). A node whose soak left its gate (tools/ring/loadout_soak.gd: 0.40-0.60 of the games at 30, 0.45-0.55 at 60) is switched off here and noted in the doc; its numbers then read as the move's own.",
@@ -42,8 +43,22 @@
     "fire.lightning.shock": true,
     "air.pull.trip": true,
     "air.wall.prison": true,
-    "water.wave.drench": true
+    "water.wave.drench": true,
+    "earth.catch.clean_return": true,
+    "earth.catch.open_hands": true,
+    "earth.spike.steady_point": true,
+    "earth.spike.swift_lance": true,
+    "earth.boulder.heavy": true,
+    "earth.passive.deep_roots": true,
+    "earth.passive.swift_roots": true,
+    "water.turn.patient": true,
+    "water.passive.lazy_river": true,
+    "water.passive.rapids": true,
+    "fire.parry.reaching": true,
+    "air.passive.long_carry": true,
+    "air.passive.gale_force": true
   },
+  "behaviour": {},
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -67,7 +82,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench"
-  ],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
   "styles_live": ["boxing"]
 }

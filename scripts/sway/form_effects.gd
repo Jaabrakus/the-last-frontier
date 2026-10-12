@@ -362,7 +362,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
 	var s: FormStone
 	if mode == "cannonball":
-		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed, matter)
+		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
@@ -372,7 +372,7 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	sfx("rumble", foot, -4.0, 1.1)
 	if SbFx.fire(bc.body, "stone_form/" + mode, "rise", {"at": foot, "dir": way}):
 		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
-	var th := Throw.start(bc, s, td)
+	var th := Throw.start(bc, s, _throw_d(bc, d))
 	if th != null and BendR3.on(bc.body) and BendR3.airborne(bc.body):
 		th.follow = true
 	if th != null and String(BendR3.cur.get("tag", "")).ends_with(".grown"):
@@ -417,7 +417,7 @@ static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
 	var sbk := "%s/%s" % [m if m != "" else "stone_form", mode]
 	if SbFx.fire(bc.body, sbk, "rise", {"at": s.global_position, "dir": bc.facing()}):
 		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
-	var th := Throw.start(bc, s, d.get("throw", {}))
+	var th := Throw.start(bc, s, _throw_d(bc, d))
 	if th == null:
 		s.queue_free()
 		return null
@@ -445,7 +445,7 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
 	var s: FormStone
 	if mode == "cannonball":
-		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed, matter)
+		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
@@ -487,6 +487,31 @@ static func grow_raised(th: Node, m: String, mode: String, now := false) -> void
 	sfx("rise", at, -3.0, 0.75)
 	if t.stone.is_inside_tree():
 		GatherFx.fall_dust(t.stone.get_tree().current_scene, at, t.stone.radius * 2.0)
+
+
+## Stone Form's throw data for caster `bc`: the move's, with the wearer's own hurl speeds (a skill tree node: Swift Lance, Heavy
+## Boulder; BendLoadout tune move:stone_form.throw.hurl.<kind>.mps). Classic: the move's own dictionary.
+static func _throw_d(bc: BendCaster, d: Dictionary) -> Dictionary:
+	var td: Dictionary = d.get("throw", {})
+	if bc == null or BendLoadout.overlay_of(bc.body).is_empty():
+		return td
+	var out := td.duplicate(true)
+	var hurl: Dictionary = out.get("hurl", {})
+	for k: String in ["spike", "cannonball"]:
+		if hurl.get(k) is Dictionary:
+			(hurl[k] as Dictionary)["mps"] = BendLoadout.tune(bc.body, "move:stone_form.throw.hurl.%s.mps" % k, (hurl[k] as Dictionary).get("mps"))
+	return out
+
+
+## The Boulder's own data for caster `bc`: the move's, with the wearer's radius (Heavy Boulder; tune
+## move:stone_form.cannonball.radius_m).
+static func _ball_d(bc: BendCaster, d: Dictionary) -> Dictionary:
+	var cb: Dictionary = d.get("cannonball", {})
+	if bc == null or BendLoadout.overlay_of(bc.body).is_empty():
+		return cb
+	var out := cb.duplicate()
+	out["radius_m"] = BendLoadout.tune_f(bc.body, "move:stone_form.cannonball.radius_m", float(cb.get("radius_m", 0.26)))
+	return out
 
 
 ## The Throw of the stone `body` raised and still holds (null none).

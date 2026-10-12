@@ -17,6 +17,8 @@ extends RefCounted
 ##                                                   clip to the twist's: the Lightning Pistol, the owner 2026-10-11 "have this
 ##                                                   or that and each has it perks and cons"); BendPoses.pick reads it for the
 ##                                                   wearer (pose_of) before his fighting style
+##         tune   {path: number}                     a guard rule, passive, % ring rule or move number per wearer
+##                                                   (TUNE_PATHS; tune(body, path, base) at each seam that reads it)
 ##         class  {tag: {d, base, growth, angle, set_stun, volley_n}}   the % ring numbers of the wearer's own hits with that
 ##                                                   tag (a change class:<tag>+<variant>.<key>, rules.json stock.classes; the
 ##                                                   owner 2026-10-11 on the tree: "fix it"): RingRules.on_hit puts them over
@@ -53,7 +55,13 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
 ## The overlay's parts (a number or a pose a node changes per wearer).
-const PARTS := ["spec", "lock", "wall", "ice", "pose", "class"]
+const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new"]
+## THE BEHAVIOUR TALENTS (2026-10-11, the owner: "make sure all the talents work and they work in game"): a node whose effect is
+## new code (its changes hold a "new" or "new:<what>.<key>" entry, or a class:<tag>+<variant> with a whole new class) applies only
+## once its id is in loadout_apply.json `behaviour` ({id: where the code is}): the game's code then asks wears(body, id) at the place
+## the behaviour happens, and reads the node's own numbers through tune(body, "new:<what>.<key>", base) (a "new:" change with a
+## number) or new_class(body, "<tag>+<variant>") (a whole class the node adds). A node not in the map is refused ("new behaviour
+## not built"): it never half-applies. Classic (nothing worn) never reaches any of it.
 ## The keys of a hit's class a node may change for its wearer (what RingRules.on_hit reads off the class it is handed); the
 ## others (set, jab, pop, pull, dir, ...) are what a hit is, not how much.
 const CLASS_KEYS := ["d", "base", "growth", "angle", "set_stun", "volley_n"]
@@ -62,6 +70,18 @@ const CLASS_KEYS := ["d", "base", "growth", "angle", "set_stun", "volley_n"]
 ## prison_s: Wind Prison (BendZone: the Wind Wall holds whoever it catches in the air); drench_s: Drenching Wave (the hit carries
 ## it, RingRules.on_hit soaks him: BendStatus.drench).
 const NEW_SPEC_KEYS := ["bind_s", "prison_s", "drench_s"]
+## The tune part (2026-10-11, the owner: "make sure all the talents work and they work in game"): a guard rule, a passive, a %
+## ring rule or a move's own number the wearer reads where the game reads it for him (tune(body, path, base); each path here has
+## that seam, any other is refused). The change's path is the key: rules:guard_rules.<key> (Bending.rule), rules:passives.<el>.<key>
+## (Bending.passive), stock:<key> or stock:<block>.<key> (rules.json stock), move:<move>.<key>... (moves.json; a rule a move may
+## carry of its own, sputter_s or release_s, else the global rule).
+const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return_lock_s", "rules:guard_rules.rally_step",
+		"rules:guard_rules.rally_clean_step", "stock:return_mult", "stock:rally.step", "stock:rally.clean",
+		"rules:passives.earth.knock_mult", "rules:passives.earth.fill_mult", "stock:rooted_base", "stock:guard_perfect_s",
+		"stock:late_mult", "rules:passives.water.steer_dps", "rules:passives.water.steer_max_deg", "rules:passives.water.steer_s",
+		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
+		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
+		"move:stone_form.cannonball.radius_m"]
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -258,7 +278,8 @@ static func _resolve(id: String) -> Dictionary:
 	if not (changes is Array) or (changes as Array).is_empty():
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
-	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}}
+	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {},
+			"class_new": {}}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
 			return _refused("a change is not a dictionary")
@@ -290,6 +311,15 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		return _put(out.pose as Dictionary, [rest], String(to))
 	if kind == "class":
 		return _take_class(out, n, path, rest, from, to)
+	if path in TUNE_PATHS:
+		return _take_tune(out, path, from, to)
+	if kind == "new" or path == "new":
+		# (a behaviour talent's own code: only once it is built, its id in `behaviour`)
+		if not String(n.get("id", "")) in behaviour():
+			return "%s: new behaviour not built" % path
+		if path == "new" or to == null:
+			return ""
+		return _put(out.tune as Dictionary, [path], to)
 	# (a spec key Classic does not have, from none: NEW_SPEC_KEYS only, which the code reads as off when absent)
 	var new_key := kind == "spec" and from == null and path.get_slice(".", path.get_slice_count(".") - 1) in NEW_SPEC_KEYS
 	if not (to is float or to is int) or not (new_key or from is float or from is int):
@@ -356,6 +386,53 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 	return "%s: no code reads this number per wearer" % path
 
 
+## A tune change (TUNE_PATHS): `from` the game's number now (an array of numbers for a hurl's speeds), `to` of the same shape,
+## into the tune part under its path ("" taken, else why not).
+static func _take_tune(out: Dictionary, path: String, from: Variant, to: Variant) -> String:
+	var cur: Variant = tune_base(path)
+	if cur == null:
+		return "%s: the game holds no such number" % path
+	if not _same_shape_num(cur, from) or not _same_shape_num(from, to, true):
+		return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
+	return _put(out.tune as Dictionary, [path], to)
+
+
+## The game's own number at tune path `path` (null: none).
+static func tune_base(path: String) -> Variant:
+	var kind := path.get_slice(":", 0)
+	var keys: Array = Array(path.substr(kind.length() + 1).split("."))
+	match kind:
+		"rules":
+			if keys.size() == 2 and keys[0] == "guard_rules":
+				return Bending.rules().get(String(keys[1]))
+			if keys.size() == 3 and keys[0] == "passives":
+				return Bending.passive(String(keys[1])).get(String(keys[2]))
+		"stock":
+			if keys.size() == 1:
+				return (RingRules.data().get("stock", {}) as Dictionary).get(String(keys[0]))
+			if keys.size() == 2:
+				return RingRules.stock_block(String(keys[0])).get(String(keys[1]))
+		"move":
+			var md := SwayMoves.move(String(keys[0]))
+			var v2: Variant = _dig(md, keys.slice(1))
+			if v2 == null and keys.size() == 2 and String(keys[1]) in ["sputter_s", "release_s"]:
+				return Bending.rule("sputter_s", 0.7) if keys[1] == "sputter_s" else SwayMoves.lock_rule("release_s", 1.0)
+			return v2
+	return null
+
+
+## Whether `a` and `b` are the same number (or arrays of the same numbers; `shape_only`: only the same shape).
+static func _same_shape_num(a: Variant, b: Variant, shape_only := false) -> bool:
+	if (a is float or a is int) and (b is float or b is int):
+		return shape_only or is_equal_approx(float(a), float(b))
+	if a is Array and b is Array and (a as Array).size() == (b as Array).size():
+		for i in (a as Array).size():
+			if not _same_shape_num((a as Array)[i], (b as Array)[i], shape_only):
+				return false
+		return true
+	return false
+
+
 ## class:<tag>+<variant>.<key>: key `key` of the class of the wearer's hits with `tag` (rules.json stock.classes), `from` the
 ## data's, into the overlay's class part as {tag: {key: to}} ("" taken, else why not). A change with no key (a whole class: a hit
 ## the node adds, Surfacing's, the Reel's) is no number; nor is a key that says what the hit is (set, dir, pull). A volley's
@@ -365,6 +442,9 @@ static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: Stri
 	var plus := rest.find("+")
 	var dot := rest.find(".", plus + 1) if plus > 0 else -1
 	if plus <= 0 or dot < 0:
+		if to is Dictionary and from == null and String(n.get("id", "")) in behaviour():
+			# (a behaviour talent's whole new class: new_class(body, "<tag>+<variant>"))
+			return _put(out["class_new"] as Dictionary, [rest], to)
 		return "%s: a hit the node adds, not a number of one" % path
 	var tag := rest.substr(0, plus)
 	var key := rest.substr(dot + 1)
@@ -428,7 +508,8 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 ## {id: why}}. A pick that is not live, of another element, worn without a node it requires, or that sets a number another
 ## already set, applies nothing.
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "ids": [], "refused": {}}
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "ids": [],
+			"refused": {}}
 	for v: Variant in picks:
 		var id := String(v)
 		var why := why_not(id)
@@ -628,6 +709,38 @@ static func hit_class(body: Object, cls: Dictionary) -> Dictionary:
 	for k: String in over:
 		out[k] = float(over[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)
 	return out
+
+
+## The behaviour talents built (loadout_apply.json behaviour: {id: where its code is}).
+static func behaviour() -> Dictionary:
+	var b: Variant = config().get("behaviour", {})
+	return b if b is Dictionary else {}
+
+
+## Whether `body` wears node `id` live now (a behaviour talent's code asks this where the behaviour happens; Classic: false).
+static func wears(body: Object, id: String) -> bool:
+	return _wears(body) and id in picks_of(body)
+
+
+## A whole class a worn behaviour talent adds ("<tag>+<variant>" as its change names it; {} none).
+static func new_class(body: Object, key: String) -> Dictionary:
+	if not _wears(body):
+		return {}
+	var c: Variant = (overlay_of(body).get("class_new", {}) as Dictionary).get(key)
+	return c as Dictionary if c is Dictionary else {}
+
+
+## The wearer's own number at tune path `path` (TUNE_PATHS), else `base` (the game's: Classic reads it unchanged).
+static func tune(body: Object, path: String, base: Variant) -> Variant:
+	if not _wears(body):
+		return base
+	var t: Variant = overlay_of(body).get("tune")
+	return (t as Dictionary).get(path, base) if t is Dictionary else base
+
+
+## tune() as a float.
+static func tune_f(body: Object, path: String, base: float) -> float:
+	return float(tune(body, path, base))
 
 
 ## Move `m`'s lock at `mode` for `body`: `base` (the data's, before the stretch, the tier and lock_mult) or the wearer's own.

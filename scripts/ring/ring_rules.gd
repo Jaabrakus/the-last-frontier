@@ -1186,7 +1186,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	d *= stale_k * stock_num("pct_scale", 1.0)
 	# (a late guard's half; an untagged hit's damage and knock came already halved by the guard that let it through)
 	if late and not untagged:
-		d *= stock_num("late_mult", 0.5)
+		d *= BendLoadout.tune_f(n, "stock:late_mult", stock_num("late_mult", 0.5))
 	if first and vkey != "":
 		_volleys[vkey] = {"stale_k": stale_k, "at": now}
 		if _volleys.size() > 64:
@@ -1200,20 +1200,20 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	# late guard halves it
 	var drench_s := float(info.get("drench_s", 0.0))
 	if drench_s > 0.0 and not returned:
-		res["drench_s"] = BendStatus.drench(n, drench_s * (stock_num("late_mult", 0.5) if late else 1.0))
+		res["drench_s"] = BendStatus.drench(n, drench_s * (BendLoadout.tune_f(n, "stock:late_mult", stock_num("late_mult", 0.5)) if late else 1.0))
 	# a bind (a skill tree twist's hit, info.bind_s: BendStatus.bind): his feet held, no launch, no hitstun, no string hit; a
 	# late guard halves it
 	var bind_s := float(info.get("bind_s", 0.0))
 	if bind_s > 0.0 and not returned:
 		# (its look in its own move's matter: Stone Grip's stone, Frost Geyser's ice, Static Shock's sparks, Tripwind's wind)
-		res["bind_s"] = BendStatus.bind(n, bind_s * (stock_num("late_mult", 0.5) if late else 1.0),
+		res["bind_s"] = BendStatus.bind(n, bind_s * (BendLoadout.tune_f(n, "stock:late_mult", stock_num("late_mult", 0.5)) if late else 1.0),
 				Bending.element_of(String(info.get("move", ""))))
 		return res
 	# the launch
 	var lying := BendKnock.peek(n) != null and BendKnock.peek(n).lying_t > 0.0
 	var w := weight_of(BendPoses.element_of(n))
 	if BendStatus.rooted_mult(n) < 1.0:
-		cls["base_mult"] = stock_num("rooted_base", 0.85)
+		cls["base_mult"] = BendLoadout.tune_f(n, "stock:rooted_base", stock_num("rooted_base", 0.85))
 	var range_m := 0.0
 	var from: Variant = info.get("from", null)
 	if from is Vector3:
@@ -1222,13 +1222,13 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var p := pct_of(n)
 	var v := launch_v(cls, p, d, w, range_m, air)
 	if by != null and BendStatus.until(by, &"bend_carry_until") > 0.0:
-		v *= stock_num("carried_mult", 1.15)
+		v *= BendLoadout.tune_f(by, "stock:carried_mult", stock_num("carried_mult", 1.15))
 	if bool(cls.get("pull", false)) and by is Node3D and n is Node3D:
 		var gap := Vector2((by as Node3D).global_position.x - (n as Node3D).global_position.x,
 				(by as Node3D).global_position.z - (n as Node3D).global_position.z).length()
 		v = minf(v, sqrt(2.0 * stock_num("pull_decel", 6.0) * maxf(gap - 0.6, 0.0)))
 	if late and not untagged:
-		v *= stock_num("late_mult", 0.5)
+		v *= BendLoadout.tune_f(n, "stock:late_mult", stock_num("late_mult", 0.5))
 	var ang := float(cls.get("angle", 30.0))
 	var flat := _flat_way(n, by, info, String(cls.get("dir", "travel")))
 	var stun := float(info.get("set_stun", cls.get("set_stun", -1.0)))

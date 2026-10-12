@@ -2725,7 +2725,8 @@ func passive_fill() -> float:
 	if not elem() or quick_element() != "earth" or not player.is_on_floor():
 		return 1.0
 	var pv := Bending.passive("earth")
-	return float(pv.get("fill_mult", 1.2)) if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0
+	var fm := BendLoadout.tune_f(player, "rules:passives.earth.fill_mult", float(pv.get("fill_mult", 1.2)))
+	return fm if player.horizontal_speed() < float(pv.get("still_mps", 0.3)) else 1.0
 
 
 func _hold(dt: float, q: Dictionary) -> void:
@@ -2781,7 +2782,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 				_wait_release = true          # (the button still held: let go before the next lock)
 				_wait_src = lock_src
 			return
-		if elem() and not _sputtered and full_t >= Bending.rule("sputter_s", 0.7):
+		if elem() and not _sputtered and full_t >= rule_of(move, "sputter_s", Bending.rule("sputter_s", 0.7)):
 			_sputter()
 		if rw > 0.0 and full_t > rw:
 			_fizzle()
@@ -2864,7 +2865,8 @@ func _on_target(q: Dictionary) -> bool:
 ## 2026-10-03, "gust its hard and unenjoyable") over the art's (lock: cone_deg, grace_s, release_s).
 func rule_of(m: String, key: String, def: float) -> float:
 	var r: Variant = SwayMoves.move(m).get("lock_rules", {})
-	return float((r as Dictionary).get(key, def)) if r is Dictionary else def
+	var v := float((r as Dictionary).get(key, def)) if r is Dictionary else def
+	return BendLoadout.tune_f(player, "move:%s.%s" % [m, key], v) if key in ["release_s", "sputter_s"] else v
 
 
 ## The seconds after the click within which letting go casts (0: no limit, no fizzle; Gust's).

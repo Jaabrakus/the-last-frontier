@@ -361,9 +361,9 @@ func _swing(dt: float) -> void:
 	travelled = 0.0
 	if BendPoses.element_of(_swing_by) == "water":
 		var pv := Bending.passive("water")
-		steer_dps = float(pv.get("steer_dps", 45.0))
-		steer_max_deg = float(pv.get("steer_max_deg", 15.0))
-		steer_s = float(pv.get("steer_s", 0.25))
+		steer_dps = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_dps", float(pv.get("steer_dps", 45.0)))
+		steer_max_deg = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_max_deg", float(pv.get("steer_max_deg", 15.0)))
+		steer_s = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_s", float(pv.get("steer_s", 0.25)))
 		age = 0.0
 		_steered = 0.0
 	_face()

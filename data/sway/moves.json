@@ -277,6 +277,7 @@
       "label": "Stone Form",
       "art": "form",
       "lock_s": 1.1,
+      "mode_lock_s": {"spike": 1.1, "cannonball": 1.1},
       "mode_air_lock_s": {"spike": 0.6},
       "mode_air_moving_mult": {"spike": 1.0},
       "motes": 2,

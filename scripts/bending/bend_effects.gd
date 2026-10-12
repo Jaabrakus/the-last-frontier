@@ -163,7 +163,7 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 	var carried := false
 	if bool(spec.get("carry", false)) and bc.carry_ready():
 		# (Carried wind: a hit straight out of a dash knocks harder; spent on this cast)
-		var k := float(Bending.passive("air").get("knock_mult", 1.15))
+		var k := BendLoadout.tune_f(p, "rules:passives.air.knock_mult", float(Bending.passive("air").get("knock_mult", 1.15)))
 		spec["knock_mps"] = float(spec.get("knock_mps", 0.0)) * k
 		p.remove_meta(&"bend_carry_until")
 		carried = true
@@ -336,9 +336,9 @@ static func bolts(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 	if String(spec.get("kind", "")) == "water" and BendPoses.element_of(p) == "water" and not spec.has("steer_dps"):
 		var pv := Bending.passive("water")
 		spec = spec.duplicate()
-		spec["steer_dps"] = float(pv.get("steer_dps", 45.0))
-		spec["steer_max_deg"] = float(pv.get("steer_max_deg", 15.0))
-		spec["steer_s"] = float(pv.get("steer_s", 0.25))
+		spec["steer_dps"] = BendLoadout.tune_f(p, "rules:passives.water.steer_dps", float(pv.get("steer_dps", 45.0)))
+		spec["steer_max_deg"] = BendLoadout.tune_f(p, "rules:passives.water.steer_max_deg", float(pv.get("steer_max_deg", 15.0)))
+		spec["steer_s"] = BendLoadout.tune_f(p, "rules:passives.water.steer_s", float(pv.get("steer_s", 0.25)))
 	var nctx := NetSpells.ctx()                   # (online: a volley's later bolts named in its cast's run, NetSpells)
 	for i in n:
 		var fire := func() -> void:
@@ -785,7 +785,7 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 		var who2 := BendBolt._taker(h2.collider as Node) if not h2.is_empty() else null
 		rec["redirected"] = true
 		if who2 != null and BendStatus.can_take(who2, who):
-			var k := Bending.rule("perfect_mult", 1.2)
+			var k := BendLoadout.tune_f(who, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
 			var binfo := BendZone.return_info(info, who, bfrom, k)
 			BendR3.deliver(who2, float(spec.get("damage", 50.0)) * k, end2, bdir, who, float(spec.get("_lock_s", -1.0)),
 					Vector3(bdir.x, 0.0, bdir.z).normalized() * float(spec.get("knock_mps", 6.0)) + Vector3.UP * 2.0, binfo)

@@ -51,6 +51,10 @@ func _run() -> void:
 			for j in 30:
 				await process_frame
 			var mo := RingMode.find(self)
+			var pl := lvl.player
+			var sc := SwayCaster.of(pl) if pl != null else null
+			print("PROBE bending: element %s, arena_element %s, caster %s, hud strip %s" % [Bending.of(pl).element if pl != null else "-",
+					pl.get(&"arena_element") if pl != null else "-", sc != null, pl.hud.get(&"bend_strip") != null if pl != null and pl.hud != null else false])
 			print("PROBE ring: RingArena.format %s, MatchSetup.format %s, sides %d v %d, deck %.0f x %.0f, practice %s, quick %s" % [
 					RingArena.format, MatchSetup.format, (mo.rules.sides[0] as Array).size(), (mo.rules.sides[1] as Array).size(),
 					mo.ring.half_w() * 2.0, mo.ring.half_l() * 2.0, MatchSetup.practice(), MatchSetup.quick])

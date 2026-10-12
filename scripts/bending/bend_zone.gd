@@ -707,7 +707,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 			var lance := what == "air" and b.shape == "spear"
 			if what in ["water", "ice"] or lance:
 				if perfect:
-					b.begin_swing(owner_node, SWING_S, SWING_R, Bending.rule("perfect_mult", 1.2), "ice" if lance else "")
+					b.begin_swing(owner_node, SWING_S, SWING_R, BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult",
+							Bending.rule("perfect_mult", 1.2)), "ice" if lance else "")
 				else:
 					_late(b)
 			elif what == "fire":
@@ -808,7 +809,7 @@ func _late(b: BendBolt) -> void:
 ## speed, damage and knock. A floor wave stays on the floor (its line the aim's yaw).
 func _straight_back(b: BendBolt) -> void:
 	var to := guard_aim(owner_node, b.global_position)
-	var k := Bending.rule("perfect_mult", 1.2)
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
 	b.redirect(to - b.global_position, owner_node)
 	b.info["ret_mult"] = k
 	b.velocity *= k
@@ -884,7 +885,8 @@ static func carry_wind(body: Node) -> void:
 		return
 	if not NetSpells.here(body, "carry", []):
 		return                                   # (online: his owner's, NetSpells)
-	body.set_meta(&"bend_carry_until", BendStatus.now() + float(Bending.passive("air").get("after_s", 0.8)))
+	body.set_meta(&"bend_carry_until", BendStatus.now() + BendLoadout.tune_f(body, "rules:passives.air.after_s",
+			float(Bending.passive("air").get("after_s", 0.8))))
 	if body is Node3D:
 		BendLooks.carried(body as Node3D)
 
@@ -895,7 +897,7 @@ static func guard_lock_s(body: Node, base: float) -> float:
 	var held := held_stone(body)
 	if held != null:
 		return Bending.rule("perfect_return_lock_s", 0.1) if bool(held.get_meta(&"bend_clean", false)) \
-				else Bending.rule("return_lock_s", 0.35)
+				else BendLoadout.tune_f(body, "rules:guard_rules.return_lock_s", Bending.rule("return_lock_s", 0.35))
 	if BendStatus.until(body, &"bend_whiff_until") > 0.0:
 		return maxf(base, Bending.rule("whiff_lock_s", 0.5))
 	return base
@@ -927,7 +929,7 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	var kind := GustLift.kind_of(fs)
 	var floor_d: Dictionary = ((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get(kind,
 			((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get("stone", {}))
-	var mult := return_mult(fs)
+	var mult := return_mult(fs, bc.body)
 	var own: Dictionary = fs.get_meta(&"bend_stone_d", {})
 	var fm: Array = floor_d.get("mps", [24.0, 24.0])
 	var fd: Array = floor_d.get("damage", [60.0, 60.0])
@@ -942,7 +944,9 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	if own.has("gravity"):
 		hd["gravity"] = minf(float(own.gravity), float(floor_d.get("gravity", 6.0)))
 	var clean := bool(fs.get_meta(&"bend_clean", false))
-	var rally := float(fs.get_meta(&"bend_rally", 0.0)) + (Bending.rule("rally_clean_step", 0.2) if clean else Bending.rule("rally_step", 0.1))
+	var rally := float(fs.get_meta(&"bend_rally", 0.0)) + (BendLoadout.tune_f(bc.body, "rules:guard_rules.rally_clean_step",
+			Bending.rule("rally_clean_step", 0.2)) if clean else BendLoadout.tune_f(bc.body, "rules:guard_rules.rally_step",
+			Bending.rule("rally_step", 0.1)))
 	fs.set_meta(&"bend_rally", rally)
 	fs.set_meta(&"bend_returns", int(fs.get_meta(&"bend_returns", 0)) + 1)
 	fs.set_meta(&"bend_return", {"mps": mps, "damage": dmg, "knock_mps": knock, "mult": mult, "clean": clean})
@@ -1008,10 +1012,12 @@ static func _throw_pop_stone(bc: BendCaster, fs: FormStone, toward := Vector3.IN
 
 ## A held stone's throw-back factor now: perfect_mult off a clean catch, times the rally (1 + its earlier returns' steps),
 ## the whole at most rally_max (spec §2.6: "up to x1.6").
-static func return_mult(s: Node) -> float:
+static func return_mult(s: Node, by: Node = null) -> float:
 	var clean := bool(s.get_meta(&"bend_clean", false))
 	var rally := 1.0 + float(s.get_meta(&"bend_rally", 0.0))
-	return minf(rally * (Bending.rule("perfect_mult", 1.2) if clean else 1.0), Bending.rule("rally_max", 1.6))
+	var who: Node = by if by != null else (instance_from_id(int(s.get_meta(&"bend_held_by", 0))) as Node if s.has_meta(&"bend_held_by") else null)
+	var pm := BendLoadout.tune_f(who, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	return minf(rally * (pm if clean else 1.0), Bending.rule("rally_max", 1.6))
 
 
 ## What a guard of `body`'s does to a cone of `cone_kind` reaching him (BendEffects.cone): the share of its damage and knock

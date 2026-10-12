@@ -37,10 +37,15 @@ const CLASS_NODES := ["earth.fissure.deep", "water.spear.cold_hands", "water.spe
 		"fire.lightning.short_fuse", "fire.embers.tight", "air.palm.shoving", "air.gust.rising"]
 const BIND_NODES := ["earth.column.grip", "water.geyser.frost", "fire.lightning.shock", "air.pull.trip", "air.wall.prison",
 		"water.wave.drench"]
+## The tuning talents (2026-10-11): a guard rule, a passive, a % ring rule or Stone Form's own number per wearer (BendLoadout's tune
+## part; tests/ring/test_talents_tune.gd plays them in a ring).
+const TUNE_NODES := ["earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance",
+		"earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient",
+		"water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"]
 const LIVE := ["air.ball.dense", "air.gust.full_sail", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick",
-		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES + BIND_NODES
+		"earth.wall.thick", "water.wall.thick_ice", "fire.lightning.pistol"] + CLASS_NODES + BIND_NODES + TUNE_NODES
 const ON_NOW := ["air.ball.dense", "air.slice.keen", "earth.burrow.lie_low", "fire.step.quick", "fire.lightning.pistol"] + CLASS_NODES \
-		+ BIND_NODES
+		+ BIND_NODES + TUNE_NODES
 
 var checks := 0
 var fails: Array[String] = []
@@ -145,7 +150,8 @@ func _run() -> void:
 	_expect(not "water.skate.wet_trail" in live and not bool(BendLoadout.resolve("water.skate.wet_trail").ok)
 			and String(BendLoadout.resolve("water.skate.wet_trail").why).contains("puddles"),
 			"Skate's Wet Trail is refused: its puddles are in the data and nothing makes them (%s)" % BendLoadout.resolve("water.skate.wet_trail").why)
-	_expect(not "earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") != "", "Earth's Steady Point is not in the set")
+	_expect("earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") == "",
+			"Earth's Steady Point is live (2026-10-11: its release and sputter read per wearer, its own Spike lock)")
 	_expect(BendLoadout.live_styles() == ["boxing"], "the live styles are Boxing only (%s)" % [BendLoadout.live_styles()])
 	_expect(not BendPoses._libs.has(BOXING_LIB), "the Boxing library is not loaded before a style clip is asked for")
 
@@ -187,6 +193,13 @@ func _run() -> void:
 				_expect(String(wp.get("clip", "")) == String(c.to) and String(wp.get("from", "")) == "node"
 						and String(BendPoses.pick(mvp, mdp, el, bot).get("clip", "")) == String(c.from),
 						"%s: the wearer casts %s with %s, the other with %s" % [id, rest, c.to, c.from])
+				continue
+			if path in BendLoadout.TUNE_PATHS:
+				# (a guard rule, a passive, a % ring rule or a move's own number: the wearer's at its seam, the other's the game's)
+				_expect(str(BendLoadout.tune(w, path, null)) == str(c.to) and str(BendLoadout.tune(bot, path, "classic")) == "classic"
+						and str(BendLoadout.tune_base(path)) == str(c.from) or (_near(BendLoadout.tune(w, path, null), c.to)
+						and _near(BendLoadout.tune_base(path), c.from) and str(BendLoadout.tune(bot, path, "classic")) == "classic"),
+						"%s: %s is %s for the wearer, the game's %s for the other" % [id, path, str(c.to), str(c.from)])
 				continue
 			var to := float(c.to)
 			var none := c.from == null                  # (a spec key Classic does not have: a bind's bind_s)
@@ -303,7 +316,7 @@ func _run() -> void:
 	t["test.drift"] = {"id": "test.drift", "kind": "enhance", "ring_legal": true, "mode": "slice",
 			"changes": [{"path": "spec:air_blast/slice.mps", "from": 40.0, "to": 50.0}]}
 	t["test.nochange"] = {"id": "test.nochange", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": []}
-	t["test.rule"] = {"id": "test.rule", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "rules:guard_rules.perfect_mult", "from": 1.2, "to": 1.3}]}
+	t["test.rule"] = {"id": "test.rule", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "rules:guard_rules.whiff_lock_s", "from": 0.5, "to": 0.6}]}
 	t["test.clash"] = {"id": "test.clash", "kind": "enhance", "ring_legal": true, "mode": "slice", "changes": [{"path": "spec:air_blast/slice.mps", "from": 45.0, "to": 51.0}]}
 	t["test.volley"] = {"id": "test.volley", "kind": "enhance", "ring_legal": true, "mode": "embers",
 			"changes": [{"path": "class:fire_jab/embers+x.volley_n", "from": 7, "to": 6}]}
