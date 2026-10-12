@@ -28,6 +28,12 @@ extends RefCounted
 ##   hits             forward(op, n, args): the host's effect on a puppet sent to its owner; apply_hit(h) there runs it on
 ##                    his own body inside a verdict (BendR3.take, BendStatus' effects); "hit_by" and "jab_guarded" go to
 ##                    the attacker's owner (his jab string, SwayCaster.note_hit)
+##   body moves       a joiner's own move landing on another machine's fighter (RingMoves._hit: an edge attack, the Rise's,
+##                    a get-up attack; relays_move) is told the host (move_hit), who lands it as his own decision would
+##                    (BendStatus.hurt and knock: on its own body, or on to the fighter's machine)
+##   strings          a jab string ended on its victim's machine (RingRules.string_ended, BendR3._on_string_ended) is told the
+##                    host and, from the host, the hitter's own machine ("string_end": string_ended), so the one Pop a string
+##                    holds there as offline
 ## Values on the wire: a body by its net id ({"@b": id}: RingNet.net_id_of), a spell thing by its name ({"@e": name}), any
 ## other node as null (enc, dec).
 
@@ -264,6 +270,44 @@ static func to_attacker(op: String, by: Node, args: Array) -> void:
 	forward(op, by, args)
 
 
+## Whether hitter `by`'s own move landing on `n` is the host's to land (online: a joiner's own body on another machine's
+## fighter); else it lands here as ever.
+static func relays_move(by: Node, n: Node) -> bool:
+	return online() and not net.is_host() and _verdict == 0 and owns(by) and not owns(n)
+
+
+## Hitter `by`'s move on `n` told the host (relays_move): `d` %, the hit point `at`, its knock `v`, its hit info.
+static func move_hit(n: Node, d: float, at: Vector3, v: Vector3, by: Node, info: Dictionary) -> void:
+	if online():
+		net.send_report(enc(["move_hit", n, d, at, v, by, info]) as Array)
+
+
+## A joiner's move hit (move_hit), on the host from peer `from`: landed as the host's own would be (its gates on to the
+## fighter's machine), the hitter his.
+static func land_move_hit(r: Array, from: int) -> void:
+	var n := r[1] as Node
+	var by := r[5] as Node
+	if n == null or by == null or not online() or net.owner_of(by) != from:
+		return                                       # (a move is told by its hitter's own machine only)
+	var v: Vector3 = r[4]
+	var info: Dictionary = r[6]
+	BendStatus.hurt(n, float(r[2]), r[3] as Vector3, v.normalized(), by, -1.0, info)
+	BendStatus.knock(n, v, by, info)
+
+
+## A jab string of `by`'s on `victim` ended here (BendR3._on_string_ended): told on (a joiner's victim: the host; the host:
+## the hitter's own machine when he is another's). Nothing offline or inside a word.
+static func string_ended(by: Node, victim: Node) -> void:
+	if not online() or _verdict > 0 or by == null or not is_instance_valid(by) or victim == null:
+		return
+	if not net.is_host():
+		if owns(victim):
+			net.send_report(enc(["string_end", by, victim]) as Array)
+		return
+	if not owns(by):
+		forward("string_end", by, [victim])
+
+
 ## An effect the host sent this machine for one of its own bodies (forward): run on it inside a verdict.
 static func apply_hit(h: Array) -> void:
 	if h.size() < 2:
@@ -300,6 +344,10 @@ static func apply_hit(h: Array) -> void:
 			BendR3.hit_by(n, a[2] as Node, a[3] as Dictionary, a[4] as Dictionary)
 		"jab_guarded":
 			BendR3.jab_guarded(n)
+		"string_end":
+			var victim := a[2] as Node3D
+			if victim != null:
+				BendR3._on_string_ended(n, victim, 0, 0.0)
 	_verdict -= 1
 
 

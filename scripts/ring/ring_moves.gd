@@ -2356,13 +2356,17 @@ func _bodies() -> Array:
 
 
 ## One of his moves' set hits on `n` through BendStatus (tag, d % in the info; a set knock of `mps` along `away` raised by
-## `angle_deg`).
+## `angle_deg`). Online a joiner's own move on another machine's fighter is landed by the host (NetSpells.move_hit: the hit
+## on the fighter's own machine as a spell's is).
 func _hit(n: Node, tag: String, d: float, away: Vector3, mps: float, angle_deg: float) -> void:
 	var a := deg_to_rad(angle_deg)
 	var flat := Vector3(away.x, 0.0, away.z).normalized() if Vector2(away.x, away.z).length() > 1e-3 else Vector3.FORWARD
 	var v := flat * mps * cos(a) + Vector3.UP * mps * sin(a)
 	var info := {"tag": tag, "from": _pos(), "air": _air, "set_stun": -1.0}
 	var at := (n as Node3D).global_position + Vector3.UP
+	if NetSpells.relays_move(body, n):
+		NetSpells.move_hit(n, d, at, v, body, info)
+		return
 	BendStatus.hurt(n, d, at, v.normalized(), body, -1.0, info)
 	BendStatus.knock(n, v, body, info)
 

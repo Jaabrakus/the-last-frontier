@@ -168,9 +168,12 @@ ring (other rules, another deck) the joiner's ring is loaded again, the session 
 banner (RingMode.net_note). When the host leaves, a joiner's session closes and his match starts again offline with a bot.
 On the same network a joiner types the host's address; over the internet the host forwards port 24570 (until R3's relay).
 
-**Still to come in R1:** body attacks decided by a joiner's own machine (a ledge attack, the Rise's hit: through the host to
-the victim's owner); the jab string's end on a victim's machine back to the hitter's (RingRules.string_ended); lag
-compensation (R1 e).
+**Body moves and strings** (R1 c). A joiner's own move landing on another machine's fighter (RingMoves._hit: an edge
+attack, the Rise's, a get-up attack) is told the host, who lands it as his own decision (on its own body, or on to the
+fighter's machine); the host checks the move came from the hitter's own machine. A jab string ended on its victim's machine
+(RingRules.string_ended) is told the host and from there the hitter's own machine, so one Pop a string holds everywhere.
+
+**Still to come in R1:** lag compensation (R1 e).
 
 ## Phases
 
@@ -178,7 +181,7 @@ compensation (R1 e).
 |---|---|---|
 | R1 a | the session: host and join into a 1v1 % ring, the second fighter a remote human; bodies streamed, puppets animated (built) | `tests/net/test_ring_net_pair.gd` |
 | R1 b | casts: every spell predicted, run by the host, ghosted elsewhere; names; the host's words about spells (built but stones) | `tests/net/test_ring_net_casts.gd` |
-| R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online (the spells' built with R1 b; body attacks, strings, stones to come) | `test_ring_net_hits.gd` |
+| R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online; body moves and strings (built) | `tests/net/test_ring_net_casts.gd` |
 | R1 d | the match mirrored: phases, clock, lives, falls, respawns, rounds, the screens (built) | `tests/net/test_ring_net_match.gd` |
 | R1 e | lag compensation: cast fast-forward, rewound hits, guard timing; a simulated 80 ms link | `test_ring_net_lag.gd` |
 | R2 | 2v2 and 4v4 online, bots filling empty slots, more than one remote human, spectators | |

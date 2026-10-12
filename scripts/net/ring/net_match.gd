@@ -117,7 +117,8 @@ static func report_fall(b: Node3D, by: Node, pct: float, tag: String) -> void:
 
 
 ## A client's report `r` (decoded) from peer `from`, on the host: a fall of his own body taken on the host's books (its word
-## to every machine follows from RingRules.take_ko).
+## to every machine follows from RingRules.take_ko); his own move's hit on another's fighter landed (NetSpells.land_move_hit);
+## a jab string ended on his own body (BendR3._on_string_ended here, then the hitter's machine).
 static func on_report(r: Array, from: int) -> void:
 	var net := NetSpells.net
 	if net == null or not net.is_host() or r.is_empty():
@@ -130,3 +131,10 @@ static func on_report(r: Array, from: int) -> void:
 			var rules := RingRules.current()
 			if rules != null:
 				rules.take_ko(b, r[2] as Node, float(r[3]), String(r[4]))
+		"move_hit":
+			NetSpells.land_move_hit(r, from)
+		"string_end":
+			var by := r[1] as Node
+			var victim := r[2] as Node3D
+			if by != null and victim != null and net.owner_of(victim) == from:
+				BendR3._on_string_ended(by, victim, 0, 0.0)     # (the host's copy; on to the hitter's own machine)

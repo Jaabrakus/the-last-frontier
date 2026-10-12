@@ -245,6 +245,7 @@ static func _reset(bc: BendCaster) -> void:
 
 ## PERCENT's string on `victim` ended (RingRules.string_ended): `by`'s jab string on him starts over (one Pop a string).
 static func _on_string_ended(by: Node, victim: Node3D, _hits: int, _pct: float) -> void:
+	NetSpells.string_ended(by, victim)          # (online: the hitter's string is kept on the host and on his own machine)
 	var bc := BendCaster.of(by) if by != null and is_instance_valid(by) else null
 	if bc != null and victim != null and int(bc.jab.get("victim", 0)) == victim.get_instance_id():
 		_reset(bc)

@@ -13,6 +13,8 @@ extends SceneTree
 ##                      puppet, then left), the return's hit sent to the joiner (".return"), the guard's result told on the
 ##                      joiner's machine ("perfect" on the host's puppet), the parried caster's slower next cast given the
 ##                      joiner (1.15)
+##   a body move        the joiner's own move (an edge attack's set hit, RingMoves._hit) on the host's fighter: told the
+##                      host, who lands it on his player (his % up)
 ## Each prints "RING NET CASTS <role> PASSED (<n> checks)" or "... FAILED (<f> of <n>)"; exit 0 only on a pass.
 
 const LIMIT_S := 240.0
@@ -166,6 +168,7 @@ func _run() -> void:
 	await _joiners_jab()
 	await _hosts_jab()
 	await _turn()
+	await _body_move()
 	_end()
 
 
@@ -344,6 +347,28 @@ func _turn() -> void:
 		net.note("h3_done")
 		await _until(func() -> bool: return got.has("j3_done"), 15.0)
 	aim_on = null
+
+
+# ---------------------------------------------------------------- a joiner's own move
+## The joiner's own body's move landing on the host's fighter (RingMoves._hit: an edge attack's set hit, as its sweep lands
+## it): told the host, who lands it on his own player (his % up).
+func _body_move() -> void:
+	var ok := await _settle(APART_M, "settled_4")
+	_expect(ok, "both at their spots for the joiner's own move")
+	var p := _puppet()
+	if role == "join":
+		await _until(func() -> bool: return got.has("move_ready"), 15.0)
+		var away := (p.global_position - player.global_position)
+		RingMoves.of(player)._hit(p, "edge/attack", 7.0, away, 6.0, 20.0)
+		net.note("moved")
+		await _until(func() -> bool: return got.has("h4_done"), 15.0)
+	else:
+		var pct0 := RingRules.current().pct_of(player)
+		net.note("move_ready")
+		await _until(func() -> bool: return got.has("moved"), 15.0)
+		var hit := await _until(func() -> bool: return RingRules.current().pct_of(player) > pct0, 5.0)
+		_expect(hit, "the joiner's edge attack landed by the host on the host's player (%.1f%%)" % RingRules.current().pct_of(player))
+		net.note("h4_done")
 
 
 ## The "bolt" words applied here on `id`: those with a swing begun (`swinging`), or with none.

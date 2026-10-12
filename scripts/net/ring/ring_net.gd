@@ -493,6 +493,7 @@ func place_humans() -> void:
 	_sync_puppets()
 	if mode == null or mode.rules == null:
 		return
+	BendR3._hear_strings()                    # (a string ended on this machine's own fighter is told on: NetSpells.string_ended)
 	for id: int in roster:
 		if id == my_id():
 			continue
