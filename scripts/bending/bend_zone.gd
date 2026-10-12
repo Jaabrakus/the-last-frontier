@@ -963,6 +963,10 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	var fm: Array = floor_d.get("mps", [24.0, 24.0])
 	var fd: Array = floor_d.get("damage", [60.0, 60.0])
 	var mps := maxf(float(own.get("mps", 0.0)) * mult, float(fm[fm.size() - 1]))
+	var on_beat := bool(fs.get_meta(&"bend_clean", false)) and BendLoadout.wears(bc.body, RETURN_TO_SENDER) and beat_return(bc.body, fs)
+	if on_beat:
+		mps *= RTS_MULT                          # (Return to Sender: a clean catch thrown back on the Beat flies faster)
+		BendLooks.beat_flash(_hands_of(bc.body), "earth")
 	var dmg := maxf(float(own.get("damage", 0.0)) * mult, float(fd[fd.size() - 1]))
 	var knock := maxf(float(own.get("knock_mps", 0.0)) * mult, float(floor_d.get("knock_mps", GustLift.KNOCK_MPS)))
 	var hd := floor_d.duplicate()
@@ -978,7 +982,7 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 			Bending.rule("rally_step", 0.1)))
 	fs.set_meta(&"bend_rally", rally)
 	fs.set_meta(&"bend_returns", int(fs.get_meta(&"bend_returns", 0)) + 1)
-	fs.set_meta(&"bend_return", {"mps": mps, "damage": dmg, "knock_mps": knock, "mult": mult, "clean": clean})
+	fs.set_meta(&"bend_return", {"mps": mps, "damage": dmg, "knock_mps": knock, "mult": mult, "clean": clean, "beat": on_beat})
 	for k: StringName in [&"bend_held_by", &"bend_clean", FormStone.LOOSE_META]:
 		if fs.has_meta(k):
 			fs.remove_meta(k)
@@ -1005,6 +1009,38 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	BendLooks.burst(fs.global_position, "stone", 12)
 	BendSounds.play(&"earth_cast_crack", fs.global_position, 1.0 if clean else -1.0)
 	return th
+
+
+## Earth's Return to Sender (data/sway/skill_tree.json earth.catch.return_to_sender; the owner, 2026-10-11: "make sure all the
+## talents work"): a cleanly caught stone its wearer throws back on the Beat (the E that throws it pressed within
+## BendLoadout.beat_s of the clean catch: beat_return) flies RTS_MULT faster, a flash on his own hands. Its late return's lock is
+## the node's own number (rules:guard_rules.return_lock_s, guard_lock_s).
+const RETURN_TO_SENDER := "earth.catch.return_to_sender"
+const RTS_MULT := 1.15
+
+
+## Whether the lock that throws held stone `s` back began within the Beat of its catch (its press at or after the catch, at
+## most BendLoadout.beat_s after it): the player's E (SwayCaster.lock_began_at), a bot's (NpcBending's lock start).
+static func beat_return(body: Node, s: Node) -> bool:
+	var caught := float(s.get_meta(&"bend_caught_at", -INF))
+	var pressed := lock_began(body)
+	return pressed >= caught - 0.02 and pressed - caught <= BendLoadout.beat_s() + 1e-3
+
+
+## When `body`'s lock now began (BendStatus.now() when it has none: a cast with no lock).
+static func lock_began(body: Node) -> float:
+	var sc := SwayCaster.of(body)
+	if sc != null:
+		return sc.lock_began_at
+	if body is NpcFighter and (body as NpcFighter).brain != null and (body as NpcFighter).brain.bending != null:
+		return float((body as NpcFighter).brain.bending.get(&"_lock_at"))
+	return BendStatus.now()
+
+
+## What a Beat flash on `body` is drawn at: the player's SwayCaster (his hands), else the body (its chest).
+static func _hands_of(body: Node) -> Node:
+	var sc := SwayCaster.of(body)
+	return sc if sc != null else body
 
 
 ## Earth's Pop stone held in the hand (BendR3.pop_stone) thrown along the aim (E, or Shove; `toward` INF: the aim): its own

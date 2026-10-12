@@ -418,6 +418,10 @@ var _step_lock := false
 var _cm_used := 1.0
 ## The last lock's start (BendStatus.now()) and its source, for the tests.
 var lock_began_at := -INF
+## The Beat (the skill tree's timing rule; only for a wearer of a technique it pays, BendLoadout.beat_paid): this cast was let
+## go within beat_s of its lock filling (the release's info says beat: BendR3.info_for), and the last such cast's time (tests).
+var _beat_go := false
+var beat_at := -INF
 var _rooted_t := 0.0
 ## Another machine's fighter online (RingNet's puppet, docs/tidebreak/ring_netcode.md): it never locks or casts by itself;
 ## its owner's lock is played on it (net_lock: its state and signals, for its SwayPose) and his casts run through it
@@ -1609,7 +1613,10 @@ func _physics_process(dt: float) -> void:
 				elif _cast_wait():
 					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
+					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer it pays; never a click)
+					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player)
 					_cast()
+					_beat_go = false
 			State.LOCKING:
 				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
 					_queued = true                # (a click: it goes the moment the lock is full)
@@ -3101,6 +3108,10 @@ func _cast() -> void:
 		if jbc != null:
 			jbc.jab_step_until = -INF             # (round 3: the step spent by this jab; its own hit owes the next one's)
 	var rel := {"air": airborne(), "at": BendStatus.now()} if r3_on else {}
+	if _beat_go and r3_on:
+		rel["beat"] = true                        # (let go on the Beat: its hits' info says so; a flash on his own hands)
+		beat_at = BendStatus.now()
+		BendLooks.beat_flash(self, Bending.element_of(m))
 	_pin_id = m
 	_pin_mode = String(pin[1])
 	_pinning = true

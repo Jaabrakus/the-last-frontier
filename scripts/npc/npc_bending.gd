@@ -1025,6 +1025,8 @@ func _stone_from_pop() -> void:
 
 ## Juggle's wearer: how many stones it held at the last tick (_stone_from_pop).
 var _juggle_n := 0
+## Its last cast let go on the Beat (a technique's wearer only: _release), for the tests.
+var beat_at := -INF
 
 
 ## The stone it holds (caught: BendZone.held_stone, the player's own reckoning), null none.
@@ -1422,7 +1424,17 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
+	# (the Beat, for a bot wearing a technique it pays (a test's; bots wear no loadout in a match): let go within beat_s of
+	# its lock filling, its hits' info says so, as the player's: BendR3.info_for; a flash on its own hands)
+	var keep_rel := BendR3.release
+	var beat := BendLoadout.beat_paid(me) and took - lock_s <= BendLoadout.beat_s()
+	if beat:
+		BendR3.release = {"beat": true}
+		beat_at = _now()
+		BendLooks.beat_flash(me, element)
 	var ok := _cast(id, md, t)
+	if beat:
+		BendR3.release = keep_rel
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(me)               # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0
@@ -1614,6 +1626,14 @@ func _answer_catch() -> void:
 	_cool.erase(key)
 	_guard_until = minf(_guard_until, at)
 	_rest_until = minf(_rest_until, at)
+	var held := _held_stone()
+	if BendLoadout.wears(me, BendZone.RETURN_TO_SENDER) and held != null and bool(held.get_meta(&"bend_clean", false)):
+		# (Return to Sender worn (a test's bot): a clean catch's E again pressed on the Beat, not at the next think)
+		var d := clampf(float(preset().get("reaction_s", 0.4)) * 0.25, 0.05, BendLoadout.beat_s() * 0.6)
+		me.get_tree().create_timer(d, false).timeout.connect(func() -> void:
+			if is_instance_valid(me) and not me.is_dead() and casting == "" and _held_stone() == held and is_instance_valid(held):
+				_next.erase(key)
+				begin(String(g[0]), String(g[1])))
 
 
 ## A guard of its own told its result (BendCaster.guarded, from BendZone: the same as the player's): perfect (on the beat:

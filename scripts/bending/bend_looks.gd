@@ -1703,6 +1703,22 @@ static func grow_click(sway: Node) -> void:
 		pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.12, 0.2, 0.6, Color(1.0, 0.95, 0.7), Color.WHITE)
 
 
+## The Beat (the skill tree's timing rule, only for a wearer of a technique it pays): a cast let go on it, or a Catch's E again
+## on it, gives a brief glow on the caster's own hands, his element's colour, and a click (BendSounds lock_grow, soft). `who`
+## a SwayCaster (its hands) or a body (its chest). Nothing on anyone else.
+static func beat_flash(who: Node, el: String) -> void:
+	var at := _hands(who)
+	BendSounds.play(&"lock_grow", at, -6.0)
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var tint: Array = GUARD_TINTS.get(el, [Color.WHITE, Color.WHITE])
+	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.1, 0.18, 0.5, tint[0], Color.WHITE)
+	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.16, 0.18, 0.6, tint[1], tint[0])
+
+
 ## A lock held past sputter_s that does not grow: a fizz on the caster's own hands (BendSounds lock_sputter), a few spent
 ## bits of its element dropping off them.
 static func sputter(sway: Node, el: String) -> void:

@@ -9,6 +9,9 @@ extends SceneTree
 ##                     (Classic holds all three); E throws the one caught first, E again the other; a stone at 0.85 s is late
 ##                     (Classic: caught); RingRules.guard_outcome's full catch 0.8 s (1.0); the bot wearing it catches two and
 ##                     throws both back
+##   Return to Sender  a stone caught clean on E (the player's real lock: guard_override) and E again 0.05 s after the catch:
+##                     thrown back on the Beat x1.15 (Classic x1, the same timing; the wearer at 0.35 s x1, no Beat); a late
+##                     catch's return lock 0.4 s (0.35); the bot wearing it throws a clean catch back on the Beat
 ## Last line "TALENTS EARTH PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
 
 const NAME := "TALENTS EARTH"
@@ -112,6 +115,7 @@ func _run() -> void:
 	await _secs(0.25)
 	await _thick_wall()
 	await _juggle()
+	await _return_to_sender()
 	_end()
 
 
@@ -289,3 +293,84 @@ func _juggle() -> void:
 	await _secs(1.5)
 	await _clear_held(bot)
 	await _clear_held(player)
+
+
+# ---------------------------------------------------------------- Return to Sender
+## A stone thrown at the player and caught by his Catch on E (the real lock: guard_override), E let go, and E again `after_s`
+## after the catch: {clean, ret (the stone's bend_return: mps, beat), pressed (the second E's lock start after the catch)}.
+func _return_after(id: String, after_s: float) -> Dictionary:
+	_wear(player, id)
+	sc.guard_override = true
+	await _secs(0.3)                                 # (the guard's lock filled: the Catch stands)
+	_stone_at(player, bot)
+	await _ticks(3)
+	var s := BendZone.held_stone(player)
+	sc.guard_override = false
+	if s == null:
+		return {"clean": false, "ret": {}, "pressed": -1.0}
+	var caught := float(s.get_meta(&"bend_caught_at", -1.0))
+	var clean := bool(s.get_meta(&"bend_clean", false))
+	while BendStatus.now() < caught + after_s:
+		await _ticks(1)
+	sc.guard_override = true
+	await _secs(0.3)
+	sc.guard_override = false
+	var ret: Dictionary = s.get_meta(&"bend_return", {}) if is_instance_valid(s) else {}
+	var out := {"clean": clean, "ret": ret, "pressed": sc.lock_began_at - caught}
+	await _secs(1.2)
+	await _clear_held(player)
+	return out
+
+
+func _return_to_sender() -> void:
+	var id := "earth.catch.return_to_sender"
+	_expect(BendLoadout.why_not(id) == "" and id in BendLoadout.behaviour(), "Return to Sender is live, its code built (%s)" % BendLoadout.why_not(id))
+	var c := await _return_after("", 0.05)
+	var w := await _return_after(id, 0.05)
+	var w_late := await _return_after(id, 0.35)
+	var cm := float((c.ret as Dictionary).get("mps", 0.0))
+	var wm := float((w.ret as Dictionary).get("mps", 0.0))
+	var lm := float((w_late.ret as Dictionary).get("mps", 0.0))
+	_expect(bool(c.clean) and bool(w.clean) and bool(w_late.clean) and cm > 0.0, "three clean catches on E, each thrown back with E again (%.1f m/s)" % cm)
+	_expect(bool((w.ret as Dictionary).get("beat", false)) and _near(wm / maxf(cm, 0.01), 1.15, 0.005) and float(w.pressed) <= 0.2,
+			"Return to Sender: E again %.2f s after the clean catch, on the Beat: it flies x%.3f (%.1f m/s)" % [w.pressed, wm / maxf(cm, 0.01), wm])
+	_expect(not bool((c.ret as Dictionary).get("beat", false)), "Classic: the same E at the same time throws it as ever (x1, no Beat)")
+	_expect(not bool((w_late.ret as Dictionary).get("beat", false)) and _near(lm, cm, 0.01),
+			"Return to Sender: E again %.2f s after the catch is past the Beat: as ever (%.1f m/s)" % [w_late.pressed, lm])
+	# its minus: a late catch's throw-back readies in 0.4 s (Classic 0.35)
+	var locks := {}
+	for wid: String in ["", id]:
+		_wear(player, wid)
+		var at := player.global_position + Vector3.UP * 1.25 - player.global_basis.z * 0.6
+		var st := FormStone.ball(current_scene, at, {"radius_m": 0.2, "rise_s": 0.01, "life_s": 30.0}, 3, "stone")
+		st.state = FormStone.State.RESTING
+		st.freeze = true
+		st.set_meta(&"bend_held_by", player.get_instance_id())
+		st.set_meta(&"bend_caught_at", BendStatus.now())
+		locks[wid] = BendZone.guard_lock_s(player, 0.2)
+		st.remove_meta(&"bend_held_by")
+		st.queue_free()
+		await _ticks(2)
+	_expect(_near(float(locks[""]), 0.35, 0.001) and _near(float(locks[id]), 0.4, 0.001),
+			"Return to Sender: a late catch's return locks %.2f s (Classic %.2f)" % [locks[id], locks[""]])
+	_wear(player, "")
+	# the bot wearing it: its clean catch thrown back on the Beat (its own E, its own timing)
+	_wear(bot, id)
+	var rec := _catch(bot, 1.0)
+	await _ticks(2)
+	_stone_at(bot, player)
+	await _ticks(3)
+	var held := BendZone.held_stone(bot)
+	var clean_b := held != null and bool(held.get_meta(&"bend_clean", false))
+	_end_zone(rec)
+	bot.held = false
+	for i in 30:
+		await _secs(0.05)
+		if held == null or not is_instance_valid(held) or not held.has_meta(&"bend_held_by"):
+			break
+	bot.held = true
+	var bret: Dictionary = held.get_meta(&"bend_return", {}) if held != null and is_instance_valid(held) else {}
+	_expect(clean_b and bool(bret.get("beat", false)), "Return to Sender on the bot: its clean catch thrown back on the Beat (%s)" % [bret])
+	_wear(bot, "")
+	await _secs(1.2)
+	await _clear_held(bot)

@@ -58,10 +58,12 @@
     "fire.parry.reaching": true,
     "air.passive.long_carry": true,
     "air.passive.gale_force": true,
-    "earth.catch.juggle": true
+    "earth.catch.juggle": true,
+    "earth.catch.return_to_sender": true
   },
   "behaviour": {
-    "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)"
+    "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)",
+    "earth.catch.return_to_sender": "BendZone.return_stone (a clean catch thrown back on the Beat x1.15: beat_return, lock_began); the Beat in SwayCaster (_beat_go) and NpcBending (_release, _answer_catch on the Beat); return_lock_s per wearer (guard_lock_s)"
   },
   "live": [
     "air.ball.dense",
@@ -86,6 +88,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle", "earth.catch.return_to_sender"],
   "styles_live": ["boxing"]
 }
