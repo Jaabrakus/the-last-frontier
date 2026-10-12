@@ -731,6 +731,18 @@ static func new_class(body: Object, key: String) -> Dictionary:
 	return c as Dictionary if c is Dictionary else {}
 
 
+## The class (RingRules.class_of's shape: tagged, its growth scaled) of a hit by `body` tagged `tag`, a worn behaviour talent's
+## whole new class ("<tag>+<variant>" as its change names it; {} none: RingRules.on_hit then reads the hit as untagged).
+static func new_hit_class(body: Object, tag: String) -> Dictionary:
+	var nc := new_class(body, tag)
+	if nc.is_empty():
+		return {}
+	var out := nc.duplicate()
+	out["tag"] = tag
+	out["growth"] = float(out.get("growth", 0.0)) * RingRules.stock_num("growth_scale", 1.0)
+	return out
+
+
 ## The wearer's own number at tune path `path` (TUNE_PATHS), else `base` (the game's: Classic reads it unchanged).
 static func tune(body: Object, path: String, base: Variant) -> Variant:
 	if not _wears(body):

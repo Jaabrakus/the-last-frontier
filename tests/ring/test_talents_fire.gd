@@ -11,11 +11,19 @@ extends SceneTree
 ##   Grounded Charge   a hit breaks the Lightning charge; the next Lightning begun within 1 s starts half full
 ##   Hot Feet          standing still the fill x0.9, on the move x1.1 (Classic x1.0 both); a bot's standing fill x0.9
 ##   Dancing Feet      on the move x0.9; within 0.6 s of a real Step's end x1.15
+##   Crescent Burn     a real High Kick's crescent leaves a 2 m patch of flame for 1.5 s where it ends: a foe standing in it
+##                     gains 1% each 0.5 s, 3 at most; jumped (his feet 1 m up) nothing; its owner never; Classic none
+##   Ignite Step       a real Step leaves a 2 m line of fire for 1.5 s: the same ticks; Classic none
+##   Blazing Fireball  a grown Punch ending on the deck before the foe bursts 2 m: he gains its 6%, knocked away; a wall
+##                     between covers him; the core spares the burst; Classic no burst
+##   Scald             his Punch through steam (and his Breath over it) makes the cloud scald 1.5 s: a foe in it gains 1%
+##                     each 0.5 s, 3 at most; Classic none
 ##   each              resolves whole and is live (BendLoadout.why_not), and Classic (nothing worn) reads the game's own
 ## Last line "TALENTS FIRE PASSED (n checks)" or "... FAILED".
 
 const BUILT := ["fire.parry.hot_hands", "fire.punch.rhythm", "fire.kick.chain", "fire.lightning.grounded",
-		"fire.passive.dancing_feet", "fire.passive.hot_feet"]
+		"fire.passive.dancing_feet", "fire.passive.hot_feet", "fire.fireball.blazing", "fire.highkick.crescent_burn",
+		"fire.step.ignite", "fire.breath.scald"]
 const WATCHDOG_S := 400.0
 
 var checks := 0
@@ -133,6 +141,10 @@ func _run() -> void:
 	await _grounded()
 	await _feet()
 	await _bot()
+	await _crescent()
+	await _ignite()
+	await _blazing()
+	await _scald()
 	_end()
 
 
@@ -409,6 +421,207 @@ func _feet() -> void:
 	_expect(absf(float(step[""][1]) / float(cl[0]) - 1.0) < 0.03 and absf(float(step["fire.passive.dancing_feet"][1]) / float(cl[0]) - 1.15) < 0.03,
 			"Dancing Feet: within 0.6 s of a Step's end the fill x%.2f (Classic x%.2f)" % [float(step["fire.passive.dancing_feet"][1]) / float(cl[0]),
 			float(step[""][1]) / float(cl[0])])
+
+
+# ---------------------------------------------------------------- floor fire
+## The matter ticks (`tag`) on `n` since `t0` (BendR3.hits_log).
+func _ticks_on(n: Node, tag: String, t0: float) -> int:
+	var k := 0
+	for h: Dictionary in BendR3.hits_log:
+		if h.n == n and String(h.tag) == tag and float(h.at) >= t0:
+			k += 1
+	return k
+
+
+## The newest matter zone (a tick_tag) of `owner`'s.
+func _matter_of(owner: Node) -> BendZone:
+	var out: BendZone = null
+	for z in get_nodes_in_group(BendZone.GROUP):
+		if z is BendZone and (z as BendZone).owner_node == owner and (z as BendZone).tick_tag != "" and not z.is_queued_for_deletion():
+			out = z as BendZone
+	return out
+
+
+## The foe pinned at `at` for `s` s: the matter ticks he took and his % gained.
+func _foe_in(at: Vector3, s: float) -> Array:
+	var keep := _foe_at
+	_foe_at = at
+	foe.global_position = at
+	var rr := RingRules.current()
+	var p0 := rr.pct_of(foe)
+	var t0 := BendStatus.now()
+	await _secs(s)
+	var out := [_ticks_on(foe, "matter/burn", t0), rr.pct_of(foe) - p0]
+	_foe_at = keep
+	return out
+
+
+func _crescent() -> void:
+	var got := {}
+	for id: String in ["", "fire.highkick.crescent_burn"]:
+		await _calm()
+		_wear(id)
+		await _tap(1)
+		await _tap(1)
+		var hk := c.readied_spell == "fire_kick" and c.mode_of("fire_kick") == "high_kick"
+		var n0 := casts.size()
+		var began := await _begin("fire_kick")
+		var cast_ok := await _cast_at(0.0)
+		await _until(func() -> bool: return _matter_of(p) != null, 1.5)
+		var z := _matter_of(p)
+		got[id] = {"ok": hk and began and cast_ok and casts.size() > n0, "z": z != null}
+		if z == null:
+			continue
+		var zd := {"r": z.radius, "life": z.life_s, "cap": z.tick_cap, "tag": z.tick_tag}
+		var on := await _foe_in(z.global_position + Vector3(0.6, 0.0, 0.0), 1.6)
+		got[id]["zd"] = zd
+		got[id]["ticks"] = on
+	_expect(bool(got[""].ok) and bool(got["fire.crescent_burn" if false else "fire.highkick.crescent_burn"].ok), "High Kick: real casts")
+	var cb: Dictionary = got["fire.highkick.crescent_burn"]
+	_expect(not bool(got[""].z), "Crescent Burn: not worn, the crescent leaves no flame")
+	var zd: Dictionary = cb.get("zd", {})
+	_expect(bool(cb.z) and is_equal_approx(float(zd.get("r", 0.0)), 2.0) and is_equal_approx(float(zd.get("life", 0.0)), 1.5)
+			and int(zd.get("cap", 0)) == 3 and String(zd.get("tag", "")) == "matter/burn",
+			"Crescent Burn: the crescent lands as a patch of flame %.1f m, %.1f s, %d ticks at most (%s)" % [float(zd.get("r", 0.0)),
+			float(zd.get("life", 0.0)), int(zd.get("cap", 0)), String(zd.get("tag", ""))])
+	var tk: Array = cb.get("ticks", [0, 0.0])
+	var d := float(RingRules.class_of("matter/burn").d) * RingRules.stock_num("pct_scale", 1.0)
+	_expect(int(tk[0]) == 3 and absf(float(tk[1]) - 3.0 * d) < 0.05,
+			"Crescent Burn: a foe who stays in it gains %.2f%% in %d ticks (1%% each 0.5 s, 3%% at most)" % [tk[1], tk[0]])
+	# jumped (his feet 1 m over it) and its own caster: nothing
+	await _calm()
+	_wear("fire.highkick.crescent_burn")
+	var probe := p.global_position + (-p.global_basis.z) * 4.0
+	var pz := FireTalents.patch(p, probe, 2.0, 1.5, "burn", "matter/burn", 3, "fire_kick")
+	var made := pz != null
+	var pat := pz.global_position if made else probe
+	var up := await _foe_in(pat + Vector3.UP * 1.0, 1.0)
+	var pz2 := FireTalents.patch(p, probe, 2.0, 1.5, "burn", "matter/burn", 3, "fire_kick")
+	RingLevel.place(p, Transform3D(p.global_basis, pat))
+	var t0 := BendStatus.now()
+	await _secs(1.0)
+	_expect(made and pz2 != null and int(up[0]) == 0 and _ticks_on(p, "matter/burn", t0) == 0,
+			"floor fire: a foe whose feet are 1 m over it takes no tick (%d), its own caster none (%d)" % [up[0], _ticks_on(p, "matter/burn", t0)])
+
+
+func _ignite() -> void:
+	var got := {}
+	for id: String in ["", "fire.step.ignite"]:
+		await _calm()
+		_wear(id)
+		var n0 := casts.size()
+		await _tap(2)
+		var cast_ok := await _until(func() -> bool: return casts.size() > n0, 1.5) < INF
+		await _ticks(3)
+		var z := _matter_of(p)
+		got[id] = {"ok": cast_ok, "z": z != null}
+		if z != null:
+			got[id]["zd"] = {"len": z.size.z, "life": z.life_s, "cap": z.tick_cap, "tag": z.tick_tag, "kind": z.kind}
+			got[id]["ticks"] = await _foe_in(z.global_position, 1.6)
+	var ig: Dictionary = got["fire.step.ignite"]
+	var zd: Dictionary = ig.get("zd", {})
+	_expect(bool(got[""].ok) and bool(ig.ok), "Step: real casts")
+	_expect(not bool(got[""].z) and bool(ig.z) and is_equal_approx(float(zd.get("len", 0.0)), 2.0) and is_equal_approx(float(zd.get("life", 0.0)), 1.5)
+			and int(zd.get("cap", 0)) == 3 and String(zd.get("kind", "")) == "burn",
+			"Ignite Step: the Step leaves a %.1f m line of fire for %.1f s (Classic none)" % [float(zd.get("len", 0.0)), float(zd.get("life", 0.0))])
+	var tk: Array = ig.get("ticks", [0, 0.0])
+	_expect(int(tk[0]) == 3, "Ignite Step: a foe standing in it gains %d ticks (%.2f%%), 3 at most" % [tk[0], tk[1]])
+
+
+## A grown Punch of the player's (the cast's own spec and info) launched from his chest at `to`.
+func _fireball_at(to: Vector3, from := Vector3.INF) -> BendBolt:
+	var spec: Dictionary = ((SwayMoves.move("fire_blast").bend as Dictionary).punch as Dictionary).duplicate(true)
+	spec = BendLoadout.spec(p, "fire_blast", "punch", spec)
+	spec.merge(spec.grow as Dictionary, true)
+	spec["_info"] = BendR3.info_for(bc, "fire_blast", "punch", true, spec)
+	if from == Vector3.INF:
+		from = p.global_position + Vector3.UP * 1.3
+	return BendBolt.launch(p, from, (to - from).normalized(), spec)
+
+
+func _blazing() -> void:
+	var rr := RingRules.current()
+	var got := {}
+	for id: String in ["", "fire.fireball.blazing"]:
+		await _calm()
+		_wear(id)
+		rr._stale.clear()
+		var fp := _foe_at
+		var flat := Vector3(fp.x - p.global_position.x, 0.0, fp.z - p.global_position.z).normalized()
+		var ground := FormEffects.ground_at(p, fp - flat * 1.3)
+		var p0 := rr.pct_of(foe)
+		var t0 := BendStatus.now()
+		var b := _fireball_at(ground, ground + Vector3.UP * 3.0)       # (it lands on the deck from above)
+		await _until(func() -> bool: return not is_instance_valid(b), 2.0)
+		await _ticks(3)
+		var hits := BendR3.hits_log.filter(func(h: Dictionary) -> bool: return h.n == foe and float(h.at) >= t0)
+		got[id] = [rr.pct_of(foe) - p0, hits.map(func(h: Dictionary) -> String: return String(h.tag))]
+	var bl: Array = got["fire.fireball.blazing"]
+	var d := 6.0 * RingRules.stock_num("pct_scale", 1.0)
+	_expect(float(got[""][0]) < 0.01 and absf(float(bl[0]) - d) < 0.05 and (bl[1] as Array) == ["fire_blast/punch.grown+burst"],
+			"Blazing Fireball: a Fireball on the deck 1.3 m before him bursts: he gains %.2f%% (%s; Classic %.2f%%)" % [bl[0], bl[1], got[""][0]])
+	# a wall between: the burst stays on its side
+	await _calm()
+	_wear("fire.fireball.blazing")
+	var fp2 := _foe_at
+	var flat2 := Vector3(fp2.x - p.global_position.x, 0.0, fp2.z - p.global_position.z).normalized()
+	var wat := FormEffects.ground_at(p, fp2 - flat2 * 1.0)
+	var w := BendEffects._wall(p, Transform3D(Basis.looking_at(-flat2, Vector3.UP), wat), "stone", 6.0, 3.0)
+	await _secs(1.0)
+	var p1 := rr.pct_of(foe)
+	var b2 := _fireball_at(wat + Vector3.UP * 1.0)
+	await _until(func() -> bool: return not is_instance_valid(b2), 2.0)
+	await _ticks(3)
+	_expect(is_instance_valid(w) and rr.pct_of(foe) - p1 < 0.01, "Blazing Fireball: into a wall 1 m before him, the burst stays on its side (he gains %.2f%%)" % (rr.pct_of(foe) - p1))
+	if is_instance_valid(w):
+		w.queue_free()
+	# the core: his class 16 (from 20); the one it strikes takes no burst
+	var core := BendLoadout.hit_class(p, RingRules.class_of("fire_blast/punch.grown"))
+	await _calm()
+	_wear("fire.fireball.blazing")
+	rr._stale.clear()
+	var t1 := BendStatus.now()
+	var b3 := _fireball_at(_foe_at + Vector3.UP * 1.0)
+	await _until(func() -> bool: return not is_instance_valid(b3), 2.0)
+	await _ticks(3)
+	var tags: Array = BendR3.hits_log.filter(func(h: Dictionary) -> bool: return h.n == foe and float(h.at) >= t1).map(func(h: Dictionary) -> String: return String(h.tag))
+	_expect(is_equal_approx(float(core.get("d", 0.0)), 16.0) and tags == ["fire_blast/punch.grown"],
+			"Blazing Fireball: its core adds %.0f%% (from 20); the one it strikes takes the core only (%s)" % [float(core.get("d", 0.0)), tags])
+
+
+func _scald() -> void:
+	var got := {}
+	for id: String in ["", "fire.breath.scald"]:
+		await _calm()
+		_wear(id)
+		var st := BendBolt.steam(foe, _foe_at)
+		await _ticks(2)
+		var from := _foe_at + Vector3.UP * 1.2 + (p.global_position - _foe_at).normalized() * 4.0
+		var spec: Dictionary = ((SwayMoves.move("fire_blast").bend as Dictionary).punch as Dictionary).duplicate()
+		spec["_info"] = BendR3.info_for(bc, "fire_blast", "punch", false, spec)
+		var t0 := BendStatus.now()
+		BendBolt.launch(p, from, (_foe_at + Vector3.UP * 1.0 - from).normalized(), spec)
+		await _secs(0.3)
+		var scalded := is_instance_valid(st) and st.has_meta(&"talent_scalded")
+		await _secs(1.3)
+		got[id] = [_ticks_on(foe, "matter/burn", t0), scalded]
+	_expect(int(got[""][0]) == 0 and not bool(got[""][1]) and int(got["fire.breath.scald"][0]) == 3 and bool(got["fire.breath.scald"][1]),
+			"Scald: his Punch through steam: a foe in the cloud gains %d ticks, 3 at most (Classic %d)" % [got["fire.breath.scald"][0], got[""][0]])
+	# the Breath over steam before him
+	var br := {}
+	for id: String in ["", "fire.breath.scald"]:
+		await _calm()
+		_wear(id)
+		var fwd := -p.global_basis.z
+		fwd.y = 0.0
+		var st2 := BendBolt.steam(p, p.global_position + fwd.normalized() * 3.0)
+		await _ticks(2)
+		BendEffects.apply(bc, "fire_breath", "breath", ((SwayMoves.move("fire_breath").bend as Dictionary).breath as Dictionary))
+		await _ticks(3)
+		br[id] = is_instance_valid(st2) and st2.has_meta(&"talent_scalded")
+	_expect(not bool(br[""]) and bool(br["fire.breath.scald"]), "Scald: his Breath over a steam cloud makes it scald (Classic: steam)")
+	var cls := BendLoadout.hit_class(p, RingRules.class_of("fire_breath/breath"))
+	_expect(is_equal_approx(float(cls.get("d", 0.0)), 11.0), "Scald: his Breath adds %.0f%% (from 12)" % float(cls.get("d", 0.0)))
 
 
 # ---------------------------------------------------------------- a bot wearing them

@@ -131,6 +131,7 @@ var _caught := {}                  ## a Wind Prison: body id -> true once it has
 var tick_tag := ""
 var tick_cap := 0
 var round_zone := false            ## (a patch: inside() reads its radius, not its box)
+var tick_floor := true             ## (floor fire: only feet on its floor take its tick; false: anyone in it, a scald's steam)
 var _ticks_to := {}                ## body id -> the ticks it gave him
 const MATTER_META := &"bend_matter_tick_at"
 const MATTER_EVERY_S := 0.5
@@ -153,6 +154,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.tick_tag = String(spec.get("tick_tag", ""))
 	z.tick_cap = int(spec.get("tick_cap", 0))
 	z.round_zone = bool(spec.get("round", false))
+	z.tick_floor = bool(spec.get("tick_floor", true))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -553,6 +555,8 @@ func _every(dt: float) -> void:
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
 ## passes as its owner's own does: a guard never sends a teammate's bolt back or eats it.
 func on_bolt(b: BendBolt) -> bool:
+	if kind == "steam" and b.kind == "fire" and not b.spent and FireTalents.any(b.caster) and inside(b.global_position):
+		FireTalents.through_steam(self, b.caster)    # (a worn Scald: his fire through steam; it passes on as ever)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -1388,7 +1392,7 @@ static func return_info(info: Dictionary, by: Node, at: Vector3, mult: float) ->
 ## the burn with no flinch (no knock). The hit info: the wall's, wall_entry or wall_tick.
 ## A matter zone's tick on `n` (see MATTER): % only, the hit no_hurt (no lock set-back, no Lightning-charge break, no string).
 func _matter_tick(n: Node3D) -> void:
-	if not BendStatus.can_take(n, owner_node) or n.global_position.y - global_position.y > MATTER_FEET_M:
+	if not BendStatus.can_take(n, owner_node) or (tick_floor and n.global_position.y - global_position.y > MATTER_FEET_M):
 		return                                    # (his own and his side's never; floor fire: jumped, his feet over it)
 	var id := n.get_instance_id()
 	var k := int(_ticks_to.get(id, 0))

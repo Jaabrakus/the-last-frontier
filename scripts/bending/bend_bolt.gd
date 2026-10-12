@@ -148,6 +148,8 @@ var _body_parts: Array[Node] = []
 var _look: Node3D
 ## The swing turned it (become): it is drawn wrapped round the guard and leaves with a burst and a cast's voice.
 var _swing_became := false
+## The body its blow struck (_hit; null none): a worn talent's burst spares him (FireTalents.bolt_ended).
+var struck_who: Node = null
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -669,6 +671,7 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 			var to := by.global_position - (who as Node3D).global_position
 			to.y = 0.0
 			flat = to.normalized() if to.length_squared() > 1e-4 else -flat
+		struck_who = who
 		BendR3.deliver(who, damage + (6.0 if burning else 0.0), at, dir, by, lock_s, flat * knock_mps + Vector3.UP * up_mps, info)
 		if root_s > 0.0:
 			BendStatus.root(who, root_s)
@@ -869,6 +872,8 @@ func _finish(why: String) -> void:
 	if spent:
 		return
 	spent = true
+	if FireTalents.any(caster) and NetSpells.decides():
+		FireTalents.bolt_ended(self, why)        # (a worn talent where it ends: a burst, a patch, a seam; Classic never)
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)
