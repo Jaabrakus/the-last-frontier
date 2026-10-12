@@ -193,8 +193,14 @@ func _run() -> void:
 		var el := id.get_slice(".", 0)
 		var w := _body()
 		var bot := _body()
-		var ov := BendLoadout.wear(w, [id], "", el)
-		_expect((ov.ids as Array) == [id] and BendLoadout.picks_of(w) == [id] and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
+		# (worn with the nodes it requires, as a loadout must wear it: a skill set's nodes with their set, 2026-10-11; their
+		# changes count as named below)
+		var wear_ids: Array = BendLoadout._requires(id) + [id]
+		var all_changes: Array = []
+		for wid: Variant in wear_ids:
+			all_changes.append_array(_node(String(wid)).get("changes", []) as Array)
+		var ov := BendLoadout.wear(w, wear_ids, "", el)
+		_expect((ov.ids as Array) == wear_ids and BendLoadout.picks_of(w) == wear_ids and BendLoadout.overlay_of(bot).is_empty(), "%s: worn by one body, not the other" % id)
 		for c: Dictionary in n.changes:
 			var path := String(c.path)
 			var rest := path.get_slice(":", 1)
@@ -241,7 +247,7 @@ func _run() -> void:
 				_expect(is_same(bc0, base_c) and _near(bc0.get(key0), from * gs),
 						"%s: a body that wears nothing hits with the class as it is (%s %s)" % [id, key0, from])
 				var named_keys := {}
-				for c3: Dictionary in n.changes:
+				for c3: Dictionary in all_changes:
 					if String(c3.path).begins_with("class:%s+" % tag0):
 						named_keys[String(c3.path).get_slice("+", 1).get_slice(".", 1)] = true
 				var others_same := true
@@ -264,7 +270,7 @@ func _run() -> void:
 					_expect(_near(_dig(bs, keys.slice(1)), from) and bs == base, "%s: a body that wears nothing reads %s (%s)" % [id, path, from])
 				# every key the node does not name is today's
 				var named := {}
-				for c2: Dictionary in n.changes:
+				for c2: Dictionary in all_changes:
 					if String(c2.path).begins_with("spec:%s/%s." % [mv, md]):
 						named[String(c2.path).get_slice(".", 1)] = true
 				var rest_same := true

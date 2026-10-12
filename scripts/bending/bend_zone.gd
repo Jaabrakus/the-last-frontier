@@ -101,6 +101,8 @@ var put_out := false
 ## it turns no shot aside. 0: a plain Wind Wall.
 var prison_s := 0.0
 var put_out_n := 0
+## A wind wall's push (m/s): its spec's push_mps (Rime Wall's 3.2 for its wearer), else WIND_WALL_KNOCK.
+var push_mps := WIND_WALL_KNOCK
 ## The stones a guard caught or dropped from stone bolts (FormStone), for the tests.
 var stones: Array[FormStone] = []
 ## Round 2's timed guard (see the header): on, its perfect window (s), the share a late one lets through, its element, and
@@ -139,6 +141,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.speed = float(spec.get("mps", 0.0))
 	z.put_out = bool(spec.get("put_out", false))
 	z.prison_s = float(spec.get("prison_s", 0.0))
+	z.push_mps = float(spec.get("push_mps", WIND_WALL_KNOCK))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -250,7 +253,7 @@ func _look() -> void:
 			fr.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
-		"smoke", "dust", "spray":
+		"smoke", "dust", "spray", "snow":
 			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
 					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
 			_fx.append(cl)
@@ -488,13 +491,13 @@ func _wind_push() -> void:
 		var side := signf((global_transform.affine_inverse() * n.global_position).z)
 		var out := global_basis.z.normalized() * (side if absf(side) > 0.0 else 1.0)
 		BendR3.deliver(n, 0.0, n.global_position, out, owner_node, -1.0,
-				Vector3(out.x, 0.0, out.z).normalized() * WIND_WALL_KNOCK + Vector3.UP * 0.5, info)
+				Vector3(out.x, 0.0, out.z).normalized() * push_mps + Vector3.UP * 0.5, info)
 
 
 ## Who it holds now: everyone within it (round) or in its box.
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
-	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
+	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle", "snow"] \
 			or kind in GUARDS:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
@@ -502,6 +505,8 @@ func inside(p: Vector3) -> bool:
 
 ## Its lasting effects on whom it holds, each `dt` s.
 func _every(dt: float) -> void:
+	if kind == "snow":
+		AirTalents.snow_every(self)              # (Blizzard: its cold, the water it freezes, fire melting it)
 	var r := maxf(radius, size.x * 0.6)
 	if put_out:
 		put_out_fires()
@@ -538,6 +543,8 @@ func _every(dt: float) -> void:
 func on_bolt(b: BendBolt) -> bool:
 	if not b.spent and kind in ["fire_wall", "smoke"] and AirTalents.through_ally_fire(self, b):
 		return false                                 # (Dragon Fire: his Gust through an ally's fire carries a front on; it flies on)
+	if kind in ["fire_wall", "burn"] and AirTalents.snuffs(self, b):
+		return true                                  # (Frost Gust: his Gust puts a foe's fire out)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false
@@ -582,6 +589,9 @@ func on_bolt(b: BendBolt) -> bool:
 				b.burning = true
 				SbFx.fire(owner_node, SbFx.key_of(info), "blown", {"at": b.global_position, "dir": b.velocity})
 				return true
+		"snow":
+			if b.kind == "fire":
+				AirTalents.melt_snow(self)           # (Blizzard: fire melts it out in a second)
 		"wind_wall":
 			if AirTalents.wall_shards(self, b):
 				return true                          # (Frostwind: his Wind Wall drops water and ice as shards)
@@ -1300,6 +1310,8 @@ func end(why := "ended") -> void:
 		whiffed(owner_node)
 		_result("whiff", "")
 	remove_from_group(GROUP)
+	if kind == "wind_wall":
+		AirTalents.on_wall_end(self, why)          # (Rime Wall: a crust where it stood; Classic none)
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)

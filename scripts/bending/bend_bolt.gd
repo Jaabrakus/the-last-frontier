@@ -155,6 +155,8 @@ var swing_hold := Callable()
 var carries := false
 ## Frostwind's Gust or Wind Ball (AirTalents.frosts): the puddles, grates and steam it crosses freeze (AirTalents.frost_step).
 var frosts := false
+## Hail Ball's Wind Ball (AirTalents.hails): hail falls where it ends (AirTalents.hail_burst).
+var hails := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
@@ -191,6 +193,7 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	var inf: Variant = spec.get("_info", {})
 	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
 	b.frosts = AirTalents.frosts(by, b.info)        # (Frostwind worn: its wind freezes water it crosses; Classic false)
+	b.hails = AirTalents.hails(by, b.info)          # (Hail Ball worn: hail where it ends; Classic false)
 	b.floor_wave = String(spec.get("do", "")) == "floor_wave"
 	if b.floor_wave:
 		b.width_m = float(spec.get("width_m", 2.2))
@@ -888,6 +891,8 @@ func _finish(why: String) -> void:
 	if spent:
 		return
 	spent = true
+	if hails:
+		AirTalents.hail_burst(self, why)
 	remove_from_group(GROUP)
 	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)

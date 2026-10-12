@@ -39,6 +39,21 @@ extends RefCounted
 ##                                      crust (melt_crust in BendBolt._hit, a Breath's BendEffects.melt, a Fire Wall or burning
 ##                                      ground on it: CrustWatch) back into its puddle (a grate's back into the grate); his Wind
 ##                                      Wall 3.5 s (the set's spec number)
+##   Hail Ball (air.frost.hail_ball)    hails / hail_burst (BendBolt.launch, _finish): where his Wind Ball hits or ends, HAIL_N
+##                                      hailstones fall HAIL_R round it, each 2% to a foe within HAIL_HIT_M (its class the
+##                                      node's matter/hail: no knock, no flinch, no hurt); its knock base 7 (a class number)
+##   Frost Gust (air.frost.frost_gust)  snuffs (BendZone.on_bolt): his Gust puts out a foe's Fire Wall or burning ground it
+##                                      crosses (today air takes the flame); 1.8 m wide (a spec number)
+##   Rime Wall (air.frost.rime_wall)    on_wall_end (BendZone.end): his Wind Wall ending drops a crust where it stood (RIME_S);
+##                                      its push 3.2 m/s (the zone's push_mps, from its spec)
+##   Blizzard (air.frost.blizzard)      a new skill, 4 tapped twice: talent mode air_wall/blizzard (moves.json talent_bend: a
+##                                      2.5 m snow column 2-10 m off where he aims, 3 s, one at a time, lock 0.9 s); snow_every
+##                                      (BendZone._every of kind snow): it freezes water in it, a foe inside gains 1% each 0.5 s
+##                                      (the node's matter/cold, no knock, no hurt; 6% at most), fire on it melts it out in 1 s
+##                                      (melt_snow; a fire bolt through it: BendZone.on_bolt); it hides both ways (snow in
+##                                      NpcBendCaster.HIDING); his Wind Wall 15% shorter (wall_life_k, BendEffects' wind_wall)
+##   Whiteout (air.frost.whiteout)      home_fill (SwayCaster._hold, NpcBending's lock): his locks fill x1.15 standing on his
+##                                      own crust or in his own Blizzard; Patch 1.7 s (patch_lock)
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
@@ -89,9 +104,32 @@ const CRUST_CAP := 2
 const GRATE_R := 1.0
 const CRUST_META := &"air_crust_by"
 const FROZEN_META := &"air_frozen"
+const HAIL_BALL := "air.frost.hail_ball"
+const FROST_GUST := "air.frost.frost_gust"
+const RIME_WALL := "air.frost.rime_wall"
+const BLIZZARD := "air.frost.blizzard"
+const WHITEOUT := "air.frost.whiteout"
+## Hail Ball: its hailstones, how far round where the ball ends they fall (m), how near one must fall to strike (m), their tag.
+const HAIL_N := 3
+## Frost Gust: how far under a Gust's middle its wave reaches down to the deck (m; its spec's height_m 2 from a chest-high cast).
+const GUST_REACH_DOWN_M := 1.6
+const HAIL_R := 1.2
+const HAIL_HIT_M := 0.8
+const HAIL_TAG := "matter/hail"
+## Rime Wall: its crust's life (s).
+const RIME_S := 3.0
+## Blizzard: the cold tick's tag, its ticks from one Blizzard at most (1% each: 6%), how soon fire melts it out (s); the matter
+## tick's rate a body (s; tick_contract) and its meta (when he last took one, from any matter).
+const COLD_TAG := "matter/cold"
+const COLD_CAP := 6
+const SNOW_MELT_S := 1.0
+const MATTER_EVERY_S := 0.5
+const MATTER_TICK_META := &"bend_matter_tick_at"
+## Whiteout: the fill on his own frost.
+const HOME_FILL := 1.15
 ## The new skills a worn talent adds as a mode of a move on an empty double tap: id -> [move, mode] (their specs: moves.json
 ## <move>.talent_bend).
-const TALENT_MODES := {"air.slot.dust": ["air_wall", "dust"]}
+const TALENT_MODES := {"air.slot.dust": ["air_wall", "dust"], "air.frost.blizzard": ["air_wall", "blizzard"]}
 const DRAGON_FIRE := "air.gust.dragon_fire"
 ## Dragon Fire: the front's tag (its whole class the node's: class:air_gust/gust+fire_front, BendLoadout.worn_class), how far it
 ## runs (m), and how long an ally's Breath stays fire in its smoke (s: the flame's own warm moment, fx_looks smoke warm_s).
@@ -582,3 +620,139 @@ class CrustWatch extends Node:
 			if String(src.get("kind", "")) == "puddle" and own is Node3D and is_instance_valid(own):
 				BendZone.make(own as Node3D, "puddle", r.global_position, {"radius_m": float(src.get("radius", 0.9)),
 						"life_s": float(src.get("life", 4.0))}, r.global_basis.z)
+
+
+# ---------------------------------------------------------------- Hail Ball
+## Whether a bolt of `by`'s with `info` carries a hail core (his Wind Ball, Hail Ball worn; BendBolt.launch sets its hails).
+static func hails(by: Node, info: Dictionary) -> bool:
+	return String(info.get("tag", "")) == "air_blast/ball" and BendLoadout.wears(by, HAIL_BALL)
+
+
+## Hail Ball (see the header): where its Wind Ball hits or ends its flight (BendBolt._finish), HAIL_N hailstones fall HAIL_R
+## round it (the first along its way), each striking whoever stands within HAIL_HIT_M of where it falls, his foes only:
+## HAIL_TAG's class (2%, no knock, no flinch, no hurt).
+static func hail_burst(b: BendBolt, why: String) -> void:
+	if not why in ["hit", "world", "range", "wall", "lip"] or not NetSpells.decides():
+		return
+	var by := b._by()
+	if by == null or not b.is_inside_tree() or not BendLoadout.wears(by, HAIL_BALL):
+		return
+	var at := FormEffects.ground_at(b, b.global_position)
+	var fwd := Vector3(b.velocity.x, 0.0, b.velocity.z)
+	fwd = fwd.normalized() if fwd.length_squared() > 1e-6 else Vector3.FORWARD
+	var info := {"tag": HAIL_TAG, "move": "air_blast", "mode": "ball", "from": at, "air": false, "released_at": BendStatus.now(),
+			"no_hurt": true}
+	for i in HAIL_N:
+		var spot := at + fwd.rotated(Vector3.UP, TAU * float(i) / float(HAIL_N)) * HAIL_R
+		spot.y = FormEffects.ground_at(b, spot).y
+		BendLooks.burst(spot + Vector3.UP * 1.8, "ice", 8, Vector3.DOWN, 20.0, 6.0, 0.08)
+		for e in BendCaster.near(by, spot, HAIL_HIT_M):
+			var n: Node3D = e[0]
+			if n == by or BendCaster.same_team(n, by):
+				continue
+			BendR3.deliver(n, 2.0, n.global_position + Vector3.UP * 1.6, Vector3.DOWN, by, -1.0, Vector3.ZERO, info)
+
+
+# ---------------------------------------------------------------- Frost Gust
+## A fire wall or burning ground of his foe's his Gust crosses (BendZone.on_bolt, before its own inside test: the wave's
+## width over the low burning ground counts): a Frost Gust wearer's puts it out. True when it did (the Gust flies on).
+static func snuffs(z: BendZone, b: BendBolt) -> bool:
+	if b.spent or b.kind != "air" or String(b.info.get("tag", "")) != "air_gust/gust" or not BendLoadout.wears(b._by(), FROST_GUST):
+		return false
+	var by := b._by()
+	if z.owner_node == by or BendCaster.same_team(by, z.owner_node):
+		return false                                 # (his side's fire is left burning)
+	# (crossing it: the wave's own width over its box; a Gust is a wave from the deck up (its spec's height_m 2), so the low
+	# burning ground under a chest-high Gust is crossed too)
+	var l := z.global_transform.affine_inverse() * b.global_position
+	if absf(l.x) > z.size.x * 0.5 + b.radius or absf(l.z) > z.size.z * 0.5 + b.radius or l.y < -b.radius \
+			or l.y > z.size.y + maxf(b.radius, GUST_REACH_DOWN_M):
+		return false
+	BendLooks.burst(z.global_position + Vector3.UP, "steam", 26, Vector3.UP, 100.0, 2.0, 0.6)
+	BendLooks.burst(z.global_position + Vector3.UP * 0.5, "ice", 14, Vector3.UP, 120.0, 2.0, 0.12)
+	z.end("snuffed")
+	return true
+
+
+# ---------------------------------------------------------------- Rime Wall
+## His Wind Wall ending (BendZone.end): a Rime Wall wearer's drops a crust ridge where it stood (RIME_S), lying along it.
+static func on_wall_end(z: BendZone, why: String) -> void:
+	if why == "owner" or z.owner_node == null or not is_instance_valid(z.owner_node) or not z.is_inside_tree():
+		return
+	if not BendLoadout.wears(z.owner_node, RIME_WALL) or not NetSpells.decides():
+		return
+	make_crust(z.owner_node, FormEffects.ground_at(z, z.global_position), z.way, RIME_S, {})
+
+
+# ---------------------------------------------------------------- Blizzard
+## The cold of his Blizzard (BendZone._every of a snow zone, each 0.25 s): a foe inside gains 1% each MATTER_EVERY_S (one tick
+## a body each MATTER_EVERY_S from any matter), COLD_CAP ticks at most from one Blizzard; the water in it frozen to crust; fire
+## on it (a Fire Wall, burning ground) melts it out in SNOW_MELT_S.
+static func snow_every(z: BendZone) -> void:
+	var by := z.owner_node
+	if by == null or not is_instance_valid(by) or not NetSpells.decides():
+		return
+	for n in z.get_tree().get_nodes_in_group(Bending.POOLS):
+		var p3 := n as Node3D
+		if p3 != null and not p3.is_queued_for_deletion() and not p3.has_meta(FROZEN_META) and (not (p3 is BendZone) or (p3 as BendZone).kind == "puddle") \
+				and Vector2(p3.global_position.x - z.global_position.x, p3.global_position.z - z.global_position.z).length() <= z.radius:
+			var w := p3.global_position - by.global_position
+			freeze_pool(by, p3, Vector3(w.x, 0.0, w.z))
+	for f in z.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var fz := f as BendZone
+		if fz != null and fz.kind in ["fire_wall", "burn"] and not fz.is_queued_for_deletion() \
+				and fz.global_position.distance_to(z.global_position) <= z.radius + maxf(fz.size.x * 0.5, fz.radius):
+			melt_snow(z)
+	var ticks: Dictionary = z.get_meta(&"air_cold", {})
+	var now := BendStatus.now()
+	var info := {"tag": COLD_TAG, "move": "air_wall", "mode": "blizzard", "air": false, "released_at": now, "no_hurt": true}
+	for e in BendCaster.near(by, z.global_position, z.radius + 0.5):
+		var n: Node3D = e[0]
+		if n == by or BendCaster.same_team(n, by) or not z.inside(n.global_position):
+			continue
+		var id := n.get_instance_id()
+		if int(ticks.get(id, 0)) >= COLD_CAP or now - float(n.get_meta(MATTER_TICK_META, -INF)) < MATTER_EVERY_S - 1e-3:
+			continue
+		ticks[id] = int(ticks.get(id, 0)) + 1
+		n.set_meta(MATTER_TICK_META, now)
+		var inf := info.duplicate()
+		inf["from"] = n.global_position
+		BendR3.deliver(n, 1.0, n.global_position + Vector3.UP, Vector3.DOWN, by, -1.0, Vector3.ZERO, inf)
+	z.set_meta(&"air_cold", ticks)
+
+
+## Fire on a Blizzard: it melts out in SNOW_MELT_S (once).
+static func melt_snow(z: BendZone) -> void:
+	if z.has_meta(&"air_melting"):
+		return
+	z.set_meta(&"air_melting", true)
+	z.life_s = minf(z.life_s, z.t + SNOW_MELT_S)
+	BendLooks.burst(z.global_position + Vector3.UP, "steam", 20, Vector3.UP, 90.0, 2.0, 0.6)
+
+
+## His Wind Wall's life factor (Blizzard's new:air_wall.wall_life_k; 1 Classic).
+static func wall_life_k(body: Node) -> float:
+	if not BendLoadout.wears(body, BLIZZARD):
+		return 1.0
+	return BendLoadout.tune_f(body, "new:air_wall.wall_life_k", 1.0)
+
+
+# ---------------------------------------------------------------- Whiteout
+## His locks' fill factor now (SwayCaster._hold, NpcBending's lock): Whiteout's HOME_FILL standing on his own crust or in his
+## own Blizzard, else 1.
+static func home_fill(body: Node) -> float:
+	if body == null or not (body is Node3D) or not BendLoadout.wears(body, WHITEOUT) or not body.is_inside_tree():
+		return 1.0
+	var at := (body as Node3D).global_position
+	for w in body.get_tree().get_nodes_in_group(FormRaised.GROUP):
+		var fr := w as FormRaised
+		if fr == null or fr.state == FormRaised.State.CRUMBLING or int(fr.get_meta(CRUST_META, 0)) != body.get_instance_id():
+			continue
+		var l := fr.global_transform.affine_inverse() * at
+		if absf(l.x) <= fr.size.x * 0.5 + 0.25 and absf(l.z) <= fr.size.z * 0.5 + 0.25 and l.y >= fr.size.y - 0.3 and l.y <= fr.size.y + 0.6:
+			return HOME_FILL
+	for z in body.get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "snow" and bz.owner_node == body and not bz.is_queued_for_deletion() and bz.inside(at):
+			return HOME_FILL
+	return 1.0

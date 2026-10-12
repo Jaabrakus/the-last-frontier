@@ -218,6 +218,9 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			zone(bc, a, spec)
 		"wind_wall":
 			var ws := spec.duplicate()
+			var wk: float = AirTalents.wall_life_k(p)
+			if wk != 1.0:
+				ws["life_s"] = float(ws.get("life_s", 4.0)) * wk      # (Blizzard's wearer: his Wind Wall 15% shorter)
 			ws["zone"] = "wind_wall"
 			if not ws.has("at"):
 				ws["at"] = "place"

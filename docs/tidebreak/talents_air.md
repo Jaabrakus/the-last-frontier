@@ -23,6 +23,11 @@ game's own casts, locks, guards and hits.
 | Second Wind (`air.patch.second_wind`) | his Patch begun within 0.8 s of a dash's end locks 1.25 s, any other time 1.6 s (1.5) | `AirTalents.patch_lock` in `SwayCaster._lock_time` and `NpcBending.lock_for` (a bot: as a share of its own Patch lock) |
 | Dust Cloud (`air.slot.dust`) | a new skill on 4 tapped twice: a 3 m dust cloud where he aims (2-6 m, placed like a wall) for 2.5 s that hides as smoke does, one at a time, lock 0.9 s; his Wind Wall stands 3.5 s (4) | a talent mode `air_wall/dust` (moves.json `air_wall.talent_bend.dust`, never in `modes` or `bend`: the Classic fingerprint reads those): `AirTalents.extra_modes` (SwayCaster.my_modes), `modes_for` (Bending.other_move, the hotbar's double tap), `talent_spec` (SwayCaster.spec_of, FormEffects.apply, BendCast.cast), `talent_lock`, `pose_mode` (BendPoses.pick: the Wind Wall's pose), `label` |
 | Frostwind (`air.set.frostwind`, the skill set) | his Gust or Wind Ball turns a puddle or a grate it crosses into frost crust (a snow ridge 0.4 m high, 3 m long across its way, 4 s; two of his at once); floor waves and rolling stones stop at it, anyone can jump it, never slippery; a frozen grate is no water source till its crust goes; steam it crosses falls as snow and clears; water and ice his Wind Wall meets fall as shards; fire (a fire bolt, a Fire Wall or burning ground on it, a Breath) melts a crust back into its puddle, a grate's back into the grate; mud never freezes (only puddles do); his Wind Wall 3.5 s (4) | `AirTalents.frosts` (BendBolt.launch sets `frosts`), `frost_step` (its flight), `freeze_pool` / `make_crust` (a snow FormRaised with a `CrustWatch`), `melt_crust` (BendBolt._hit), `wall_shards` (BendZone.on_bolt) |
+| Hail Ball (`air.frost.hail_ball`) | where his Wind Ball hits or ends its flight, 3 hailstones fall 1.2 m round it (the first along its way), each 2% to a foe within 0.8 m of where it falls, no knock, no flinch, no hurt (its whole class `matter/hail` the node's); the ball's knock base 7 (8); it is still air for every guard and wall | `AirTalents.hails` (BendBolt.launch sets `hails`), `hail_burst` (BendBolt._finish); `BendLoadout.worn_class` |
+| Frost Gust (`air.frost.frost_gust`) | his Gust puts out a foe's Fire Wall or burning ground it crosses (a Gust is a wave from the deck up: the low burning ground under it counts); 1.8 m wide (2) | `AirTalents.snuffs` at the top of `BendZone.on_bolt` (its own crossing test) |
+| Rime Wall (`air.frost.rime_wall`) | when his Wind Wall ends it drops a 3 m crust where it stood, along it, for 3 s; while it stands it is the same Wind Wall, pushing at 3.2 m/s (4) | `AirTalents.on_wall_end` in `BendZone.end`; a wind wall's push is its spec's `push_mps` (Classic's 4.0, as `WIND_WALL_KNOCK` was) |
+| Blizzard (`air.frost.blizzard`) | a new skill on 4 tapped twice: a 2.5 m snow column 2-10 m off where he aims for 3 s, one at a time, lock 0.9 s; it hides both ways (snow in `NpcBendCaster.HIDING`), freezes the water in it to crust, a foe inside gains 1% each 0.5 s (6% at most; its whole class `matter/cold` the node's; no knock, no hurt), fire on it melts it out in 1 s; his Wind Wall 15% shorter (3 s with the set's 3.5) | talent mode `air_wall/blizzard` (moves.json `air_wall.talent_bend.blizzard`); `AirTalents.snow_every` (BendZone._every of kind `snow`), `melt_snow` (a fire bolt in it: BendZone.on_bolt; a Fire Wall or burning ground on it), `wall_life_k` (BendEffects' wind_wall) |
+| Whiteout (`air.frost.whiteout`) | standing on his own crust or in his own Blizzard his locks fill x1.15; Patch 1.7 s (1.5) | `AirTalents.home_fill` in `SwayCaster._hold` and NpcBending's lock; `patch_lock` |
 
 The Beat (`skill_tree.json` "beat", the owner's yes): a held cast let go within 0.2 s after its lock fills; never a click,
 never a cast that goes by itself. Only a worn technique reads it (`AirTalents.beat_worn`): SwayCaster marks the release
@@ -36,6 +41,16 @@ Two nodes that set the same number to the same value (Tailwind and Carry the Edg
 Wind: the Gust's lock 0.5) no longer refuse each other when worn together (`BendLoadout._fold`: a clash is two values).
 
 Notes:
+- The tick contract's `no_hurt` (hail, cold): such a hit skips the struck one's hurt reaction (`BendR3.take`: no `took_hit`,
+  so no Lightning-charge break; `BendStatus.hurt`: no `hurt` signal), and `no_flinch` keeps it out of the string and the stale
+  queue (RingRules.on_hit returns before them). A body takes one matter tick each 0.5 s from any matter (meta
+  `bend_matter_tick_at`, shared so the other elements' matter can read it too).
+- Blizzard's two tree changes (2026-10-11): its cold tick's class `class:matter/cold` was only named in its `new` text, so it is
+  written as Hail Ball's `class:matter/hail` is; its Wind Wall trade was `spec:air_wall/wall.life_s` 4.0 to 3.4, the number the
+  set it requires sets to 3.5 (two values: a clash that refused Blizzard whenever it was worn), now `new:air_wall.wall_life_k`
+  1.0 to 0.85 (its own note: it multiplies with the set's 3.5).
+- tests/ring/test_loadout_apply.gd wears each live node with the nodes it requires (a set's nodes with their set), their changes
+  counted as named.
 - A bot can cast a worn new skill through its own path (BendCast.cast), but no bot mind picks Dust Cloud (bots never wear
   loadouts in a match; a mind that places dust is for when they do).
 - Second Wind's quick lock has its own path in the tree (`new:patch.after_dash_lock_s`, from `stock:patch.lock_s`): its two

@@ -34,6 +34,16 @@ extends SceneTree
 ##                      worn: it stays a puddle); two of his at once; a floor wave stops at it; fire melts it back into the
 ##                      puddle; over a grate: no water source till a Fire Wall on it melts it; steam his Gust crosses clears;
 ##                      his Wind Wall drops water as shards; his Wind Wall 3.5 s; a bot wearing it freezes a puddle too
+##   Hail Ball          (with the set) his Wind Ball onto the deck 1.2 m before the foe: a hailstone strikes him there for 2%,
+##                      no knock, no hurt (not worn: nothing)
+##   Frost Gust         his Gust puts out a foe's Fire Wall and burning ground (not worn: it takes the flame, they burn on);
+##                      1.8 m wide
+##   Rime Wall          his Wind Wall pushes at 3.2 m/s (4); as it ends a 3 m crust lies where it stood for 3 s
+##   Blizzard           4 tapped twice; lock 0.9 s; through the real lock a 2.5 m snow column for 3 s where he aims: it hides
+##                      him, freezes a puddle in it, the foe in it gains 1% each 0.5 s, 6 at most, no knock, no hurt; fire melts
+##                      it out in about a second; one at a time; his Wind Wall 15% shorter; a bot wearing it casts it
+##   Whiteout           his Patch 1.7 s (1.5); on his own crust or in his own snow his locks fill x1.15 (a Slice's real fill);
+##                      a bot's on its own crust too
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
@@ -41,7 +51,8 @@ const NAME := "TALENTS AIR"
 const LIMIT_S := 600.0
 const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
 		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind", "air.slip.near_miss", "air.patch.second_wind",
-		"air.gust.dragon_fire", "air.slot.dust", "air.set.frostwind"]
+		"air.gust.dragon_fire", "air.slot.dust", "air.set.frostwind", "air.frost.hail_ball", "air.frost.frost_gust",
+		"air.frost.rime_wall", "air.frost.blizzard", "air.frost.whiteout"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -292,6 +303,16 @@ func _run() -> void:
 		await _dust()
 	if _on("air.set.frostwind"):
 		await _frostwind()
+	if _on("air.frost.hail_ball"):
+		await _hail_ball()
+	if _on("air.frost.frost_gust"):
+		await _frost_gust()
+	if _on("air.frost.rime_wall"):
+		await _rime_wall()
+	if _on("air.frost.blizzard"):
+		await _blizzard()
+	if _on("air.frost.whiteout"):
+		await _whiteout()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -1221,3 +1242,273 @@ func _nearest_grate() -> Node3D:
 			bd = d
 			best = g
 	return best
+
+
+# ---------------------------------------------------------------- Hail Ball
+func _hits_on(n: Node, by: Node, tag: String, from_i: int) -> Array:
+	var out: Array = []
+	for i in range(mini(from_i, BendR3.hits_log.size()), BendR3.hits_log.size()):
+		var e: Dictionary = BendR3.hits_log[i]
+		if e.get("n") == n and e.get("by") == by and String(e.get("tag", "")) == tag:
+			out.append(e)
+	return out
+
+
+func _hail_ball() -> void:
+	var help0 := MatchSetup._aim_help
+	MatchSetup._aim_help = "off"                      # (the crosshair's own point: the Wind Ball onto the deck before him)
+	var got := {}
+	var end_at := Vector3.INF
+	for ids: Array in [["air.set.frostwind"], ["air.set.frostwind", "air.frost.hail_ball"]]:
+		await _stage(9.0)
+		_wear(ids)
+		var way := Vector3.RIGHT
+		var spot := FormEffects.ground_at(foe, player.global_position + way * 2.5)
+		if end_at.is_finite():
+			foe.global_position = end_at + way * AirTalents.HAIL_R     # (where the first hailstone falls: 1.2 m on from the ball's end)
+			foe.velocity = Vector3.ZERO
+		else:
+			foe.global_position += way * 3.0          # (out of the way of the first ball)
+		aim_at = spot
+		await _ticks(12)
+		aim_at = spot
+		await _ticks(4)
+		var log0 := BendR3.hits_log.size()
+		var pct0 := rules.pct_of(foe)
+		var ball := _cast(pc, "air_blast", "ball")
+		var ends := {"at": Vector3.INF}
+		if ball != null:
+			ball.ended.connect(func(_w: String) -> void: ends.at = FormEffects.ground_at(ball, ball.global_position))
+		await _secs(0.8)
+		if not end_at.is_finite():
+			end_at = ends.at
+		var hail := _hits_on(foe, player, AirTalents.HAIL_TAG, log0)
+		got[ids.size()] = {"end": last_end, "hail": hail.size(), "pct": rules.pct_of(foe) - pct0,
+				"no_hurt": hail.size() > 0 and bool((hail[0].info as Dictionary).get("no_hurt", false)),
+				"kv": (hail[0].kv as Vector3).length() if hail.size() > 0 else -1.0}
+	MatchSetup._aim_help = help0
+	var c: Dictionary = got[1]
+	var w: Dictionary = got[2]
+	var hail_cls := BendLoadout.worn_class(player, AirTalents.HAIL_TAG)
+	_wear([])
+	var d := 2.0 * RingRules.stock_num("pct_scale", 1.0)
+	_expect(String(c.end) in ["world", "range"] and int(c.hail) == 0 and _near(float(c.pct), 0.0),
+			"Hail Ball not worn: a Wind Ball onto the deck 1.2 m before the foe leaves him be (%s)" % c.end)
+	_expect(int(w.hail) == 1 and _near(float(w.pct), d, 0.02) and bool(w.no_hurt) and _near(float(w.kv), 0.0),
+			"Hail Ball: where the ball ends, hail falls 1.2 m on: one hailstone strikes the foe there, +%.2f%% (2 x the scale), no knock, no hurt (%s)" % [w.pct, w])
+	_expect(not hail_cls.is_empty() and BendLoadout.worn_class(player, AirTalents.HAIL_TAG).is_empty() and RingRules.class_of(AirTalents.HAIL_TAG).is_empty(),
+			"Hail Ball: the hail's class is the wearer's; taken off, nobody's (none in the data)")
+
+
+# ---------------------------------------------------------------- Frost Gust
+func _frost_gust() -> void:
+	var got := {}
+	for ids: Array in [["air.set.frostwind"], ["air.set.frostwind", "air.frost.frost_gust"]]:
+		for zk: String in ["fire_wall", "burn"]:
+			await _stage(9.0)
+			_wear(ids)
+			var at := FormEffects.ground_at(player, player.global_position + Vector3.RIGHT * 3.5)
+			var spec: Dictionary = (SwayMoves.move("fire_wall").bend as Dictionary).wall if zk == "fire_wall" else (SwayMoves.move("fire_wall").bend as Dictionary).inferno
+			var z := BendZone.make(foe, zk, at, spec, Vector3.LEFT)
+			await _ticks(3)
+			var g := _cast(pc, "air_gust", "gust")
+			var w_m := g.radius * 2.0 if g != null else -1.0
+			await _secs(0.4)
+			got["%d|%s" % [ids.size(), zk]] = {"stands": is_instance_valid(z) and not z.is_queued_for_deletion(),
+					"burning": g != null and is_instance_valid(g) and g.burning, "w": w_m}
+			if is_instance_valid(z):
+				z.queue_free()
+			await _ticks(3)
+	_wear([])
+	_expect(bool(got["1|fire_wall"].stands) and bool(got["1|burn"].stands),
+			"Frost Gust not worn: his Gust through a foe's Fire Wall or burning ground leaves it burning (takes its flame)")
+	_expect(not bool(got["2|fire_wall"].stands) and not bool(got["2|burn"].stands),
+			"Frost Gust: his Gust puts out a foe's Fire Wall and his burning ground (%s)" % [got])
+	_expect(_near(float(got["2|fire_wall"].w), 1.8) and _near(float(got["1|fire_wall"].w), 2.0),
+			"Frost Gust: his Gust %.1f m wide (2)" % got["2|fire_wall"].w)
+
+
+# ---------------------------------------------------------------- Rime Wall
+func _rime_wall() -> void:
+	var got := {}
+	for ids: Array in [["air.set.frostwind"], ["air.set.frostwind", "air.frost.rime_wall"]]:
+		await _stage(9.0)
+		_wear(ids)
+		await _clear_crusts()
+		var known := {}
+		for z0 in get_nodes_in_group(BendZone.GROUP):
+			known[z0.get_instance_id()] = true
+		BendEffects.apply(pc, "air_wall", "wall", (SwayMoves.move("air_wall").bend as Dictionary).wall)
+		var wz: BendZone = null
+		for z0 in get_nodes_in_group(BendZone.GROUP):
+			if not known.has(z0.get_instance_id()) and (z0 as BendZone).kind == "wind_wall":
+				wz = z0
+		var push := -1.0
+		if wz != null:
+			var log0 := BendR3.hits_log.size()
+			foe.global_position = wz.global_position + wz.global_basis.z * 0.2
+			foe.velocity = Vector3.ZERO
+			await _ticks(3)
+			for i in range(mini(log0, BendR3.hits_log.size()), BendR3.hits_log.size()):
+				var e: Dictionary = BendR3.hits_log[i]
+				if e.get("n") == foe and e.get("by") == player:
+					var kv: Vector3 = e.kv
+					push = Vector2(kv.x, kv.z).length()
+			var wat := wz.global_position
+			var wx := wz.global_basis.x
+			wz.end("life")
+			await _ticks(3)
+			var cs := _crusts(player)
+			var cr: FormRaised = cs[0] if cs.size() == 1 else null
+			got[ids.size()] = {"push": push, "crusts": cs.size(),
+					"at": Vector2(cr.global_position.x - wat.x, cr.global_position.z - wat.z).length() if cr != null else -1.0,
+					"along": absf(cr.global_basis.x.normalized().dot(wx.normalized())) if cr != null else 0.0,
+					"life": cr.life_s if cr != null else -1.0, "w": cr.size.x if cr != null else -1.0}
+		else:
+			got[ids.size()] = {"push": -1.0, "crusts": -1}
+		await _stage(9.0)
+	_wear([])
+	await _clear_crusts()
+	var c: Dictionary = got[1]
+	var w: Dictionary = got[2]
+	_expect(_near(float(c.push), 4.0, 0.01) and _near(float(w.push), 3.2, 0.01),
+			"Rime Wall: his Wind Wall pushes back at %.1f m/s (Classic %.1f)" % [w.push, c.push])
+	_expect(int(c.crusts) == 0, "Rime Wall not worn: his Wind Wall ends and leaves nothing")
+	_expect(int(w.crusts) == 1 and float(w.at) < 0.3 and float(w.along) > 0.99 and _near(float(w.life), 3.0) and _near(float(w.w), 3.0),
+			"Rime Wall: as his Wind Wall ends, a 3 m crust lies where it stood, along it, for 3 s (%s)" % [w])
+
+
+# ---------------------------------------------------------------- Blizzard
+func _snows(by: Node) -> Array:
+	var out: Array = []
+	for z in get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind == "snow" and bz.owner_node == by and not bz.is_queued_for_deletion():
+			out.append(bz)
+	return out
+
+
+func _blizzard() -> void:
+	if not sc.cast_released.is_connected(_count_cast):
+		sc.cast_released.connect(_count_cast)
+	var key4: Array = Bending.keys("air")[3]
+	await _stage(8.0)
+	_wear(["air.set.frostwind"])
+	var w0 := _wall_life()
+	_expect(sc.my_modes("air_wall") == ["wall"], "Blizzard not worn: the Wind Wall's key has one move")
+	_wear(["air.set.frostwind", "air.frost.blizzard"])
+	var other := Bending.other_move(key4, "air_wall", "wall", player)
+	_expect(String(other.get("mode", "")) == "blizzard" and SwayCaster.mode_label("air_wall", "blizzard") == "Blizzard",
+			"Blizzard: 4 tapped twice readies it (%s)" % [other])
+	sc.set_mode("air_wall", "blizzard")
+	var lock_b := sc._lock_time("air_wall", null, 0.0, 0.0)
+	sc.set_mode("air_wall", "wall")
+	var lock_w := sc._lock_time("air_wall", null, 0.0, 0.0)
+	_expect(_near(lock_b / lock_w, 0.9 / 0.8, 0.002), "Blizzard: its lock 0.9 s")
+	var w1 := _wall_life()
+	_expect(_near(w0, 3.5) and _near(w1, 3.5 * 0.85, 0.01), "Blizzard: his Wind Wall stands %.2f s (the set's %.1f, 15%% shorter)" % [w1, w0])
+	# cast through the real lock at the foe 8 m off: a snow column on him
+	var pz := BendZone.make(foe, "puddle", FormEffects.ground_at(foe, foe.global_position + Vector3.LEFT * 1.0), {"radius_m": 0.8, "life_s": 8.0}, Vector3.LEFT)
+	var log0 := BendR3.hits_log.size()
+	var pct0 := rules.pct_of(foe)
+	await _held_cast("air_wall", "blizzard", 0.05)
+	var sn := _snows(player)
+	var z: BendZone = sn[0] if sn.size() == 1 else null
+	var off := Vector2(z.global_position.x - player.global_position.x, z.global_position.z - player.global_position.z).length() if z != null else -1.0
+	_expect(z != null and _near(z.radius, 2.5) and _near(z.life_s, 3.0) and off >= 1.9 and off <= 10.1 and z.inside(foe.global_position),
+			"Blizzard: a 2.5 m snow column for 3 s where he aims (%.1f m off), the foe in it" % off)
+	await _ticks(20)
+	_expect(NpcBendCaster.hidden(foe, player) and (not is_instance_valid(pz) or pz.is_queued_for_deletion()) and not _crusts(player).is_empty(),
+			"Blizzard: it hides him from the foe, and the puddle in it froze to crust")
+	if z != null:
+		z.life_s = 9.0                                # (left standing: the cold's cap)
+	await _secs(4.0)
+	var cold := _hits_on(foe, player, AirTalents.COLD_TAG, log0)
+	var per := 1.0 * RingRules.stock_num("pct_scale", 1.0)
+	_expect(cold.size() == AirTalents.COLD_CAP and _near(rules.pct_of(foe) - pct0, per * AirTalents.COLD_CAP, 0.05)
+			and (cold[0].kv as Vector3).length() < 0.01 and bool((cold[0].info as Dictionary).get("no_hurt", false)),
+			"Blizzard: the foe in it gains 1%% a tick, 6 ticks at most (%d, +%.2f%%), no knock, no hurt" % [cold.size(), rules.pct_of(foe) - pct0])
+	if cold.size() >= 2:
+		_expect(float(cold[1].at) - float(cold[0].at) >= AirTalents.MATTER_EVERY_S - 0.01, "Blizzard: one tick each 0.5 s (%.2f s)" % [float(cold[1].at) - float(cold[0].at)])
+	# fire melts it out in a second
+	if z != null and is_instance_valid(z):
+		var fz := BendZone.make(foe, "fire_wall", z.global_position, (SwayMoves.move("fire_wall").bend as Dictionary).wall, Vector3.LEFT)
+		var gone := await _until(func() -> bool: return not is_instance_valid(z) or z.is_queued_for_deletion(), 3.0)
+		_expect(gone <= 1.4, "Blizzard: fire on it melts it out in about a second (%.2f s)" % gone)
+		if is_instance_valid(fz):
+			fz.queue_free()
+	# one at a time
+	await _held_cast("air_wall", "blizzard", 0.05)
+	await _held_cast("air_wall", "blizzard", 0.05)
+	await _ticks(3)
+	_expect(_snows(player).size() == 1, "Blizzard: a new one ends his old one (%d)" % _snows(player).size())
+	sc.set_mode("air_wall", "wall")
+	# a bot wearing it casts it
+	BendLoadout.wear(foe, ["air.set.frostwind", "air.frost.blizzard"], "", "air")
+	var ok := BendCast.cast(BendCaster.of(foe), "air_wall", "blizzard", player, player.global_position)
+	var fb := _snows(foe).size()
+	BendLoadout.clear(foe)
+	_expect(ok and fb == 1, "Blizzard on a bot: it casts it through its own path")
+	_wear([])
+	await _clear_crusts()
+	await _clear_air()
+
+
+# ---------------------------------------------------------------- Whiteout
+func _whiteout() -> void:
+	await _stage(9.0)
+	sc.set_mode("patch", "patch")
+	_wear(["air.set.frostwind"])
+	var patch0 := sc._lock_time("patch", null, 0.0, 0.0)
+	_wear(["air.set.frostwind", "air.frost.whiteout"])
+	var patch1 := sc._lock_time("patch", null, 0.0, 0.0)
+	_expect(_near(patch1 / patch0, 1.7 / 1.5, 0.002), "Whiteout: his Patch locks %.2f s (%.2f: 1.7 for 1.5)" % [patch1, patch0])
+	var off := AirTalents.home_fill(player)
+	var cr := AirTalents.make_crust(player, FormEffects.ground_at(player, player.global_position + Vector3.RIGHT * 2.0), Vector3.RIGHT, 6.0)
+	await _secs(0.3)
+	player.global_position = cr.global_position + Vector3.UP * (cr.size.y + 0.05)
+	player.velocity = Vector3.ZERO
+	await _ticks(6)
+	var on := AirTalents.home_fill(player)
+	# the real fill on it: a Slice lock's share after 0.2 s, on his crust and off it
+	var f_on := await _fill_after(0.2)
+	player.global_position = cr.global_position + Vector3.LEFT * 3.0 + Vector3.UP * 0.05
+	await _ticks(10)
+	var f_off := await _fill_after(0.2)
+	_expect(_near(off, 1.0) and _near(on, AirTalents.HOME_FILL), "Whiteout: on his own crust his locks fill x%.2f (off it x%.2f)" % [on, off])
+	_expect(f_off > 0.0 and _near(f_on / f_off, AirTalents.HOME_FILL, 0.06), "Whiteout: a Slice lock fills %.3f on it, %.3f off it" % [f_on, f_off])
+	var sz := BendZone.make(player, "snow", player.global_position, {"radius_m": 2.5, "life_s": 3.0}, Vector3.RIGHT)
+	await _ticks(2)
+	var in_snow := AirTalents.home_fill(player)
+	sz.queue_free()
+	_wear(["air.set.frostwind"])
+	var not_worn := AirTalents.home_fill(player)
+	_expect(_near(in_snow, AirTalents.HOME_FILL) and _near(not_worn, 1.0), "Whiteout: in his own snow x%.2f; not worn x%.2f" % [in_snow, not_worn])
+	# a bot wearing it: its own lock fill on its own crust
+	BendLoadout.wear(foe, ["air.set.frostwind", "air.frost.whiteout"], "", "air")
+	var fcr := AirTalents.make_crust(foe, FormEffects.ground_at(foe, foe.global_position + Vector3.LEFT * 2.0), Vector3.RIGHT, 6.0)
+	await _secs(0.3)
+	foe.global_position = fcr.global_position + Vector3.UP * (fcr.size.y + 0.05)
+	foe.velocity = Vector3.ZERO
+	await _ticks(6)
+	var fon := AirTalents.home_fill(foe)
+	BendLoadout.clear(foe)
+	_expect(_near(fon, AirTalents.HOME_FILL), "Whiteout on a bot: on its own crust its locks fill x%.2f" % fon)
+	_wear([])
+	await _clear_crusts()
+
+
+## The share of a Slice lock filled `s` s after it began (the aim's button held; let go after, no cast).
+func _fill_after(s: float) -> float:
+	sc.ready_spell("air_blast")
+	sc.set_mode("air_blast", "slice")
+	aim_at = NpcSenses.chest_of(foe)
+	await _ticks(4)
+	sc.held_override = true
+	await _until(func() -> bool: return sc.state != SwayCaster.State.IDLE, 1.0)
+	var f0 := sc.fill
+	await _secs(s)
+	var f := sc.fill - f0
+	sc.held_override = false
+	await _secs(0.8)
+	return f

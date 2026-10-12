@@ -8166,10 +8166,26 @@
          "where": "moves.json (new spec), BendZone (new kind), SwayCaster.modes_of"
         },
         {
-         "path": "spec:air_wall/wall.life_s",
-         "from": 4.0,
-         "to": 3.4,
-         "note": "multiplies with the set entry's 3.5: 3.0 s"
+         "path": "class:matter/cold",
+         "from": null,
+         "to": {
+          "d": 1.0,
+          "base": 0.0,
+          "growth": 0.0,
+          "set": true,
+          "no_flinch": true,
+          "no_hurt": true
+         },
+         "base_tag": null,
+         "note": "the cold tick (tick_contract, proposed_classes matter/cold): its whole class the wearer's (2026-10-11: written here as Hail Ball's matter/hail is, so the tick has a class to read)"
+        },
+        {
+         "path": "new:air_wall.wall_life_k",
+         "from": 1.0,
+         "to": 0.85,
+         "new_field": true,
+         "from_path": "spec:air_wall/wall.life_s",
+         "note": "15% shorter: multiplies with the set entry's 3.5 (3.0 s). 2026-10-11: was spec:air_wall/wall.life_s 4.0 to 3.4, the same number the set sets to 3.5 (a clash that refused Blizzard with the set it requires); a factor keeps its intent"
         }
        ],
        "visual": {

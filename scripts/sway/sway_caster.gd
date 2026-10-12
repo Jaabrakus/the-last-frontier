@@ -2784,6 +2784,7 @@ func _hold(dt: float, q: Dictionary) -> void:
 			rate = 0.0                            # (Patch: standing still only)
 		var pf := passive_fill()
 		rate *= pf
+		rate *= AirTalents.home_fill(player)       # (Whiteout on his own frost; Classic 1)
 		if pf > 1.0:
 			_rooted_t -= dt
 			if _rooted_t <= 0.0:
