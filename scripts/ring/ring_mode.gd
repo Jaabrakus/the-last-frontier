@@ -389,6 +389,7 @@ func next_round() -> void:
 		_stock_game()
 	_new_tally()
 	_to("COUNTDOWN")
+	NetMatch.told(self, ["m_next", round])
 
 
 ## The foe of this round (team 1) at the other end: a bot of its element, no gun, held through the countdown.
@@ -707,13 +708,15 @@ func _physics_process(dt: float) -> void:
 			if not practice and n != _count_said and phase_t >= RingRules.num("round_show_s", 0.8) and n > 0:
 				_count_said = n
 				_sting("count")
-			if phase_t >= cd:
-				_fight()
+			if phase_t >= cd and NetMatch.referee(self):
+				_fight()                         # (online the host's: the others go at its word, NetMatch)
 		"FIGHT":
 			_count_guards()
 			if rules.team_mode() and not practice:
 				_coach(dt)
-			if practice:
+			if not NetMatch.referee(self):
+				pass                             # (online a mirror: the clock and the round's end are the host's words)
+			elif practice:
 				practice_ctl.step(dt)
 			elif stock():
 				_stock_clock()
@@ -725,7 +728,7 @@ func _physics_process(dt: float) -> void:
 			var wait := RingRules.num("pause_s", 6.0)
 			if stock() and decided():
 				wait = RingRules.stock_num("over_s", 2.2)
-			if phase_t >= wait or _skip:
+			if (phase_t >= wait or _skip) and NetMatch.referee(self):
 				_skip = false
 				if decided():
 					_done()
@@ -757,6 +760,7 @@ func _fight() -> void:
 	if not practice:
 		_music(true)
 	_to("FIGHT")
+	NetMatch.told(self, ["m_fight"])
 
 
 ## THE TEAM COACH (team formats, FIGHT): each bot is handed the nearest opponent still in play, counted spread_m farther for
@@ -842,10 +846,11 @@ func _time_out() -> void:
 		_end_round(-1, "time")
 
 
-## The round to `team` (-1: drawn) for `why`.
+## The round to `team` (-1: drawn) for `why`. Online the referee's (NetMatch: told the others, who end theirs at its word).
 func _end_round(team: int, why: String) -> void:
-	if phase != "FIGHT":
+	if phase != "FIGHT" or not (NetMatch.referee(self) or NetMatch.applying()):
 		return
+	NetMatch.told(self, ["m_end", team, why])
 	_left_at_end = round_left_s()
 	rules.live = false
 	last_winner = team
@@ -885,6 +890,9 @@ func decided() -> bool:
 
 
 func _done() -> void:
+	if not (NetMatch.referee(self) or NetMatch.applying()):
+		return
+	NetMatch.told(self, ["m_done"])
 	winner = 0 if score.x > score.y else (1 if score.y > score.x else -1)
 	if player != null and is_instance_valid(player):
 		player.drag_speed_cap = 0.0          # (the match screen stands: he waits for a rematch or the menu)
@@ -918,6 +926,8 @@ func _on_side_out(side: int) -> void:
 	if practice:
 		practice_ctl.on_out()
 		return
+	if not NetMatch.referee(self):
+		return                               # (online a mirror: the round's end is the host's word, NetMatch)
 	if stock():
 		_end_round(1 - side, "sudden" if rules.sudden else "falls")
 		return
@@ -1370,6 +1380,13 @@ func _stock_clock() -> void:
 		_end_round(0 if a > b else 1, "time")
 		return
 	# (level at the bell: sudden death; everyone back on the deck first)
+	net_sudden()
+	NetMatch.told(self, ["m_sudden"])
+
+
+## Sudden death begun (the referee's level bell: _stock_clock; online another machine at the host's word, NetMatch): everyone
+## back on the deck first, one life each at sudden.pct.
+func net_sudden() -> void:
 	for p: Dictionary in _respawns:
 		_do_respawn(p.body as Node3D)
 	_respawns.clear()

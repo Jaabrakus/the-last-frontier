@@ -981,6 +981,16 @@ func add_pct(b: Node, delta: float, by: Node, tag: String) -> void:
 	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
 
 
+## b's % as its owner's machine has it (online: another machine's body, NetBody's pct slot): shown, nothing else changed.
+func mirror_pct(b: Node, v: float) -> void:
+	var st := _sk(b)
+	if st.is_empty() or is_equal_approx(float(st.pct), v):
+		return
+	var was := float(st.pct)
+	st["pct"] = maxf(v, 0.0)
+	pct_changed.emit(b, float(st.pct), float(st.pct) - was)
+
+
 ## b's % set to `to` (a fall: 0; sudden death: sudden.pct; Practice's rows); the fresh pool emptied.
 func reset_pct(b: Node, to := 0.0) -> void:
 	var st := _sk(b)
@@ -1421,7 +1431,8 @@ func _end_string(body: Node3D, st: Dictionary, now: float) -> void:
 
 
 ## b into the water (spec §7.1, §5.2): a life gone, credited to the last knocker within knock_credit_s (else his own fall),
-## his % to 0, ko(b, by, pct, tag, stocks_left); out of lives: gone, and his side out when it was the last of them.
+## his % to 0, ko(b, by, pct, tag, stocks_left); out of lives: gone, and his side out when it was the last of them. Online
+## (NetMatch) a machine that is not the referee tells the host instead, whose word takes it on every machine (take_ko).
 func _ko(b: Node3D) -> void:
 	var st := _sk(b)
 	if st.is_empty() or bool(st.away) or bool(st.gone):
@@ -1432,6 +1443,21 @@ func _ko(b: Node3D) -> void:
 		by = kn.last_knocker
 	var pct := pct_of(b)
 	var tag := String(st.get("last_tag", "")) if by != null else ""
+	if not NetSpells.decides():
+		NetMatch.report_fall(b, by, pct, tag)
+		return
+	take_ko(b, by, pct, tag)
+
+
+## A fall of b's taken on these books (_ko's; online the host's word, NetMatch: `left` the lives the host left him, -1 these
+## books' own count): see _ko. The referee's word to the others.
+func take_ko(b: Node3D, by: Node, pct: float, tag: String, left := -1) -> void:
+	var st := _sk(b)
+	if st.is_empty() or bool(st.away) or bool(st.gone):
+		return
+	if b.has_meta(&"net_fell"):
+		b.remove_meta(&"net_fell")
+	var kn := BendKnock.peek(b)
 	st["away"] = true
 	if not lives_on:
 		# (Practice: no lives; the % to 0, both put back: RingMode -> RingPractice.on_out through side_out; out until then)
@@ -1444,8 +1470,8 @@ func _ko(b: Node3D) -> void:
 		rang_out.emit(b, by)
 		side_out.emit(team_of(b))
 		return
-	st["stocks"] = maxi(int(st.stocks) - 1, 0)
-	var left := int(st.stocks)
+	st["stocks"] = maxi(int(st.stocks) - 1, 0) if left < 0 else left
+	left = int(st.stocks)
 	st["safe_until"] = -INF
 	st["string"] = {"hits": 0, "pct": 0.0, "by": null, "pop": false, "bounced": false, "m": 0}
 	var t := team_of(b)
@@ -1465,6 +1491,8 @@ func _ko(b: Node3D) -> void:
 		st["out"] = true
 		st["by"] = by
 		st["why"] = "falls"
+	if NetSpells.online() and NetSpells.decides():
+		NetSpells.word(["m_ko", b, by, pct, tag, left])     # (online: the referee's word, every machine's books alike)
 	ko.emit(b, by, pct, tag, left)
 	rang_out.emit(b, by)
 	if left <= 0:

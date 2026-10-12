@@ -229,6 +229,9 @@ static func apply_word(w: Array) -> void:
 			var hs := a[2] as FormStone
 			if hb != null and hs != null:
 				BendEffects.crack_heave(hb, hs, a[3] as Dictionary)
+		_:
+			if String(a[0]).begins_with("m_"):
+				NetMatch.apply_word(a)                # (the match's: NetMatch)
 	_verdict -= 1
 
 

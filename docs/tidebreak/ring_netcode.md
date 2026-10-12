@@ -150,9 +150,19 @@ still and follow. A flight (GustLift) is run alike everywhere (its throw is in a
 the Fissure's): a ghost's passes bodies and bursts on the world, and the host's word stops it (the stone's state) or bursts
 it where the host's did (its "end"). A raised stone's grow and drop go with the lock's course.
 
+**The match** (NetMatch, R1 d). The host is the referee: only its RingMode moves the match on (the countdown's end, the
+clock, a round's end, sudden death, the next round, the match's end), each step told the others ("m_fight", "m_end",
+"m_sudden", "m_next", "m_done"), who run the same RingMode step in their own numbering (their side is their team 0). A
+body's owner sees it fall into the water and tells the host (a client's report, the one message a client sends the host
+besides its casts); the host takes the life on its books (RingRules.take_ko) and tells everyone ("m_ko": the lives left),
+each machine taking it the same way (the KO line, the body hidden, its respawn's timer; the owner puts his body back on his
+spout). Each body's % is its owner's and goes with his state (NetBody's pct slot), shown on every machine
+(RingRules.mirror_pct). Tested two-machine: the joiner's fight begins at the host's word, each % shown on the other, three
+falls taken on both books, the round and the match the host's on both screens (a win there, a loss on the joiner's).
+
 **Still to come in R1:** body attacks decided by a joiner's own machine (a ledge attack, the Rise's hit: through the host to
-the victim's owner); the jab string's end on a victim's machine back to the hitter's (RingRules.string_ended); the match
-mirror (R1 d); lag compensation (R1 e).
+the victim's owner); the jab string's end on a victim's machine back to the hitter's (RingRules.string_ended); lag
+compensation (R1 e); the menu's Online row (host, join by address).
 
 ## Phases
 
@@ -161,7 +171,7 @@ mirror (R1 d); lag compensation (R1 e).
 | R1 a | the session: host and join into a 1v1 % ring, the second fighter a remote human; bodies streamed, puppets animated (built) | `tests/net/test_ring_net_pair.gd` |
 | R1 b | casts: every spell predicted, run by the host, ghosted elsewhere; names; the host's words about spells (built but stones) | `tests/net/test_ring_net_casts.gd` |
 | R1 c | hits and body effects to their owners; % and knock-ups, binds, prisons, soaks, guards and parry rewards online (the spells' built with R1 b; body attacks, strings, stones to come) | `test_ring_net_hits.gd` |
-| R1 d | the match mirrored: phases, clock, lives, falls, respawns, rounds, the screens | `test_ring_net_match.gd` |
+| R1 d | the match mirrored: phases, clock, lives, falls, respawns, rounds, the screens (built) | `tests/net/test_ring_net_match.gd` |
 | R1 e | lag compensation: cast fast-forward, rewound hits, guard timing; a simulated 80 ms link | `test_ring_net_lag.gd` |
 | R2 | 2v2 and 4v4 online, bots filling empty slots, more than one remote human, spectators | |
 | R3 | the player-run server: a headless export with the graphics stripped, start scripts per format, server.json (port, players, format, rounds, time, arena, bots, password, twists allowed), the main menu's Join row (address, recent servers), the host's match settings, admin commands | |

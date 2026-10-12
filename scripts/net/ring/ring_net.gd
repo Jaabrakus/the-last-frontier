@@ -544,6 +544,18 @@ func _hit(h: Array) -> void:
 	NetSpells.apply_hit(h)
 
 
+## A client's report to the host (NetMatch.report_fall: a fall of his own body).
+func send_report(r: Array) -> void:
+	if is_client():
+		_report.rpc_id(1, r)
+
+
+@rpc("any_peer", "reliable")
+func _report(r: Array) -> void:
+	if is_host():
+		NetMatch.on_report(NetSpells.dec(r) as Array, multiplayer.get_remote_sender_id())
+
+
 # ---------------------------------------------------------------- the tests' and tools' word
 ## A word `tag` with `data` to every other machine (reliable; noted on theirs).
 func note(tag: String, data: Variant = null) -> void:
