@@ -286,6 +286,32 @@ this branch two picks setting one number clash; earth p2's stacking rule in `Ben
 once merged). Run B, Forked Lightning, the Magma set, Magma Fist, Dancing Feet, Flashfire and Cauterize, 4 games: 2 wins of 4,
 worn 7 of 7, no script error, no stall, LOADOUT SOAK DONE.
 
+**Fix pass (12 October 2026, `tb/talents-fire-fix`)**, after the verifier's read of pass 2:
+- Blazing Fireball's burst was 2 m round plus 0.35 m slack (about 4.7 m across); it is now 2 m wide (`BLAZE_R` 1 m, on whoever
+  it touches: his capsule, 0.3 m round, within it), and only where the Fireball hits (a body, a raised wall, the deck), never
+  where its flight runs out in the air.
+- Magma Fist's "a perfect Turn douses it (an obsidian stone drops)" is built: a ball of magma put out as steam drops a loose
+  obsidian stone of its caster's where it went out (`FireTalents.obsidian`, the same stone a cooled seam leaves).
+- Flashfire: see the merge notes above (fire lights a wearer's gas first; no edit to `BendGas.ignite`). Gas exists in a match
+  only once earth's Sulphur set is merged; on this branch alone only its trade (Embers 6%) shows in a match.
+- Hot Feet and Dancing Feet now reach a bot whole (`bot_fill_mult`: a bot had the standing side only); Dancing Feet's x1.15 is the
+  whole rate for 0.6 s after a Step, on the move too (it was x0.9 x 1.15), and only the Step's own dash end starts it (a Jets dash
+  after a Step did too).
+- Chain Kicks' head start is keyed by move and mode: a High Kick or the air Slam after a Beat Kick starts empty.
+- Bots let go on the Beat as often as their difficulty's `beat_rate` (bend_ai.json presets: the same lines as the water lane's,
+  so the files merge as one), not on every release.
+- Scald: any fire of the wearer's through steam (a fire bolt, a fire cone, a Fire Wall, floor fire or a seam touching the cloud),
+  and the scalding cloud has its own look while it burns (flame and embers through it).
+- Cauterize's bot lock reads Patch's `ring_lock_s` from moves.json (it had 1.5 written in); two doc comments in `bend_zone.gd`
+  are back over their own functions.
+- Left as they are (general, not fire's alone): online a loadout is worn only on each machine's own player, so the matter a talent
+  makes is the host's where it is decided there (seams, patches, bursts, Forked's live water, Scald's zone) and every machine's
+  where the cast makes it (Ignite Step's line, Curved Curtain's pieces); making them agree needs the loadout sent over the wire.
+- `tests/ring/test_loadout_apply.gd`'s lines that wear a node with the nodes it requires are now word for word earth p2's (`with`),
+  so they merge with earth's cleanly; fire's own addition below them (the required nodes' spec changes counted as named, which
+  Lava Kick needs beside the set's Kick speed) reads that `with`. Water's and air's versions of those lines differ: keep earth's
+  and fire's at the merge.
+
 ## Tests and commands
 
 ```
