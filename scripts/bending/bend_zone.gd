@@ -536,6 +536,8 @@ func _every(dt: float) -> void:
 ## Bolt `b` passing it (see the header); true when it acted on it. An ally's bolt (BendCaster.same_team: the ring's sides)
 ## passes as its owner's own does: a guard never sends a teammate's bolt back or eats it.
 func on_bolt(b: BendBolt) -> bool:
+	if not b.spent and kind in ["fire_wall", "smoke"] and AirTalents.through_ally_fire(self, b):
+		return false                                 # (Dragon Fire: his Gust through an ally's fire carries a front on; it flies on)
 	if b.spent or b.caster == owner_node or not inside(b.global_position) or BendCaster.same_team(b.caster, owner_node) \
 			or b.swinging():
 		return false

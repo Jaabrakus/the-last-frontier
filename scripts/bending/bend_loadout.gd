@@ -82,7 +82,8 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
 		"move:stone_form.cannonball.radius_m",
-		"rules:air_rules.guard.hold_max_s"]             # (air: Rebound's held Wind Guard, SwayCaster._hold_guard and a bot's shield_tick)
+		"rules:air_rules.guard.hold_max_s",             # (air: Rebound's held Wind Guard, SwayCaster._hold_guard and a bot's shield_tick)
+		"rules:passives.air.near_m", "stock:patch.lock_s"]   # (air: Near Miss, BendBolt._near_miss; Second Wind, AirTalents.patch_lock)
 
 ## Tests only: merged over the file (enabled, live, styles_live replace; nodes merge by id).
 static var config_override: Dictionary = {}
@@ -731,6 +732,18 @@ static func new_class(body: Object, key: String) -> Dictionary:
 		return {}
 	var c: Variant = (overlay_of(body).get("class_new", {}) as Dictionary).get(key)
 	return c as Dictionary if c is Dictionary else {}
+
+
+## A hit's class for tag `tag` that only a worn behaviour talent of `body`'s adds (new_class), as RingRules.class_of makes one:
+## tagged, its growth scaled ({} none: Classic, or no such class worn). RingRules.on_hit asks it when the data has no class.
+static func worn_class(body: Object, tag: String) -> Dictionary:
+	var c := new_class(body, tag)
+	if c.is_empty():
+		return {}
+	var out := c.duplicate()
+	out["tag"] = tag
+	out["growth"] = float(out.get("growth", 0.0)) * RingRules.stock_num("growth_scale", 1.0)
+	return out
 
 
 ## The wearer's own number at tune path `path` (TUNE_PATHS), else `base` (the game's: Classic reads it unchanged).

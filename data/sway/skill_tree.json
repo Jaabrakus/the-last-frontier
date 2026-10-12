@@ -7844,10 +7844,12 @@
        "help": "Patch is quicker right after a dash.",
        "changes": [
         {
-         "path": "stock:patch.lock_s",
+         "path": "new:patch.after_dash_lock_s",
          "from": 1.5,
          "to": 1.25,
-         "note": "begun within 0.8 s after a dash"
+         "new_field": true,
+         "from_path": "stock:patch.lock_s",
+         "note": "begun within 0.8 s after a dash (AirTalents.patch_lock; 2026-10-11: its own path, so the two Patch locks of this node are not one number set twice)"
         },
         {
          "path": "stock:patch.lock_s",

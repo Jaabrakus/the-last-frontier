@@ -22,13 +22,19 @@ extends SceneTree
 ##                      foe standing there; a Gust let go late, or not worn, leaves the stone lying
 ##   Peak Wind          key 3 held through a Leap's full lock and let go on the Beat: his Carried wind charged fresh at the top
 ##                      (as high a Leap as ever); key 3 tapped (a click), or not worn, no fresh charge at the top
+##   Near Miss          his Slip 8.5 m/s (9.5); a Slice passing 1.3 m off in his Slip charges his Carried wind (not worn: only
+##                      within 1.2 m, a 0.9 m one does)
+##   Second Wind        his Patch begun within 0.8 s of a dash's end (a real Slip) locks 1.25 s, later 1.6 (1.5); a bot's too
+##   Dragon Fire        his Gust through his fire mate's Fire Wall sends one fire front on (not worn: none; a foe's wall: none,
+##                      it takes the flame as ever); the front strikes a foe it runs into for 6% (the node's class, his alone)
 ## Every talent here is live in data/bending/loadout_apply.json (BendLoadout.why_not ""), and a body that wears nothing reads the
 ## game's own numbers. Last line "TALENTS AIR PASSED (n checks)" or "... FAILED".
 
 const NAME := "TALENTS AIR"
 const LIMIT_S := 600.0
 const MINE := ["air.gust.full_sail", "air.slice.tailwind", "air.guard.drift", "air.guard.eye", "air.guard.rebound",
-		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind"]
+		"air.slice.carry_edge", "air.gust.carrying", "air.leap.peak_wind", "air.slip.near_miss", "air.patch.second_wind",
+		"air.gust.dragon_fire"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -263,6 +269,12 @@ func _run() -> void:
 		await _carrying()
 	if _on("air.leap.peak_wind"):
 		await _peak_wind()
+	if _on("air.slip.near_miss"):
+		await _near_miss()
+	if _on("air.patch.second_wind"):
+		await _second_wind()
+	if _on("air.gust.dragon_fire"):
+		await _dragon_fire()
 	physics_frame.disconnect(_aim)
 	_end()
 
@@ -733,3 +745,159 @@ func _peak_wind() -> void:
 	_expect(_near(float(w.top_left), 0.8, 0.06) and float(c.top_left) < 0.7 and float(tap.top_left) < 0.7,
 			"Peak Wind: at the top of the Beat Leap his Carried wind is fresh (%.2f s left; Classic %.2f, tapped %.2f)" % [w.top_left, c.top_left, tap.top_left])
 	_expect(absf(float(w.rise) - float(c.rise)) < 0.15, "Peak Wind: the Leap rises as high as ever (%.2f m, Classic %.2f m)" % [w.rise, c.rise])
+
+
+# ---------------------------------------------------------------- Near Miss
+## The player Slips (the game's dash: back from the foe) and the foe's Slice passes `off` m beside him as he goes: {mps (the
+## Slip's flat speed), charged (Carried wind charged within 0.15 s, before the Slip's own end could)}.
+func _slip_past(off: float) -> Dictionary:
+	await _stage(10.0)
+	aim_at = NpcSenses.chest_of(foe)
+	await _ticks(4)
+	for k: StringName in [&"bend_carry_until", &"bend_slip_until"]:
+		if player.has_meta(k):
+			player.remove_meta(k)
+	BendEffects.apply(pc, "evade", "slip", (SwayMoves.move("evade").bend as Dictionary).slip)
+	var v: Vector3 = BendEffects.last_of(pc).get("v", Vector3.ZERO)
+	var way := foe.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var side := Vector3.UP.cross(way).normalized()
+	var b := _cast(BendCaster.of(foe), "air_blast", "slice")
+	if b != null:
+		var ch := NpcSenses.chest_of(player)
+		b.global_position = ch + way * 3.0 + side * off
+		b.velocity = -way * b.velocity.length()
+	var charged := false
+	for i in ceili(0.15 * Engine.physics_ticks_per_second):
+		await physics_frame
+		charged = charged or BendStatus.until(player, &"bend_carry_until") > 0.0
+	if b != null and is_instance_valid(b):
+		b.end("test")
+	await _secs(0.6)
+	return {"mps": Vector2(v.x, v.z).length(), "charged": charged}
+
+
+func _near_miss() -> void:
+	_wear([])
+	var c := await _slip_past(1.3)
+	var c_close := await _slip_past(0.9)
+	_wear(["air.slip.near_miss"])
+	var w := await _slip_past(1.3)
+	_wear([])
+	_expect(_near(float(c.mps), 9.5, 0.05) and _near(float(w.mps), 8.5, 0.05),
+			"Near Miss: his Slip goes %.1f m/s (Classic %.1f)" % [w.mps, c.mps])
+	_expect(bool(c_close.charged) and not bool(c.charged),
+			"Near Miss not worn: a Slice 0.9 m off in his Slip charges his Carried wind, one 1.3 m off does not (1.2 m)")
+	_expect(bool(w.charged), "Near Miss: a Slice 1.3 m off in his Slip charges it (1.44 m)")
+
+
+# ---------------------------------------------------------------- Second Wind
+func _second_wind() -> void:
+	await _stage(10.0)
+	sc.set_mode("patch", "patch")
+	var got := {}
+	for id: String in ["", "air.patch.second_wind"]:
+		_wear([id] if id != "" else [])
+		if player.has_meta(&"bend_dash_end"):
+			player.remove_meta(&"bend_dash_end")
+		# (a real Slip: its end is the dash's end the Patch counts from)
+		BendEffects.apply(pc, "evade", "slip", (SwayMoves.move("evade").bend as Dictionary).slip)
+		var ended := await _until(func() -> bool: return player.has_meta(&"bend_dash_end"), 1.5)
+		var quick := sc._lock_time("patch", null, 0.0, 0.0)
+		await _secs(1.0)
+		var later := sc._lock_time("patch", null, 0.0, 0.0)
+		got[id] = {"ended": ended < INF, "quick": quick, "later": later,
+				"bot": NpcBending.lock_for("patch", "patch", "normal", 0.0, player)}
+		await _secs(0.4)
+	var c: Dictionary = got[""]
+	var w: Dictionary = got["air.patch.second_wind"]
+	_expect(bool(c.ended) and bool(w.ended) and _near(float(c.quick), float(c.later), 0.001),
+			"Second Wind not worn: Patch locks the same right after a dash and later (%.2f s)" % c.quick)
+	_expect(_near(float(w.quick) / float(c.quick), 1.25 / 1.5, 0.002) and _near(float(w.later) / float(c.later), 1.6 / 1.5, 0.002),
+			"Second Wind: Patch begun within 0.8 s of a dash locks %.2f s, later %.2f s (Classic %.2f: 1.25, 1.6 for 1.5)" % [w.quick, w.later, c.quick])
+	# (a bot wearing it: its own Patch lock read the same way)
+	BendLoadout.wear(foe, ["air.patch.second_wind"], "", "air")
+	foe.set_meta(&"bend_dash_end", BendStatus.now())
+	var bq := NpcBending.lock_for("patch", "patch", "normal", 0.0, foe)
+	foe.set_meta(&"bend_dash_end", BendStatus.now() - 5.0)
+	var bl := NpcBending.lock_for("patch", "patch", "normal", 0.0, foe)
+	BendLoadout.clear(foe)
+	var b0 := NpcBending.lock_for("patch", "patch", "normal", 0.0, foe)
+	_expect(b0 > 0.0 and _near(bq / b0, 1.25 / 1.5, 0.002) and _near(bl / b0, 1.6 / 1.5, 0.002),
+			"Second Wind on a bot: its Patch lock %.2f s after a dash, %.2f s later (not worn %.2f: x1.25/1.5, x1.6/1.5)" % [bq, bl, b0])
+	_wear([])
+
+
+# ---------------------------------------------------------------- Dragon Fire
+## The fire mate's Fire Wall across the line from the player to the foe, `at` m from the player (BendZone.make, as his cast
+## makes it); `own`: the foe's own instead (a foe's wall).
+func _fire_wall_at(m: float, owner: NpcFighter) -> BendZone:
+	var way := foe.global_position - player.global_position
+	way.y = 0.0
+	way = way.normalized()
+	var at := FormEffects.ground_at(player, player.global_position + way * m)
+	var spec: Dictionary = (SwayMoves.move("fire_wall").bend as Dictionary).wall
+	return BendZone.make(owner, "fire_wall", at, spec, way)
+
+
+func _gust_through(owner: NpcFighter) -> Dictionary:
+	await _stage(10.0)
+	var z := _fire_wall_at(3.5, owner)
+	await _ticks(4)
+	_made.clear()
+	node_added.connect(_on_added)
+	var g := _cast(pc, "air_gust", "gust")
+	await _secs(0.5)
+	node_added.disconnect(_on_added)
+	var fronts := 0
+	var kind := ""
+	for e0: Array in _made:
+		if String(e0[1]) == AirTalents.FRONT_TAG:
+			fronts += 1
+			kind = String(e0[0])
+	var burning := g != null and is_instance_valid(g) and g.burning
+	if is_instance_valid(z):
+		z.queue_free()
+	await _secs(0.5)
+	return {"fronts": fronts, "kind": kind, "burning": burning}
+
+
+func _dragon_fire() -> void:
+	var mate: NpcFighter = null
+	for e: Dictionary in mode.extras:
+		if e.get("bot") is NpcFighter and BendCaster.same_team(e.bot, player):
+			mate = e.bot
+	_expect(mate != null and BendPoses.element_of(mate) == "fire", "Dragon Fire: a fire mate on the player's side")
+	if mate == null:
+		return
+	mate.global_position = _home + Vector3(0.0, 0.0, 6.0)
+	_wear([])
+	var c := await _gust_through(mate)
+	_wear(["air.gust.dragon_fire"])
+	var w := await _gust_through(mate)
+	var f := await _gust_through(foe)
+	_wear([])
+	_expect(int(c.fronts) == 0, "Dragon Fire not worn: his Gust through his mate's Fire Wall passes it as ever (no front)")
+	_expect(int(w.fronts) == 1 and String(w.kind) == "fire",
+			"Dragon Fire: his Gust through his mate's Fire Wall sends one fire front on (%d, %s)" % [w.fronts, w.kind])
+	_expect(int(f.fronts) == 0, "Dragon Fire: a foe's fire wall makes no front (his Gust takes its flame as ever)")
+	# the front's hit: 6% and a set knock of 6, his (the class the node adds), at the foe 3 m on, the deck clear
+	await _stage(8.0)
+	_wear(["air.gust.dragon_fire"])
+	var way := foe.global_position - player.global_position
+	way.y = 0.0
+	var log0 := BendR3.hits_log.size()
+	var pct0 := rules.pct_of(foe)
+	AirTalents.fire_front(player, foe.global_position - way.normalized() * 3.0, way)
+	await _secs(0.6)
+	var hit := false
+	for i in range(mini(log0, BendR3.hits_log.size()), BendR3.hits_log.size()):
+		var e: Dictionary = BendR3.hits_log[i]
+		hit = hit or (e.get("n") == foe and e.get("by") == player and String(e.get("tag", "")) == AirTalents.FRONT_TAG)
+	var d := 6.0 * RingRules.stock_num("pct_scale", 1.0)
+	_expect(hit and _near(rules.pct_of(foe) - pct0, d, 0.05),
+			"Dragon Fire: the front strikes the foe it runs into, his, +%.2f%% (its class: 6 x the scale = %.2f)" % [rules.pct_of(foe) - pct0, d])
+	_expect(BendLoadout.worn_class(foe, AirTalents.FRONT_TAG).is_empty() and RingRules.class_of(AirTalents.FRONT_TAG).is_empty(),
+			"Dragon Fire: the front's class is the wearer's alone (none in the data, none for a body that wears nothing)")
+	_wear([])

@@ -64,7 +64,10 @@
     "air.guard.rebound": true,
     "air.slice.carry_edge": true,
     "air.gust.carrying": true,
-    "air.leap.peak_wind": true
+    "air.leap.peak_wind": true,
+    "air.slip.near_miss": true,
+    "air.patch.second_wind": true,
+    "air.gust.dragon_fire": true
   },
   "behaviour": {
     "air.slice.tailwind": "AirTalents.on_hit (BendR3._noted: a Slice of his that lands charges his Carried wind)",
@@ -73,7 +76,10 @@
     "air.guard.rebound": "AirTalents.on_guard and start_fill (BendZone.report, SwayCaster._try_begin, NpcBending.begin: the next air_blast lock 40% full); hold_max_s by tune (SwayCaster._hold_guard, NpcRingMind.shield_tick)",
     "air.slice.carry_edge": "AirTalents.keeps_carry (BendEffects._apply: a Beat Slice keeps the Carried wind it used); the Beat: SwayCaster._cast, BendR3.info_for, NpcBending._release (AirTalents.beat_worn, bot_beat)",
     "air.gust.carrying": "AirTalents.on_wind_wave and carry_stones (BendEffects.wind_wave, BendBolt._physics_process: a Beat Gust throws the loose stones it crosses on 6 m as pebbles)",
-    "air.leap.peak_wind": "AirTalents.on_dash (BendEffects.dash: a Beat Leap charges his Carried wind at its top, PeakWatch); key 3 held by a Beat wearer: SwayCaster._key3_beat_hold"
+    "air.leap.peak_wind": "AirTalents.on_dash (BendEffects.dash: a Beat Leap charges his Carried wind at its top, PeakWatch); key 3 held by a Beat wearer: SwayCaster._key3_beat_hold",
+    "air.slip.near_miss": "AirTalents.near_m (BendBolt._near_miss: the tune path rules:passives.air.near_m per body); its Slip speed is a spec number",
+    "air.patch.second_wind": "AirTalents.patch_lock (SwayCaster._lock_time, NpcBending.lock_for: 1.25 s within 0.8 s of a dash's end, new:patch.after_dash_lock_s; else stock:patch.lock_s 1.6)",
+    "air.gust.dragon_fire": "AirTalents.through_ally_fire and fire_front (BendZone.on_bolt: his Gust through an ally's Fire Wall or Breath sends a fire front 6 m on); its class by BendLoadout.worn_class (RingRules.on_hit)"
   },
   "live": [
     "air.ball.dense",
@@ -105,6 +111,9 @@
     "air.guard.rebound",
     "air.slice.carry_edge",
     "air.gust.carrying",
-    "air.leap.peak_wind"],
+    "air.leap.peak_wind",
+    "air.slip.near_miss",
+    "air.patch.second_wind",
+    "air.gust.dragon_fire"],
   "styles_live": ["boxing"]
 }

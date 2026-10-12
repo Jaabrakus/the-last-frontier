@@ -18,6 +18,9 @@ game's own casts, locks, guards and hits.
 | Carry the Edge (`air.slice.carry_edge`) | a Slice let go on the Beat while Carried wind is charged is carried and leaves it charged; the Slice adds 10% (11) | `AirTalents.keeps_carry` in `BendEffects._apply` |
 | Carrying Wind (`air.gust.carrying`) | a Gust let go on the Beat takes the loose stones it crosses (anyone's) and throws them on 6 m along its way, each a pebble (`rock_jab/pebbles`: 5%, set knock 3; a stone bolt: a Catch holds it, walls stop it); the Gust's lock 0.5 s (0.45) | `AirTalents.on_wind_wave` (BendEffects.wind_wave), `carry_stones` (BendBolt's flight, `carries`) |
 | Peak Wind (`air.leap.peak_wind`) | a Leap let go on the Beat charges his Carried wind fresh at its top (no extra height); the Leap's lock 0.3 s (0.25) | `AirTalents.on_dash` (BendEffects.dash: `PeakWatch` on him) |
+| Dragon Fire (`air.gust.dragon_fire`) | his Gust through an ally's Fire Wall (or Breath, while its flame is in its smoke: 0.5 s) carries the flame 6 m on as a fire front (a fire floor wave of his: 6%, set knock 6, its own class `air_gust/gust+fire_front`); team only; the Gust adds 9% (10) | `AirTalents.through_ally_fire` / `fire_front` in `BendZone.on_bolt` (before an ally's zone lets it pass); `BendLoadout.worn_class` in `RingRules.on_hit` |
+| Near Miss (`air.slip.near_miss`) | a near miss in his Slip counts within 1.44 m (1.2); his Slip 8.5 m/s (9.5) | `AirTalents.near_m` in `BendBolt._near_miss` (tune path `rules:passives.air.near_m`) |
+| Second Wind (`air.patch.second_wind`) | his Patch begun within 0.8 s of a dash's end locks 1.25 s, any other time 1.6 s (1.5) | `AirTalents.patch_lock` in `SwayCaster._lock_time` and `NpcBending.lock_for` (a bot: as a share of its own Patch lock) |
 
 The Beat (`skill_tree.json` "beat", the owner's yes): a held cast let go within 0.2 s after its lock fills; never a click,
 never a cast that goes by itself. Only a worn technique reads it (`AirTalents.beat_worn`): SwayCaster marks the release
@@ -31,6 +34,12 @@ Two nodes that set the same number to the same value (Tailwind and Carry the Edg
 Wind: the Gust's lock 0.5) no longer refuse each other when worn together (`BendLoadout._fold`: a clash is two values).
 
 Notes:
+- Second Wind's quick lock has its own path in the tree (`new:patch.after_dash_lock_s`, from `stock:patch.lock_s`): its two
+  Patch locks were the one number `stock:patch.lock_s` set twice, which a node may not do (2026-10-11).
+- Near Miss and Second Wind change tune paths only, but needed the seam code, so they are listed in `behaviour` too (that is
+  also how tests/ring/test_loadout_apply.gd picks them up).
+- Dragon Fire is greyed out in 1v1 by the Advancement window's rules (no ally there); in the match it simply never meets an
+  ally's fire.
 - Drift Guard: a direction pressed fresh while the guard is up is still the guard's Roll (RingMoves' ground dodge, as for
   everyone). He walks by holding a direction as he raises the guard, or by keeping one held.
 - Eye of the Gale: E held is the player's guard button (SwayCaster._guard_down); a bot's is its held shield (NpcRingMind.shield:

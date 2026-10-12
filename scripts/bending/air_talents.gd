@@ -16,6 +16,14 @@ extends RefCounted
 ##                                      starts its lock REBOUND_FILL full (once); his held guard's longest stand is the node's
 ##                                      rules:air_rules.guard.hold_max_s (BendLoadout.tune at SwayCaster._hold_guard and the bot's
 ##                                      shield_tick)
+##   Near Miss (air.slip.near_miss)     near_m: a near miss in his Slip counts within the node's 1.44 m (BendBolt._near_miss);
+##                                      his Slip 8.5 m/s is the node's spec number
+##   Second Wind (air.patch.second_wind)  patch_lock: his Patch begun within SECOND_WIND_S of a dash's end locks 1.25 s, else
+##                                      1.6 (SwayCaster._lock_time, NpcBending.lock_for; any worn stock:patch.lock_s too)
+##   Dragon Fire (air.gust.dragon_fire)  through_ally_fire: his Gust through an ally's Fire Wall (or his Breath while its flame is
+##                                      in the smoke, BREATH_HOT_S) carries the flame on FRONT_M as a fire front (a fire floor
+##                                      wave of his: FRONT_TAG, 6%, set knock 6); team only (BendZone.on_bolt, before the same
+##                                      team's pass); a foe's fire wall still lends his air its flame (today's rule)
 ## THE BEAT (skill_tree.json "beat", the owner's yes 2026-10-11): a held cast let go within BEAT_S after its lock fills (never a
 ## click, never a cast that goes by itself). Only a worn technique reads it (beat_worn: its move and mode), so with none worn
 ## the Beat does nothing: SwayCaster marks the release (its `rel`, BendR3.release) and the cast's hit info carries "beat"
@@ -52,6 +60,18 @@ const BEAT_TALENTS := {"air_blast/slice": CARRY_EDGE, "air_gust/gust": CARRYING,
 const BOT_BEAT_RATE := {"easy": 0.0, "normal": 0.2, "hard": 0.5}
 ## Carrying Wind: how far a loose stone the Gust takes is thrown on (m).
 const CARRY_M := 6.0
+const NEAR_MISS := "air.slip.near_miss"
+const DRAGON_FIRE := "air.gust.dragon_fire"
+## Dragon Fire: the front's tag (its whole class the node's: class:air_gust/gust+fire_front, BendLoadout.worn_class), how far it
+## runs (m), and how long an ally's Breath stays fire in its smoke (s: the flame's own warm moment, fx_looks smoke warm_s).
+const FRONT_TAG := "air_gust/gust+fire_front"
+const FRONT_M := 6.0
+const BREATH_HOT_S := 0.5
+const SECOND_WIND := "air.patch.second_wind"
+## Near Miss: the near-miss search reaches this times the passive's near_m (each body then by its own: near_m).
+const NEAR_QUERY_K := 1.5
+## Second Wind: a Patch begun this soon after a dash ends takes the quick lock (s).
+const SECOND_WIND_S := 0.8
 
 
 # ---------------------------------------------------------------- Tailwind
@@ -264,3 +284,54 @@ class PeakWatch extends Node:
 
 ## Peak Wind: the longest it watches a Leap for its top (s).
 const PEAK_WATCH_S := 2.0
+
+
+# ---------------------------------------------------------------- Near Miss
+## How near a bolt must pass `n` in his Slip to charge his Carried wind (m): the passive's `base`, or his worn Near Miss's.
+static func near_m(n: Node, base: float) -> float:
+	return BendLoadout.tune_f(n, "rules:passives.air.near_m", base)
+
+
+# ---------------------------------------------------------------- Second Wind (and any worn Patch lock)
+## `body`'s Patch lock from `base` (the ring's): a worn stock:patch.lock_s (Second Wind's any other time, Whiteout's); Second
+## Wind's quick one when begun within SECOND_WIND_S of a dash's end (BendMotion's bend_dash_end). Classic: `base`.
+static func patch_lock(body: Node, base: float) -> float:
+	var b := BendLoadout.tune_f(body, "stock:patch.lock_s", base)
+	if BendLoadout.wears(body, SECOND_WIND) and BendStatus.now() - float(body.get_meta(&"bend_dash_end", -INF)) <= SECOND_WIND_S:
+		b = BendLoadout.tune_f(body, "new:patch.after_dash_lock_s", b)
+	return b
+
+
+# ---------------------------------------------------------------- Dragon Fire
+## Bolt `b` in zone `z` (BendZone.on_bolt, before an ally's zone lets it pass): a Dragon Fire wearer's Gust through an ally's
+## Fire Wall, or his Breath while its flame is in its smoke, sends a fire front on along its way (fire_front), once a zone. True
+## when it did (the Gust flies on either way).
+static func through_ally_fire(z: BendZone, b: BendBolt) -> bool:
+	if b.spent or b.kind != "air" or b.floor_wave or String(b.info.get("tag", "")) != "air_gust/gust":
+		return false
+	var by := b._by()
+	if by == null or z.owner_node == null or z.owner_node == by or not BendCaster.same_team(by, z.owner_node):
+		return false
+	var fire := z.kind == "fire_wall" or (z.kind == "smoke" and z.t <= BREATH_HOT_S and BendPoses.element_of(z.owner_node) == "fire")
+	if not fire or not BendLoadout.wears(by, DRAGON_FIRE) or not z.inside(b.global_position):
+		return false
+	var done: Array = b.get_meta(&"air_fronts", [])
+	if done.has(z.get_instance_id()):
+		return false
+	done.append(z.get_instance_id())
+	b.set_meta(&"air_fronts", done)
+	fire_front(by, b.global_position, Vector3(b.velocity.x, 0.0, b.velocity.z))
+	return true
+
+
+## Dragon Fire's front: a fire floor wave of `by`'s from where his Gust took the flame (`at`) along `way`, FRONT_M (BendBolt's
+## floor wave: it runs on the deck, a jump clears it, walls stop it, a Parry takes it). Its hit is FRONT_TAG's class.
+static func fire_front(by: Node3D, at: Vector3, way: Vector3) -> BendBolt:
+	var flat := way.normalized() if way.length_squared() > 1e-6 else -by.global_basis.z
+	var g := FormEffects.ground_at(by, at)
+	var info := {"tag": FRONT_TAG, "move": "air_gust", "mode": "gust", "from": g, "air": false, "released_at": BendStatus.now()}
+	var spec := {"do": "floor_wave", "kind": "fire", "mps": 16.0, "range_m": FRONT_M, "width_m": 2.4, "height_m": 0.9,
+			"damage": 8.0, "knock_mps": 6.0, "up_mps": 2.0, "_lock_s": BendEffects.lock_of("air_gust", "gust"), "_info": info}
+	BendLooks.burst(g + Vector3.UP * 0.8, "fire", 22, flat + Vector3.UP * 0.3, 70.0, 5.0, 0.3)
+	BendSounds.play(&"fire_crackle", g, 0.0)
+	return BendBolt.launch(by, g + flat * 0.4, flat, spec)

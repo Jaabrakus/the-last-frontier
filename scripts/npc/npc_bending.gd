@@ -478,6 +478,11 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		if mlk.has(md):
 			base = float(mlk[md])
 		base = BendLoadout.lock(who, id, md, base)         # (`who` wears a loadout live: its own lock for this mode; else base)
+		if id == "patch" and who != null:
+			# (a worn talent's Patch lock, Second Wind, as its share of the ring's Patch lock: a bot's Patch lock is its own;
+			# Classic x1)
+			var ring := float(d.get("ring_lock_s", base))
+			base *= AirTalents.patch_lock(who, ring) / maxf(ring, 0.01)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)

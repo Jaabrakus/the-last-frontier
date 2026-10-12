@@ -1153,6 +1153,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	elif tag != "":
 		cls = class_of(tag)
 		cls = BendLoadout.hit_class(by, cls)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)
+		if cls.is_empty():
+			cls = BendLoadout.worn_class(by, tag)  # (a whole class a worn talent adds: Dragon Fire's front; Classic: none)
 	var untagged := cls.is_empty()
 	if untagged:
 		cls = _untagged_class(info)

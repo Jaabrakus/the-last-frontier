@@ -2462,7 +2462,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
 	if r3() and m == "patch":
-		base = float(d.get("ring_lock_s", base))  # (round 3, spec §8: Patch's own lock in the % ring)
+		base = AirTalents.patch_lock(player, float(d.get("ring_lock_s", base)))  # (round 3, spec §8: Patch's own lock in the % ring;
+		                                                                         # a worn talent's, Second Wind)
 	# (a perfect guard's cast reward, or a parried caster's penalty: BendStatus.parry_reward; this one cast's, spent as it goes)
 	var cm := BendStatus.cast_mult(player) if elem() else 1.0
 	_cm_used = cm
