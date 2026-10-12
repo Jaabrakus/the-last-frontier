@@ -201,6 +201,18 @@ static func mat(key: String) -> ShaderMaterial:
 		"wind_arc":
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1}
+		"wind_arc_slice":
+			# (the Slice's blade: a deeper blue edge and an ink line, so it reads on the pale planks and apart from the Gust's
+			# pale wave; the move review 2026-10-12)
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.12, "glow": 1.25,
+					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.12, 0.28, 0.55), "ink": 0.7}
+		"wind_arc_pull":
+			# (the Pull's hook: teal, inked, its curve facing back to the caster)
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.15, "glow": 1.15,
+					"c_main": Color(0.85, 1.0, 0.97, 0.92), "c_edge": Color(0.25, 0.75, 0.75, 0.85), "c_ink": Color(0.08, 0.35, 0.38),
+					"ink": 0.6}
 		"ice":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
@@ -359,6 +371,28 @@ static func band_mesh(r0: float, r1: float, h: float, segs := 28) -> Mesh:
 		for i in segs:
 			var a0 := TAU * i / segs
 			var a1 := TAU * (i + 1) / segs
+			var u0 := float(i) / segs
+			var u1 := float(i + 1) / segs
+			var p00 := Vector3(cos(a0) * r0, 0.0, sin(a0) * r0)
+			var p10 := Vector3(cos(a1) * r0, 0.0, sin(a1) * r0)
+			var p01 := Vector3(cos(a0) * r1, h, sin(a0) * r1)
+			var p11 := Vector3(cos(a1) * r1, h, sin(a1) * r1)
+			for v: Array in [[p00, Vector2(u0, 0)], [p01, Vector2(u0, 1)], [p11, Vector2(u1, 1)],
+					[p00, Vector2(u0, 0)], [p11, Vector2(u1, 1)], [p10, Vector2(u1, 0)]]:
+				st.set_uv(v[1])
+				st.set_normal(Vector3((v[0] as Vector3).x, 0.0, (v[0] as Vector3).z).normalized())
+				st.add_vertex(v[0])
+		return st.commit())
+
+
+## An open band round local Y like band_mesh, but only `span` rad of it, centred on -Z (forward): a wave's front.
+static func band_arc_mesh(r0: float, r1: float, h: float, span: float, segs := 16) -> Mesh:
+	return _cached("band_arc_%.2f_%.2f_%.2f_%.2f_%d" % [r0, r1, h, span, segs], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in segs:
+			var a0 := -PI * 0.5 + span * (float(i) / segs - 0.5)
+			var a1 := -PI * 0.5 + span * (float(i + 1) / segs - 0.5)
 			var u0 := float(i) / segs
 			var u1 := float(i + 1) / segs
 			var p00 := Vector3(cos(a0) * r0, 0.0, sin(a0) * r0)

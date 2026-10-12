@@ -111,6 +111,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 	if shape == "spear" and kind in ["stone", "ice", "air"]:
 		_spear_body(parent, kind, r)
 		return
+	if kind == "air" and shape in ["slice", "pull"]:
+		_air_blade(parent, r, shape)
+		return
 	match kind:
 		"fire":
 			_fire_body(parent, r, long)
@@ -228,7 +231,9 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 		_glow(parent, Vector3(w * 3.2, w * 2.0, 1.0), Vector3.ZERO)
 	else:
 		_air_dust(parent)
-	arc.rotation = Vector3(0.35, 0.0, 0.0)                    # (flat across its flight, tipped up a little: the kick's sweep)
+	# (flat across its flight, tipped up a little: the kick's sweep; fire's High Kick stood up into a rising sweep, the move
+	# review 2026-10-12: the flame went out flat, not like an uppercut)
+	arc.rotation = Vector3(1.05 if kind == "fire" else 0.35, 0.0, 0.0)
 	arc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
 	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "orb"))
 	o.scale = Vector3.ONE * w * 0.9
@@ -243,6 +248,26 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 		l.omni_range = 3.5
 		l.shadow_enabled = false
 		parent.add_child(l)
+
+
+## Air's Slice and Pull told apart from the Gust's pale wave (the move review 2026-10-12: all three a thin white streak): the
+## Slice a wider, thinner blade with a deep blue inked edge, flat across its flight; the Pull a teal hook whose curve faces back
+## to the caster (it draws him in), a second smaller hook inside it. Small as the Gust (the owner, 2026-10-11, hated a big air
+## wave): shape and colour, not size.
+static func _air_blade(parent: Node3D, r: float, shape: String) -> void:
+	if shape == "slice":
+		var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.28, 2.6), ToonFx.mat("wind_arc_slice"))
+		arc.scale = Vector3.ONE * r * 6.5
+		_core(arc)
+	else:
+		for i in 2:
+			var hook := _mesh(parent, ToonFx.arc_mesh(1.0, 0.34, 2.2), ToonFx.mat("wind_arc_pull"))
+			hook.scale = Vector3.ONE * r * (5.0 - 1.8 * i)
+			hook.rotation = Vector3(0.0, PI, 0.0)            # (its bulge toward the caster: a hook pulling back)
+			hook.position = Vector3(0.0, 0.0, r * 1.2 * i)
+			hook.set_instance_shader_parameter(&"seed", 0.37 * i)
+			_core(hook)
+	_air_dust(parent)
 
 
 ## A thrown spear (its point -Z, along its flight). Ice: a long thin crystal shaft and a heavy faceted head on it, a glint at
@@ -910,6 +935,87 @@ static func blast(at: Vector3, dir: Vector3, deg: float, reach: float, kind: Str
 			burst(at, kind, n, d, half, v, 0.45)
 
 
+## Patch on `body` (round 3's heal: the fresh % taken back), in element `el`'s matter: three rings rising from his feet to his chest,
+## each closing in on him, and the matter drawn up round him (stone flakes, drops, embers, wisps), a light at his middle. Round
+## him, never over his face (the move review 2026-10-12: Patch showed only a circle at the feet).
+static func patch_glow(body: Node3D, el: String) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	var cols: Array = {"earth": [DUST, DUST_LIGHT], "water": [WATER, FOAM], "fire": [FIRE, FIRE_HOT]}.get(el, [AIR, Color(0.6, 0.82, 1.0)])
+	var h := body_h(body)
+	pool.light(body.global_position + Vector3.UP * h * 0.5, (cols[1] as Color), 2.5, 0.5, 3.5)
+	for i in 3:
+		tree.create_timer(0.11 * i, false).timeout.connect(_patch_ring.bind(body, el, h * (0.06 + 0.36 * i), cols))
+
+
+## One of Patch's rings on `body` at `y` over his feet, closing in, and its element's matter drawn up from it.
+static func _patch_ring(body: Node3D, el: String, y: float, cols: Array) -> void:
+	var p2 := _pool()
+	if p2 == null or not is_instance_valid(body):
+		return
+	var at := body.global_position + Vector3.UP * y
+	p2.play("ring", Transform3D(Basis.IDENTITY, at), 0.42, 1.0, 0.5, cols[0], cols[1])
+	match el:
+		"earth":
+			p2.shoot("chunk", at, 7, Vector3.UP, 30.0, Vector2(0.8, 1.6), Vector2(0.05, 0.1), 0.5, Vector3(0, -2.0, 0), 0.0, {"r": 0.55})
+		"water":
+			p2.shoot("drop", at, 10, Vector3.UP, 25.0, Vector2(1.0, 2.0), Vector2(0.05, 0.1), 0.5, Vector3(0, -3.0, 0), 0.0, {"r": 0.5})
+		"fire":
+			p2.shoot("spark_fire", at, 12, Vector3.UP, 25.0, Vector2(1.0, 2.4), Vector2(0.03, 0.05), 0.6, Vector3(0, 1.0, 0), 0.5,
+					{"r": 0.5})
+		_:
+			p2.shoot("spark_line", at, 10, Vector3.UP, 20.0, Vector2(1.5, 3.0), Vector2(0.03, 0.04), 0.4, Vector3.ZERO, 1.0,
+					{"r": 0.55})
+
+
+## The Wave's water going out from `at` (the caster's chest) along `dir`, `deg` wide, to `reach` m at `mps` (BendEffects.cone's
+## travel_mps: its hits land as this front reaches them, the move review 2026-10-12: he flew before the foam got there): a blue
+## curl of water, `tall` m, risen afresh every step along the way, spray thrown off its lip and drops left on the deck.
+static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps: float, tall := 1.2) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	var d := Vector3(dir.x, 0.0, dir.z).normalized()
+	if d.length_squared() < 1e-6:
+		return
+	var foot := FormEffects.ground_at(pool, at)
+	var span := deg_to_rad(clampf(deg, 20.0, 160.0))
+	var mesh := ToonFx.band_arc_mesh(1.0, 1.12, 1.0, span)
+	var look := Basis.looking_at(d, Vector3.UP)
+	pool.shoot("drop", at, 16, d, deg * 0.4, Vector2(4.0, 8.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -10, 0), 0.0)
+	var steps := clampi(int(ceil(reach / 0.55)), 6, 24)
+	for i in steps:
+		var r := 0.7 + (reach - 0.7) * float(i + 1) / steps
+		var h := tall * lerpf(0.75, 1.0, sin(PI * float(i + 1) / (steps + 1)))   # (it swells, then breaks at its end)
+		var wait := r / maxf(mps, 1.0)
+		var last := i == steps - 1
+		tree.create_timer(maxf(wait - 0.04, 0.0), false).timeout.connect(func() -> void:
+			var p2 := _pool()
+			if p2 == null:
+				return
+			var xf := Transform3D(look * Basis.from_scale(Vector3(r, h, r)), foot + Vector3.UP * 0.02)
+			p2.play("crown", xf, 0.32, 1.0, 1.06, WATER, FOAM, mesh)
+			var lip := foot + d * r + Vector3.UP * h
+			p2.shoot("foam", lip, 3, d + Vector3.UP * 0.6, 50.0, Vector2(1.0, 2.5), Vector2(0.25, 0.45), 0.4, Vector3(0, -3, 0), 1.5,
+					{"r": r * sin(span * 0.5) * 0.8})
+			p2.shoot("drop", lip, 5, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0), 0.0,
+					{"r": r * sin(span * 0.5) * 0.8})
+			if last:
+				p2.shoot("foam", foot + d * r + Vector3.UP * 0.3, 10, d + Vector3.UP, 70.0, Vector2(1.0, 3.0), Vector2(0.3, 0.6), 0.6,
+						Vector3(0, -2, 0), 1.0, {"r": r * sin(span * 0.5)}))
+
+
 ## The dust and cracks along the foot of an earth wall coming up at `at` (its foot's middle), `size` (x across), facing
 ## `way`; `matter` "ice" for an ice wall (frost and sparkles in place of dust).
 static func rise(at: Vector3, size: Vector3, way: Vector3, matter := "earth") -> void:
@@ -971,11 +1077,13 @@ static func lightning(a: Vector3, b: Vector3) -> void:
 	var c1 := SB_VIOLET if sb_bolt else ELEC
 	var c2 := SB_LAVENDER if sb_bolt else Color(0.85, 0.92, 1.0)
 	var back := (a - b).normalized()
+	# (the stroke held 0.36 s, four flickers: at 0.26 it was gone between two looks, the move review 2026-10-12; the strike's
+	# timing is the spec's flash_s, not this)
 	if sb_bolt:
-		sb_strike(pool, a, b, 0.26, 3)
-		_sb_crackle(pool, b, back, SB_HIT_FORKS, 0.26)
+		sb_strike(pool, a, b, 0.36, 4)
+		_sb_crackle(pool, b, back, SB_HIT_FORKS, 0.36)
 	else:
-		pool.lightning(a, b, 0.26, 3)
+		pool.lightning(a, b, 0.36, 4)
 	pool.play("flash", Transform3D(Basis.IDENTITY, b), 0.2, 0.6, 1.8, c1, c2)
 	pool.play("flash", Transform3D(Basis.IDENTITY, a), 0.12, 0.3, 0.8, c1, c2)
 	pool.shoot("spark_sb" if sb_bolt else "spark_elec", b, 26, back, 75.0, Vector2(3.0, 9.0), Vector2(0.025, 0.045), 0.35,

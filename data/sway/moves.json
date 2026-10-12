@@ -231,6 +231,22 @@
               "bump": 0.8
             }
           },
+          "ice": {
+            "_doc": "Water's Ice Wall's shape only (BendEffects._ice_look: its rules are the snow wall's; the move review 2026-10-12, the packed-snow slab read as stone): smooth, sharp-edged, drawn in ToonFx's ice crystal over this look.",
+            "label": "ice",
+            "shape": {"bump": 0.2, "batter_m": 0.05, "top_m": 0.04, "sag_m": 0.0, "round_m": 0.06},
+            "look": {
+              "kind": "snow",
+              "a": [0.66, 0.88, 1.0],
+              "b": [0.46, 0.76, 0.98],
+              "d": [0.26, 0.55, 0.86],
+              "foot": [0.5, 0.78, 0.95],
+              "foot_h": 0.12,
+              "scale": 1.5,
+              "rough": 0.2,
+              "bump": 0.35
+            }
+          },
           "wood": {
             "label": "wood",
             "surface": "wood",
@@ -914,7 +930,9 @@
           "knock_mps": 10.0,
           "up_mps": 2.5,
           "put_out": true,
-          "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0},
+          "travel_mps": 18.0,
+          "tall_m": 1.2,
+          "grow": {"range_m": 12.0, "deg": 65.0, "knock_mps": 13.0, "tall_m": 1.8},
           "air": "slam"
         },
         "slam": {"do": "slam", "kind": "water", "label": "Downpour", "width_m": 3.2, "depth_m": 3.0, "lean_m": 1.5, "active_s": 0.12, "damage": 16.0, "knock_mps": 7.0, "angle_deg": -70.0, "set_stun": 0.3, "bounce_k": 0.45, "bounce_add": 2.0, "put_out": true, "puddle": {"radius_m": 1.6, "life_s": 6.0}},
@@ -1552,6 +1570,7 @@
           "do": "wind_wave",
           "kind": "air",
           "pull": true,
+          "shape": "pull",
           "width_m": 2.0,
           "height_m": 2.0,
           "mps": 18.0,
@@ -1589,6 +1608,7 @@
         "slice": {
           "do": "bolt",
           "kind": "air",
+          "shape": "slice",
           "mps": 45.0,
           "damage": 18.0,
           "knock_mps": 4.0,

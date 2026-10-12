@@ -244,7 +244,10 @@ static func _apply(bc: BendCaster, m: String, mode: String, spec: Dictionary, gr
 			if bool(_cur.get("patched", false)):
 				SbFx.fire(p, sbk, "heal_pop", {"dir": a.flat})
 			if not SbFx.fire(p, sbk, "heal", {"node": p, "dir": a.flat}):
-				BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
+				if m == "patch":
+					BendLooks.patch_glow(p, BendPoses.element_of(p))   # (round him in his element's matter, feet to chest)
+				else:
+					BendLooks.burst(p.global_position + Vector3.UP, "water" if kind == "water" else "air", 20, Vector3.UP, 60.0, 1.5)
 		"cleanse":
 			for k: StringName in [&"bend_root", &"bend_slow"]:
 				if p.has_meta(k) and NetSpells.owns(p):
@@ -425,36 +428,28 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 	BendStatus.rescue_near(p, p.global_position + flat * r * 0.5, r * 0.6)   # (a held teammate in its reach freed)
 	var info: Dictionary = spec.get("_info", {})
 	var hit := 0
+	var travel := 0.0 if ring else float(spec.get("travel_mps", 0.0))
+	var o := p.global_position
 	for e in BendCaster.near(p, p.global_position, r):
 		var n: Node3D = e[0]
 		var to := n.global_position - p.global_position
 		to.y = 0.0
 		if not ring and to.length() > 0.3 and rad_to_deg(to.normalized().angle_to(flat)) > deg * 0.5:
 			continue
-		var inf := info
-		var gm := 1.0
-		if BendR3.stock():
-			# (round 3: every guard a shield, spec §2.5: perfect nothing, late half as a slide)
-			var g := BendZone.guard_take(n, kind, p, info)
-			if String(g.result) == "perfect":
-				continue
-			gm = float(g.mult)
-			inf = g.info
+		if travel > 0.0:
+			# (a travelling cone, the Wave: it lands as its water reaches him, BendLooks.wave_front; still in its way then, a
+			# little slack for the front's width: the move review 2026-10-12, he flew before the foam got there)
+			var wait := maxf(to.length() - 0.5, 0.0) / travel
+			p.get_tree().create_timer(wait, false).timeout.connect(func() -> void:
+				if not is_instance_valid(p) or not is_instance_valid(n) or not n.is_inside_tree():
+					return
+				var t2 := n.global_position - o
+				t2.y = 0.0
+				if t2.length() > r + 1.0 or (t2.length() > 0.3 and rad_to_deg(t2.normalized().angle_to(flat)) > deg * 0.5 + 12.0):
+					return
+				_cone_hit(p, n, t2, flat, spec, kind, info))
 		else:
-			gm = BendZone.cone_mult(n, kind, p)
-			if gm <= 0.0:
-				continue                          # (parted round him on the beat)
-		var away := to.normalized() if to.length_squared() > 1e-4 else flat
-		BendR3.deliver(n, float(spec.get("damage", 0.0)) * gm, n.global_position + Vector3.UP, away, p, float(spec.get("_lock_s", -1.0)),
-				(away * float(spec.get("knock_mps", 0.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))) * gm, inf)
-		SbFx.fire(p, SbFx.key_of(info), "hit_body", {"at": n.global_position + Vector3.UP, "dir": away, "info": info})
-		if float(spec.get("root_s", 0.0)) > 0.0:
-			BendStatus.root(n, float(spec.root_s))
-		if float(spec.get("slow_s", 0.0)) > 0.0:
-			BendStatus.slow(n, float(spec.slow_s))
-		if float(spec.get("dazzle_s", 0.0)) > 0.0:
-			# (a flare's flash: a bot so dazzled aims wider and answers later, NpcBendCaster.dazzled)
-			n.set_meta(&"bend_dazzle_until", BendStatus.now() + float(spec.dazzle_s))
+			_cone_hit(p, n, to, flat, spec, kind, info)
 		hit += 1
 	_cur["hit"] = hit
 	if not ring and String(info.get("tag", "")).get_slice(".", 0) == "wave/push":
@@ -489,9 +484,47 @@ static func cone(p: Node3D, from: Vector3, flat: Vector3, spec: Dictionary, ring
 				if oz != null and oz.kind == "smoke" and oz.owner_node == p and not oz.is_queued_for_deletion():
 					oz.end()
 		_cur["smoke"] = BendZone.make(p, "smoke", at, {"radius_m": maxf(r * 0.45, 1.5), "life_s": float(spec.smoke_s)}, flat)
-	if not SbFx.fire(p, SbFx.key_of(info), "cone", {"at": p.global_position + Vector3.UP * 1.1, "dir": flat, "radius": r,
+	if travel > 0.0:
+		BendLooks.wave_front(p.global_position + Vector3.UP * 1.1, flat, deg, r, travel, float(spec.get("tall_m", 1.2)))
+	elif not SbFx.fire(p, SbFx.key_of(info), "cone", {"at": p.global_position + Vector3.UP * 1.1, "dir": flat, "radius": r,
 			"to": p.global_position + Vector3.UP * 1.1 + flat * r, "info": info}):
 		BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind)
+		if kind == "fire" and float(spec.get("smoke_s", 0.0)) > 0.0 and not ring:
+			# (Breath breathed out a while, not one puff: the flame kept 0.35 s more before its smoke, the move review
+			# 2026-10-12; looks only, the hit was the cone's above)
+			for i in 2:
+				p.get_tree().create_timer(0.14 * (i + 1), false).timeout.connect(func() -> void:
+					if is_instance_valid(p):
+						BendLooks.blast(p.global_position + Vector3.UP * 1.1, flat, deg, r, kind))
+
+
+## One body `n` the cone reached, `to` (flat) from the caster: its guard's share taken, then the hit (the cone's at once, or
+## its travelling water's as it arrives).
+static func _cone_hit(p: Node3D, n: Node3D, to: Vector3, flat: Vector3, spec: Dictionary, kind: String, info: Dictionary) -> void:
+	var inf := info
+	var gm := 1.0
+	if BendR3.stock():
+		# (round 3: every guard a shield, spec §2.5: perfect nothing, late half as a slide)
+		var g := BendZone.guard_take(n, kind, p, info)
+		if String(g.result) == "perfect":
+			return
+		gm = float(g.mult)
+		inf = g.info
+	else:
+		gm = BendZone.cone_mult(n, kind, p)
+		if gm <= 0.0:
+			return                                # (parted round him on the beat)
+	var away := to.normalized() if to.length_squared() > 1e-4 else flat
+	BendR3.deliver(n, float(spec.get("damage", 0.0)) * gm, n.global_position + Vector3.UP, away, p, float(spec.get("_lock_s", -1.0)),
+			(away * float(spec.get("knock_mps", 0.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))) * gm, inf)
+	SbFx.fire(p, SbFx.key_of(info), "hit_body", {"at": n.global_position + Vector3.UP, "dir": away, "info": info})
+	if float(spec.get("root_s", 0.0)) > 0.0:
+		BendStatus.root(n, float(spec.root_s))
+	if float(spec.get("slow_s", 0.0)) > 0.0:
+		BendStatus.slow(n, float(spec.slow_s))
+	if float(spec.get("dazzle_s", 0.0)) > 0.0:
+		# (a flare's flash: a bot so dazzled aims wider and answers later, NpcBendCaster.dazzled)
+		n.set_meta(&"bend_dazzle_until", BendStatus.now() + float(spec.dazzle_s))
 
 
 ## The Wave's skill tree talents (BendLoadout.wears: the caster's own; Classic never here), its cone `r` m along `flat` cast:
@@ -595,6 +628,10 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	var bm := BendMotion.of(p)
 	bm.carry(dir * fwd, 0.25)
 	bm.dash_began(up)
+	if bool(spec.get("by_pitch", false)) and kind == "fire":
+		bm._trail("fire")                         # (Jets: flame under his feet while it carries him, the move review 2026-10-12)
+	elif float(spec.get("under_s", 0.0)) > 0.0:
+		bm._trail("stone")                        # (Burrow: a wake of broken earth along the line he went under)
 	AirTalents.on_dash(p, spec)                     # (Peak Wind's Beat Leap: Carried wind at its top; Classic none)
 	if float(spec.get("under_s", 0.0)) > 0.0:
 		p.set_meta(&"bend_under_until", BendStatus.now() + float(spec.under_s))
@@ -1114,10 +1151,22 @@ static func ice_wall(c: Variant, flat: Vector3, spec := {}) -> FormRaised:
 	var x := Vector3.UP.cross(flat).normalized()
 	var r := _wall(p, Transform3D(Basis(x, Vector3.UP, flat), foot), "snow", -1.0, -1.0, true)     # (true: the wearer's Ice Wall numbers)
 	r.set_meta(&"bend_ice", true)
+	_ice_look(r)
 	FormRaised.count_wall(r)                 # (ice walls count with the earth walls: rules.json max_walls)
 	if not bool(r.get_meta(&"sbfx_rise", false)):
 		BendLooks.burst(foot + Vector3.UP, "ice", 24)
 	return r
+
+
+## An ice wall drawn as ice (earth_wall.wall.materials.ice's shape: smooth, sharp-edged; ToonFx's ice crystal), its rules the
+## snow wall's.
+static func _ice_look(r: FormRaised) -> void:
+	if r == null or r.mesh_instance == null or r.kind != "wall":
+		return
+	r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, absi(hash(r.base.origin)) % 97, FormModels.BURY_M, "ice")
+	# (the Ice Spear's crystal: flat facets in three blues and a light rim, still ice on its shaded side, where the matter's
+	# look went slate)
+	r.mesh_instance.material_override = ToonFx.mat("ice")
 
 
 static func freeze_water(c: Variant, at: Vector3, flat: Vector3) -> void:
@@ -1131,6 +1180,7 @@ static func freeze_water(c: Variant, at: Vector3, flat: Vector3) -> void:
 			bz.end()
 			var r := _wall(p, Transform3D(xf.basis.orthonormalized(), xf.origin), "snow")
 			r.set_meta(&"bend_ice", true)
+			_ice_look(r)
 			FormRaised.count_wall(r)
 			BendLooks.burst(xf.origin + Vector3.UP, "ice", 30)
 			_cur["froze"] = r

@@ -295,6 +295,7 @@ func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null
 		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
 		if not SbFx.fire(null, String(get_meta(&"sbfx_key", "")), "hit", {"at": point, "normal": nrm, "dir": nrm, "node": self}):
 			_chips(get_tree().current_scene, point, nrm, 10)
+		_crack(point, nrm)
 	if hits >= hits_max:
 		crumble("shot")
 
@@ -333,10 +334,44 @@ func worn() -> bool:
 	return state != State.CRUMBLING and hits > 0
 
 
-## Packed again (mend): its hits gone, its time begun again.
+## Packed again (mend): its hits gone, its time begun again, its cracks closed.
 func mend() -> void:
 	hits = 0
 	age = 0.0
+	for c in _cracks:
+		if is_instance_valid(c):
+			var tw := c.create_tween()
+			tw.tween_property(c, "scale", Vector3.ONE * 0.05, 0.35)
+			tw.tween_callback(c.queue_free)
+	_cracks.clear()
+
+
+## The hits it has taken shown on it (the move review 2026-10-12: a worn wall looked whole, so Mend had nothing to show):
+## a crack mark on its face where each landed, its own child (it moves and goes with it; mend closes them). Wood shows none.
+var _cracks: Array[MeshInstance3D] = []
+func _crack(point: Vector3, nrm: Vector3) -> void:
+	if matter == "wood" or kind != "wall" or not BendLooks.live():
+		return
+	var face := global_basis.z.normalized()
+	if face.dot(nrm) < 0.0:
+		face = -face                              # (the face it was struck on)
+	var x := face.cross(Vector3.UP).normalized()
+	if x.length_squared() < 1e-6:
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "Crack"
+	mi.mesh = ToonFx.plane()
+	mi.material_override = ToonFx.mat("mark_cracks")
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_instance_shader_parameter(&"t", 0.0)
+	mi.set_instance_shader_parameter(&"seed", float(hits) * 3.7 + float(get_instance_id() % 13))
+	add_child(mi)
+	var b := Basis(x, face, x.cross(face)).rotated(face, float(hits) * 1.9)
+	var on := global_position + face * (size.z * 0.5 + 0.06)
+	var local := point - global_position
+	var at := on + x * clampf(local.dot(x), -size.x * 0.4, size.x * 0.4) + Vector3.UP * clampf(point.y - global_position.y, 0.3, size.y - 0.3)
+	mi.global_transform = Transform3D(b.scaled(Vector3.ONE * 0.65), at)
+	_cracks.append(mi)
 
 
 func crumble(why: String) -> void:

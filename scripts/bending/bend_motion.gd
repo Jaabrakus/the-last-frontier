@@ -39,6 +39,17 @@ static func of(n: CharacterBody3D) -> BendMotion:
 func carry(v: Vector3, s: float) -> void:
 	_carry = Vector3(v.x, 0.0, v.z)
 	_carry_t = s
+	_watch_short(s)
+
+
+## The slide after a dash, a run or a ride watched for a body in its way for `s` + SHORT_S (its own easing carries him on
+## after the carry: _stop_short).
+var _short_until := -INF
+var _short_from := -INF
+const SHORT_S := 1.0
+func _watch_short(s: float) -> void:
+	_short_from = BendStatus.now()
+	_short_until = _short_from + s + SHORT_S
 
 
 func fall(mps: float, s: float, kind: String) -> void:
@@ -51,6 +62,7 @@ func fall(mps: float, s: float, kind: String) -> void:
 func run(mps: float, s: float, kind: String) -> void:
 	_run = mps
 	_run_t = s
+	_watch_short(s)
 	_trail(kind)
 
 
@@ -103,6 +115,7 @@ func ride(dir: Vector3, m: float, s: float) -> void:
 	_ride = flat * m / maxf(s, 0.01)
 	_ride_t = maxf(s, 0.01)
 	_ride_from = BendStatus.now()
+	_watch_short(s)
 	_trail("water")
 
 
@@ -154,6 +167,12 @@ func _physics_process(dt: float) -> void:
 			body.velocity.z = _carry.z
 	if _ride_t > 0.0:
 		_ride_step(dt)
+	if BendStatus.now() < _short_until:
+		var kn := BendKnock.peek(body)
+		if kn != null and kn.last_knock_at >= _short_from:
+			_short_until = -INF                   # (knocked since: the blow's motion, never cut)
+		else:
+			_stop_short(dt)
 	if _dash == 1 and _carry_t <= 0.0:
 		_dash_end()
 	elif _dash == 2:
@@ -181,6 +200,40 @@ func _physics_process(dt: float) -> void:
 	if not active() and _fx != null and is_instance_valid(_fx):
 		BendLooks.stop_trail(_fx)
 		_fx = null
+
+
+## A dash, a run or a ride (and the slide after it, _watch_short) stops SHORT_M before a body in its way (fighters pass
+## through each other: Burrow, Surf and Jets ended inside the foe, the move review 2026-10-12): what is left of it ended,
+## his speed toward that body cut to what reaches SHORT_M. Not one far above or below (a jet jump over him).
+const SHORT_M := 1.0
+func _stop_short(dt: float) -> void:
+	var v := Vector3(body.velocity.x, 0.0, body.velocity.z)
+	var sp := v.length()
+	if sp < 1.5:
+		return
+	var way := v / sp
+	var at := body.global_position
+	for e in BendCaster.near(body, at, SHORT_M + sp * dt + 0.8):
+		var n: Node3D = e[0]
+		if n == body or absf(n.global_position.y - at.y) > 1.5:
+			continue
+		var to := n.global_position - at
+		to.y = 0.0
+		var along := to.dot(way)
+		if along <= 0.05 or (to - way * along).length() > 0.75:
+			continue
+		if along - sp * dt > SHORT_M:
+			continue
+		_carry_t = 0.0
+		_run_t = 0.0
+		_ride_t = 0.0
+		var keep := maxf(along - SHORT_M, 0.0) / maxf(dt, 1e-3)
+		var toward := to.normalized()
+		var vt := v.dot(toward)
+		if vt > keep:
+			body.velocity.x -= toward.x * (vt - keep)
+			body.velocity.z -= toward.z * (vt - keep)
+		return
 
 
 ## The ride's frame: its own share on top of his own way (whatever his easing did since: its distance exact), the knock's carry

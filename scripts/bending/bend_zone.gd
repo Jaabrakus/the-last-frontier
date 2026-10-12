@@ -268,8 +268,10 @@ func _look() -> void:
 			_fx.append(BendLooks.emitter(self, "water", Vector3(radius * 0.7, 0.05, radius * 0.7), 14, 0.6, 1.6, 0.12))
 			_grow(look, Vector3.ONE * 0.05)
 		"air_shield":
+			# (bands thinner than they were, 0.26 of its round high: the dome of wind hid the guard almost whole, the move review
+			# 2026-10-12)
 			for i in 3:
-				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.45), ToonFx.mat(["wind_band", "wind_band_slow", "wind_band_fast"][i]))
+				var b := _part(look, ToonFx.band_mesh(1.0, 0.95, 0.26), ToonFx.mat(["wind_band", "wind_band_slow", "wind_band_fast"][i]))
 				b.scale = Vector3.ONE * radius * (1.0 - i * 0.07)
 				b.position = Vector3.UP * (0.3 + i * 0.62)
 				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
@@ -327,8 +329,10 @@ func _look() -> void:
 			if gl != null:
 				_fx.append(gl)
 		"smoke", "dust", "spray", "snow":
-			var cl := BendLooks.emitter(self, "smoke" if kind == "smoke" else ("dust" if kind == "dust" else "foam"),
-					Vector3(radius, 0.8, radius), 40, 2.2, 0.6, 1.6)
+			# (smoke: more and smaller puffs, a haze over the same round rather than a few grey lumps; the move review 2026-10-12)
+			var sm := kind == "smoke"
+			var cl := BendLooks.emitter(self, "smoke" if sm else ("dust" if kind == "dust" else "foam"),
+					Vector3(radius, 0.8, radius), 84 if sm else 40, 1.6 if sm else 2.2, 0.6, 0.8 if sm else 1.6)
 			_fx.append(cl)
 			if kind == "smoke" and cl != null:
 				# (round 4: lit warm from under by the flame that made it, for its first warm_s)
@@ -396,11 +400,13 @@ func _look() -> void:
 				_fx.append(BendLooks.emitter(self, "embers", Vector3(0.4, 0.4, 0.2), 10, 0.5, 1.0, 0.05))
 				_grow(look, Vector3.ONE * 0.3)
 		"wind_wall":
-			# (a standing wall of moving wind: bands streaming across its face, dust whipped up along its foot)
-			for i in 4:
-				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.5), ToonFx.mat(["wind_band", "wind_band_fast", "wind_band_slow", "wind_band"][i]))
-				b.scale = Vector3(size.x * 0.5, size.y * 0.24, maxf(size.z, 0.3))
-				b.position = Vector3(0.0, size.y * (0.14 + 0.24 * i), 0.0)
+			# (a standing wall of moving wind: bands streaming across its face, dust whipped up along its foot; each band a flat
+			# ellipse its full width across and a hand deep, so it reads as a sheet from any side: deep as the wall, from aside it
+			# was a twisted column, a tornado, the move review 2026-10-12)
+			for i in 5:
+				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.5), ToonFx.mat(["wind_band", "wind_band_fast", "wind_band_slow", "wind_band", "wind_band_fast"][i]))
+				b.scale = Vector3(size.x * 0.5, size.y * 0.21, 0.14)
+				b.position = Vector3(0.0, size.y * (0.1 + 0.19 * i), 0.0)
 				b.rotation = Vector3(0.0, 0.0, 0.08 * (1.0 if i % 2 == 0 else -1.0))
 				b.set_instance_shader_parameter(&"seed", i * 0.41)
 			var foot := BendLooks.emitter(self, "dust", Vector3(size.x * 0.5, 0.1, size.z * 0.6), 22, 0.7, 1.4, 0.4)
@@ -1071,6 +1077,9 @@ func _late(b: BendBolt) -> void:
 	b.damage *= late_mult
 	b.knock_mps *= late_mult
 	b.up_mps *= late_mult
+	# (the glance where it met the guard, before the half that gets through: a late Parry read as no guard at all, its
+	# fireball bursting on his head, the move review 2026-10-12)
+	BendLooks.burst(b.global_position, b.kind, 10, -b.velocity, 70.0, 2.5, 0.22, false)
 
 
 ## Sent straight back along the guard's aim at once (the Parry's, the Wind Guard's bounce): his now, perfect_mult of its

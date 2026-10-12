@@ -19,6 +19,8 @@ uniform float rim_on = 1.0;
 uniform float glint = 1.0;
 uniform float glow = 1.0;
 instance uniform float range_on = 0.0;
+// (your own Ice Wall seen through, OwnFade: `fade` in a screen-door as form_matter's; 1 whole, every other use)
+instance uniform float fade = 1.0;
 
 varying vec3 v_wpos;
 
@@ -30,7 +32,7 @@ void vertex() {
 }
 
 void fragment() {
-	if (near_cut(VERTEX, FRAGCOORD.xy)) {
+	if (near_cut(VERTEX, FRAGCOORD.xy) || dither_cut(fade, FRAGCOORD.xy)) {
 		discard;
 	}
 	vec3 N = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));

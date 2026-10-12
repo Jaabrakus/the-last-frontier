@@ -26,6 +26,9 @@ const REEL_PCT := 30.0
 ## The side camera: across the deck this far, this high, looking at the middle of the two.
 const CAM_SIDE := 7.5
 const CAM_UP := 1.4
+const GUARD_ETA_S := 0.32
+const FAST_MPS := 33.0
+const GUARD_LEAD_S := 0.3
 const CAM_FOV := 40.0
 
 var reel_shots: Array = []
@@ -37,6 +40,7 @@ var _hid: Array = []
 var _pitch_sign := 1.0
 ## The shot's fixed middle (the camera never follows: a launch flies out of a still picture, as a viewer sees it).
 var _cam_mid := Vector3.ZERO
+var _cam_from := Vector3.INF      # (cam=behind: where the player stood as the shot began, the camera kept still from there)
 var _aim_node: Node3D = null       # (the aim's mark when not the foe: mend's wall, the camera's ray over it otherwise)
 
 
@@ -110,10 +114,14 @@ func _reel(el: String) -> void:
 				("SHIFT + DIR" if String(sh.kind) == "key3" else "KEY %d" % int(sh.key)))
 		await _roll("%s  ·  %s" % [el.to_upper(), key_word], String(sh.label), String(sh.get("detail", "")), 6)
 		var t0 := seg_total
+		var foe0: Node3D = mode.foe
+		var pct0 := mode.rules.pct_of(foe0) if foe0 != null else 0.0
 		await _do(sh)
+		var dpct := (mode.rules.pct_of(foe0) - pct0) if foe0 != null and is_instance_valid(foe0) else 0.0
+		print("MOVE REEL HIT %s %s: foe +%.1f%%" % [el, sh.label, dpct])     # (what it did to him: a hit that shows nothing still counts)
 		reel_shots.append({"element": el, "key": sh.get("key", 0), "id": sh.get("id", ""), "mode": sh.get("mode", ""),
 				"kind": sh.kind, "label": sh.label, "grown": sh.get("grown", false), "t0": t0, "t1": seg_total,
-				"take": cur_id})
+				"take": cur_id, "foe_pct": snappedf(dpct, 0.1)})
 		n += 1
 		recording = false
 		_let_go()
@@ -216,6 +224,8 @@ func _stage(sh: Dictionary) -> void:
 		b_s = JAB_GAP * 0.5
 	_cam_mid = ring.center() + ring.axis() * ((p_s + b_s) * 0.5)
 	_cam_mid.y = ring.top() + 1.0
+	_cam_from = ring.center() + ring.axis() * p_s
+	_cam_from.y = ring.top()
 	for e: Array in [[player, p_s], [foe, b_s]]:
 		var n: CharacterBody3D = e[0]
 		n.global_position = ring.center() + ring.axis() * float(e[1]) + Vector3.UP * 0.05
@@ -270,11 +280,16 @@ func _do(sh: Dictionary) -> void:
 	var sc := SwayCaster.of(player)
 	match String(sh.kind):
 		"jab":
+			# (each jab held until its short lock fills, then let go, as a player does: a 0.12 s tap let go before the lock and
+			# no jab ever left the hand, the first reel's mistake)
 			for i in 3:
 				_ctl.set_held(&"fire", true)
-				await _frames(0.12)
+				var held := 0.0
+				while held < 1.2 and sc.state != SwayCaster.State.FULL:
+					await physics_frame
+					held += 1.0 / Engine.physics_ticks_per_second
 				_ctl.set_held(&"fire", false)
-				await _frames(0.42)
+				await _frames(0.18)
 			await _frames(SHOT_S - 1.6)
 		"key3":
 			# (each press made at a physics frame's start, as a key's is: a fresh press, Hotbar._shift_dir's chord)
@@ -299,12 +314,25 @@ func _do(sh: Dictionary) -> void:
 		"guard":
 			var foe := mode.foe
 			var nb: NpcBending = foe.brain.bending if foe.brain != null else null
-			_ctl.set_held(InputSetup.GUARD_ACTION, true)
-			await _frames(0.3)
+			var k1 := Bending.first_of(Bending.keys(_el)[0])
+			var bs: Dictionary = (SwayMoves.move(String(k1.id)).get("bend", {}) as Dictionary).get(String(k1.mode), {})
+			# (E as a player times it: a fast strike (FAST_MPS and up: the Whip, the Slice) is on you before you could see it fly,
+			# so E goes up as he winds up, GUARD_LEAD_S before his cast; a slower one as it is GUARD_ETA_S out (the guard's short
+			# lock, then its perfect_s). E up before a slow fireball was cast, it came late, half through, nothing went back)
+			var fast := float(bs.get("mps", 0.0)) >= FAST_MPS
+			if fast:
+				await physics_frame
+				_ctl.set_held(InputSetup.GUARD_ACTION, true)
+				await _frames(GUARD_LEAD_S)
 			if nb != null:
-				var k1 := Bending.first_of(Bending.keys(_el)[0])
 				nb.begin(String(k1.id), String(k1.mode))
 				nb._release()
+			if not fast:
+				var waited := 0.0
+				while waited < 2.5 and _eta(foe) > GUARD_ETA_S:
+					await physics_frame
+					waited += 1.0 / Engine.physics_ticks_per_second
+				_ctl.set_held(InputSetup.GUARD_ACTION, true)
 			await _frames(1.3)
 			_ctl.set_held(InputSetup.GUARD_ACTION, false)
 			await _frames(0.15)
@@ -350,6 +378,32 @@ func _wear_wall() -> FormRaised:
 	return w
 
 
+## Seconds until the nearest bolt flying at the player reaches him (INF: none; only `by` casts in a guard shot, so any bolt
+## coming his way is his).
+func _eta(_by: Node3D) -> float:
+	var best := INF
+	var me := player.global_position + Vector3.UP * 1.0
+	for n in player.get_tree().get_nodes_in_group(BendBolt.GROUP):
+		var b := n as BendBolt
+		if b == null or not is_instance_valid(b) or b.spent:
+			continue
+		var sp := b.velocity.length()
+		var to := me - b.global_position
+		if sp < 0.5 or to.length() > 16.0 or b.velocity.dot(to) <= 0.0:
+			continue
+		best = minf(best, maxf(to.length() - 0.8, 0.0) / sp)
+	for n in player.get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := n as FormStone                  # (earth's thrown stones: Stone Form's spike and boulder)
+		if st == null or not is_instance_valid(st):
+			continue
+		var v := st.linear_velocity
+		var to2 := me - st.global_position
+		if v.length() < 3.0 or to2.length() > 16.0 or v.dot(to2) <= 0.0:
+			continue
+		best = minf(best, maxf(to2.length() - 0.8, 0.0) / v.length())
+	return best
+
+
 ## One cast of `id` at `md` through the keys: its key pressed (a second press for a key's other move or mode), the mode set,
 ## right-click held until the lock is full (grown: until it grew, at most 3 s more), let go.
 func _cast_one(id: String, md: String, grown: bool) -> void:
@@ -393,6 +447,16 @@ func _cam(_dt: float) -> Array:
 	var ax := ring.axis()
 	var across := ax.cross(Vector3.UP).normalized()
 	var mid := _cam_mid
+	if String(args.get("cam", "")) == "behind":
+		# (cam=behind: over the player's shoulder at the shot's start, toward the foe, as a player sees it: walls and blades
+		# are drawn across the line between them, edge-on from the side)
+		var pp := _cam_from if _cam_from.is_finite() else player.global_position
+		var foe: Node3D = mode.foe
+		var to := ((foe.global_position if foe != null and is_instance_valid(foe) else mid) - pp)
+		to.y = 0.0
+		to = to.normalized() if to.length_squared() > 1e-4 else ax
+		var side := to.cross(Vector3.UP).normalized()
+		return [pp - to * 3.6 + side * 0.9 + Vector3.UP * 2.1, pp + to * 6.0 + Vector3.UP * 1.0, 55.0]
 	var pos := mid + across * CAM_SIDE + Vector3.UP * CAM_UP - ax * 0.6
 	return [pos, mid, CAM_FOV]
 
