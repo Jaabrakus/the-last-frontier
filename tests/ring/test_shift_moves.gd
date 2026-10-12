@@ -5,8 +5,9 @@ extends SceneTree
 ## held), the player's controls driven (PlayerControls.set_held, as a duel AI's):
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_shift_moves.gd -- [rules=stock|zones]
 ##   the chord    Shift held, then a direction (W too: no sprint breaks it): key 3's movement spell (the crosshair on the foe too) (SwayCaster.last_key3 "dash"); a direction held, then
-##                Shift: the same; Shift alone, a direction alone, Shift + Space, the guard held + Shift + a direction:
-##                never key 3; in the air Shift + a direction: the air dodge (last_key3 "dodge")
+##                Shift: the same; Shift + W tapped and let go before the move goes: still forward (PlayerBendCaster.latch_move);
+##                Shift alone, a direction alone, Shift + Space, the guard held + Shift + a direction: never key 3; in the air
+##                Shift + a direction: the air dodge (last_key3 "dodge")
 ##   no sprint    Shift and W held 2 s: the run's speed (movement.json physics.run), never the old sprint's
 ##   the words    the strip's key 3 shows Shift; F1 says Shift + a direction dashes
 ## The last line "SHIFT MOVES PASSED (<n> checks)" or "SHIFT MOVES FAILED (<f> of <n>)".
@@ -81,6 +82,21 @@ func _rest() -> void:
 	await _until(_settled, 5.0)
 	await _ticks(10)
 	c.last_key3 = ""
+
+
+## Both mid-deck again, the fight on and casting let back (a case's dash may carry him out: a new round's countdown holds
+## casts, RingMode._hold_casts).
+func _mid() -> void:
+	var rm := RingMode.find(self)
+	await _until(func() -> bool: return rm.phase == "FIGHT" and c.enabled, 10.0)
+	var ar := RingArena.find(self)
+	for e: Array in [[p, -3.0], [rm.foe, 3.0]]:
+		var b: CharacterBody3D = e[0]
+		if b != null:
+			b.global_position = ar.center() + ar.axis() * float(e[1]) + Vector3.UP * 0.05
+			b.velocity = Vector3.ZERO
+	await _ticks(20)
+	await _until(_settled, 5.0)
 
 
 func _settled() -> bool:
@@ -165,6 +181,21 @@ func _run() -> void:
 	c.last_break = lb0
 	await _rest()
 	_expect(await _press([&"move_right", &"sprint"], 6) == "dash", "D held, then Shift: key 3's movement spell (%s)" % c.last_key3)
+	await _rest()
+	# ---- a tap: Shift + W let go before the move goes still goes forward (the way pressed is kept; the move reel's Skate)
+	await _mid()
+	var fw := BendCaster.of(p).facing()
+	var t0 := p.global_position
+	await physics_frame
+	ctl.set_held(&"sprint", true)
+	await _ticks(2)
+	ctl.set_held(&"move_forward", true)
+	await _ticks(2)
+	ctl.release_all()
+	var tapped := c.last_key3
+	await _ticks(40)
+	var ahead := (p.global_position - t0).dot(fw)
+	_expect(tapped == "dash" and ahead > 1.0, "Shift + W tapped and let go: forward, the way pressed (%s, %.1f m ahead)" % [tapped, ahead])
 	await _rest()
 
 	# ---- never key 3

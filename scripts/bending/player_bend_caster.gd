@@ -166,11 +166,30 @@ func held_move() -> Vector2:
 	if player == null or player.controls == null:
 		return _rec("held_move", Vector2.ZERO)
 	var v := player.controls.move_vector()
-	return _rec("held_move", Vector2(v.x, -v.y))
+	var hv := Vector2(v.x, -v.y)
+	if hv.length() < 0.3 and BendStatus.now() <= press_move_until:
+		hv = press_move                        # (the chord's way, its keys let go before the move went: latch_move)
+	return _rec("held_move", hv)
 
 
 ## Tests only: not null stands for the move keys held (held_move).
 var held_override: Variant = null
+
+## The way the move keys held at key 3's press (Shift + a direction, SwayCaster.key3_press), until press_move_until: held_move's
+## answer when the keys are let go before the move goes (its lock fills after the press: Skate's 0.4 s; a tap of Shift + W went
+## back, the move reel 2026-10-12).
+var press_move := Vector2.ZERO
+var press_move_until := -INF
+
+
+## The keys held now kept for `s` seconds (none held: the last kept stands).
+func latch_move(s: float) -> void:
+	if player == null or player.controls == null:
+		return
+	var v := player.controls.move_vector()
+	if v.length() >= 0.3:
+		press_move = Vector2(v.x, -v.y)
+		press_move_until = BendStatus.now() + s
 
 
 func jump_held() -> bool:

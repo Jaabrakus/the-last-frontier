@@ -779,6 +779,9 @@ func key3_press() -> bool:
 		return false
 	var rm := RingMoves.of(player)
 	var now := BendStatus.now()
+	var pbc := BendCaster.of(player) as PlayerBendCaster
+	if pbc != null:
+		pbc.latch_move(BendR3.num("key3_latch_s", 1.2))  # (the way pressed is the way it goes, the keys let go or not)
 	if rm != null and rm.on_spout():
 		rm.leave_spout()
 	if frozen() or (rm != null and rm.in_landing_lag()):
