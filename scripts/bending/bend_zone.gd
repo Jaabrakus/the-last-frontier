@@ -78,6 +78,18 @@ const SWING_R := 1.0
 ## A body walking into a wind wall is pushed back at this (m/s), once each PUSH_EVERY_S.
 const WIND_WALL_KNOCK := 4.0
 const PUSH_EVERY_S := 0.5
+## Round zones the skill tree's sets add (inside: within radius): gas (the Sulphur set's cloud), mud (the Mud set's pool).
+const ROUND_NEW := ["gas", "mud"]
+## The bolts Washout washes gas with (their info's tag): the Splash and the Lash.
+const WASH_TAGS := ["water_jet/splash", "water_whip/whip"]
+## Water's Turn talents (skill tree): Whirl Turn (a held swing), Eddy (a head start after a perfect Turn: the meta's time, how
+## long it waits, how full the lock starts, the moves it helps: the Lash and the Spear).
+const WHIRL := "water.turn.whirl"
+const EDDY := "water.turn.eddy"
+const EDDY_META := &"bend_eddy_until"
+const EDDY_S := 1.2
+const EDDY_FILL := 0.4
+const EDDY_MOVES := ["water_whip", "ice"]
 ## Guard results by element, for the soak and the HUD: {element: {perfect, late, whiff}}.
 static var counts := {}
 
@@ -100,6 +112,8 @@ var put_out := false
 ## can catch someone mid flight"): whoever it touches in the air is held inside it for this long, helpless (BendStatus.float_up);
 ## it turns no shot aside. 0: a plain Wind Wall.
 var prison_s := 0.0
+## A Turn's longest swing held on (spec swing_s: read only for a wearer of Whirl Turn, a skill tree twist; a tap swings SWING_S).
+var swing_hold_s := 0.0
 var put_out_n := 0
 ## The stones a guard caught or dropped from stone bolts (FormStone), for the tests.
 var stones: Array[FormStone] = []
@@ -139,6 +153,7 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	z.speed = float(spec.get("mps", 0.0))
 	z.put_out = bool(spec.get("put_out", false))
 	z.prison_s = float(spec.get("prison_s", 0.0))
+	z.swing_hold_s = float(spec.get("swing_s", SWING_S))
 	if not BendR3.cur.is_empty():
 		z.info = BendR3.cur.duplicate()
 	if R2_GUARDS.has(p_kind) and BendStatus.element_mode(by):
@@ -454,6 +469,8 @@ func _physics_process(dt: float) -> void:
 	if kind == "tornado":
 		global_position += way * speed * dt
 		global_position.y = FormEffects.ground_at(self, global_position).y      # (a deck's, not the terrain's under it)
+	elif kind == "steam" and speed > 0.0:
+		global_position += way * speed * dt       # (Steamcraft, a skill tree synergy: its steam drifts toward his aim)
 	var decides := NetSpells.decides()           # (online a ghost's zone decides nothing: the host's words)
 	_tick -= dt
 	if _tick <= 0.0:
@@ -495,7 +512,7 @@ func _wind_push() -> void:
 func inside(p: Vector3) -> bool:
 	var l := global_transform.affine_inverse() * p
 	if kind in ["bubble", "air_shield", "ice_patch", "smoke", "dust", "spray", "steam", "tornado", "vacuum", "puddle"] \
-			or kind in GUARDS:
+			or kind in GUARDS or kind in ROUND_NEW:
 		return Vector2(l.x, l.z).length() <= radius and l.y > -1.0 and l.y < 3.5
 	return absf(l.x) <= size.x * 0.5 and absf(l.z) <= size.z * 0.5 + 0.3 and l.y > -0.5 and l.y < size.y + 0.3
 
@@ -523,6 +540,15 @@ func _every(dt: float) -> void:
 				BendR3.deliver(n, damage_s * dt, n.global_position + Vector3.UP, way, owner_node, -1.0,
 						way * speed * 1.2 + Vector3.UP * 3.0, info)
 	_inside_was = now_in
+	if kind == "redirect" and r2 and BendLoadout.wears(owner_node, "water.turn.cleanse"):
+		# (Cleanse, a skill tree enhance: while its wearer's Turn stands, a gas cloud reaching into its radius is washed out; an
+		# ally's is left)
+		for z in get_tree().get_nodes_in_group(GROUP):
+			var g := z as BendZone
+			if g != null and g.kind == "gas" and not (g.owner_node != null and is_instance_valid(g.owner_node)
+					and BendCaster.same_team(g.owner_node, owner_node)) \
+					and Vector2(g.global_position.x - global_position.x, g.global_position.z - global_position.z).length() <= radius + g.radius:
+				g.wash()
 	if kind == "water_wall":
 		# (a fire wall it stands in goes out)
 		for z in get_tree().get_nodes_in_group(GROUP):
@@ -620,7 +646,27 @@ func on_bolt(b: BendBolt) -> bool:
 				b.end("absorbed")
 				took += 1
 				return true
+		"gas":
+			# (Washout, a skill tree synergy: the wearer's Splash and Lash wash out a gas cloud they pass through, and fly on)
+			if b.kind == "water" and washes(b):
+				wash()
+				return true
 	return false
+
+
+## Whether bolt `b` washes out gas: a Splash or a Lash (not sent back) of a fighter who wears Washout.
+static func washes(b: BendBolt) -> bool:
+	return BendLoadout.wears(b._by(), "water.splash.washout") and not bool(b.info.get("returned", false)) \
+			and String(b.info.get("tag", "")).get_slice(".", 0) in WASH_TAGS
+
+
+## This gas cloud washed out by water (Washout, Cleanse): a ring of spray where it hung, gone.
+func wash() -> void:
+	if is_queued_for_deletion():
+		return
+	BendLooks.burst(global_position + Vector3.UP * 0.8, "water", 26, Vector3.UP, 170.0, 3.0, 0.5)
+	BendLooks.sound("water", "hit", global_position + Vector3.UP, -6.0)
+	end("washed")
 
 
 ## A Wind Prison's catch (prison_s): `n`, in the air inside it, held where he is for prison_s x what his last floats left
@@ -707,8 +753,10 @@ func _guard_bolt(b: BendBolt) -> bool:
 			var lance := what == "air" and b.shape == "spear"
 			if what in ["water", "ice"] or lance:
 				if perfect:
+					# (Whirl Turn, a skill tree twist: held on, the swing goes on round him up to swing_hold_s; whirl_held)
 					b.begin_swing(owner_node, SWING_S, SWING_R, BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult",
-							Bending.rule("perfect_mult", 1.2)), "ice" if lance else "")
+							Bending.rule("perfect_mult", 1.2)), "ice" if lance else "",
+							swing_hold_s if BendLoadout.wears(owner_node, WHIRL) else 0.0)
 				else:
 					_late(b)
 			elif what == "fire":
@@ -873,9 +921,47 @@ static func report(owner: Node, result: String, what: String, el: String) -> voi
 	counts[el] = c
 	if owner is Node3D:
 		BendLooks.guard_result(owner as Node3D, el, result)
+	if result == "perfect" and el == "water" and BendLoadout.wears(owner, EDDY):
+		# (Eddy, a skill tree technique: after a perfect Turn his next Lash or Spear begun within EDDY_S starts EDDY_FILL full;
+		# eddy_fill. Its tell the water charged on his own hands)
+		owner.set_meta(EDDY_META, BendStatus.now() + EDDY_S)
+		if owner is Node3D:
+			BendLooks.burst((owner as Node3D).global_position + Vector3.UP * 1.3, "water", 10, Vector3.UP, 70.0, 1.2, 0.12)
 	var bc := BendCaster.of(owner)
 	if bc != null:
 		bc.guarded.emit(result, what)
+
+
+## Eddy (a skill tree technique, BendZone.report): the fill a lock of move `m` begun now by `body` starts at, EDDY_FILL for his
+## Lash or Spear within EDDY_S of a perfect Turn (spent by it), else 0 (never a zero lock: the rest still fills).
+static func eddy_fill(body: Node, m: String) -> float:
+	if not m in EDDY_MOVES or body == null or not is_instance_valid(body) or not body.has_meta(EDDY_META):
+		return 0.0
+	var until := float(body.get_meta(EDDY_META))
+	body.remove_meta(EDDY_META)
+	return EDDY_FILL if BendStatus.now() <= until else 0.0
+
+
+## Whirl Turn (a skill tree twist): whether `body` holds a swing on now: the player's E held (SwayCaster); a bot holds it while
+## the foe it aims at stands guarding (it sends it on when he cannot guard it).
+static func whirl_held(body: Node) -> bool:
+	if body == null or not is_instance_valid(body):
+		return false
+	var sc := SwayCaster.of(body) if body is FrontierPlayer else null
+	if sc != null:
+		return sc._guard_down()
+	var bc := BendCaster.of(body)
+	var t: Node3D = bc.aim_target() if bc != null and bc.valid() else null
+	return t != null and guarding(t)
+
+
+## Whether `body` has a round-2 guard standing now (a catch, a Turn, a parry, a Wind Guard).
+static func guarding(body: Node) -> bool:
+	for z in body.get_tree().get_nodes_in_group(GROUP):
+		var g := z as BendZone
+		if g != null and g.r2 and g.owner_node == body and not g.is_queued_for_deletion():
+			return true
+	return false
 
 
 ## Carried wind on `body` (air's passive: a hit straight out of a dash, a near miss or a bounced guard knocks harder for

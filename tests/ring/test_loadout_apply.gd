@@ -152,8 +152,10 @@ func _run() -> void:
 	for id0: String in live:
 		only_known = only_known and id0 in _live_all()
 	_expect(every_on and only_known, "the nodes live now are the four the soak passed, the Lightning Pistol, the nine class nodes and the four binds, within the resolvable ones (%s)" % [live])
-	_expect(not "earth.wall.thick" in live and not "water.wall.thick_ice" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
-			"the two walls the soak could not exercise are switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
+	_expect(not "earth.wall.thick" in live and BendLoadout.why_not("earth.wall.thick") == "switched off",
+			"the Earth Wall node the soak could not exercise is switched off in the json (%s)" % BendLoadout.why_not("earth.wall.thick"))
+	_expect("water.wall.thick_ice" in live and BendLoadout.why_not("water.wall.thick_ice") == "",
+			"Thick Ice is switched on (2026-10-11: tests/ring/test_talents_water.gd raises the wall and shoots it) (%s)" % BendLoadout.why_not("water.wall.thick_ice"))
 	# the rest of this test wants every resolvable node on, whatever the switches say
 	var all_on := {}
 	for id1: String in _live_all():

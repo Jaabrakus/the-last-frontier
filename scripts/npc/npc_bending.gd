@@ -1358,6 +1358,8 @@ func begin(id: String, md: String) -> void:
 	# this lock's cast, _release)
 	_cm_used = 1.0 if bool(o.get("guard", false)) else BendStatus.cast_mult(me)
 	lock_s *= _cm_used
+	if not bool(o.get("guard", false)):
+		lock_t = lock_s * BendZone.eddy_fill(me, id)     # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
 	if String((o.get("hint", {}) as Dictionary).get("role", "")) == "reaction":
 		# (a reaction's only: a guard of another role (the anchor, a hop) never holds back the next catch)
 		_guard_until = _lock_at + lock_s + float(ai().get("guard_cool_s", 0.0))

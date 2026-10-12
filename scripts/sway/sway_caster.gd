@@ -2336,6 +2336,8 @@ func _try_begin(q: Dictionary) -> void:
 		_r3_form(m)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
+	if elem() and lock_src != SRC_GUARD:
+		fill = BendZone.eddy_fill(player, m)      # (Eddy, a skill tree technique: a head start after a perfect Turn; else 0)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:

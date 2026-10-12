@@ -232,3 +232,32 @@ zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path /Users/kiwimango/Do
 ```
 
 A game is about 11 s of wall time headless. `GODOT_TIMEOUT=1500` for 30 games per run. The soak forces on the nodes it is asked for (so a switched-off node can be re-measured) and takes the seeds from `seed=` (game `g` uses `seed + 101 g`).
+
+## Water's talents (11 October 2026, the talents pass, lane water)
+
+The owner, 2026-10-11: "we need to make sure all the talents work and they work in game right". Each is worn by one fighter alone,
+read where the game does the thing (BendLoadout.wears, its own numbers through tune or new_class), and played in a real 1v1 %
+ring by `tests/ring/test_talents_water.gd` worn, not worn and on a bot. Classic never reaches any of it (the golden fingerprint
+of `test_loadout_review.gd` still passes).
+
+| Talent | What the wearer gets | Where |
+| --- | --- | --- |
+| Thick Ice | switched on: his Ice Wall takes 4 hits, rises in 0.8 s (a wall raised and shot with ice in the test) | `BendEffects._wall` (as before) |
+| Washout | his Splash and Lash wash out a gas cloud they fly through and fly on; Splash 3.5% | `BendZone.on_bolt` gas, `BendZone.wash` |
+| Splashdown | where his Lash stops (on a body, a wall, the deck) a 1.2 m puddle of his for 6 s, a Geyser source; Lash 8% | `BendBolt.end` |
+| Steamcraft | steam his water makes with fire is his, hangs 2.5 s and drifts 3 m toward his aim; Lash 8% | `BendBolt.meet`, `BendBolt.steam`, `BendZone` steam drift |
+| Cleanse | while his Turn stands a gas cloud reaching into its 2.2 m is washed out (not an ally's); Turn lock 0.24 s | `BendZone._every` redirect |
+| Whirl Turn | E held through a perfect Turn: the water circles him up to 0.6 s, let go it leaves along his aim; late 60% | `BendZone._guard_bolt`, `BendBolt._swing`, `BendZone.whirl_held` |
+| Eddy | his Lash or Spear begun within 1.2 s of a perfect Turn starts 40% full; his Turn's beat 0.25 s | `BendZone.report`, `eddy_fill`, `SwayCaster._try_begin`, `NpcBending.begin` |
+
+Bots (never worn in a normal match): a bot wearing Whirl Turn holds the swing while the foe it aims at stands guarding and sends
+it on when he cannot; a bot wearing Eddy begins its next Lash 40% full; the rest are its casts' own.
+
+Washout and Cleanse act on gas, the Sulphur set's matter (earth's skill set, not built in this lane): they are built against its
+interface, a `BendZone` of kind `gas` (round, `ROUND_NEW`), and do nothing until a gas cloud exists in a match. The test makes the
+cloud itself. Until Sulphur is built only their trades (Splash 3.5%, the Turn's 0.24 s lock) show in a match.
+
+BendLoadout, for these: the same number set twice by two worn nodes is no clash (Splashdown's and Steamcraft's Lash 8%, Thick
+Ice's and Mire's 0.8 s rise); a node that requires others folds after them and sets its numbers over theirs (Mud Lash's 28 m/s
+over the Mud set's 30.6); a `set:<set>.<key>` change of a behaviour talent is read from skill_tree.json skill_sets (Delta's mud
+life); a behaviour talent may set spec keys no Classic code reads (the Skate's puddles).

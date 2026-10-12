@@ -2,6 +2,7 @@
   "format": "tidebreak-loadout-apply",
   "version": 1,
   "_doc": [
+    "water.wall.thick_ice is switched ON (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): tests/ring/test_talents_water.gd raises the wearer's Ice Wall in a ring and shoots it with ice: it rises in 0.8 s and falls at the 4th hit (Classic 0.7 s, the 3rd), a bot wearing it the same. The soak still cannot see it (its bots never raise a wall unasked).",
     "The tuning talents (2026-10-11, the owner: \"we need to make sure all the talents work and they work in game right\"): Clean Return, Open Hands, Steady Point, Swift Lance, Heavy Boulder, Deep Roots, Swift Roots, Patient Turn, Lazy River, Rapids, Reaching Parry, Long Carry, Gale Force change a guard rule, a passive, a % ring rule or Stone Form's own number for the wearer (BendLoadout's tune part: each read where the game reads it for him). Live unsoaked; tests/ring/test_talents_tune.gd plays each worn and not worn in a ring.",
     "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
@@ -20,6 +21,12 @@
   "enabled": true,
   "classic_style": false,
   "nodes": {
+    "water.turn.eddy": true,
+    "water.turn.whirl": true,
+    "water.turn.cleanse": true,
+    "water.lash.steamcraft": true,
+    "water.lash.splashdown": true,
+    "water.splash.washout": true,
     "air.ball.dense": true,
     "air.gust.full_sail": false,
     "air.slice.keen": true,
@@ -27,7 +34,7 @@
     "water.skate.wet_trail": false,
     "fire.step.quick": true,
     "earth.wall.thick": false,
-    "water.wall.thick_ice": false,
+    "water.wall.thick_ice": true,
     "fire.lightning.pistol": true,
     "earth.fissure.deep": true,
     "water.spear.cold_hands": true,
@@ -58,7 +65,14 @@
     "air.passive.long_carry": true,
     "air.passive.gale_force": true
   },
-  "behaviour": {},
+  "behaviour": {
+    "water.splash.washout": "BendZone.on_bolt gas (washes), BendZone.wash; the gas zone is the Sulphur set's (earth)",
+    "water.lash.splashdown": "BendBolt.end, _splashdown (a puddle where the Lash stops)",
+    "water.lash.steamcraft": "BendBolt.meet, BendBolt.steam (life, drift), BendZone steam drift",
+    "water.turn.cleanse": "BendZone._every redirect (gas washed in its reach)",
+    "water.turn.whirl": "BendZone._guard_bolt redirect, BendBolt.begin_swing / _swing, BendZone.whirl_held",
+    "water.turn.eddy": "BendZone.report, BendZone.eddy_fill, SwayCaster._try_begin, NpcBending.begin"
+  },
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -82,6 +96,13 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force",
+    "water.splash.washout",
+    "water.lash.splashdown",
+    "water.lash.steamcraft",
+    "water.turn.cleanse",
+    "water.turn.whirl",
+    "water.turn.eddy"
+  ],
   "styles_live": ["boxing"]
 }

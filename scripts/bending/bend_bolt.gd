@@ -94,6 +94,14 @@ var spin_a := 0.0
 ## The steam left where water and fire meet (BendZone "steam"): its radius and how long it hangs (s).
 const STEAM_R := 2.2
 const STEAM_S := 1.5
+## The skill tree's water talents here (BendLoadout.wears: the wearer's own; Classic never reaches them): Splashdown's puddle
+## where a Lash stops (on a body, a wall or the deck), Steamcraft's steam (its life the node's new:steam.life_s, drifting
+## STEAM_DRIFT_M toward the water's caster's aim over it), Mud Lash's smother (fire met is put out with no steam).
+const SPLASHDOWN := "water.lash.splashdown"
+const SPLASHDOWN_PUDDLE := {"radius_m": 1.2, "life_s": 6.0}
+const STEAMCRAFT := "water.lash.steamcraft"
+const STEAM_DRIFT_M := 3.0
+const MUD_LASH := "water.mud.lash"
 ## Round 2 (see the header). A floor wave's width at the foot (m).
 const FLOOR_W0 := 1.2
 const WEIGHTS := {"light": 0, "medium": 1, "heavy": 2}
@@ -137,6 +145,9 @@ var _swing_r := 1.0
 var _swing_k := 1.0
 var _swing_t := -1.0
 var _swing_a0 := 0.0
+## Whirl Turn's longest swing held on (in swings; 0 none) and how long its last swing lasted (s; the tests).
+var _swing_hold := 0.0
+var swing_held_s := 0.0
 ## Where it was caught, from the guard: its flat distance and its height (the swing glides from there onto its circle).
 var _swing_r0 := 1.0
 var _swing_h0 := 1.0
@@ -275,12 +286,14 @@ func swinging() -> bool:
 ## A Turn on the beat (BendZone): once round `by`'s waist over `s` s at `r` m, then away along his aim at `k` times its
 ## speed, damage and knock, his; a water fighter's Flowing steers it as it leaves. `to_kind`: it turns into that kind as it
 ## is caught (become: the Air Lance turned to ice), drawn short on the circle (WRAP_Z) while it wraps round him.
-func begin_swing(by: Node3D, s: float, r: float, k: float, to_kind := "") -> void:
+func begin_swing(by: Node3D, s: float, r: float, k: float, to_kind := "", hold_s := 0.0) -> void:
 	_swing_by = by
 	_swing_s = maxf(s, 0.05)
 	_swing_r = r
 	_swing_k = k
 	_swing_t = 0.0
+	# (Whirl Turn, a skill tree twist: held on past the swing it keeps circling him, up to hold_s, and leaves when let go)
+	_swing_hold = hold_s / _swing_s if hold_s > _swing_s else 0.0
 	var off := global_position - by.global_position
 	_swing_a0 = atan2(off.x, off.z)
 	_swing_r0 = clampf(Vector2(off.x, off.z).length(), 0.2, 3.0)
@@ -338,7 +351,7 @@ func _swing(dt: float) -> void:
 		return
 	_swing_t += dt / _swing_s
 	var u := minf(_swing_t, 1.0)
-	var a := _swing_a0 - TAU * u
+	var a := _swing_a0 - TAU * (_swing_t if _swing_hold > 0.0 else u)
 	# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
 	var e := smoothstep(0.0, SWING_IN, u)
 	var rr := lerpf(_swing_r0, _swing_r, e)
@@ -351,6 +364,10 @@ func _swing(dt: float) -> void:
 	_face()
 	if _swing_t < 1.0:
 		return
+	if _swing_hold > 0.0 and _swing_t < _swing_hold and BendZone.whirl_held(_swing_by):
+		return                                    # (Whirl Turn: held on, it goes on circling)
+	_swing_hold = 0.0
+	swing_held_s = _swing_t * _swing_s
 	_swing_t = -1.0
 	var to := BendZone.guard_aim(_swing_by, global_position)
 	var sp := velocity.length() * _swing_k
@@ -789,9 +806,21 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 			b.end("cancel")
 		return
 	if "water" in ks and "fire" in ks:
+		var wb := a if a.kind == "water" else b
+		if wb.is_lash() and BendLoadout.wears(wb._by(), MUD_LASH):
+			# (Mud Lash: the fire it meets is smothered under the mud, no steam)
+			BendLooks.burst(at, "stone", 18, Vector3.UP, 120.0, 2.5)
+			BendLooks.burst(at, "water", 12)
+			BendLooks.sound("water", "hit", at, -3.0)
+			a.end("smothered")
+			b.end("smothered")
+			return
 		BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
 		BendLooks.sound("steam", "hit", at)
-		steam(a._by() if a._by() != null else (b._by() if b._by() != null else a), at)
+		var sby: Node3D = a._by() if a._by() != null else (b._by() if b._by() != null else a)
+		if BendLoadout.wears(wb._by(), STEAMCRAFT):
+			sby = wb._by()                       # (Steamcraft: the steam his water made is his, his to steer)
+		steam(sby, at)
 		a.end("steam")
 		b.end("steam")
 		return
@@ -840,6 +869,13 @@ static func steam(by: Node3D, at: Vector3) -> BendZone:
 		return null
 	var g := FormEffects.ground_at(by, at)
 	var foot := g if at.y - g.y < 2.5 and at.y >= g.y - 0.5 else at - Vector3.UP * 1.0
+	if BendLoadout.wears(by, STEAMCRAFT):
+		# (Steamcraft: his steam hangs the node's longer life and drifts STEAM_DRIFT_M toward where he aims over it)
+		var life := BendLoadout.tune_f(by, "new:steam.life_s", STEAM_S)
+		var to := BendZone.guard_aim(by, foot) - foot
+		to.y = 0.0
+		var way := to.normalized() if to.length_squared() > 1e-4 else -by.global_basis.z
+		return BendZone.make(by, "steam", foot, {"radius_m": STEAM_R, "life_s": life, "mps": STEAM_DRIFT_M / maxf(life, 0.1)}, way)
 	return BendZone.make(by, "steam", foot, {"radius_m": STEAM_R, "life_s": STEAM_S})
 
 
@@ -862,7 +898,28 @@ func end(why: String) -> void:
 		return
 	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
 		return                                    # (a ghost's: the host's word ends it, net_end)
+	if why in ["hit", "wall", "world"] and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
+		_splashdown()
 	_finish(why)
+
+
+## A Lash of its caster's own (water_whip/whip, not sent back by a guard).
+func is_lash() -> bool:
+	return kind == "water" and not bool(info.get("returned", false)) and String(info.get("tag", "")).get_slice(".", 0) == "water_whip/whip"
+
+
+## Splashdown: where the Lash stopped (a body, a wall, the deck) a puddle of its caster's on the deck under it (SPLASHDOWN_PUDDLE):
+## his water, a Geyser's source (BendZone puddle). None when the deck is far under (off the ring).
+func _splashdown() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var g := FormEffects.ground_at(self, global_position)
+	if global_position.y - g.y > 3.0 or global_position.y < g.y - 0.6:
+		return
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	BendLooks.burst(g + Vector3.UP * 0.1, "water", 20, Vector3.UP, 70.0, 2.5, 0.3)
+	BendZone.make(by, "puddle", g, SPLASHDOWN_PUDDLE, flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
 
 
 func _finish(why: String) -> void:
@@ -974,6 +1031,8 @@ func _end_look(why: String, at: Vector3, n: Vector3) -> void:
 				BendLooks.burst(at, "stone", 24)
 		"melted", "bubble":
 			BendLooks.burst(at, "water", 14)
+		"smothered":
+			BendLooks.burst(at, "stone", 18, Vector3.UP, 120.0, 2.5)
 		"scattered":
 			BendLooks.burst(at, "water", 18, Vector3.UP, 180.0, 2.5)
 		"cancel", "stone", "blocked", "dropped":

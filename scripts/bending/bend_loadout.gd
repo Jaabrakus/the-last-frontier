@@ -96,6 +96,7 @@ static var _resolved: Dictionary = {}            ## id -> resolve()
 static var _lib_exists: Dictionary = {}          ## library path -> whether the file is there (asked once)
 static var _ok_memo: Dictionary = {}             ## style -> element -> style_ok, made under _ok_memo_cfg
 static var _ok_memo_cfg: Variant = null          ## the config_override the memo was made under
+static var _sets: Dictionary = {}                ## skill_tree.json skill_sets (set_rule)
 
 
 # ---------------------------------------------------------------- the switches
@@ -126,6 +127,7 @@ static func reload_data() -> void:
 	_lib_exists = {}
 	_ok_memo = {}
 	_ok_memo_cfg = null
+	_sets = {}
 
 
 ## The master switch (data/bending/loadout_apply.json "enabled"): off, no style and no number applies.
@@ -313,6 +315,15 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 		return _take_class(out, n, path, rest, from, to)
 	if path in TUNE_PATHS:
 		return _take_tune(out, path, from, to)
+	if kind == "set":
+		# (set:<set>.<key>: a skill set's own rule, skill_tree.json skill_sets.<set>.zone, read by a behaviour talent's code through
+		# tune(body, path, base): Delta's shorter mud pools)
+		if not String(n.get("id", "")) in behaviour():
+			return "%s: new behaviour not built" % path
+		var cur_s: Variant = set_rule(rest)
+		if cur_s == null or not _same_shape_num(cur_s, from) or not _same_shape_num(from, to, true):
+			return "%s: the data holds %s, the node says from %s" % [path, str(cur_s), str(from)]
+		return _put(out.tune as Dictionary, [path], to)
 	if kind == "new" or path == "new":
 		# (a behaviour talent's own code: only once it is built, its id in `behaviour`)
 		if not String(n.get("id", "")) in behaviour():
@@ -342,7 +353,7 @@ static func _take(out: Dictionary, n: Dictionary, c: Dictionary) -> String:
 				return "%s: the data holds %s, the node says from none" % [path, str(cur)]
 		elif cur == null or not is_equal_approx(float(cur), float(from)):
 			return "%s: the data holds %s, the node says from %s" % [path, str(cur), str(from)]
-		if not _consumed(mv, mode, sub):
+		if not _consumed(mv, mode, sub) and not String(n.get("id", "")) in behaviour():
 			return "%s: no code reads this number" % path
 		return _put(out.spec as Dictionary, ["%s/%s" % [mv, mode]] + sub, to)
 	if kind != "move":
@@ -419,6 +430,17 @@ static func tune_base(path: String) -> Variant:
 				return Bending.rule("sputter_s", 0.7) if keys[1] == "sputter_s" else SwayMoves.lock_rule("release_s", 1.0)
 			return v2
 	return null
+
+
+## A skill set's own rule `rest` ("<set>.<key>": skill_tree.json skill_sets.<set>.zone.<key>, the mud pools' 8 s), null none.
+static func set_rule(rest: String) -> Variant:
+	if _sets.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(TREE_PATH)) if FileAccess.file_exists(TREE_PATH) else null
+		var ss: Variant = (d as Dictionary).get("skill_sets") if d is Dictionary else null
+		_sets = ss if ss is Dictionary and not (ss as Dictionary).is_empty() else {"_none": {}}
+	var st: Variant = _sets.get(rest.get_slice(".", 0))
+	var z: Variant = (st as Dictionary).get("zone") if st is Dictionary else null
+	return (z as Dictionary).get(rest.get_slice(".", 1)) if z is Dictionary else null
 
 
 ## Whether `a` and `b` are the same number (or arrays of the same numbers; `shape_only`: only the same shape).
@@ -510,7 +532,10 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 static func overlay_for(picks: Array, element := "") -> Dictionary:
 	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "ids": [],
 			"refused": {}}
-	for v: Variant in picks:
+	# (the nodes that require others folded after them, each in its order: their numbers go over the required ones')
+	var ordered: Array = picks.filter(func(v: Variant) -> bool: return _requires(String(v)).is_empty())
+	ordered.append_array(picks.filter(func(v: Variant) -> bool: return not _requires(String(v)).is_empty()))
+	for v: Variant in ordered:
 		var id := String(v)
 		var why := why_not(id)
 		var r := resolve(id) if why == "" else {}
@@ -530,8 +555,11 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 		for part: String in PARTS:
 			trial[part] = (out[part] as Dictionary).duplicate(true)
 		var clash := ""
+		# (a node that requires others sets its own numbers over theirs: Mud Lash's 28 m/s is the Mud set's heavier water
+		# included; its requires are worn, checked above)
+		var over := not _requires(id).is_empty()
 		for part: String in PARTS:
-			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary)
+			clash = _fold(trial[part] as Dictionary, r.get(part, {}) as Dictionary, over)
 			if clash != "":
 				break
 		if clash != "":
@@ -543,18 +571,21 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 	return out
 
 
-## `src` folded into `into` (a number set twice is a clash: returns where, else "").
-static func _fold(into: Dictionary, src: Dictionary) -> String:
+## `src` folded into `into` (a number set twice is a clash: returns where, else ""). The same number set twice is none (two
+## trades of the same Lash %, Splashdown's and Steamcraft's 8); `over`: src's numbers replace what is there (a node over the
+## nodes it requires).
+static func _fold(into: Dictionary, src: Dictionary, over := false) -> String:
 	for k: String in src:
 		if src[k] is Dictionary:
 			if into.has(k) and not (into[k] is Dictionary):
 				return k
 			if not into.has(k):
 				into[k] = {}
-			var why := _fold(into[k], src[k])
+			var why := _fold(into[k], src[k], over)
 			if why != "":
 				return "%s.%s" % [k, why]
-		elif into.has(k):
+		elif into.has(k) and not over and not ((into[k] is float or into[k] is int) and (src[k] is float or src[k] is int)
+				and is_equal_approx(float(into[k]), float(src[k]))):
 			return k
 		else:
 			into[k] = src[k]
