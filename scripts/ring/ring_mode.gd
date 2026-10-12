@@ -505,6 +505,12 @@ func end_of_team(team: int) -> int:
 	return _end(team)
 
 
+## Online, the session's news on the banner for `s` (RingNet: "Hosting ...", "... joined.", "Could not reach the host.").
+func net_note(text: String, s := 3.0) -> void:
+	_note = text
+	_note_t = s
+
+
 ## The fighters a side: the ring's format's (RingArena.format: 1, 2 or 4), a practice 1.
 func team_n() -> int:
 	return 1 if MatchSetup.practice() else MatchSetup.team_size(RingArena.format)

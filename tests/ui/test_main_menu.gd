@@ -128,8 +128,8 @@ func _run() -> void:
 		_end()
 		return
 	var names := _names(m)
-	check(names == [MatchSetup.sport(), "Start here", "Quick match", "Practice", "Class & talents", "Your look", "Settings", "Credits", "Quit"],
-			"the demo lobby: rows 01-09 (Tidebreak, Start here, Quick match, Practice, Class & talents, Your look, Settings, Credits, Quit), no legacy Open world (%s)" % [names])
+	check(names == [MatchSetup.sport(), "Start here", "Quick match", "Practice", "Play online", "Class & talents", "Your look", "Settings", "Credits", "Quit"],
+			"the demo lobby: rows 01-10 (Tidebreak, Start here, Quick match, Practice, Play online, Class & talents, Your look, Settings, Credits, Quit), no legacy Open world (%s)" % [names])
 	check((m.find_child("GameTitle", true, false) as Label).text == "TIDEBREAK"
 			and (m.find_child("GameSubtitle", true, false) as Label).text == "ELEMENTAL ARENA COMBAT", "the visible title identifies the elemental arena game")
 	check(_sub(m, "Quick match") == MatchSetup.quick_line() and _sub(m, MatchSetup.sport()) != "",

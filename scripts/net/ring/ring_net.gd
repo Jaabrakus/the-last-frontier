@@ -21,6 +21,10 @@ extends Node
 ##                 _word, NetSpells.apply_word); send_hit (the host's effect on a body to its owner: _hit, NetSpells.apply_hit).
 ##                 A puppet casts through a NetBendCaster (bound at its making) and wears its owner's loadout (his hello's
 ##                 picks and style). net_id_of(body) / body_by_net_id(id): a body's name on the wire (its owner's peer)
+##   the setup     the host's match settings go with the roster (NetMatch.setup_of: rules, games, rounds, time); a joiner takes
+##                 them (NetMatch.take_setup), its ring loaded again when they change what the ring is (its rules, its size)
+##   the menu      the lobby's Play online (MainMenu._open_online): my_addresses() shown to the host, last_address() /
+##                 remember_address() the joiner's field; the session's news on the ring's banner (_say: RingMode.net_note)
 ##   the match     RingMode asks: human_at(team, slot) (a remote human holds that slot: no bot is made there),
 ##                 place_humans() (the puppets on the rules' books at their spawns), flipped() (this machine's side is the
 ##                 host's team 1: its ends swap); a roster change restarts the match on every machine
@@ -59,11 +63,14 @@ var roster := {}
 var bodies := {}
 ## Words for the player ("" none): the last thing the session did ("Joined.", "Could not reach the host.").
 var status := ""
+## Times this machine's ring was loaded again for the host's settings (the tests).
+var reloads := 0
 var _buffers := {}              # peer id -> NetBody
 var _send_t := 0.0
 var _ping_t := 0.0
 var _my_hello := {}
 var _join_to: Array = []        # [address, port] of the join under way
+var _me := 1                    # this machine's peer id while a session is on (my_id)
 var _join_tries := 0
 
 
@@ -144,8 +151,15 @@ func is_client() -> bool:
 	return role == Role.CLIENT
 
 
+## Whether this machine's peer is connected (a client still reaching the host is not).
+func _connected() -> bool:
+	var mp := multiplayer.multiplayer_peer
+	return mp != null and mp.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
+
+
+## This machine's peer id (kept from the session's start: a peer the host has dropped answers nothing; 1 offline).
 func my_id() -> int:
-	return multiplayer.get_unique_id() if role != Role.OFF else 1
+	return _me if role != Role.OFF else 1
 
 
 func host(port := PORT) -> Error:
@@ -156,6 +170,7 @@ func host(port := PORT) -> Error:
 		return err
 	multiplayer.multiplayer_peer = peer
 	role = Role.HOST
+	_me = 1
 	NetSpells.net = self
 	clock.be_host()
 	roster = {1: _hello_of()}
@@ -180,6 +195,7 @@ func _try_join() -> Error:
 		return err
 	multiplayer.multiplayer_peer = peer
 	role = Role.CLIENT
+	_me = multiplayer.get_unique_id()
 	NetSpells.net = self
 	_say("Joining %s:%d ..." % [_join_to[0], _join_to[1]])
 	return OK
@@ -207,10 +223,12 @@ func _close() -> void:
 	for id: int in bodies.keys():
 		if id != my_id():
 			_drop(id)
+	bodies.clear()                            # (this machine's player too: its id is the session's, gone with it)
 	roster.clear()
 	_buffers.clear()
 	_join_to = []
 	role = Role.OFF
+	NetMatch.drop_setup()
 	NetSpells.reset()
 	NetCasts.reset()
 	NetSpells.net = null
@@ -218,11 +236,45 @@ func _close() -> void:
 	if is_inside_tree():
 		multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 	roster_changed.emit()
+	if mode != null and is_instance_valid(mode) and mode.is_inside_tree():
+		mode.restart()                        # (the others' fighters gone from the books: the match again, offline)
 
 
 func _say(text: String) -> void:
 	status = text
 	print("RingNet: ", text)
+	if mode != null and is_instance_valid(mode):
+		mode.net_note(text)
+
+
+## This machine's addresses on its networks (IPv4, not the loopback or a link-local one): what a joiner types.
+static func my_addresses() -> String:
+	var out: Array[String] = []
+	for a: String in IP.get_local_addresses():
+		if a.count(".") == 3 and not a.begins_with("127.") and not a.begins_with("169.254."):
+			out.append(a)
+	return ", ".join(out) if not out.is_empty() else "none found"
+
+
+## Where the last address joined is kept (a script run's own file: a test never touches the player's).
+static func address_cfg() -> String:
+	var args := OS.get_cmdline_args()
+	return "user://ring_net_test.cfg" if "-s" in args or "--script" in args else "user://ring_net.cfg"
+
+
+## The last address joined (the menu's field), else this machine (127.0.0.1: two games on one machine).
+static func last_address() -> String:
+	var cf := ConfigFile.new()
+	if cf.load(address_cfg()) != OK:
+		return "127.0.0.1"
+	return String(cf.get_value("join", "address", "127.0.0.1"))
+
+
+static func remember_address(a: String) -> void:
+	var cf := ConfigFile.new()
+	cf.load(address_cfg())
+	cf.set_value("join", "address", a)
+	cf.save(address_cfg())
 
 
 # ---------------------------------------------------------------- the people
@@ -266,7 +318,7 @@ func _on_peer_disconnected(id: int) -> void:
 	roster.erase(id)
 	_drop(id)
 	if is_host():
-		_roster.rpc(roster)
+		_roster.rpc(roster, NetMatch.setup_of())
 	_after_roster()
 
 
@@ -283,7 +335,7 @@ func _hello(h: Dictionary) -> void:
 	e["slot"] = slot.y
 	roster[id] = e
 	_say("%s joined (side %d)." % [e.name, slot.x])
-	_roster.rpc(roster)
+	_roster.rpc(roster, NetMatch.setup_of())
 	_after_roster()
 
 
@@ -304,8 +356,15 @@ func _free_slot() -> Vector2i:
 
 
 @rpc("authority", "reliable")
-func _roster(r: Dictionary) -> void:
+func _roster(r: Dictionary, setup: Dictionary = {}) -> void:
 	roster = r
+	if NetMatch.take_setup(setup) and mode != null and is_instance_valid(mode):
+		_say("The host's match: loading it ...")
+		reloads += 1
+		mode = null
+		MatchSetup.incoming = true                # (the ring loaded again is a match: MatchSetup.take)
+		get_tree().change_scene_to_file(MainMenu.RING_SCENE)     # (its rules or its size are another ring's: attach again)
+		return
 	_after_roster()
 
 
@@ -346,7 +405,7 @@ func human_at(team: int, slot: int) -> int:
 # ---------------------------------------------------------------- the puppets
 ## A puppet for every other peer in the roster, none for one gone (made once the ring's level is here).
 func _sync_puppets() -> void:
-	if mode == null or not is_instance_valid(mode) or mode.level == null:
+	if role == Role.OFF or mode == null or not is_instance_valid(mode) or mode.level == null:
 		return
 	if mode.player != null:
 		bodies[my_id()] = mode.player
@@ -453,6 +512,8 @@ func place_humans() -> void:
 func _physics_process(delta: float) -> void:
 	if role == Role.OFF:
 		return
+	if is_client() and not _connected():
+		return                                  # (still reaching the host: nothing to ask or send yet)
 	if is_client():
 		_ping_t -= delta
 		if _ping_t <= 0.0:

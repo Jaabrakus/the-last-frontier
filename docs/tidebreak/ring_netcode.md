@@ -160,9 +160,17 @@ spout). Each body's % is its owner's and goes with his state (NetBody's pct slot
 (RingRules.mirror_pct). Tested two-machine: the joiner's fight begins at the host's word, each % shown on the other, three
 falls taken on both books, the round and the match the host's on both screens (a win there, a loss on the joiner's).
 
+**Playing it.** The lobby's row 05, Play online (MainMenu._open_online): Host a match (this machine's addresses shown; the
+host's own match settings are the match's), or the host's address and Join (kept for next time). The ring loads at once on
+both machines; the host fights a bot until a player joins, then the match begins again with him. The host's settings go
+with its roster (NetMatch.setup_of: rules, games, rounds, time, format) and a joiner takes them; when they make another
+ring (other rules, another deck) the joiner's ring is loaded again, the session kept. The session's news is on the ring's
+banner (RingMode.net_note). When the host leaves, a joiner's session closes and his match starts again offline with a bot.
+On the same network a joiner types the host's address; over the internet the host forwards port 24570 (until R3's relay).
+
 **Still to come in R1:** body attacks decided by a joiner's own machine (a ledge attack, the Rise's hit: through the host to
 the victim's owner); the jab string's end on a victim's machine back to the hitter's (RingRules.string_ended); lag
-compensation (R1 e); the menu's Online row (host, join by address).
+compensation (R1 e).
 
 ## Phases
 

@@ -14,7 +14,47 @@ extends RefCounted
 ##                ko signal, RingMode._on_ko: the line, the body hidden, its respawn's timer) and tells every machine
 ##                ("m_ko": the lives left), each taking it on its own books the same way; on its owner's machine the body is
 ##                put back on its spout when its time comes (RingMode._do_respawn)
+##   the setup    the host's match settings go with its roster (setup_of: rules, games, rounds, time, the format); a joiner
+##                takes them before its match starts again (take_setup), its ring loaded again when they change what the ring
+##                is (its rules, its deck's size)
 ## A machine that is no referee waits for the host's words; offline everything here is a no-op.
+
+## The host's match settings (RingNet sends them with its roster).
+static func setup_of() -> Dictionary:
+	return {"format": MatchSetup.format, "rules": MatchSetup.rule_set(), "games": MatchSetup.games(),
+			"rounds_to_win": MatchSetup.rounds_to_win, "round_s": MatchSetup.round_s}
+
+
+## The host's settings `s` taken here (a joiner's, before its match starts again): true when the ring loaded here is not the
+## one they make (its rules, its deck's size: loaded again).
+static func take_setup(s: Dictionary) -> bool:
+	if s.is_empty():
+		return false
+	var rules := String(s.get("rules", MatchSetup.rule_set()))
+	var fmt := String(s.get("format", MatchSetup.format))
+	var rr := RingRules.current()
+	var other := (rr != null and rr.rule_set != rules) or fmt != RingArena.format
+	if rules in MatchSetup.RULE_SETS:
+		MatchSetup.rules_choice = rules
+		RingRules.rule_set_override = rules       # (over a joiner's own launch settings while the session lasts: drop_setup)
+		_pinned = true
+	if fmt in MatchSetup.FORMATS:
+		MatchSetup.format = fmt
+	MatchSetup.games_n = int(s.get("games", MatchSetup.games_n))
+	MatchSetup.rounds_to_win = int(s.get("rounds_to_win", MatchSetup.rounds_to_win))
+	MatchSetup.round_s = float(s.get("round_s", MatchSetup.round_s))
+	return other
+
+
+static var _pinned := false
+
+
+## The host's rules let go (the session over: RingNet._close); a joiner's own settings rule his next ring again.
+static func drop_setup() -> void:
+	if _pinned:
+		RingRules.rule_set_override = ""
+		_pinned = false
+
 
 ## Whether this machine moves match `m` on (offline, the host).
 static func referee(m: RingMode) -> bool:

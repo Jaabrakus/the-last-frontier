@@ -27,18 +27,21 @@ extends Control
 ##                    yours: 0 to 200 or grows, MatchSetup.foe_pct / my_pct), Controls; MatchSetup.set_practice), into the ring
 ##                    with no clock, rounds or score (RingMode practice); its Lessons row the same practice with the lessons'
 ##                    cards (RingLessons.ask: your element's dummy, a card at a time, each done by doing it)
-##   05 Class & talents  the Character Advancement window (_open_advancement: AdvancementWindow.open over the menu, for the
+##   05 Play online   a 1 v 1 against another player (_open_online; RingNet, docs/tidebreak/ring_netcode.md): Host a match (this
+##                    machine's addresses shown, the host's match settings played), or the host's address and Join; into the
+##                    ring as Begin goes (MatchSetup 1 v 1, RingNet.incoming the session asked for)
+##   06 Class & talents  the Character Advancement window (_open_advancement: AdvancementWindow.open over the menu, for the
 ##                    lobby's element; its "Your look" tab opens the creator; the match setup has the same in a small link)
-##   06 Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
+##   07 Your look     the character creator on the saved look (CharacterCreator; Accept keeps it)
 ## The character comes first and its element after it (the owner, 2026-10-10: "we just need the char made and then the element that
 ## char chooses"): once the creator is accepted (the first press of Tidebreak offers it; or Your look), and the character has no
 ## element yet, the screen "Choose your element" follows (_open_element_step: the match setup's four fighter cards, one pick,
 ## Enter to confirm; kept in the look: AppearanceStore.set_element). That element is what the lobby's fighter, the match setup,
 ## Quick match and the advancement window start from (MatchSetup.load); a match may still play another.
-##   07 Settings      volume, the mouse, invert, full screen, vsync (GameSettings)
-##   08 Credits       the copyright and no-AI-training notice (NOTICE.txt), CREDITS.md as the project keeps it, and the
+##   08 Settings      volume, the mouse, invert, full screen, vsync (GameSettings)
+##   09 Credits       the copyright and no-AI-training notice (NOTICE.txt), CREDITS.md as the project keeps it, and the
 ##                    licence in full (EULA.txt)
-##   09 Quit
+##   10 Quit
 ## Legacy only: the retained Open world panel is not linked from the Tidebreak demo menu. Its rows and handlers remain
 ## available to development tools and their regression checks (Continue, New game, Load game, Museum, Co-op, the duel test,
 ## Campaigns); Esc from a screen opened there comes back to it.
@@ -641,26 +644,29 @@ func _build_items() -> void:
 	var pr := BroadcastUI.row("04", "Practice", _practice_line(), el, {"name": "Practice"})
 	pr.pressed.connect(_open_practice)
 	_items.add_child(pr)
-	_items.add_child(BroadcastUI.gap(0, 14))
+	var ol := BroadcastUI.row("05", "Play online", "host a 1 v 1, or join a friend's by address", el, {"name": "Online"})
+	ol.pressed.connect(_open_online)
+	_items.add_child(ol)
+	_items.add_child(BroadcastUI.gap(0, 8))         # (8, and 10 below: Play online's row fits over the caption at 1280 x 720)
 	_items.add_child(_section("FIGHTER"))
-	var ct := BroadcastUI.row("05", "Class & talents", _advancement_line(el), el, {"name": "ClassTalents", "badge": "NEW"})
+	var ct := BroadcastUI.row("06", "Class & talents", _advancement_line(el), el, {"name": "ClassTalents", "badge": "NEW"})
 	ct.pressed.connect(_open_advancement)
 	_items.add_child(ct)
-	var lk := BroadcastUI.row("06", "Your look", "the character creator: face, build and dress", el, {"name": "YourLook"})
+	var lk := BroadcastUI.row("07", "Your look", "the character creator: face, build and dress", el, {"name": "YourLook"})
 	lk.pressed.connect(_open_look)
 	_items.add_child(lk)
-	_items.add_child(BroadcastUI.gap(0, 16))
+	_items.add_child(BroadcastUI.gap(0, 10))
 	_util = HBoxContainer.new()
 	_util.name = "Util"
 	_util.add_theme_constant_override("separation", 26)
 	_items.add_child(_util)
-	var st := BroadcastUI.util("07", "Settings")
+	var st := BroadcastUI.util("08", "Settings")
 	st.pressed.connect(_open_settings)
 	_util.add_child(st)
-	var cr := BroadcastUI.util("08", "Credits")
+	var cr := BroadcastUI.util("09", "Credits")
 	cr.pressed.connect(_open_credits)
 	_util.add_child(cr)
-	var q := BroadcastUI.util("09", "Quit")
+	var q := BroadcastUI.util("10", "Quit")
 	q.pressed.connect(func() -> void: get_tree().quit())
 	_util.add_child(q)
 	_chain_focus()
@@ -942,6 +948,46 @@ func _play_match() -> void:
 		DuelMode.incoming = true
 		path = GAME_SCENE
 	LoadingScreen.go(get_tree(), path)
+
+
+## Play online (RingNet; docs/tidebreak/ring_netcode.md): a 1 v 1 against another player. One machine hosts (its match
+## settings are the match's: the joiner's ring takes them), the other joins by the host's address (kept for next time). The
+## ring loads at once on both: the host fights a bot until a player joins, then the match begins again with him; the joiner
+## reaches the host as his ring loads (the ring's banner says how it goes).
+func _open_online() -> void:
+	_open_panel()
+	_panel.add_child(BroadcastUI.heading("Play online"))
+	_panel.add_child(BroadcastUI.label("A 1 v 1 against another player: one of you hosts, the other joins with the host's address. On the same network that is all; over the internet the host forwards port %d on the router." % RingNet.PORT,
+			18, BroadcastUI.DIM, true))
+	var hb := BroadcastUI.item("Host a match", 26, "your match settings; this machine's address: %s" % RingNet.my_addresses())
+	hb.name = "HostOnline"
+	hb.pressed.connect(func() -> void: _play_online({"role": "host", "port": RingNet.PORT}))
+	_panel.add_child(hb)
+	var addr := LineEdit.new()
+	addr.name = "OnlineAddress"
+	addr.placeholder_text = "the host's address, e.g. 192.168.1.20"
+	addr.text = RingNet.last_address()
+	addr.custom_minimum_size = Vector2(420, 44)
+	addr.add_theme_font_size_override("font_size", 20)
+	_panel.add_child(addr)
+	var jb := BroadcastUI.item("Join", 26, "the match at the address above")
+	jb.name = "JoinOnline"
+	jb.pressed.connect(func() -> void:
+		var a := addr.text.strip_edges()
+		if a == "":
+			return
+		RingNet.remember_address(a)
+		_play_online({"role": "join", "address": a, "port": RingNet.PORT}))
+	_panel.add_child(jb)
+	hb.grab_focus.call_deferred()
+
+
+## Into the ring online (`mode`: RingNet.incoming's host or join), as Begin goes: a 1 v 1 match.
+func _play_online(mode: Dictionary) -> void:
+	RingNet.incoming = mode
+	MatchSetup.set_match()
+	MatchSetup.format = "1v1"                  # (online is 1 v 1 for now: docs/tidebreak/ring_netcode.md R2 brings the teams)
+	_play_match()
 
 
 ## Quick match: the last setup (GameSettings' "match"), the opponent's element drawn at random (MatchSetup.quick_match), at once.
