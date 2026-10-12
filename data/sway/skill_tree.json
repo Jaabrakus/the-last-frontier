@@ -705,13 +705,16 @@
          "from": 1,
          "to": 3,
          "base_tag": "stone_form/cannonball",
-         "default_from": true
+         "default_from": true,
+         "when": "avalanche"
         },
         {
          "path": "class:stone_form/cannonball+avalanche.base",
          "from": 7.4,
          "to": 5.9,
-         "base_tag": "stone_form/cannonball"
+         "base_tag": "stone_form/cannonball",
+         "when": "avalanche",
+         "note": "the three rolling stones only (their hit info says avalanche): the Boulder is one Boulder, its own hit Classic's, until it lands"
         },
         {
          "path": "new",

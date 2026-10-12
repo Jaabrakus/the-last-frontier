@@ -647,6 +647,8 @@ func tick(dt: float) -> void:
 		if t != null and is_instance_valid(t):
 			me.face_point(t.global_position)
 		if lock_t >= lock_s - 1e-5:
+			if _beat_late > 0.0 and lock_t < lock_s + _beat_late:
+				return                             # (a missed Beat: the full lock held past its window, then let go)
 			if stock():
 				# (round 3: never a hit into a safety; a lock held full for its moment, called off past hold_max_s)
 				var go := mind().allow_release(_option(casting + "/" + mode), dt)
@@ -1049,6 +1051,26 @@ func _stone_from_pop() -> void:
 var _juggle_n := 0
 ## Its last cast let go on the Beat (a technique's wearer only: _release), for the tests.
 var beat_at := -INF
+## The Beat for a bot wearing a technique that pays on a cast (a test's bot: bots wear no loadout in a match): how often it hits
+## it, the skill tree's beat.bots (bend_ai.json presets.<difficulty>.beat_rate: easy 0, normal 0.2, hard 0.5), rolled once a
+## lock (_beat_roll); >= 0 here (a test's) over the preset's.
+var beat_rate := -1.0
+## This lock's missed Beat: it is held full this long past its lock filling before it goes (beat_s and a little: a late hand), 0
+## on the Beat or with no technique that pays on it.
+var _beat_late := 0.0
+## How far past the Beat window a missed Beat lets go (s).
+const BEAT_MISS_S := 0.08
+
+
+## Whether this lock (or this catch's E again) lands on the Beat: beat_rate rolled on its own dice (its seed and its casts so
+## far, as the grow's roll: every other choice the bot makes stays the same).
+func _beat_roll() -> bool:
+	var r := beat_rate if beat_rate >= 0.0 else float(preset().get("beat_rate", 0.0))
+	if r <= 0.0:
+		return false
+	if r >= 1.0:
+		return true
+	return float(absi(hash(Vector2i(me.rng_seed, casts + 13))) % 10000) / 10000.0 < r
 
 
 ## The stone it holds (caught: BendZone.held_stone, the player's own reckoning), null none.
@@ -1360,6 +1382,8 @@ func begin(id: String, md: String) -> void:
 	lock_t = 0.0
 	fill = 0.0
 	lock_s = lock_for(id, md, _preset_name(), _cast_dist(id, md, t), me)
+	# (a Beat technique worn that pays on this cast: on a missed roll it lets go past the window; Classic never asks)
+	_beat_late = BendLoadout.beat_s() + BEAT_MISS_S if BendLoadout.beat_paid(me, id, md) and not _beat_roll() else 0.0
 	_lock_at = _now()
 	var o := _option(id + "/" + md)
 	grown = false
@@ -1446,10 +1470,11 @@ func _release() -> void:
 	# its picked keys say; both cleared after)
 	caster.grown = grown and bool(o0.get("grow", false))
 	caster.dash_dir = _held_dir(o0, t)
-	# (the Beat, for a bot wearing a technique it pays (a test's; bots wear no loadout in a match): let go within beat_s of
-	# its lock filling, its hits' info says so, as the player's: BendR3.info_for; a flash on its own hands)
+	# (the Beat, for a bot wearing a technique that pays on this cast (a test's; bots wear no loadout in a match): let go within
+	# beat_s of its lock filling (its beat_rate's roll: begin), its hits' info says so, as the player's: BendR3.info_for; a flash
+	# on its own hands)
 	var keep_rel := BendR3.release
-	var beat := BendLoadout.beat_paid(me) and took - lock_s <= BendLoadout.beat_s()
+	var beat := BendLoadout.beat_paid(me, id, md) and took - lock_s <= BendLoadout.beat_s()
 	if beat:
 		BendR3.release = {"beat": true}
 		beat_at = _now()
@@ -1650,7 +1675,11 @@ func _answer_catch() -> void:
 	_rest_until = minf(_rest_until, at)
 	var held := _held_stone()
 	if BendLoadout.wears(me, BendZone.RETURN_TO_SENDER) and held != null and bool(held.get_meta(&"bend_clean", false)):
-		# (Return to Sender worn (a test's bot): a clean catch's E again pressed on the Beat, not at the next think)
+		if not _beat_roll():
+			# (Return to Sender worn, its Beat missed (beat_rate): E again past the window, a plain return)
+			_next[key] = maxf(at, _now() + BendLoadout.beat_s() + BEAT_MISS_S)
+			return
+		# (Return to Sender worn (a test's bot), its Beat rolled: a clean catch's E again pressed on the Beat, not at the next think)
 		var d := clampf(float(preset().get("reaction_s", 0.4)) * 0.25, 0.05, BendLoadout.beat_s() * 0.6)
 		me.get_tree().create_timer(d, false).timeout.connect(func() -> void:
 			if is_instance_valid(me) and not me.is_dead() and casting == "" and _held_stone() == held and is_instance_valid(held):

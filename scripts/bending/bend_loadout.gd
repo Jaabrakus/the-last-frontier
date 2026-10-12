@@ -26,6 +26,10 @@ extends RefCounted
 ##                                                   staling, the range exemption and every other reader of a tag see the move
 ##                                                   it is (the tree's variant tags fold back to their base, as its
 ##                                                   proposed_classes ask); volley_n only beside the node's own spec count
+##         class_when {flag: {tag: {key: number}}}   the same, only on the wearer's hits whose info carries `flag` (a class
+##                                                   change with "when": <flag>, a behaviour node's own hits): beat, a cast let
+##                                                   go on the Beat (Heave's Column); avalanche, the Avalanche's three rolling
+##                                                   stones (never the Boulder's own hit before it lands)
 ##       A node whose change touches a number nothing reads per wearer is refused whole (never half applied), and so is one whose
 ##       data drifted from its `from` (the move was retuned after the tree was written), and one that requires a node that is
 ##       not live itself (Mud Lash's numbers without the Mud set's mud would be half the node). Picks worn together follow
@@ -57,7 +61,7 @@ const FormMatter := preload("res://scripts/sway/form_matter.gd")
 ## What a body that wears nothing reads (shared and read-only: the readers never change what overlay_of gives them).
 const NONE := {}
 ## The overlay's parts (a number or a pose a node changes per wearer).
-const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new", "class_beat"]
+const PARTS := ["spec", "lock", "wall", "ice", "pose", "class", "tune", "class_new", "class_when"]
 ## THE BEHAVIOUR TALENTS (2026-10-11, the owner: "make sure all the talents work and they work in game"): a node whose effect is
 ## new code (its changes hold a "new" or "new:<what>.<key>" entry, or a class:<tag>+<variant> with a whole new class) applies only
 ## once its id is in loadout_apply.json `behaviour` ({id: where the code is}): the game's code then asks wears(body, id) at the place
@@ -84,7 +88,9 @@ const TUNE_PATHS := ["rules:guard_rules.perfect_mult", "rules:guard_rules.return
 		"rules:passives.air.after_s", "rules:passives.air.knock_mult", "stock:carried_mult", "move:stone_form.sputter_s",
 		"move:stone_form.release_s", "move:stone_form.throw.hurl.spike.mps", "move:stone_form.throw.hurl.cannonball.mps",
 		"move:stone_form.cannonball.radius_m"] + EARTH_TUNE_PATHS
-## Earth's (pass 1, 2026-10-11): the % ring's full-catch time (Juggle: RingRules.guard_outcome reads it for the guard's owner),
+## Earth's (pass 1, 2026-10-11): the % ring's full-catch time (Juggle: RingRules.guard_outcome reads it for the guard's owner;
+## that is the spec's reference answer, which no game code calls today: the game's own Catch ends its full catches at the spec's
+## window_s, which the same node sets, so the per-wearer number here only keeps the reference agreeing with the game),
 ## and a skill set's own rule (set:<set>.<key>, the tree's skill_sets.<set>.zone: Sulphur's clouds, read by BendGas for the
 ## gas's owner; set_base).
 const EARTH_TUNE_PATHS := ["stock:guard_catch_s", "set:sulphur.cloud_life_s", "set:sulphur.cloud_radius_m"]
@@ -288,7 +294,7 @@ static func _resolve(id: String) -> Dictionary:
 		return _refused("changes no number")
 	var el := id.get_slice(".", 0)
 	var out := {"ok": true, "why": "", "el": el, "spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {},
-			"class_new": {}, "class_beat": {}, "beat": false, "from": {},
+			"class_new": {}, "class_when": {}, "beat": false, "beat_on": [], "from": {},
 			"final": String(n.get("set", "")) != "" and String(n.get("kind", "")) != "skill_set"}
 	for c: Variant in (changes as Array):
 		if not (c is Dictionary):
@@ -296,11 +302,34 @@ static func _resolve(id: String) -> Dictionary:
 		var why := _take(out, n, c as Dictionary)
 		if why != "":
 			return _refused(why)
-		# (a built behaviour node whose new code is the Beat's: its wearer's held casts let go on the Beat pay, beat_paid)
-		if String(n.get("id", "")) in behaviour() and String((c as Dictionary).get("path", "")).begins_with("new") \
-				and (String((c as Dictionary).get("what", "")) + String((c as Dictionary).get("where", ""))).contains("Beat"):
-			out["beat"] = true
+	# (a built behaviour node whose new code is the Beat's: the held casts of its own move it pays on, beat_paid)
+	out["beat_on"] = _beat_on(n)
+	out["beat"] = not (out.beat_on as Array).is_empty()
 	return out
+
+
+## The held casts ("move/mode") Beat technique `n` pays on when let go on the Beat: loadout_apply.json `beat_on`[its id] when
+## that names them (Quarry: the Fissure it lets go into its wall; Return to Sender: none, its Beat is the Catch's E again,
+## BendZone.beat_return), else the node's own move and mode (Heave: "A Column let go on the Beat"; every "A <move> let go on the
+## Beat" technique of the tree). [] for a node that is no Beat technique (not built, or none of its new changes says Beat): its
+## wearer's other casts never pay, flash or carry info.beat (the tree's beat.pays: "only techniques").
+static func _beat_on(n: Dictionary) -> Array:
+	var id := String(n.get("id", ""))
+	if not id in behaviour():
+		return []
+	var says := false
+	for c: Variant in (n.get("changes", []) as Array):
+		if c is Dictionary and String((c as Dictionary).get("path", "")).begins_with("new") \
+				and (String((c as Dictionary).get("what", "")) + String((c as Dictionary).get("where", ""))).contains("Beat"):
+			says = true
+	if not says:
+		return []
+	var bo: Variant = config().get("beat_on")
+	var named: Variant = (bo as Dictionary).get(id) if bo is Dictionary else null
+	if named is Array:
+		return (named as Array).duplicate()
+	var mv := String(n.get("extends_move", ""))
+	return ["%s/%s" % [mv, String(n.get("mode", ""))]] if mv != "" else []
 
 
 ## One change into `out` ("" taken, else why not).
@@ -455,10 +484,17 @@ static func beat_s() -> float:
 	return float(w) if (w is float or w is int) else 0.2
 
 
-## Whether `body` wears a live technique that pays on the Beat (a behaviour node whose new code is the Beat's: its change says
-## so); Classic and every other loadout: false, the Beat does nothing and shows nothing.
-static func beat_paid(body: Object) -> bool:
-	return _wears(body) and bool(overlay_of(body).get("beat", false))
+## Whether `body` wears a live technique that pays on the Beat for a held cast of move `m` at `mode` (its beat_on: the node's
+## own move, _beat_on); `m` "": any of his casts (whether he wears a Beat technique at all). Classic, every other loadout and
+## every other move: false, the Beat does nothing and shows nothing.
+static func beat_paid(body: Object, m := "", mode := "") -> bool:
+	if not _wears(body):
+		return false
+	var ov := overlay_of(body)
+	if m == "":
+		return bool(ov.get("beat", false))
+	var on: Variant = ov.get("beat_on")
+	return on is Array and ("%s/%s" % [m, mode]) in (on as Array)
 
 
 ## Whether `a` and `b` are the same number (or arrays of the same numbers; `shape_only`: only the same shape).
@@ -504,11 +540,13 @@ static func _take_class(out: Dictionary, n: Dictionary, path: String, rest: Stri
 	var built := String(n.get("id", "")) in behaviour()
 	if key == "volley_n" and not _counts_with(n, tag, to) and not (built and _has_new(n)):
 		return "%s: no spec count of the node's own beside it" % path
-	if String(c.get("when", "")) == "beat":
+	var when := String(c.get("when", ""))
+	if when != "":
 		if not built:
-			return "%s: a Beat class needs its node's new code" % path
-		# (only a cast let go on the Beat sends it: hit_class reads it off a hit whose info says beat)
-		return _put_n(out, "class_beat", [tag, key], to, from)
+			return "%s: a class when %s needs its node's new code" % [path, when]
+		# (only the node's own hits whose info says so take it: hit_class; beat, a cast let go on the Beat (Heave); avalanche,
+		# the Avalanche's rolling stones)
+		return _put_n(out, "class_when", [when, tag, key], to, from)
 	return _put_n(out, "class", [tag, key], to, from)
 
 
@@ -587,7 +625,7 @@ static func _put(into: Dictionary, keys: Array, v: Variant) -> String:
 ## applies nothing. Two picks that change one number the same way from the same base stack as the tree's "stacking" says
 ## (_fold_n: their ratios multiply; a set twist's number is final).
 static func overlay_for(picks: Array, element := "") -> Dictionary:
-	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "class_beat": {},
+	var out := {"spec": {}, "lock": {}, "wall": {}, "ice": {}, "pose": {}, "class": {}, "tune": {}, "class_new": {}, "class_when": {},
 			"ids": [], "refused": {}, "from": {}}
 	for v: Variant in picks:
 		var id := String(v)
@@ -629,6 +667,11 @@ static func overlay_for(picks: Array, element := "") -> Dictionary:
 		(out.ids as Array).append(id)
 		if bool(r.get("beat", false)):
 			out["beat"] = true
+			if not (out.get("beat_on") is Array):
+				out["beat_on"] = []
+			for k: Variant in (r.get("beat_on", []) as Array):
+				if not k in (out.beat_on as Array):
+					(out.beat_on as Array).append(k)
 	return out
 
 
@@ -855,20 +898,29 @@ static func pose_of(body: Object, m: String, mode: String) -> String:
 
 ## The class `cls` (RingRules.class_of's: tagged, its growth scaled) of a hit by `body`, with the wearer's own numbers for its
 ## tag over it (`cls` itself for Classic or a tag he changes nothing of: no copy). A growth is scaled as class_of scales the
-## data's. The tag stays the move's. `info` the hit's: one sent on the Beat (info.beat: SwayCaster's release, BendR3.info_for)
-## takes the wearer's Beat class over that (Heave's Column: class_beat).
+## data's. The tag stays the move's. `info` the hit's: one whose info carries a node's flag takes the wearer's class_when for it
+## over that (info.beat, sent on the Beat by SwayCaster's release and BendR3.info_for: Heave's Column; info.avalanche: the
+## Avalanche's rolling stones, GustLift._avalanche). A returned hit's class (RingRules.return_class: its tag
+## "<origin>.return", which no node's class change names) asks here too: only a Kiln Stone's heat reaches it (info.heated).
 static func hit_class(body: Object, cls: Dictionary, info := {}) -> Dictionary:
 	if cls.is_empty() or not _wears(body):
 		return cls
 	var ov := overlay_of(body)
-	var over: Variant = (ov.get("class", {}) as Dictionary).get(String(cls.get("tag", "")))
-	var beat: Variant = (ov.get("class_beat", {}) as Dictionary).get(String(cls.get("tag", ""))) if bool(info.get("beat", false)) else null
+	var tag := String(cls.get("tag", ""))
+	var over: Variant = (ov.get("class", {}) as Dictionary).get(tag)
+	# (a node's class "when" <flag>: only on his hits whose info carries the flag; beat: let go on the Beat, Heave's Column)
+	var whens: Array = [over]
+	var cw: Variant = ov.get("class_when")
+	if cw is Dictionary:
+		for f: String in (cw as Dictionary):
+			if bool(info.get(f, false)) and ((cw as Dictionary)[f] as Dictionary).get(tag) is Dictionary:
+				whens.append(((cw as Dictionary)[f] as Dictionary)[tag])
 	# (Kiln Stone: a stone of his heated by fire it crossed, BendZone.KILN_STONE: its launch base higher)
 	var heated := bool(info.get("heated", false)) and wears(body, BendZone.KILN_STONE)
-	if not (over is Dictionary) and not (beat is Dictionary) and not heated:
+	if not (over is Dictionary) and whens.size() == 1 and not heated:
 		return cls
 	var out := cls.duplicate()
-	for o: Variant in [over, beat]:
+	for o: Variant in whens:
 		if o is Dictionary:
 			for k: String in o:
 				out[k] = float(o[k]) * (RingRules.stock_num("growth_scale", 1.0) if k == "growth" else 1.0)

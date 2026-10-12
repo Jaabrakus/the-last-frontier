@@ -156,6 +156,8 @@ static func make(by: Node3D, p_kind: String, at: Vector3, spec: Dictionary, p_wa
 	var w := Vector3(p_way.x, 0.0, p_way.z)
 	z.way = w.normalized() if w.length_squared() > 1e-6 else Vector3.FORWARD
 	z.add_to_group(GROUP)
+	if p_kind == "gas":
+		BendGas.live_n += 1                      # (Sulphur's gas, counted where it is made: the host's BendGas.make, a joiner's net word)
 	if p_kind == "puddle":
 		z.add_to_group(Bending.POOLS)
 		z.set_meta(&"reach_m", z.radius + 1.0)

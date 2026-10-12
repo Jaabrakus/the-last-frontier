@@ -236,8 +236,9 @@ func _run() -> void:
 				var key0 := rest.get_slice("+", 1).get_slice(".", 1)
 				var base_c := RingRules.class_of(tag0)
 				var gs := RingRules.stock_num("growth_scale", 1.0) if key0 == "growth" else 1.0
-				# (a Beat class, a change with when "beat", is the wearer's on a hit let go on the Beat: Heave's)
-				var wc := BendLoadout.hit_class(w, base_c, {"beat": true} if String(c.get("when", "")) == "beat" else {})
+				# (a class change with when <flag> is the wearer's on a hit whose info carries the flag: "beat", let go on the Beat
+				# (Heave's); "avalanche", the Avalanche's rolling stones)
+				var wc := BendLoadout.hit_class(w, base_c, {String(c.when): true} if String(c.get("when", "")) != "" else {})
 				var bc0 := BendLoadout.hit_class(bot, base_c)
 				_expect(_near(wc.get(key0), to * gs) and String(wc.get("tag", "")) == tag0,
 						"%s: the wearer's %s hits have %s %s, the tag kept (%s)" % [id, tag0, key0, to, wc.get(key0)])

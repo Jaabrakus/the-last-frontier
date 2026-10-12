@@ -386,8 +386,9 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	return s
 
 
-## Avalanche's wearer (GustLift.AVALANCHE: his Boulder's class is a volley of three for the stones it breaks into): the Boulder
-## itself, until it lands, one stone whose hit is whole (its info volley_n 1). Anyone else's throw: untouched.
+## Avalanche's wearer (GustLift.AVALANCHE: the node's class numbers, a volley of three at base 5.9, are the rolling stones' own,
+## class_when avalanche): the Boulder itself, until it lands, one stone whose hit is whole (its info volley_n 1; its class
+## Classic's). Anyone else's throw: untouched.
 static func _one_boulder(bc: BendCaster, th: Throw, mode: String) -> void:
 	if th != null and mode == "cannonball" and BendLoadout.wears(bc.body, GustLift.AVALANCHE) and not th.info.is_empty():
 		th.info["volley_n"] = 1

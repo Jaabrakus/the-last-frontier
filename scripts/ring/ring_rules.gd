@@ -1151,6 +1151,9 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var cls: Dictionary
 	if returned:
 		cls = return_class(String(info.get("origin_tag", "")), float(info.get("ret_mult", 0.0)))
+		# (the returner's worn numbers: only a Kiln Stone's heat reaches a return, a stone of his thrown back through fire,
+		# info.heated; its ".return" tag is no class a node changes. Classic: as is)
+		cls = BendLoadout.hit_class(by, cls, info)
 	elif tag != "":
 		cls = class_of(tag)
 		cls = BendLoadout.hit_class(by, cls, info)    # (the hitter's worn numbers for this tag, a skill tree node's; Classic: as is)

@@ -1613,8 +1613,9 @@ func _physics_process(dt: float) -> void:
 				elif _cast_wait():
 					_queued = true                # (round 3: hitstun, landing lag, ground spell in the air: kept until allowed)
 				else:
-					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer it pays; never a click)
-					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player)
+					# (the Beat: a held cast let go within beat_s of its lock filling, for a wearer of a technique that pays on
+					# this move and mode (Heave's Column, Quarry's Fissure: BendLoadout.beat_paid); never a click, never his other casts)
+					_beat_go = elem() and full_t <= BendLoadout.beat_s() and BendLoadout.beat_paid(player, move, mode_of(move))
 					_cast()
 					_beat_go = false
 			State.LOCKING:

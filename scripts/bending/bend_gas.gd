@@ -19,7 +19,8 @@ extends RefCounted
 ##                face once (every: its own look round, each 0.25 s); lightning through it charges it (live, Live Gas: everyone
 ##                inside takes LIVE_K of the strike's %, % only; the gas stays)
 ##   the sources  the set: his Boulder's end (a cloud where it bursts) and a stone clash with a foe's (a cloud where they met);
-##                Sulphur Spike: a puff where his Spike stops; Sulphur Boulder: three puffs along its flight; Fuming Column:
+##                Sulphur Spike: a puff where his Spike stops; Sulphur Boulder: three puffs laid behind it as it flies (each
+##                on the deck under its mark as it passes, GustLift._trail; none over the water); Fuming Column:
 ##                a plume where his pillar rose; Brimstone Wall: a cloud 1 m out on the shooter's side of his wall shot down;
 ##                Sulphur Vent: a new skill (4 tapped twice: moves.json earth_wall.talent_bend.vent, BendLoadout's new skills),
 ##                the deck cracked where he aims (2-6 m, placed like a wall) breathing a cloud of the spec's 3 m for 4 s (one
@@ -60,8 +61,14 @@ const HEART_MULT := 1.15
 const PLUME_R := 2.0
 const PLUME_S := 3.0
 const TRAIL_PUFFS := 3
+## How far below a flying Boulder its trail looks for the deck (m), and how far under the deck it was hurled from a floor may
+## be and still count as its deck (lower: the water's tank or the ring's catch floor, no puff).
+const TRAIL_DOWN_M := 12.0
+const TRAIL_DROP_M := 1.5
 
-## Gas zones made and not yet ended (a quick "none" for every reader while there is none: Classic never makes one).
+## Gas zones made and not yet ended (a quick "none" for every reader while there is none: Classic never makes one). Counted by
+## BendZone.make for every gas zone it makes: the host's (make) and, online, a joiner's from the host's word (NetSpells "zone"),
+## so his own machine's readers (Sulphur Heart's fill, home_mult) see the gas there too.
 static var live_n := 0
 static var _made_n := 0
 
@@ -98,8 +105,7 @@ static func make(by: Node3D, at: Vector3, kind := "cloud", r := -1.0, life := -1
 	BendR3.cur = {}
 	var z := BendZone.make(by, "gas", foot, {"radius_m": rad, "life_s": lf})
 	BendR3.cur = keep
-	_made_n += 1
-	live_n += 1
+	_made_n += 1                                   # (live_n: counted by BendZone.make, which a joiner's machine runs too)
 	z.set_meta(&"gas_cap", cp)
 	z.set_meta(&"gas_kind", kind)
 	z.set_meta(&"gas_n", _made_n)
@@ -431,8 +437,10 @@ static func way_out(body: Node3D) -> Vector3:
 
 
 ## A thrown stone of `by`'s stopped at `at` (GustLift: burst on a body, the deck, a wall; `kind` spike or cannonball; `from`
-## where its flight began): the set's sources (see the header).
-static func stone_end(by: Node3D, kind: String, at: Vector3, from: Vector3) -> void:
+## where its flight began): the set's sources (see the header). `laid`: the Sulphur Boulder's trail puffs it laid as it flew
+## (GustLift._trail); the rest of the TRAIL_PUFFS (a flight cut short: it met a body or a wall before the deck) behind it now,
+## along its flight from `from`, on the deck only (trail_puff).
+static func stone_end(by: Node3D, kind: String, at: Vector3, from: Vector3, laid := 0) -> void:
 	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, SET):
 		return
 	if kind == "spike":
@@ -443,8 +451,52 @@ static func stone_end(by: Node3D, kind: String, at: Vector3, from: Vector3) -> v
 		return
 	make(by, at, "cloud")
 	if BendLoadout.wears(by, BOULDER) and from.is_finite():
-		for i in TRAIL_PUFFS:
-			make(by, from.lerp(at, float(i + 1) / float(TRAIL_PUFFS + 1)), "puff")
+		for i in range(laid, TRAIL_PUFFS):
+			trail_puff(by, from.lerp(at, float(i + 1) / float(TRAIL_PUFFS + 1)), from)
+
+
+## Sulphur Boulder: the flat distance between the trail puffs a Boulder of `by`'s lays as it flies from `from` at `v` (its
+## gravity `g`): its flight to the deck under its start foreseen and split in TRAIL_PUFFS + 1, so the puffs fall evenly behind
+## it, each laid as the Boulder passes its mark (GustLift._trail). 0: none (not worn with the set, or no flight to speak of).
+static func trail_step(by: Node3D, from: Vector3, v: Vector3, g: float) -> float:
+	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, SET) or not BendLoadout.wears(by, BOULDER):
+		return 0.0
+	var deck := deck_under(by, from)
+	var h := maxf(from.y - deck.y, 0.0) if deck.is_finite() else 0.0
+	var gg := maxf(g, 0.01)
+	var t := (v.y + sqrt(maxf(v.y * v.y + 2.0 * gg * h, 0.0))) / gg
+	var flat := Vector2(v.x, v.z).length() * t
+	return flat / float(TRAIL_PUFFS + 1) if flat > 0.5 else 0.0
+
+
+## A trail puff of `by`'s on the deck under `at` (`from` where the Boulder was hurled: the deck it flies over is the one under
+## that, give or take TRAIL_DROP_M). Null over no deck: over the water, or only the tank's floor far under it (a puff there is
+## washed, the tree's reaction rule).
+static func trail_puff(by: Node3D, at: Vector3, from: Vector3) -> BendZone:
+	var home := deck_under(by, from)
+	var deck := deck_under(by, at)
+	if not deck.is_finite() or (home.is_finite() and deck.y < home.y - TRAIL_DROP_M):
+		return null
+	return make(by, deck, "puff")
+
+
+## The floor under `at` (the first a ray straight down meets within TRAIL_DOWN_M, past bodies, stones and raised walls), INF
+## none.
+static func deck_under(n: Node3D, at: Vector3) -> Vector3:
+	if n == null or not is_instance_valid(n) or not n.is_inside_tree():
+		return Vector3.INF
+	var space := n.get_world_3d().direct_space_state
+	var ex: Array[RID] = []
+	for i in 6:
+		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.5, at + Vector3.DOWN * TRAIL_DOWN_M, 1, ex))
+		if h.is_empty():
+			return Vector3.INF
+		var col := h.collider as Object
+		if col is CharacterBody3D or col is RigidBody3D or col is FormRaised or col is PhysicalBone3D:
+			ex.append(h.rid)
+			continue
+		return h.position
+	return Vector3.INF
 
 
 ## Two casters' stones met at `at` (BendBolt.meet, meet_lift, GustLift._meet_lifts): a cloud for each side wearing the set (his

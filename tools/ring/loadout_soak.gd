@@ -8,6 +8,8 @@ extends SceneTree
 ##   zsh tools/loop/godot_run.sh --headless --fixed-fps 60 --path . -s tools/ring/loadout_soak.gd -- element=air nodes=air.slice.keen \
 ##       [n=30] [seed=7300] [difficulty=normal] [start_side=0] [round_s=480] [ts=1]
 ##   element=<e>   both sides' element (a mirror); nodes=<id,id> the wearer's picks, or nodes=all for every live node of that element
+##                 that one loadout may wear together (the skill tree's excludes: of two that exclude each other the first in the
+##                 live list stays, the other is named on an "LSOAK nodes=all" line and not worn)
 ##   n=<count>     games in this run (a game is one match: 3 lives each; not games=, which is MatchSetup's own key: best of 3);
 ##                 start_side= which side wears in game 0, then alternating
 ##   Every node asked for is forced on here whatever loadout_apply.json's switches say (the soak is what flips them); a node that
@@ -79,7 +81,8 @@ func _initialize() -> void:
 		print("%s FAILED (element=%s)" % [NAME, el])
 		quit(1)
 		return
-	if picks == ["all"]:
+	var all_asked := picks == ["all"]
+	if all_asked:
 		picks = []
 		for id: String in BendLoadout.config().get("live", []):
 			if id.get_slice(".", 0) == el and bool(BendLoadout.resolve(id).ok):
@@ -89,6 +92,16 @@ func _initialize() -> void:
 	for id: Variant in picks:
 		forced[String(id)] = true
 	BendLoadout.config_override = {"enabled": true, "live": picks.duplicate(), "nodes": forced}
+	if all_asked:
+		# (nodes=all: the element's live nodes as one loadout may wear them together; the skill tree's excludes keep a later pick
+		# from an earlier one (Heave or Fuming Column, Thick or Brimstone Wall, Heavy or Sulphur Boulder): the first stays)
+		var ov_all := BendLoadout.overlay_for(picks, el)
+		for id: Variant in (ov_all.refused as Dictionary):
+			if String((ov_all.refused as Dictionary)[id]).begins_with("exclude"):
+				print("LSOAK nodes=all: %s not worn with the others (%s)" % [id, (ov_all.refused as Dictionary)[id]])
+				picks.erase(id)
+				forced.erase(id)
+		BendLoadout.config_override = {"enabled": true, "live": picks.duplicate(), "nodes": forced}
 	var refused: Array = []
 	for id: Variant in picks:
 		if not bool(BendLoadout.resolve(String(id)).ok):

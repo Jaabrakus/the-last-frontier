@@ -330,6 +330,8 @@ func _fly(dt: float) -> void:
 		return
 	if not heated and not ghost and BendLoadout.wears(by(), BendZone.KILN_STONE):
 		_kiln_check()
+	if not ghost and _trail_step != 0.0:
+		_trail()                                 # (Sulphur Boulder worn: its gas puffs laid behind it as it flies)
 	var hd := _hurl_d()
 	velocity.y -= float(hd.get("gravity", 6.0)) * dt
 	var lead := _lead() * smoothstep(0.0, LEAD_IN_S, _fly_t)
@@ -539,14 +541,40 @@ var heated := false
 var _kiln_trail: GPUParticles3D
 ## Where its flight began (hurl), for Sulphur Boulder's trail (BendZone.BendGas.stone_end).
 var _hurl_from := Vector3.INF
+## Sulphur Boulder's trail (BendGas.BOULDER worn): the flat distance between the puffs it lays as it flies (BendGas.trail_step,
+## worked out on its first flight frame; -1 not yet, 0 none) and how many it has laid.
+var _trail_step := -1.0
+var _trail_n := 0
 
 
 ## Its stone stopped at `at` (a burst on a body, the deck, a wall; a landing): the Sulphur set's gas where a wearer's own Spike
-## or Boulder stops (BendGas.stone_end; never a returned stone).
+## or Boulder stops (BendGas.stone_end; never a returned stone), and the trail puffs its flight did not reach.
 func _gas_end(at: Vector3) -> void:
+	if _gas_ours():
+		BendZone.BendGas.stone_end(by() as Node3D, kind, at, _hurl_from, _trail_n)
+
+
+## Whether its stone is a Stone Form throw of its caster's own (never a returned one), decided here (the host's online).
+func _gas_ours() -> bool:
 	var inf: Dictionary = get_meta(&"bend_info", {})
-	if String(inf.get("tag", "")).begins_with("stone_form/") and not bool(inf.get("returned", false)) and NetSpells.decides():
-		BendZone.BendGas.stone_end(by() as Node3D, kind, at, _hurl_from)
+	return String(inf.get("tag", "")).begins_with("stone_form/") and not bool(inf.get("returned", false)) and NetSpells.decides()
+
+
+## Sulphur Boulder (BendGas.BOULDER): its Boulder lays TRAIL_PUFFS gas puffs behind it as it flies, evenly over the flight
+## foreseen from where it was hurled (BendGas.trail_step), each on the deck under the Boulder as it passes its mark (none over
+## the water); the ones its flight did not reach are laid where it stops (stone_end).
+func _trail() -> void:
+	if _trail_step < 0.0:
+		_trail_step = 0.0
+		if kind == "cannonball" and _hurl_from.is_finite() and _gas_ours():
+			_trail_step = BendZone.BendGas.trail_step(by() as Node3D, _hurl_from, velocity, float(_hurl_d().get("gravity", 6.0)))
+		if _trail_step <= 0.0:
+			return
+	var p := stone.global_position
+	var flat := Vector2(p.x - _hurl_from.x, p.z - _hurl_from.z).length()
+	while _trail_n < BendZone.BendGas.TRAIL_PUFFS and flat >= _trail_step * float(_trail_n + 1):
+		_trail_n += 1
+		BendZone.BendGas.trail_puff(by() as Node3D, p, _hurl_from)
 
 
 func _kiln_check() -> void:
