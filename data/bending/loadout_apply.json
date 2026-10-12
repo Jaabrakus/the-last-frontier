@@ -57,9 +57,12 @@
     "water.passive.rapids": true,
     "fire.parry.reaching": true,
     "air.passive.long_carry": true,
-    "air.passive.gale_force": true
+    "air.passive.gale_force": true,
+    "earth.catch.juggle": true
   },
-  "behaviour": {},
+  "behaviour": {
+    "earth.catch.juggle": "BendZone._take_stone / held_stone / held_stones (two held side by side, the oldest thrown first, a third dropped at his feet); window_s and stock:guard_catch_s per wearer (RingRules.guard_outcome)"
+  },
   "live": [
     "air.ball.dense",
     "air.gust.full_sail",
@@ -83,6 +86,6 @@
     "fire.lightning.shock",
     "air.pull.trip",
     "air.wall.prison",
-    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force"],
+    "water.wave.drench", "earth.catch.clean_return", "earth.catch.open_hands", "earth.spike.steady_point", "earth.spike.swift_lance", "earth.boulder.heavy", "earth.passive.deep_roots", "earth.passive.swift_roots", "water.turn.patient", "water.passive.lazy_river", "water.passive.rapids", "fire.parry.reaching", "air.passive.long_carry", "air.passive.gale_force", "earth.catch.juggle"],
   "styles_live": ["boxing"]
 }

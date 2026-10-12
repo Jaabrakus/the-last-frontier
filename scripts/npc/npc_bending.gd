@@ -1015,6 +1015,16 @@ func _stone_from_pop() -> void:
 	if held and not _held_seen:
 		_answer_catch()
 	_held_seen = held
+	if BendLoadout.wears(me, BendZone.JUGGLE):
+		# (Juggle worn: one of its two held stones thrown, the other thrown next, as E again)
+		var n := BendZone.held_stones(me).size()
+		if held and n < _juggle_n:
+			_answer_catch()
+		_juggle_n = n
+
+
+## Juggle's wearer: how many stones it held at the last tick (_stone_from_pop).
+var _juggle_n := 0
 
 
 ## The stone it holds (caught: BendZone.held_stone, the player's own reckoning), null none.

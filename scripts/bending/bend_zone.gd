@@ -903,15 +903,44 @@ static func guard_lock_s(body: Node, base: float) -> float:
 	return base
 
 
-## The stone `body` caught and holds (a catch's: meta bend_held_by; not one flying or lifted), null none.
+## The stone `body` caught and holds (a catch's: meta bend_held_by; not one flying or lifted), null none. Juggle's wearer (a
+## skill tree twist: two held from one window) gets the one he caught first: E throws the oldest, E again the other.
 static func held_stone(body: Node) -> Node3D:
 	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
 		return null
 	var id := body.get_instance_id()
+	var juggle := BendLoadout.wears(body, JUGGLE)
+	var best: Node3D = null
 	for s in body.get_tree().get_nodes_in_group(FormStone.GROUP):
 		if int((s as Node).get_meta(&"bend_held_by", -1)) == id and not GustLift.busy(s) and not (s as Node).is_queued_for_deletion():
-			return s as Node3D
-	return null
+			if not juggle:
+				return s as Node3D
+			if best == null or float((s as Node).get_meta(&"bend_caught_at", 0.0)) < float(best.get_meta(&"bend_caught_at", 0.0)):
+				best = s as Node3D
+	return best
+
+
+## Earth's Juggle (data/sway/skill_tree.json earth.catch.juggle; the owner, 2026-10-11: "make sure all the talents work"): its
+## wearer's Catch holds up to JUGGLE_MAX stones from one window, side by side before him (the second JUGGLE_SIDE_M beside the
+## first); E throws the one caught first (held_stone), E again the other; one more reaching it then is stopped and dropped at
+## his feet, a loose stone of its thrower's. Its full-catch time is the node's own (spec window_s, stock guard_catch_s).
+const JUGGLE := "earth.catch.juggle"
+const JUGGLE_MAX := 2
+const JUGGLE_SIDE_M := 0.6
+
+
+## Every stone `body` holds from a catch (oldest first).
+static func held_stones(body: Node) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return out
+	var id := body.get_instance_id()
+	for s in body.get_tree().get_nodes_in_group(FormStone.GROUP):
+		if int((s as Node).get_meta(&"bend_held_by", -1)) == id and not GustLift.busy(s) and not (s as Node).is_queued_for_deletion():
+			out.append(s as Node3D)
+	out.sort_custom(func(a: Node3D, b: Node3D) -> bool:
+		return float(a.get_meta(&"bend_caught_at", 0.0)) < float(b.get_meta(&"bend_caught_at", 0.0)))
+	return out
 
 
 ## A caught stone `s` held by caster `c` thrown back along its aim (E again, or Shove: spec §2.6): its own weight, speed,
@@ -1072,6 +1101,7 @@ func _take_bolt(b: BendBolt, perfect := false) -> void:
 	var rad := clampf(b.radius, 0.12, 0.45)
 	var own: Dictionary = b.stone_d if not b.stone_d.is_empty() else {"mps": v.length(), "damage": b.damage,
 			"knock_mps": b.knock_mps, "gravity": b.gravity, "pierce": false, "weight": b.weight}
+	var thrower := b._by()
 	b.end("caught" if kind == "catch" else "cushioned")
 	var s := FormStone.ball(get_tree().current_scene, at - Vector3.UP * rad, {"radius_m": rad, "mass_kg": 20.0, "rise_s": 0.01,
 			"life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
@@ -1085,7 +1115,7 @@ func _take_bolt(b: BendBolt, perfect := false) -> void:
 		s.set_meta(&"bend_rally", b.rally)
 		s.set_meta(BendR3.ORIGIN_META, String(b.info.get("origin_tag", b.info.get("tag", "stone_form/spike"))))
 	stones.append(s)
-	_take_stone(s, v, perfect)
+	_take_stone(s, v, perfect, thrower)
 
 
 ## What burns in it goes out: fire walls and burning ground (steam), campfires, torches not in its owner's hand. How many.
@@ -1200,7 +1230,7 @@ func _stones() -> void:
 					"pierce": bool(hd.get("pierce", false))})
 		var thrower2 := _body_of(lift.caster)
 		lift.drop(false)
-		_take_stone(s, v, perfect)
+		_take_stone(s, v, perfect, thrower2)
 		if r2 and kind == "catch":
 			_result("perfect" if perfect else "late", "stone", thrower2)
 	for f in get_tree().get_nodes_in_group(NpcBending.FLIGHT_GROUP):
@@ -1237,7 +1267,7 @@ func _late_lift(lift: GustLift) -> void:
 	lift.d = d
 
 
-func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
+func _take_stone(s: Node3D, v: Vector3, perfect := false, thrower: Node = null) -> void:
 	took += 1
 	var rb := s as RigidBody3D
 	match kind:
@@ -1246,6 +1276,15 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 			var out := Vector3(-v.x, 0.0, -v.z)
 			out = out.normalized() if out.length_squared() > 1e-6 else -owner_node.global_basis.z
 			var front := owner_node.global_position + out * 1.3 + Vector3.UP * 1.1
+			if r2 and BendLoadout.wears(owner_node, JUGGLE):
+				# (Juggle: two held side by side; one more is stopped and dropped at his feet, its thrower's loose stone)
+				var have := held_stones(owner_node)
+				have.erase(s)
+				if have.size() >= JUGGLE_MAX:
+					_juggle_drop(s, v, thrower)
+					return
+				if have.size() == 1:
+					front = have[0].global_position + Vector3.UP.cross(out).normalized() * JUGGLE_SIDE_M
 			if rb != null:
 				rb.freeze = true
 			if s is FormStone and (s as FormStone).kind == "spike":
@@ -1281,6 +1320,21 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false) -> void:
 			if s is FormStone:
 				(s as FormStone).rest_again()
 			BendLooks.burst(s.global_position, "air", 18)
+
+
+## Juggle's wearer holding two already (see JUGGLE): stone `s` stopped and dropped at his feet, lying loose (whoever's it was).
+func _juggle_drop(s: Node3D, v: Vector3, by: Node = null) -> void:
+	var flat := Vector3(v.x, 0.0, v.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else -owner_node.global_basis.z
+	s.global_position = FormEffects.ground_at(owner_node, owner_node.global_position - flat * 0.8) + Vector3.UP * 0.25
+	var rb := s as RigidBody3D
+	if rb != null:
+		rb.freeze = false
+		rb.linear_velocity = Vector3.DOWN * 0.5
+	if s is FormStone:
+		(s as FormStone).rest_again()
+	FormStone.make_loose(s, by)
+	BendLooks.burst(s.global_position, "stone", 10)
 
 
 func end(why := "ended") -> void:
