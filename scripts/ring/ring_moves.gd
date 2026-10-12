@@ -2144,7 +2144,7 @@ func intent_from_keys() -> Dictionary:
 			fresh += yb * Vector3(pair[1])
 	var attack := c.just_pressed(&"fire")
 	var cast := attack or c.just_pressed(&"aim")
-	for k: StringName in [&"weapon_1", &"weapon_2", &"weapon_4", &"weapon_5"]:
+	for k: StringName in [&"weapon_1", &"weapon_2", &"weapon_4", &"weapon_5", Hotbar.SWAP_ACTION]:
 		cast = cast or c.just_pressed(k)
 	var aim := -p.camera.global_basis.z if p.camera != null else -p.global_basis.z
 	return {"move": move.limit_length(1.0), "jump": c.just_pressed(&"jump"), "jump_short": false, "jump_held": c.pressed(&"jump"),

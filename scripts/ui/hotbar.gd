@@ -47,6 +47,8 @@ extends Node
 ##                kept, another key ends it), the wheel too (SwayCaster.step_other)
 ##   round 3      in a stock-rules ring (RingRules.stock_on) key 3 acts at once and readies nothing, in every scheme
 ##                (SwayCaster.key3_press: the dash on the deck, the air dodge in the air)
+##   F            keys 1 and 2 swapped (SWAP_ACTION; the owner, 2026-10-11: "the F should toggle between 1 and 2"): an element's
+##                fighter's readied move goes to the other of the two keys, as that key's press would (swap_keys)
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -62,6 +64,8 @@ const SPELL := "spell"
 const KINDS := [WEAPON, TOOL, SPELL]
 ## Slot i's key action (i from 1): the old weapon keys.
 const ACTION := "weapon_%d"
+## F: keys 1 and 2 swapped for an element's fighter (swap_keys; InputSetup).
+const SWAP_ACTION := &"bend_swap"
 ## The one-button cycles whose number keys the slots take ([action, key]); the actions stay, unbound, for remapping.
 const TAKEN_KEYS := [[&"tool_cycle", KEY_7], [&"fish_gear", KEY_8]]
 ## What is had is looked at every SYNC_EVERY physics frames (and at every key).
@@ -686,6 +690,8 @@ func handle_input(event: InputEvent) -> bool:
 		if InputMap.has_action(a) and event.is_action_pressed(a):
 			select(i)
 			return true
+	if InputMap.has_action(SWAP_ACTION) and event.is_action_pressed(SWAP_ACTION) and swap_keys():
+		return true
 	if InputMap.has_action(&"weapon_next") and event.is_action_pressed(&"weapon_next"):
 		wheel(1)
 		return true
@@ -693,6 +699,17 @@ func handle_input(event: InputEvent) -> bool:
 		wheel(-1)
 		return true
 	return false
+
+
+## Keys 1 and 2 swapped (F, SWAP_ACTION): an element's fighter's readied move goes to the other of keys 1 and 2, as a press of
+## that key would ready it (its first move; a lock under way ended as another key's press ends it); key 1 when neither is
+## readied. False when the bar is no element's (the open world's F is the cook key).
+func swap_keys() -> bool:
+	if player == null or not (_element_keys() or _first_only()):
+		return false
+	var k := Bending.key_of(_element(), spell) if spell != "" else -1
+	select(1 if k == 0 else 0)
+	return true
 
 
 ## The mouse wheel a step (`dir` 1 down, -1 up): first moves, the next of the four; an element's keys, the readied move's

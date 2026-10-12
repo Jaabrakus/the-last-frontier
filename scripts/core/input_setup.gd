@@ -33,6 +33,9 @@ const KEYS := {
 	# screen (FrontierPlayer's "inventory") only while that scheme is on. Nothing else in the ring reads Tab, Q is the quick
 	# spell's set key, 1-5 the keys, the mouse wheel the forms, F1 the help, Esc the menu
 	"bend_wheel": [KEY_TAB],
+	# an element's fighter's keys 1 and 2 swapped (Hotbar.swap_keys; the owner, 2026-10-11: "the F should toggle between 1 and
+	# 2"): F is the open world's cook key too, read there only at a lit campfire; the swap only by an element's fighter
+	"bend_swap": [KEY_F],
 }
 const MOUSE := {
 	"fire": [MOUSE_BUTTON_LEFT],
