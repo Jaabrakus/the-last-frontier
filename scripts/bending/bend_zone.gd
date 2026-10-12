@@ -700,6 +700,12 @@ func on_bolt(b: BendBolt) -> bool:
 				BendLooks.sound("steam", "hit", b.global_position, -6.0)
 				b.end("quenched")
 				return true
+			if b.low and b.kind == "stone" and not b.floor_wave:
+				# (a stone rolling along the deck, a low stone bolt: earth's Avalanche, built in its lane; Classic has none)
+				# stops in the mud; a stone in the air passes over it
+				BendLooks.burst(b.global_position, "stone", 10, Vector3.UP, 60.0, 1.5, 0.2)
+				b.end("dropped")
+				return true
 	return false
 
 

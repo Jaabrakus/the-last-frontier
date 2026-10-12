@@ -34,8 +34,9 @@ extends SceneTree
 ##                    in his own puddle or at a grate, 1.6 s dry or in another's puddle (1.5)
 ##   the Mud set      his Downpour leaves a mud pool of his for 8 s (a puddle for 6 not worn), still a pool; a Kick's floor fire
 ##                    dies in his mud and hits across a puddle; a Fire Wall over it burns 2 s and dries it in about 1 s; a
-##                    rolling stone stops in it; a seam (the fire set's interface, a stand-in) is quenched; four pools of his at
-##                    most; his Splash 25.2 and Lash 30.6 m/s (28, 34); a bot's Downpour its own mud
+##                    rolling stone stops in it, a low stone bolt rolling along the deck too (the Avalanche's kind); a seam
+##                    (the fire set's interface, a stand-in) is quenched; four pools of his at most; his Splash 25.2 and Lash
+##                    30.6 m/s (28, 34); a bot's Downpour its own mud
 ##   Mud Lash         (with the set) the Lash flies 28 m/s; fire it meets is smothered, no steam (the set alone: steam); it adds
 ##                    10 for 9 and launches harder; a bot's smothers too
 ##   Mudslide         (with the set) the Wave reaches 7.5 m (9), grown 10 m (12), and leaves a 2 m mud pool of his where it
@@ -1181,6 +1182,32 @@ func _roll_into_pool() -> Dictionary:
 	return out
 
 
+## A stone of the foe's rolling along the deck (a low stone bolt, as earth's Avalanche rolls its three) across a pool of the
+## player's 4 m on its way: whether it ended inside the pool (stopped there) and how far it went.
+func _low_stone_through_pool() -> Dictionary:
+	await _face_off(10.0)
+	var way := (player.global_position - foe.global_position)
+	way.y = 0.0
+	way = way.normalized()
+	var pool := _pool_at(player, foe.global_position + way * 4.0, 1.5)
+	await _ticks(2)
+	var from := FormEffects.ground_at(foe, foe.global_position + way * 1.0) + Vector3.UP * BendBolt.LOW_M
+	var b := BendBolt.launch(foe, from, way, {"kind": "stone", "low": true, "mps": 12.0, "range_m": 8.0, "radius_m": 0.18,
+			"damage": 4.0, "weight": "medium", "flight": "spinning"})
+	var last := from
+	var got := {"why": ""}                            # (a lambda writes into a dictionary: its locals are copies)
+	if b != null:
+		b.ended.connect(func(w: String) -> void: got["why"] = w)
+	for i in 60:
+		if b == null or not is_instance_valid(b) or b.spent:
+			break
+		last = b.global_position
+		await physics_frame
+	var out := {"why": String(got.why), "inside": is_instance_valid(pool) and pool.inside(last), "went": Vector2(last.x - from.x, last.z - from.z).length()}
+	await _end_pools()
+	return out
+
+
 func _mud_set() -> void:
 	var mud := ["water.set.mud"]
 	_wear(player, mud)
@@ -1190,6 +1217,7 @@ func _mud_set() -> void:
 	var kick_w: float = await _kick_through_pool()
 	var fire_w: Dictionary = await _fire_over_pool()
 	var roll_w: Dictionary = await _roll_into_pool()
+	var low_w: Dictionary = await _low_stone_through_pool()
 	# a magma seam (the fire set's, built elsewhere: a BendZone of kind seam) over his mud is quenched
 	await _face_off(10.0)
 	_pool_at(player, home, 2.0)
@@ -1217,6 +1245,7 @@ func _mud_set() -> void:
 	var kick_c: float = await _kick_through_pool()
 	var fire_c: Dictionary = await _fire_over_pool()
 	var roll_c: Dictionary = await _roll_into_pool()
+	var low_c: Dictionary = await _low_stone_through_pool()
 	await _face_off(10.0)
 	_pool_at(player, home, 2.0)
 	var seam0 := BendZone.make(foe, "seam", FormEffects.ground_at(foe, home), {"width_m": 1.5, "height_m": 0.4, "thick_m": 4.0, "life_s": 3.0})
@@ -1235,6 +1264,8 @@ func _mud_set() -> void:
 			float(fire_w.wall_life), float(fire_w.pool_gone_s), float(fire_c.wall_life)])
 	_expect(float(roll_w.speed) < 0.5 and bool(roll_w.inside) and (float(roll_c.speed) > 0.5 or not bool(roll_c.inside)),
 			"the Mud set: a rolling stone stops in his mud (%s); through a puddle it rolls on (%s)" % [roll_w, roll_c])
+	_expect(String(low_w.why) == "dropped" and bool(low_w.inside) and float(low_c.went) > float(low_w.went) + 1.0,
+			"the Mud set: a stone rolling along the deck (a low stone bolt, the Avalanche's kind) stops in his mud (%s); through a puddle it rolls on (%s)" % [low_w, low_c])
 	_expect(seam_w and not seam_c, "the Mud set: a magma seam over his mud is quenched (a stand-in seam: the fire set is built elsewhere); not over a puddle")
 	_expect(n_mud == 4, "the Mud set: four mud pools of his at most (%d)" % n_mud)
 	_expect(absf(float(sw[0]) - 25.2) < 0.05 and absf(float(sw[1]) - 30.6) < 0.05 and absf(float(sc0[0]) - 28.0) < 0.05 and absf(float(sc0[1]) - 34.0) < 0.05,

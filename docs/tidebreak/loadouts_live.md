@@ -288,9 +288,10 @@ nothing to wash); once it is live they are too. Gas then comes only from a Sulph
 or a Geyser washes out the gas it passes", for everyone): the Geyser here (`BendEffects._wash_gas`), the Wave's cone in earth's
 lane (`BendGas.cone`). **Merge note:** earth's `BendGas.react` washes gas with any water bolt, everyone's Splash and Lash: that
 makes Washout's plus everyone's. Per the tree its water branch should wash only when `BendZone.washes(b)` (Washout's wearer's
-Splash and Lash), else let the bolt fly on through. Cleanse "draws on the dormant water_redirect cleanse" (the tree's rule: each
-twist names the dormant mode it draws on) for its look and its gas; the dormant spec's own effect (a root and a slow cleared on
-the caster) is not cast: in the % ring a root is a bind, and lifting one is not in the node.
+Splash and Lash), else let the bolt fly on through. Cleanse's "draws on the dormant water_redirect cleanse" is the tree's source
+note (each twist names the dormant mode it draws on); what is built is the gas wash its effect states. The dormant spec's own
+effect (BendEffects "cleanse": a root and a slow cleared on the caster) is not cast: in the % ring a root is a bind, and lifting
+one is not in the node.
 
 BendLoadout, for these: picks worn together follow the tree's stacking (skill_tree.json same_answer_gate.stacking; 2026-10-12, the
 same `_fold_n` / `_stack` / `_excluded` as earth's lane): two that change one number the same way from the same base multiply their
@@ -303,8 +304,9 @@ earth's); a behaviour talent may set spec keys no Classic code reads (the Skate'
 
 The Mud set's other counters are built against the other lanes' interfaces: a magma seam is a `BendZone` of kind `seam` (fire's
 Magma set): over mud it ends "quenched" (its own code should leave no stone for that end); Live Water's grounding (fire's Forked
-Lightning) is not built here. Rolling stones roll only in the open world (in the % ring a hurled stone shatters where it lands),
-so in a ring match that counter has nothing to stop. What the set does in a ring match today: his puddles are mud pools for 8 s
+Lightning) is not built here. Rolling stones: a FormStone rolling into his mud stops (the open world's; in the % ring a hurled
+stone shatters where it lands), and so does a stone bolt rolling along the deck (a low stone bolt: earth's Avalanche, built in its
+lane; `BendZone.on_bolt` mud, 2026-10-12); Classic has neither in a ring. What the set does in a ring match today: his puddles are mud pools for 8 s
 (the Downpour's, Splashdown's, Pooling Wave's, Mudslide's, Mire's, Wet Trail's: Classic's Skate leaves none, so the text's "from
 Skate" holds only with Wet Trail worn), a Kick's floor fire dies in one, a Fire Wall over one burns 2 s and dries it, 4 pools at
 most, Splash and Lash 10% slower.
