@@ -271,6 +271,7 @@ func trail_take(kind: String, make: Callable) -> GPUParticles3D:
 	for e: Dictionary in list:
 		if float(e.free_at) >= 0.0 and _now >= float(e.free_at):
 			e.free_at = -1.0
+			(e.g as GPUParticles3D).visible = true      # (hidden as it was let go: trail_release)
 			return e.g
 	if list.size() >= TRAILS_PER_KIND:
 		return null
@@ -302,6 +303,12 @@ func trail_release(g: GPUParticles3D) -> void:
 	for e: Dictionary in _trails.get(kind, []):
 		if e.g == g:
 			e.free_at = _now + longest + 0.25
+			# (hidden once its last particles' time is up: a let-go trail's particles were left drawn where they stopped,
+			# frozen, till it was taken again: the Lash's drops and mist hanging along its path, 2026-10-12)
+			var at := float(e.free_at)
+			get_tree().create_timer(longest + 0.05, false).timeout.connect(func() -> void:
+				if is_instance_valid(g) and float(e.free_at) == at:
+					g.visible = false)
 			return
 
 

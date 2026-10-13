@@ -142,8 +142,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 		"fire":
 			_fire_body(parent, r, long)
 		"water":
+			# (a smaller core than before: the wisps and the mist of its trail carry the look, as the water's charge)
 			var mi := _mesh(parent, ToonFx.sphere(16), ToonFx.mat("water"))
-			mi.scale = Vector3(r * 1.3, r * 1.3, r * (2.6 if long else 1.8))
+			mi.scale = Vector3(r * 1.0, r * 1.0, r * (2.0 if long else 1.4))
 			mi.position = Vector3(0.0, 0.0, r * 0.35)
 			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
 			_core(mi)
@@ -631,6 +632,16 @@ static func _stream(key: String, amount: int, life: float) -> GPUParticles3D:
 	return g
 
 
+## Water's wisp: air's wind strip tinted as water (a pale blue body, a deeper blue edge, a navy line), the water's charge
+## look's own (worktree-spellcraft's BendCharge WISP_*), for water's trails.
+static func water_wisp_mat() -> ShaderMaterial:
+	var m := ToonFx.mat("wind_strip").duplicate() as ShaderMaterial
+	m.set_shader_parameter(&"c_main", Color(0.62, 0.86, 1.0, 0.9))
+	m.set_shader_parameter(&"c_edge", Color(0.18, 0.52, 0.98, 0.78))
+	m.set_shader_parameter(&"c_ink", Color(0.05, 0.18, 0.42))
+	return m
+
+
 static func _make_trail(kind: String) -> GPUParticles3D:
 	var g: GPUParticles3D
 	var rb := ToonRibbon.new()
@@ -640,9 +651,13 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 			g.add_child(_stream("spark_fire", 12, 0.55))
 			rb.main_mat = ToonFx.mat("flame_strip")
 		"water":
-			g = _stream("drop", 22, 0.55)
-			rb.main_mat = ToonFx.mat("water_strip")
-			rb.coil_mat = ToonFx.mat("water_strip")
+			# (air's trail in water, as the water's charge (the owner, 2026-10-12: "the water charging looks perfect", "reeffect
+			# our water moves now with the new water charge"): a blue mist, a few drops, thin coiling wisps)
+			g = _stream("puff_frost", 14, 0.35)
+			g.add_child(_stream("drop", 12, 0.5))
+			var wm := water_wisp_mat()
+			rb.main_mat = wm
+			rb.coil_mat = wm
 			rb.coils = 2
 		"mud":
 			# (mud's: muddy water coiling round it, drops of mud falling off; the owner, 2026-10-12)
@@ -692,7 +707,15 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 			_pm(pm, Vector2(0.3, 1.2), Vector2(maxf(r * 0.7, 0.12), maxf(r * 1.25, 0.2)), Vector3(0, 2.5, 0), 1.5)
 			_pm(sub.process_material, Vector2(1.0, 3.0), Vector2(0.025, 0.045), Vector3(0, -2.0, 0), 1.0)
 			_ribbon(rb, maxf(r * 1.5, 0.12), 0.2, 0.14)
-		"water", "mud":
+		"water":
+			_pm(pm, Vector2(0.2, 0.8), Vector2(maxf(r * 0.9, 0.1), maxf(r * 1.7, 0.18)), Vector3(0, 0.3, 0), 1.5)
+			_pm(sub.process_material, Vector2(0.4, 1.8), Vector2(r * 0.2, r * 0.45), Vector3(0, -12.0, 0), 0.5)
+			_ribbon(rb, maxf(r * 0.6, 0.06), 0.15, 0.16)
+			rb.coil_r = r * 1.6
+			rb.coil_w = 0.04 + r * 0.16
+			rb.coil_spin = 18.0
+		"mud":
+			# (mud keeps water's old trail: drops and a coiled strip, no mist and no wisps)
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)
 			_ribbon(rb, r * 1.05, 0.45, 0.13)
 			rb.coil_r = r * 1.5
