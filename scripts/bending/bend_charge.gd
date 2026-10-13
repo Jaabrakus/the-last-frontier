@@ -13,7 +13,8 @@ extends Node3D
 ##          be"): thin wisps of water coil and spiral up round the body, a blue mist swirling with them, then wind tight round
 ##          the limb; the Geyser's flows out along the deck to where it will rise and gathers there (then: "have it charge
 ##          where the spells are going to be or let it flow there"): from before his feet to the cast's own place as the
-##          lock fills (_water_spot: the foe he tracks, else the aim's ground, within its reach), a low whirl closing in;
+##          lock fills (_water_spot: the foe he tracks, else the aim's ground, within its reach), a low whirl closing in,
+##          the deck breaking behind it as the Fissure's does ("it moves still like a fissure right": _fissure_step);
 ##          cast, the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops shake off
 ##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
 ##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
@@ -47,6 +48,8 @@ const CHANNEL := Vector2(0.3, 0.85)
 ## Water: a Geyser's water flowed out to its place while it charged (marked on the body as it is cast, BendStatus.now()):
 ## main's BendEffects.spout then sends none from his feet (BendLooks.geyser_send).
 const WATER_SENT_META := &"bend_water_sent"
+## Water: a Geyser's crack along the deck, a step of it (m) as the Fissure's rows are laid.
+const FISSURE_STEP_M := 0.7
 ## Water: its wisps' width and colours (air's strip in water: a pale blue body, a deeper blue edge, a navy line).
 const WISP_W := 0.08
 const WISP_MAIN := Color(0.62, 0.86, 1.0, 0.9)
@@ -97,6 +100,8 @@ var _light: OmniLight3D
 var _mist: GPUParticles3D
 var _deck := false
 var _spot := Vector3.ZERO
+## Water: where the Geyser's crack along the deck reached (_fissure_step; INF not begun).
+var _fissure_last := Vector3.INF
 var _shown := 0.0
 ## Earth: the raised stone being made from the rocks (its look, its own scale), the level when it rose, done.
 var _stone: Node3D
@@ -497,6 +502,30 @@ func _water_spot(spec: Dictionary) -> Vector3:
 	return BendEffects._ground_at(body, BendEffects.aim(bc, spec), spec) + Vector3.UP * 0.08
 
 
+## The Geyser's water going along the deck as the Fissure's ground does: every FISSURE_STEP_M of its way the deck cracks
+## where it passed and water spurts up out of the crack, a chip or two of the deck with it.
+func _fissure_step() -> void:
+	var at := _water_tip()
+	at.y -= 0.08
+	if _fissure_last == Vector3.INF:
+		_fissure_last = at
+		return
+	var flat := Vector3(at.x - _fissure_last.x, 0.0, at.z - _fissure_last.z)
+	if flat.length() < FISSURE_STEP_M:
+		return
+	var way := flat.normalized()
+	var n := int(flat.length() / FISSURE_STEP_M)
+	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
+	for i in n:
+		var pt := _fissure_last + way * FISSURE_STEP_M * float(i + 1)
+		pt.y = at.y
+		if pool != null:
+			pool.mark("cracks", pt + Vector3.UP * 0.01, Vector3.UP, 0.9, 1.6)
+		BendLooks.burst(pt + Vector3.UP * 0.05, "water", 6, (Vector3.UP * 1.4 + way).normalized(), 30.0, 3.2, 0.16, false)
+		BendLooks.burst(pt + Vector3.UP * 0.05, "stone", 2, Vector3.UP, 50.0, 2.0, 0.08, false)
+	_fissure_last += way * FISSURE_STEP_M * float(n)
+
+
 ## Where the water gathers now: the Geyser's flowing from before his feet out along the deck to where it will rise as the
 ## lock fills; else the limb's tip.
 func _water_tip() -> Vector3:
@@ -538,6 +567,8 @@ func _water(dt: float) -> void:
 		_move(run, p.lerp(to, ch * 0.9), dt)
 		if run.has("drops") and is_instance_valid(run.drops) and ending == "":
 			(run.drops as GPUParticles3D).amount_ratio = clampf(0.1 + 0.6 * k, 0.05, 1.0) * _shown
+	if _deck and _visual and ending == "":
+		_fissure_step()
 	if _mist != null and is_instance_valid(_mist) and ending == "":
 		# (the mist round his feet at first, then where the water gathers)
 		_mist.global_position = (c + Vector3.UP * 0.1).lerp(_water_tip(), ch)
