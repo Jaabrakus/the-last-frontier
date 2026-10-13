@@ -1,0 +1,541 @@
+{
+ "id": "ho_tinh_tails_9",
+ "name": "Fox tails, 9",
+ "description": "9 fox tails on their own bones, cream by default with a pale tip; any count 1-9 is a free choice.",
+ "kind": "feature",
+ "set": "tv_features",
+ "slot": "features.tail",
+ "alt_slots": [],
+ "layer": {
+  "default": 12
+ },
+ "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_9.glb",
+ "mesh": "ho_tinh_tails_9",
+ "surfaces": [
+  {
+   "surface": "fur",
+   "name": "fox_tail_1"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_2"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_3"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_4"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_5"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_6"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_7"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_8"
+  },
+  {
+   "surface": "fur",
+   "name": "fox_tail_9"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fur",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "cream",
+    "russet",
+    "silver_white",
+    "ash",
+    "black_tipped"
+   ],
+   "default": "cream"
+  }
+ ],
+ "stats": {
+  "tris": 16020
+ },
+ "status": "proposal",
+ "extension_bones": [
+  {
+   "name": "fox_tail_1_01",
+   "parent": "pelvis",
+   "head": [
+    -0.045,
+    0.9065,
+    -0.0936
+   ],
+   "len": 0.1877
+  },
+  {
+   "name": "fox_tail_1_02",
+   "parent": "fox_tail_1_01",
+   "head": [
+    -0.136,
+    0.7772,
+    -0.1947
+   ],
+   "len": 0.1876
+  },
+  {
+   "name": "fox_tail_1_03",
+   "parent": "fox_tail_1_02",
+   "head": [
+    -0.2307,
+    0.6539,
+    -0.2998
+   ],
+   "len": 0.1876
+  },
+  {
+   "name": "fox_tail_1_04",
+   "parent": "fox_tail_1_03",
+   "head": [
+    -0.3321,
+    0.5433,
+    -0.4124
+   ],
+   "len": 0.1875
+  },
+  {
+   "name": "fox_tail_1_05",
+   "parent": "fox_tail_1_04",
+   "head": [
+    -0.442,
+    0.4528,
+    -0.5344
+   ],
+   "len": 0.1874
+  },
+  {
+   "name": "fox_tail_2_01",
+   "parent": "pelvis",
+   "head": [
+    -0.0337,
+    0.9098,
+    -0.0936
+   ],
+   "len": 0.1918
+  },
+  {
+   "name": "fox_tail_2_02",
+   "parent": "fox_tail_2_01",
+   "head": [
+    -0.1082,
+    0.7814,
+    -0.215
+   ],
+   "len": 0.1917
+  },
+  {
+   "name": "fox_tail_2_03",
+   "parent": "fox_tail_2_02",
+   "head": [
+    -0.1854,
+    0.6593,
+    -0.341
+   ],
+   "len": 0.1917
+  },
+  {
+   "name": "fox_tail_2_04",
+   "parent": "fox_tail_2_03",
+   "head": [
+    -0.2678,
+    0.5504,
+    -0.4755
+   ],
+   "len": 0.1916
+  },
+  {
+   "name": "fox_tail_2_05",
+   "parent": "fox_tail_2_04",
+   "head": [
+    -0.3567,
+    0.4624,
+    -0.6206
+   ],
+   "len": 0.1915
+  },
+  {
+   "name": "fox_tail_3_01",
+   "parent": "pelvis",
+   "head": [
+    -0.0225,
+    0.9132,
+    -0.0936
+   ],
+   "len": 0.1958
+  },
+  {
+   "name": "fox_tail_3_02",
+   "parent": "fox_tail_3_01",
+   "head": [
+    -0.0758,
+    0.7859,
+    -0.2325
+   ],
+   "len": 0.1958
+  },
+  {
+   "name": "fox_tail_3_03",
+   "parent": "fox_tail_3_02",
+   "head": [
+    -0.1311,
+    0.6652,
+    -0.3764
+   ],
+   "len": 0.1957
+  },
+  {
+   "name": "fox_tail_3_04",
+   "parent": "fox_tail_3_03",
+   "head": [
+    -0.1898,
+    0.5582,
+    -0.5294
+   ],
+   "len": 0.1957
+  },
+  {
+   "name": "fox_tail_3_05",
+   "parent": "fox_tail_3_04",
+   "head": [
+    -0.2529,
+    0.4729,
+    -0.6938
+   ],
+   "len": 0.1955
+  },
+  {
+   "name": "fox_tail_4_01",
+   "parent": "pelvis",
+   "head": [
+    -0.0112,
+    0.9166,
+    -0.0936
+   ],
+   "len": 0.1999
+  },
+  {
+   "name": "fox_tail_4_02",
+   "parent": "fox_tail_4_01",
+   "head": [
+    -0.0395,
+    0.7907,
+    -0.2462
+   ],
+   "len": 0.1999
+  },
+  {
+   "name": "fox_tail_4_03",
+   "parent": "fox_tail_4_02",
+   "head": [
+    -0.0688,
+    0.6716,
+    -0.4041
+   ],
+   "len": 0.1998
+  },
+  {
+   "name": "fox_tail_4_04",
+   "parent": "fox_tail_4_03",
+   "head": [
+    -0.0998,
+    0.5668,
+    -0.5714
+   ],
+   "len": 0.1997
+  },
+  {
+   "name": "fox_tail_4_05",
+   "parent": "fox_tail_4_04",
+   "head": [
+    -0.133,
+    0.4844,
+    -0.7503
+   ],
+   "len": 0.1996
+  },
+  {
+   "name": "fox_tail_5_01",
+   "parent": "pelvis",
+   "head": [
+    0.0,
+    0.92,
+    -0.0936
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_5_02",
+   "parent": "fox_tail_5_01",
+   "head": [
+    0.0,
+    0.7957,
+    -0.2553
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_5_03",
+   "parent": "fox_tail_5_02",
+   "head": [
+    0.0,
+    0.6785,
+    -0.4223
+   ],
+   "len": 0.2039
+  },
+  {
+   "name": "fox_tail_5_04",
+   "parent": "fox_tail_5_03",
+   "head": [
+    0.0,
+    0.5761,
+    -0.5986
+   ],
+   "len": 0.2038
+  },
+  {
+   "name": "fox_tail_5_05",
+   "parent": "fox_tail_5_04",
+   "head": [
+    0.0,
+    0.497,
+    -0.7864
+   ],
+   "len": 0.2037
+  },
+  {
+   "name": "fox_tail_6_01",
+   "parent": "pelvis",
+   "head": [
+    0.0113,
+    0.9166,
+    -0.0936
+   ],
+   "len": 0.1999
+  },
+  {
+   "name": "fox_tail_6_02",
+   "parent": "fox_tail_6_01",
+   "head": [
+    0.0395,
+    0.7907,
+    -0.2462
+   ],
+   "len": 0.1999
+  },
+  {
+   "name": "fox_tail_6_03",
+   "parent": "fox_tail_6_02",
+   "head": [
+    0.0688,
+    0.6716,
+    -0.4041
+   ],
+   "len": 0.1998
+  },
+  {
+   "name": "fox_tail_6_04",
+   "parent": "fox_tail_6_03",
+   "head": [
+    0.0998,
+    0.5668,
+    -0.5714
+   ],
+   "len": 0.1997
+  },
+  {
+   "name": "fox_tail_6_05",
+   "parent": "fox_tail_6_04",
+   "head": [
+    0.133,
+    0.4844,
+    -0.7503
+   ],
+   "len": 0.1996
+  },
+  {
+   "name": "fox_tail_7_01",
+   "parent": "pelvis",
+   "head": [
+    0.0225,
+    0.9132,
+    -0.0936
+   ],
+   "len": 0.1958
+  },
+  {
+   "name": "fox_tail_7_02",
+   "parent": "fox_tail_7_01",
+   "head": [
+    0.0758,
+    0.7859,
+    -0.2325
+   ],
+   "len": 0.1958
+  },
+  {
+   "name": "fox_tail_7_03",
+   "parent": "fox_tail_7_02",
+   "head": [
+    0.1311,
+    0.6652,
+    -0.3764
+   ],
+   "len": 0.1957
+  },
+  {
+   "name": "fox_tail_7_04",
+   "parent": "fox_tail_7_03",
+   "head": [
+    0.1898,
+    0.5582,
+    -0.5294
+   ],
+   "len": 0.1957
+  },
+  {
+   "name": "fox_tail_7_05",
+   "parent": "fox_tail_7_04",
+   "head": [
+    0.2529,
+    0.4729,
+    -0.6938
+   ],
+   "len": 0.1955
+  },
+  {
+   "name": "fox_tail_8_01",
+   "parent": "pelvis",
+   "head": [
+    0.0338,
+    0.9098,
+    -0.0936
+   ],
+   "len": 0.1918
+  },
+  {
+   "name": "fox_tail_8_02",
+   "parent": "fox_tail_8_01",
+   "head": [
+    0.1082,
+    0.7814,
+    -0.215
+   ],
+   "len": 0.1917
+  },
+  {
+   "name": "fox_tail_8_03",
+   "parent": "fox_tail_8_02",
+   "head": [
+    0.1854,
+    0.6593,
+    -0.341
+   ],
+   "len": 0.1917
+  },
+  {
+   "name": "fox_tail_8_04",
+   "parent": "fox_tail_8_03",
+   "head": [
+    0.2678,
+    0.5504,
+    -0.4755
+   ],
+   "len": 0.1916
+  },
+  {
+   "name": "fox_tail_8_05",
+   "parent": "fox_tail_8_04",
+   "head": [
+    0.3567,
+    0.4624,
+    -0.6206
+   ],
+   "len": 0.1915
+  },
+  {
+   "name": "fox_tail_9_01",
+   "parent": "pelvis",
+   "head": [
+    0.045,
+    0.9065,
+    -0.0936
+   ],
+   "len": 0.1877
+  },
+  {
+   "name": "fox_tail_9_02",
+   "parent": "fox_tail_9_01",
+   "head": [
+    0.136,
+    0.7772,
+    -0.1947
+   ],
+   "len": 0.1876
+  },
+  {
+   "name": "fox_tail_9_03",
+   "parent": "fox_tail_9_02",
+   "head": [
+    0.2307,
+    0.6539,
+    -0.2998
+   ],
+   "len": 0.1876
+  },
+  {
+   "name": "fox_tail_9_04",
+   "parent": "fox_tail_9_03",
+   "head": [
+    0.3321,
+    0.5433,
+    -0.4124
+   ],
+   "len": 0.1875
+  },
+  {
+   "name": "fox_tail_9_05",
+   "parent": "fox_tail_9_04",
+   "head": [
+    0.442,
+    0.4528,
+    -0.5344
+   ],
+   "len": 0.1874
+  }
+ ],
+ "opens_regions": [
+  "tail_root"
+ ]
+}

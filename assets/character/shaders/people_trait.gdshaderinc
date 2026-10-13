@@ -86,7 +86,8 @@ float trait_veins(vec2 uv, float amount) {
 
 // The mark on `albedo` and `rough` (where `mask` > 0: not on the lips); returns the glow to add to EMISSION.
 vec3 trait_shade(vec2 uv, uint region, float mask, inout vec3 albedo, inout float rough) {
-	if (trait_kind == 0 || trait_amount <= 0.001 || mask <= 0.001) {
+	// (kinds 3-5 are the Thủy Vân peoples': tv_trait_shade, below)
+	if (trait_kind == 0 || trait_kind >= 3 || trait_amount <= 0.001 || mask <= 0.001) {
 		return vec3(0.0);
 	}
 	float a = trait_amount;
@@ -110,3 +111,7 @@ vec3 trait_shade(vec2 uv, uint region, float mask, inout vec3 albedo, inout floa
 	rough = mix(rough, 0.35, v);
 	return trait_color * v * trait_glow * (0.35 + 0.65 * a) * face;
 }
+
+// The Thủy Vân peoples' kinds 3 scales, 4 plates, 5 river and the rite's ash marks (the callers add
+// tv_trait_shade(UV, CUSTOM0.xy, region, mask, dot(NORMAL, VIEW), albedo, rough) after trait_shade)
+#include "res://assets/thuyvan/shaders/tv_traits.gdshaderinc"

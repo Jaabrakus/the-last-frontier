@@ -308,19 +308,46 @@ static func skin_material(look: Dictionary) -> ShaderMaterial:
 
 
 ## A world people's mark in the skin (CharacterPeoples.trait_of; the look's `trait` its strength 0..1, the people's
-## default when the look has none): people_trait.gdshaderinc's trait_kind (1 keelstone flecks, 2 Form veins), amount,
-## colour and glow.
-const TRAIT_KINDS := {"flecks": 1, "veins": 2}
+## default when the look has none): people_trait.gdshaderinc's trait_kind (1 keelstone flecks, 2 Form veins; the Thủy
+## Vân peoples' 3 scales, 4 plates, 5 river: tv_traits.gdshaderinc), amount, colour and glow. A Thủy Vân trait's colour
+## is the look's `trait_tone` (an id of the trait's `tones`, or a hex), its default the first tone. Their order maps
+## and the river's gills come from assets/thuyvan/character/traits (tools/thuyvan_art/traits/trait_maps.py).
+const TRAIT_KINDS := {"flecks": 1, "veins": 2, "scales": 3, "plates": 4, "river": 5}
+const TV_TRAIT_ORDER := "res://assets/thuyvan/character/traits/trait_order_tv.png"
+const TV_TRAIT_DETAIL := "res://assets/thuyvan/character/traits/trait_detail_tv.png"
+const TV_ASH_MARKS := "res://assets/thuyvan/character/traits/ash_marks_tv.png"
 
 
 static func set_trait(m: ShaderMaterial, look: Dictionary) -> void:
 	var tr := CharacterPeoples.trait_of(look)
 	var kind := int(TRAIT_KINDS.get(String(tr.get("kind", "")), 0))
 	var amount := clampf(float(look.get("trait", tr.get("default", 0.0))), 0.0, 1.0) if kind > 0 else 0.0
+	# the river kind draws its gills and sheen from 0.1 up; the creator's row may sit at 0 for an unmarked Riverborn
 	m.set_shader_parameter("trait_kind", kind if amount > 0.001 else 0)
 	m.set_shader_parameter("trait_amount", amount)
-	m.set_shader_parameter("trait_color", _color(tr.get("color", "#8fd6ff"), Color("#8fd6ff")))
+	var col = tr.get("color", "#8fd6ff")
+	var tones = tr.get("tones", {})
+	if tones is Dictionary and not (tones as Dictionary).is_empty():
+		var tone := String(look.get("trait_tone", ""))
+		col = tones.get(tone, tone if tone.begins_with("#") else tones.values()[0])
+	m.set_shader_parameter("trait_color", _color(col, Color("#8fd6ff")))
 	m.set_shader_parameter("trait_glow", float(tr.get("glow", 1.0)))
+	if kind >= 3 or look.has("ash"):
+		m.set_shader_parameter("tv_trait_order", _texture(TV_TRAIT_ORDER))
+		m.set_shader_parameter("tv_trait_detail", _texture(TV_TRAIT_DETAIL))
+		m.set_shader_parameter("tv_ash_marks", _texture(TV_ASH_MARKS))
+	# the Riverborn's water tint (skin_common.gdshaderinc tone_at): the look's `tint`, the people's default otherwise
+	var tint = CharacterPeoples.people(String(look.get("people", ""))).get("tint")
+	var t := 0.0
+	if tint is Dictionary:
+		t = clampf(float(look.get("tint", (tint as Dictionary).get("default", 0.0))), 0.0, 1.0)
+		m.set_shader_parameter("water_tint_hue", float((tint as Dictionary).get("hue", 230.0)))
+		m.set_shader_parameter("water_tint_chroma", float((tint as Dictionary).get("chroma", 0.062)))
+	m.set_shader_parameter("water_tint", t)
+	# the rite's ash marks (a marking anyone may wear: creator.json markings with an `ash` list)
+	var ash: Array = look.get("ash", []) if look.get("ash") is Array else []
+	m.set_shader_parameter("tv_ash", Vector3(1.0 if ash.has("thumbprint") else 0.0, 1.0 if ash.has("cheeks") else 0.0,
+			1.0 if ash.has("hands") else 0.0))
 
 
 ## The v3 head's photographed skin detail (body.json face.detail_rect; skin.gdshader head_detail).
@@ -384,6 +411,12 @@ static func eye_material(look: Dictionary) -> ShaderMaterial:
 		iris = eyes[iris]
 	m.set_shader_parameter("iris_color", _color(iris, Color("#4a2e1a")))
 	m.set_shader_parameter("stylized", 1 if is_stylized(look) else 0)
+	# reflective eyes (Thủy Vân: the people's `reflect_eye` {tapetum, levels}; the look's `reflect_eye` Off/Faint/Strong
+	# as 0/0.5/1); the environment sets `tv_night`
+	var re = CharacterPeoples.people(String(look.get("people", ""))).get("reflect_eye")
+	if re is Dictionary:
+		m.set_shader_parameter("reflect_eye", clampf(float(look.get("reflect_eye", (re as Dictionary).get("default", 0.0))), 0.0, 1.0))
+		m.set_shader_parameter("tapetum_color", _color((re as Dictionary).get("tapetum", "#9fd08a"), Color("#9fd08a")))
 	return m
 
 
