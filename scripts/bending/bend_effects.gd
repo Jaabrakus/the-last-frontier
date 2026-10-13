@@ -865,8 +865,10 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		BendLooks.geyser(from, to - from, from.distance_to(to) + 0.8, SPOUT_JET_COL_R, rise, false)
 	else:
 		# (the column: sent from his feet along the deck (geyser_send), the deck breaking there, a column of water out of it;
-		# straight up, or leaning)
-		BendLooks.geyser_send(p.global_position, at, rise)
+		# straight up, or leaning. Its water flowed there as it charged (the charge's water look marks the body, WATER_SENT_META,
+		# as it is cast): no send)
+		if BendStatus.now() - float(p.get_meta(WATER_SENT_META, -INF)) > 1.0:
+			BendLooks.geyser_send(p.global_position, at, rise)
 		var up: Vector3 = way.get("up", Vector3.UP)
 		var cr := clampf(float(s.get("radius_m", 1.8)) * 0.32, 0.45, 1.1)
 		BendLooks.geyser(at, up, SPOUT_COL_M * (0.9 if way.has("up") else 1.0), cr, rise, true)
@@ -904,6 +906,9 @@ const SPOUT_LEAN_DEG := 35.0
 const SPOUT_WATER_M := 8.0
 ## The jet's hit at the mark, of the Geyser's radius (a jet is narrower than a column).
 const SPOUT_JET_R_K := 0.8
+## The charge's water look (worktree-spellcraft's BendCharge) marks the body with this as a Geyser is cast whose water
+## flowed out to its place while it charged (the owner, 2026-10-12: "let it flow there"): no send from his feet then.
+const WATER_SENT_META := &"bend_water_sent"
 ## The column's look (BendLooks.geyser): its height (m) and a jet's thickness.
 const SPOUT_COL_M := 3.6
 const SPOUT_JET_COL_R := 0.38
