@@ -695,6 +695,8 @@ static func controls() -> String:
 
 
 static func _controls_default() -> String:
+	if OS.has_feature("public"):
+		return "full"                     # (the web build as the main game plays: every one there is a new player)
 	var d := String((schemes_data().get("controls", {}) as Dictionary).get("default", "basic"))
 	return d if d in CONTROLS else "basic"
 
