@@ -27,6 +27,8 @@ var lowest_scale := 1.0
 var active := false
 var real_t := 0.0
 var _ts0 := 1.0
+## This moment's hold (real s): the last fall's hold_real_s, any other's fall_hold_real_s.
+var _hold := 0.6
 var rules: RingRules
 var _match: Node
 ## Each competitor's velocity as last seen (instance id -> Vector3).
@@ -93,7 +95,9 @@ func _on_ko(b: Node3D, _by: Node, _pct: float, _tag: String, left: int) -> void:
 		end()                               # (a second fall during the moment: put back, no new one)
 	var practice := _practice()
 	var last := not practice and _final(b, left)
-	var slow := last or bool(BendImpact.block("moment").get("every_fall_slow", false))
+	# (every fall's beat offline only: online the time scale is each machine's own, and play goes on; the last fall ends it)
+	var slow := last or (bool(BendImpact.block("moment").get("every_fall_slow", false)) and not NetSpells.online())
+	_hold = BendImpact.num("moment", "hold_real_s", 0.6) if last else BendImpact.num("moment", "fall_hold_real_s", 0.25)
 	if practice:
 		slow = slow and bool(BendImpact.block("moment").get("practice_moment", false))
 	var k := BendImpact.num("moment", "final_splash_k", 2.0) if last else 1.0
@@ -190,11 +194,12 @@ func end() -> void:
 	Engine.time_scale = _ts0
 
 
-## The time scale's share of what it was, `rt` real seconds into the moment (1 at its end).
-static func scale_at(rt: float) -> float:
+## The time scale's share of what it was, `rt` real seconds into the moment (1 at its end); `hold` its hold (real s; -1: the
+## last fall's, hold_real_s).
+static func scale_at(rt: float, hold := -1.0) -> float:
 	var lo := BendImpact.num("moment", "slow_scale", 0.35)
 	var a := BendImpact.num("moment", "ease_in_s", 0.08)
-	var h := BendImpact.num("moment", "hold_real_s", 0.6)
+	var h := hold if hold >= 0.0 else BendImpact.num("moment", "hold_real_s", 0.6)
 	var b := BendImpact.num("moment", "ease_out_s", 0.25)
 	if rt < a:
 		return lerpf(1.0, lo, smoothstep(0.0, 1.0, rt / maxf(a, 1e-4)))
@@ -205,9 +210,9 @@ static func scale_at(rt: float) -> float:
 	return 1.0
 
 
-## The moment's whole length (real s).
-static func length_s() -> float:
-	return BendImpact.num("moment", "ease_in_s", 0.08) + BendImpact.num("moment", "hold_real_s", 0.6) \
+## The moment's whole length (real s); `hold` as scale_at's.
+static func length_s(hold := -1.0) -> float:
+	return BendImpact.num("moment", "ease_in_s", 0.08) + (hold if hold >= 0.0 else BendImpact.num("moment", "hold_real_s", 0.6)) \
 			+ BendImpact.num("moment", "ease_out_s", 0.25)
 
 
@@ -219,10 +224,10 @@ func _process(dt: float) -> void:
 		return
 	var ts := Engine.time_scale
 	real_t += dt / ts if ts > 1e-4 else dt
-	if real_t >= length_s():
+	if real_t >= length_s(_hold):
 		end()
 		return
-	Engine.time_scale = _ts0 * scale_at(real_t)
+	Engine.time_scale = _ts0 * scale_at(real_t, _hold)
 	lowest_scale = minf(lowest_scale, Engine.time_scale)
 
 

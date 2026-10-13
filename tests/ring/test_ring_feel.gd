@@ -180,9 +180,10 @@ func _run() -> void:
 	for v: float in [6.0, 12.0, 18.0]:
 		var hs := RingRules.hitstun_of(v)
 		print("METRIC hold_ms_%d=%.1f (hitstun %.0f ms)" % [int(v), BendImpact.hold_for(v, hs) * 1000.0, hs * 1000.0])
-	_expect(absf(BendImpact.hold_for(18.0, 0.81) - 0.11) < 1e-6 and absf(BendImpact.hold_for(5.0, 0.12) - 0.045) < 1e-3
-			and BendImpact.hold_for(3.9, 0.5) == 0.0 and absf(BendImpact.hold_for(18.0, 0.12) - 0.048) < 1e-6,
-			"the hold: 0.11 s at 18 m/s, capped at 0.4 of a 0.12 s stun (0.048), none under 4 m/s")
+	# (the owner, 2026-10-13, "it lacks impact": hold_max_s 0.2, hold_min_s 0.05, hold_share 0.5; data/ring/feel.json)
+	_expect(absf(BendImpact.hold_for(18.0, 0.81) - 0.2) < 1e-6 and absf(BendImpact.hold_for(5.0, 0.12) - 0.06) < 1e-3
+			and BendImpact.hold_for(3.9, 0.5) == 0.0 and absf(BendImpact.hold_for(18.0, 0.12) - 0.06) < 1e-6,
+			"the hold: 0.2 s at 18 m/s, capped at 0.5 of a 0.12 s stun (0.06), none under 4 m/s")
 	await _bot_checks()
 	await _player_checks()
 	await _hitter_checks()
@@ -657,15 +658,20 @@ func _moment_checks() -> void:
 	_expect(ok4, "a second fall during the moment (%.2f): put back (%.2f), no new one" % [mid, after])
 	restored = restored and ok4
 	await _restart()
-	# every fall that is not the last: the splash and the jolt, play goes on
+	# every fall that is not the last: the splash, the jolt and a short slow beat (fall_hold_real_s; the owner, 2026-10-13: "a
+	# proper hit can end the battle"), play going on at full pace after it
 	await _fresh(-6.0, 0.0)
 	var j0 := BendImpact.jolts
 	var s1 := ring.water.ko_splashes
 	rules._ko(foe())
 	await _ticks(3)
-	var ok5 := not RingMoment.busy() and Engine.time_scale == 1.0 and ring.water.ko_splashes == s1 + 1 and BendImpact.jolts == j0 + 1
-	_expect(ok5, "a fall that is not the last: the splash (%d) and the jolt (%d), no slow beat"
-			% [ring.water.ko_splashes - s1, BendImpact.jolts - j0])
+	var beat := RingMoment.busy() and Engine.time_scale < 1.0
+	var t_end := Time.get_ticks_msec() + int((RingMoment.length_s(BendImpact.num("moment", "fall_hold_real_s", 0.25)) + 0.3) * 1000.0)
+	while Time.get_ticks_msec() < t_end:
+		await process_frame
+	var ok5 := beat and not RingMoment.busy() and Engine.time_scale == 1.0 and ring.water.ko_splashes == s1 + 1 and BendImpact.jolts == j0 + 1
+	_expect(ok5, "a fall that is not the last: the splash (%d), the jolt (%d) and a short slow beat (%s), then full pace"
+			% [ring.water.ko_splashes - s1, BendImpact.jolts - j0, beat])
 	await _restart()
 	# the scene's exit mid-moment (into Practice)
 	await _final_ko()
