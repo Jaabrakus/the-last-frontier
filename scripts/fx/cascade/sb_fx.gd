@@ -114,6 +114,8 @@ static func on(el: String) -> bool:
 ## The master switch (a run's force_on over config.json's enabled); headless always off (today's looks, as the tests that
 ## count them build them).
 static func _master() -> bool:
+	if OS.has_feature("public"):
+		return false                          # (a public build (the export's "public" feature: the Reddit web build): our own looks)
 	_load()
 	if not allow_headless and DisplayServer.get_name() == "headless":
 		return false

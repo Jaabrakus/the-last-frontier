@@ -1408,7 +1408,8 @@ static func beam_flash(body: Node3D, at: Vector3, kind := "air") -> void:
 ## once. sb_bolt is the switch in force (a test or a capture may flip it). Visual only: where it strikes, when, and what it
 ## hits are BendEffects' and unchanged.
 const SB_BOLT := true
-static var sb_bolt := SB_BOLT
+## (a public build, the export's "public" feature: the Reddit web build, our own lightning: no Spellbreak texture shipped)
+static var sb_bolt := SB_BOLT and not OS.has_feature("public")
 ## The flashes, ring and light round a Spellbreak-shaded bolt in its colours (the shader's fringe and sheath).
 const SB_VIOLET := Color(0.46, 0.36, 1.0)
 const SB_LAVENDER := Color(0.88, 0.85, 1.0)
