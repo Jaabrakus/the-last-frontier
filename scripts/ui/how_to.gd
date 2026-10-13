@@ -162,6 +162,10 @@ func _ready() -> void:
 	enabled = get_tree().get_script() == null or args.has("howto=on")
 	if args.has("howto=off"):
 		enabled = false
+	# (the public web build: with the key hints, off until Options' Key hints turns them on; the owner, 2026-10-13: "the how to
+	# play is to distracting")
+	if OS.has_feature("public") and not FirstHints.on():
+		enabled = false
 	if args.has("howto=reset"):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(cfg_path))
 	_load()

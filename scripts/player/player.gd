@@ -469,6 +469,8 @@ func _ready() -> void:
 		hud = FrontierHUD.new()
 		hud.player = self
 		add_child(hud)
+		if arena:
+			TouchControls.attach(self)         # (the web build on a phone or a tablet: the thumbs' controls; else nothing)
 		var arc := TrajectoryPreview.new()
 		arc.name = "TrajectoryPreview"
 		arc.player = self

@@ -45,7 +45,19 @@ static func file() -> String:
 static func get_value(section: String, key: String) -> Variant:
 	var cf := ConfigFile.new()
 	cf.load(file())
-	return cf.get_value(section, key, DEFAULTS[section][key])
+	return cf.get_value(section, key, default_of(section, key))
+
+
+## The look's sensitivity on the web build: a browser gives the mouse's moves in screen pixels rather than a gaming mouse's
+## counts, and the default turned too little there (the owner, 2026-10-13: "it requires big movements to move it").
+const WEB_MOUSE := 5.0
+
+
+## A key's default (DEFAULTS; on the web build the mouse's WEB_MOUSE).
+static func default_of(section: String, key: String) -> Variant:
+	if section == "controls" and key == "mouse" and OS.has_feature("web"):
+		return WEB_MOUSE
+	return DEFAULTS[section][key]
 
 
 ## Whether the file holds `key` of `section` (a value chosen, not the default).
@@ -182,7 +194,7 @@ static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
 		v.add_child(slider.call(String(k[1]), 0.0, 1.0, 0.05, float(get_value("audio", key)), pct, func(x: float) -> void:
 			set_value("audio", key, x)
 			apply_global()))
-	v.add_child(slider.call("Mouse", 0.5, 6.0, 0.1, float(get_value("controls", "mouse")),
+	v.add_child(slider.call("Mouse", 0.5, 12.0 if OS.has_feature("web") else 6.0, 0.1, float(get_value("controls", "mouse")),
 			func(x: float) -> String: return "%.1f" % x, func(x: float) -> void:
 				set_value("controls", "mouse", x)
 				if player:

@@ -69,6 +69,26 @@ body {
 	font-variant-numeric: tabular-nums;
 }
 
+#rotate {
+	display: none;
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	background: #0b1418;
+	color: #e8eef2;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-size: 1.2rem;
+	padding: 0 2rem;
+}
+
+@media (orientation: portrait) and (pointer: coarse) {
+	#rotate {
+		display: flex;
+	}
+}
+
 #status-notice {
 	display: none;
 	max-width: min(32rem, 86vw);
@@ -91,6 +111,8 @@ body {
 		<noscript>
 			Your browser does not support JavaScript.
 		</noscript>
+
+		<div id="rotate">Turn your phone sideways to play</div>
 
 		<div id="status">
 			<div id="status-notice"></div>
@@ -213,7 +235,10 @@ const engine = new Engine(GODOT_CONFIG);
 	const exitNow = Document.prototype.exitPointerLock;
 	const lockedGet = Object.getOwnPropertyDescriptor(Document.prototype, 'pointerLockElement');
 	let wantLock = false;     // the game wants the mouse held
-	let refused = false;      // an ask made in a click or key was refused: this page cannot lock
+	// an ask made in a click or key was refused: this page cannot lock (a touch screen never can: TouchControls plays there,
+	// and ?touch=1 tries it at a desk)
+	const touchFirst = matchMedia('(pointer: coarse)').matches || /[?&]touch=1/.test(location.search);
+	let refused = touchFirst;
 	let askedAt = -1e9;       // when the last ask made in a click or key went out
 	let gameExit = false;
 	function realLocked() {
@@ -283,8 +308,15 @@ const engine = new Engine(GODOT_CONFIG);
 			gameExit = false;
 			standIn();
 		});
+		// (a finger's moves are not the mouse's: Godot reads touches as touches, and its pointermove would turn the look
+		// with the stick's thumb)
 		window.addEventListener('pointermove', function (e) {
-			if (mouse.stand_in) {
+			if (e.pointerType === 'touch') {
+				e.stopImmediatePropagation();
+			}
+		}, true);
+		window.addEventListener('pointermove', function (e) {
+			if (mouse.stand_in && e.pointerType === 'mouse') {
 				const w = window.innerWidth;
 				mouse.edge = e.clientX <= w * 0.03 ? -1 : (e.clientX >= w * 0.97 ? 1 : 0);
 			}

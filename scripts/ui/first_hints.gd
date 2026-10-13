@@ -47,7 +47,9 @@ var _a := 0.0
 static func on() -> bool:
 	var cf := ConfigFile.new()
 	cf.load(GameSettings.file())
-	return bool(cf.get_value(SECTION, KEY, true))
+	# (the public web build starts with them off, as the main game is once they have been seen; the owner, 2026-10-13: "the how
+	# to play is to distracting"; Options' Key hints turns them on)
+	return bool(cf.get_value(SECTION, KEY, not OS.has_feature("public")))
 
 
 static func set_on(v: bool) -> void:
