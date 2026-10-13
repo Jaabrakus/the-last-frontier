@@ -330,8 +330,8 @@ static func aim(c: Variant, spec := {}) -> Dictionary:
 	return {"from": from, "dir": (point - from).normalized(), "flat": flat, "point": point, "target": target}
 
 
-## The foe a tracking meter (spec track; SwayCaster's lock) followed up to its release (marked then: SwayCaster._cast), the
-## strike TRACK_FRESH_S after it at most; null none.
+## The foe a tracking meter (spec track; SwayCaster's lock) was locked on at its release (marked then: SwayCaster._cast;
+## SwayCaster.track_locked), the strike TRACK_FRESH_S after it at most; null none: the crosshair's place.
 const TRACK_FRESH_S := 1.5
 static func _tracked(p: Node3D, spec: Dictionary) -> Node3D:
 	if not (bool(spec.get("track", false)) or float(spec.get("prison_s", 0.0)) > 0.0) or p == null or not p.has_meta(SwayCaster.TRACK_META):

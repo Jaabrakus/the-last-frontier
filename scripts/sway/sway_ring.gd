@@ -21,6 +21,9 @@ extends Control
 ## outside the lock ring, each filling from the bottom up. Left, gold: the combo, a tick a stack, swelling as one is gained and
 ## draining as BendCombo's level does. Right: the guard's gauge while a guard of his stands, or while it is broken (pale;
 ## orange under back_at; the track red while broken). Each fades in and out (METER_IN_S, METER_OUT_S).
+## A tracking meter (SwayCaster.track_on; the owner, 2026-10-12: "the casting and look meter are the same"): the one ring is
+## the lock too. The lock on a foe is bright, from the top (it drains back with the crosshair off him); the rest of the fill
+## dim; at TRACK_SHARE bright it is locked: it whitens and pulses (let go, it goes under him).
 
 const RADIUS := 21.0
 const WIDTH := 2.5
@@ -58,6 +61,7 @@ var _combo_pop := 0.0
 var _gauge_a := 0.0
 var _gauge_v := 1.0
 var _broken := false
+var _locked := false
 
 
 func _ready() -> void:
@@ -108,6 +112,10 @@ func _process(dt: float) -> void:
 	_pulse = maxf(_pulse - dt / PULSE_S, 0.0)
 	_belt_t = maxf(_belt_t - dt, 0.0)
 	_meters_tick(dt)
+	var lk := on and caster._tracks(caster.move) and caster.track_locked()
+	if lk and not _locked:
+		pulse()                                   # (a tracking meter's lock taken)
+	_locked = lk
 	if not _end.is_empty():
 		_end.t = float(_end.t) + dt
 		if float(_end.t) >= END_S:
@@ -124,8 +132,8 @@ func _draw() -> void:
 	var on := caster.state != SwayCaster.State.IDLE
 	if on:
 		var a := _alpha
-		if caster.off_t > 0.0 or (caster.track_off > 0.0 and caster._tracks(caster.move)):
-			a *= 0.3 + 0.7 * absf(sin(_t * 38.0))     # (the grace, or a tracking meter off the foe: it flickers)
+		if caster.off_t > 0.0:
+			a *= 0.3 + 0.7 * absf(sin(_t * 38.0))     # (the grace: it flickers)
 		var full := caster.state == SwayCaster.State.FULL
 		var holding := caster.state == SwayCaster.State.HOLDING
 		var bright := col.lerp(Color.WHITE, 0.35) if full or holding else col
@@ -137,7 +145,14 @@ func _draw() -> void:
 		var wob := (0.6 * sin(_t * 9.0) if full else 0.0) + (strain * 2.2 * sin(_t * 41.0) if holding else 0.0)
 		_ring(c, RADIUS, 1.0, Color(0, 0, 0, 0.35 * a), shape, WIDTH + 2.0)
 		_ring(c, RADIUS, 1.0, Color(col.r, col.g, col.b, 0.22 * a), shape, WIDTH)
-		_ring(c, RADIUS + wob, caster.fill, Color(bright.r, bright.g, bright.b, 0.95 * a), shape, WIDTH)
+		if caster._tracks(caster.move):
+			# (the one meter is the lock: dim what filled off any foe, bright what filled on one; locked, it whitens)
+			var dim := col.lerp(Color(0.5, 0.5, 0.5), 0.55)
+			_ring(c, RADIUS + wob, caster.fill, Color(dim.r, dim.g, dim.b, 0.8 * a), shape, WIDTH)
+			var lit := bright.lerp(Color.WHITE, 0.5) if caster.track_locked() else bright
+			_ring(c, RADIUS + wob, minf(caster.track_on, caster.fill), Color(lit.r, lit.g, lit.b, 0.95 * a), shape, WIDTH + (0.8 if caster.track_locked() else 0.0))
+		else:
+			_ring(c, RADIUS + wob, caster.fill, Color(bright.r, bright.g, bright.b, 0.95 * a), shape, WIDTH)
 		if full:
 			# the second left to let go: a thin inner arc running down
 			var rw := caster.release_window()          # (0: no limit, Gust's: the arc stays whole)

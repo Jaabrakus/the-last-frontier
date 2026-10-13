@@ -2,8 +2,9 @@ extends SceneTree
 ## The tracking meter for the owner's eye (2026-10-12: "geiser wind prison and column should be tracking meters"): the Lives ring,
 ## earth against a held fire bot 9 m off, the Column readied and its aim held, the player's own view. Windowed (never on top):
 ##   Godot --path . --resolution 1280x720 -s tools/ring/tracking_still.gd -- out=<dir>
-## Writes tracking_off.png (the crosshair beside him: the meter empty), tracking_half.png (on him: filling), tracking_full.png
-## (full) and tracking_sheet.png (the three round the crosshair, close). Ends with TRACKING STILL DONE.
+## Writes tracking_off.png (the crosshair beside him: the meter filling dim, no lock), tracking_half.png (a second lock, beside
+## him for its first 20%, then on him: bright what filled on him), tracking_full.png (full, 80% on him: locked, whitened) and
+## tracking_sheet.png (the three round the crosshair, close). Ends with TRACKING STILL DONE.
 
 const OWN_CFG := "user://tracking_still.cfg"
 
@@ -102,10 +103,23 @@ func _run() -> void:
 	await _secs(0.2)
 	look_off = true
 	c.held_override = true
-	await _secs(0.9)
+	while c.fill < 0.6:
+		await physics_frame
 	await _save("tracking_off")
+	c.held_override = false
+	while c.state != SwayCaster.State.IDLE:
+		await physics_frame
+	await _secs(1.5)
+	for w in get_nodes_in_group(FormRaised.GROUP):
+		(w as Node).queue_free()
+	p.hotbar.ready_move(1, "earth_shove", "column")
+	await _secs(0.2)
+	c.held_override = true
+	while c.fill < 0.2:
+		await physics_frame
 	look_off = false
-	await _secs(0.75)
+	while c.fill < 0.6:
+		await physics_frame
 	await _save("tracking_half")
 	while c.state != SwayCaster.State.FULL:
 		await physics_frame
