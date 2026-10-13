@@ -1,0 +1,1122 @@
+{
+ "_about": "Thủy Vân Reed Marches stilt kit (Đồng Lau, dl_*; places_se.md §3). Units metres; Blender Z up exported glTF +Y up; a piece's front faces Blender -Y = Godot +Z. Over-water pieces: origin on the water line, piles to the bed at -1.8 m. COLOR_0 = baked AO x top light (multiply into albedo); COLOR_0.a = cloth pin / reed wind weight. Materials tvd_<key>: see materials.json. *-colonly children are walkable decks, ramps, steps and the submerged causeway, and the pile clusters' boat blocks.",
+ "materials": {
+  "tvd_timber": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/timber.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.95,
+   "specular": 0.12,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_plank": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/plank.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.12,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_pile": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/pile.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_thatch": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/thatch.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_reed": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/reed.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_weave": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/weave.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_screen": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/screen.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_rope": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/rope.png",
+   "uv_tile_m": 1.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_net": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/net.png",
+   "uv_tile_m": 1.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": true,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_iron": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/iron.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.8,
+   "specular": 0.2,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_bamboo": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/bamboo.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.85,
+   "specular": 0.15,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_mud": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/mud.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_clay": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/clay.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.85,
+   "specular": 0.15,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_bark": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/bark.png",
+   "uv_tile_m": 3.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_leaf": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/leaf.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.08,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_fish": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/fish.png",
+   "uv_tile_m": 0.5,
+   "roughness": 0.7,
+   "specular": 0.25,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_paper": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/paper.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.9,
+   "specular": 0.1,
+   "emission": "#ffb060",
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_cloth_madder": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/cloth_madder.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_cloth_bone": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/cloth_bone.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_cloth_indigo": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/cloth_indigo.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_banner_heron": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/banner_heron.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_banner_heron_b": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/banner_heron_b.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_banner_heron_c": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/banner_heron_c.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": true,
+   "cloth": true,
+   "wind": false
+  },
+  "tvd_reedcard": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/reedcard.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.08,
+   "emission": null,
+   "alpha_scissor": true,
+   "double_sided": true,
+   "cloth": false,
+   "wind": true
+  },
+  "tvd_tally": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/tally.png",
+   "uv_tile_m": null,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  },
+  "tvd_oldstone": {
+   "texture": "res://assets/thuyvan/dong_lau/textures/oldstone.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "alpha_scissor": false,
+   "double_sided": false,
+   "cloth": false,
+   "wind": false
+  }
+ },
+ "pieces": {
+  "dl_causeway": {
+   "id": "DL7",
+   "note": "5 m module along +Y; walk surface 15 cm under the water line",
+   "height": 0.62,
+   "tris": 276,
+   "budget": "200 per 5 m",
+   "materials": [
+    "tvd_plank",
+    "tvd_timber",
+    "tvd_pile",
+    "tvd_rope",
+    "tvd_iron"
+   ],
+   "size_m_xyz_blender": [
+    1.53,
+    4.97,
+    2.42
+   ],
+   "anchors": {},
+   "colliders": [
+    "path-colonly"
+   ]
+  },
+  "dl_dip_net": {
+   "id": "DL6 (PROPOSAL id)",
+   "height": 4.9,
+   "tris": 260,
+   "budget": null,
+   "materials": [
+    "tvd_bamboo",
+    "tvd_clay",
+    "tvd_rope",
+    "tvd_net"
+   ],
+   "size_m_xyz_blender": [
+    4.05,
+    11.87,
+    4.97
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_dugout": {
+   "id": "DL6",
+   "height": 0.7,
+   "tris": 430,
+   "budget": "1-2k",
+   "materials": [
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_bamboo",
+    "tvd_screen"
+   ],
+   "size_m_xyz_blender": [
+    6.6,
+    1.01,
+    0.93
+   ],
+   "anchors": {
+    "anchor_seat_stern": [
+     -2.0,
+     0.0,
+     0.15
+    ]
+   },
+   "colliders": [],
+   "tris_lod1": 430
+  },
+  "dl_ferry_flat": {
+   "id": "DL6",
+   "height": 2.5,
+   "tris": 548,
+   "budget": "1-2k",
+   "materials": [
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_screen",
+    "tvd_bamboo"
+   ],
+   "size_m_xyz_blender": [
+    9.45,
+    3.15,
+    2.62
+   ],
+   "anchors": {
+    "anchor_pole": [
+     -3.6,
+     0.0,
+     0.42
+    ]
+   },
+   "colliders": [
+    "ferry_deck-colonly"
+   ],
+   "tris_lod1": 500
+  },
+  "dl_fish_rack": {
+   "id": "DL6 (PROPOSAL id)",
+   "height": 2.5,
+   "tris": 172,
+   "budget": null,
+   "materials": [
+    "tvd_bamboo",
+    "tvd_fish"
+   ],
+   "size_m_xyz_blender": [
+    4.6,
+    1.5,
+    2.53
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_heron_banner": {
+   "id": "DL1",
+   "note": "24 m mast, 3.3 x 10 m cloth (our standing heron), madder tails",
+   "height": 25.1,
+   "tris": 218,
+   "budget": "300 / 80",
+   "materials": [
+    "tvd_pile",
+    "tvd_iron",
+    "tvd_timber",
+    "tvd_rope",
+    "tvd_banner_heron",
+    "tvd_cloth_madder"
+   ],
+   "size_m_xyz_blender": [
+    4.5,
+    0.96,
+    26.9
+   ],
+   "anchors": {
+    "anchor_banner.004": [
+     0.0,
+     -0.4,
+     23.0
+    ],
+    "anchor_mooring.010": [
+     0.0,
+     -0.5,
+     0.4
+    ]
+   },
+   "colliders": []
+  },
+  "dl_mangrove_gallery": {
+   "id": "DL4",
+   "note": "great root arches over a side channel toward +X (anchor_channel)",
+   "height": 17.6,
+   "tris": 3422,
+   "budget": "3-5k / 1k / impostor",
+   "materials": [
+    "tvd_bark",
+    "tvd_leaf"
+   ],
+   "size_m_xyz_blender": [
+    19.77,
+    16.3,
+    19.58
+   ],
+   "anchors": {
+    "anchor_channel": [
+     6.0,
+     0.0,
+     0.0
+    ]
+   },
+   "colliders": [],
+   "tris_lod1": 1000
+  },
+  "dl_mooring_fort": {
+   "id": "DL1",
+   "piles": 225,
+   "deck_m": 2.8,
+   "footprint_m": [
+    30,
+    30
+   ],
+   "doors_m": "2.8 x 1.8, no sill (Floodborn-built)",
+   "height": 30.73,
+   "tris": 13158,
+   "budget": "8-12k / 2.5k / 400",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_rope",
+    "tvd_weave",
+    "tvd_iron",
+    "tvd_bamboo",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_banner_heron",
+    "tvd_cloth_madder",
+    "tvd_paper",
+    "tvd_screen",
+    "tvd_clay"
+   ],
+   "size_m_xyz_blender": [
+    39.34,
+    36.66,
+    32.54
+   ],
+   "anchors": {
+    "anchor_banner": [
+     -13.6,
+     -14.0,
+     23.0
+    ],
+    "anchor_banner.001": [
+     13.6,
+     -14.0,
+     23.0
+    ],
+    "anchor_banner.002": [
+     -13.6,
+     13.2,
+     23.0
+    ],
+    "anchor_banner.003": [
+     13.6,
+     13.2,
+     23.0
+    ],
+    "anchor_door": [
+     0.0,
+     -6.0,
+     2.8
+    ],
+    "anchor_lantern_0": [
+     -10.0,
+     -15.1,
+     5.15
+    ],
+    "anchor_lantern_1": [
+     -4.0,
+     -15.1,
+     5.15
+    ],
+    "anchor_lantern_2": [
+     4.0,
+     -15.1,
+     5.15
+    ],
+    "anchor_lantern_3": [
+     10.0,
+     -15.1,
+     5.15
+    ],
+    "anchor_lantern_4": [
+     -10.2,
+     -7.2,
+     6.4
+    ],
+    "anchor_lantern_5": [
+     10.2,
+     -7.2,
+     6.4
+    ],
+    "anchor_lantern_6": [
+     -2.4,
+     -7.2,
+     6.4
+    ],
+    "anchor_lantern_7": [
+     2.4,
+     -7.2,
+     6.4
+    ],
+    "anchor_lantern_8": [
+     -7.35,
+     -5.1,
+     13.8
+    ],
+    "anchor_lantern_9": [
+     7.35,
+     -5.1,
+     13.8
+    ],
+    "anchor_mooring": [
+     -6.0,
+     -15.3,
+     0.4
+    ],
+    "anchor_mooring.001": [
+     6.0,
+     -15.3,
+     0.4
+    ],
+    "anchor_mooring.002": [
+     -15.3,
+     -8.0,
+     0.4
+    ],
+    "anchor_mooring.003": [
+     14.7,
+     9.0,
+     0.4
+    ],
+    "anchor_smoke": [
+     5.0,
+     3.5,
+     9.3
+    ]
+   },
+   "colliders": [
+    "fort_deck-colonly",
+    "gallery-colonly",
+    "ramp_front-colonly",
+    "ramp_west-colonly",
+    "steps_east-colonly"
+   ],
+   "tris_lod1": 2071
+  },
+  "dl_net_rack": {
+   "id": "DL6 (PROPOSAL id)",
+   "height": 3.0,
+   "tris": 176,
+   "budget": null,
+   "materials": [
+    "tvd_pile",
+    "tvd_rope",
+    "tvd_net"
+   ],
+   "size_m_xyz_blender": [
+    4.95,
+    0.26,
+    3.05
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_pile_forest_4m": {
+   "id": "DL1/DL6",
+   "note": "piles 0.36-0.5 m from the bed (-1.8); box collider for boats",
+   "height": 3.4,
+   "tris": 412,
+   "budget": "400-900",
+   "materials": [
+    "tvd_pile",
+    "tvd_rope",
+    "tvd_timber"
+   ],
+   "size_m_xyz_blender": [
+    3.56,
+    3.56,
+    4.97
+   ],
+   "anchors": {},
+   "colliders": [
+    "boat_block-colonly"
+   ]
+  },
+  "dl_pile_forest_6m": {
+   "id": "DL1/DL6",
+   "note": "piles 0.36-0.5 m from the bed (-1.8); box collider for boats",
+   "height": 3.4,
+   "tris": 644,
+   "budget": "400-900",
+   "materials": [
+    "tvd_pile",
+    "tvd_rope",
+    "tvd_timber"
+   ],
+   "size_m_xyz_blender": [
+    5.71,
+    5.83,
+    4.86
+   ],
+   "anchors": {},
+   "colliders": [
+    "boat_block-colonly.001"
+   ]
+  },
+  "dl_platform_ramp": {
+   "id": "DL6",
+   "deck_m": 2.0,
+   "note": "haul-out ramp at the front (-Y) to -0.9",
+   "height": 3.4,
+   "tris": 756,
+   "budget": "600-1.2k",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_rope",
+    "tvd_iron"
+   ],
+   "size_m_xyz_blender": [
+    6.06,
+    10.73,
+    5.2
+   ],
+   "anchors": {
+    "anchor_mooring.004": [
+     2.2,
+     -3.9,
+     0.4
+    ]
+   },
+   "colliders": [
+    "deck-colonly",
+    "ramp-colonly"
+   ]
+  },
+  "dl_platform_steps": {
+   "id": "DL6",
+   "deck_m": 1.6,
+   "note": "steps at the front (-Y) to -0.2",
+   "height": 3.0,
+   "tris": 750,
+   "budget": "600-1.2k",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_rope",
+    "tvd_iron"
+   ],
+   "size_m_xyz_blender": [
+    8.0,
+    6.05,
+    4.8
+   ],
+   "anchors": {
+    "anchor_mooring.005": [
+     3.2,
+     -2.9,
+     0.4
+    ]
+   },
+   "colliders": [
+    "deck-colonly.001",
+    "steps-colonly"
+   ]
+  },
+  "dl_raft_house": {
+   "id": "DL6",
+   "note": "floats: the log raft rides at the water line",
+   "height": 6.47,
+   "tris": 2354,
+   "budget": "2-3k",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_weave",
+    "tvd_iron",
+    "tvd_bamboo",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_clay",
+    "tvd_screen",
+    "tvd_paper",
+    "tvd_cloth_madder",
+    "tvd_rope"
+   ],
+   "size_m_xyz_blender": [
+    12.13,
+    8.19,
+    9.56
+   ],
+   "anchors": {
+    "anchor_door.004": [
+     0.8,
+     -1.0,
+     0.42
+    ],
+    "anchor_hearth_light.001": [
+     -3.25,
+     -1.8,
+     1.02
+    ],
+    "anchor_lantern_door.003": [
+     3.1,
+     -2.3,
+     2.27
+    ],
+    "anchor_smoke.004": [
+     -3.25,
+     -1.8,
+     1.32
+    ]
+   },
+   "colliders": [
+    "raft_deck-colonly"
+   ],
+   "tris_lod1": 794
+  },
+  "dl_reed_boat_burial": {
+   "id": "DL8",
+   "height": 4.65,
+   "tris": 1098,
+   "budget": "2-3k",
+   "materials": [
+    "tvd_reed",
+    "tvd_bamboo"
+   ],
+   "size_m_xyz_blender": [
+    9.88,
+    2.8,
+    4.88
+   ],
+   "anchors": {},
+   "colliders": [],
+   "tris_lod1": 700
+  },
+  "dl_reed_clump_cattail": {
+   "id": "DL5",
+   "note": "cards; COLOR_0.a = wind weight",
+   "height": 3.6,
+   "tris": 28,
+   "budget": "50-200",
+   "materials": [
+    "tvd_reedcard"
+   ],
+   "size_m_xyz_blender": [
+    3.46,
+    3.53,
+    3.86
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_reed_clump_gold": {
+   "id": "DL5",
+   "note": "cards; COLOR_0.a = wind weight",
+   "height": 3.6,
+   "tris": 28,
+   "budget": "50-200",
+   "materials": [
+    "tvd_reedcard"
+   ],
+   "size_m_xyz_blender": [
+    3.87,
+    3.61,
+    3.86
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_reed_clump_green": {
+   "id": "DL5",
+   "note": "cards; COLOR_0.a = wind weight",
+   "height": 3.6,
+   "tris": 28,
+   "budget": "50-200",
+   "materials": [
+    "tvd_reedcard"
+   ],
+   "size_m_xyz_blender": [
+    3.42,
+    3.06,
+    3.92
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_reed_house_a": {
+   "id": "DL6",
+   "note": "Floodborn-built: door 2.8 x 1.8 m, no sill; bench with a 0.5 m tail gap; soaking trough; haul-out ramp",
+   "height": 10.45,
+   "tris": 2700,
+   "budget": "2.5-4k / 800 / 150",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_weave",
+    "tvd_iron",
+    "tvd_bamboo",
+    "tvd_clay",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_paper",
+    "tvd_cloth_madder",
+    "tvd_rope"
+   ],
+   "size_m_xyz_blender": [
+    10.9,
+    14.21,
+    12.58
+   ],
+   "anchors": {
+    "anchor_door.001": [
+     0.0,
+     -2.3,
+     1.8
+    ],
+    "anchor_lantern_door": [
+     3.0,
+     -4.34,
+     4.65
+    ],
+    "anchor_mooring.006": [
+     -4.5,
+     -5.4,
+     0.4
+    ],
+    "anchor_smoke.001": [
+     0.0,
+     -0.66,
+     7.95
+    ],
+    "anchor_soak_trough": [
+     2.45,
+     -3.5,
+     2.3
+    ]
+   },
+   "colliders": [
+    "deck-colonly.002",
+    "ramp-colonly.001"
+   ],
+   "tris_lod1": 762
+  },
+  "dl_reed_house_b": {
+   "id": "DL6",
+   "note": "public standard: door 2.4 x 1.3 m, 8 cm sill; steps to the water",
+   "height": 8.25,
+   "tris": 2394,
+   "budget": "2.5-4k / 800 / 150",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_weave",
+    "tvd_iron",
+    "tvd_bamboo",
+    "tvd_rope",
+    "tvd_clay",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_paper",
+    "tvd_cloth_madder"
+   ],
+   "size_m_xyz_blender": [
+    9.65,
+    8.5,
+    10.48
+   ],
+   "anchors": {
+    "anchor_door.002": [
+     0.0,
+     -1.7,
+     1.6
+    ],
+    "anchor_lantern_door.001": [
+     2.2,
+     -3.06,
+     3.65
+    ],
+    "anchor_mooring.007": [
+     -3.7,
+     -4.0,
+     0.4
+    ],
+    "anchor_smoke.002": [
+     0.0,
+     -0.34,
+     6.35
+    ]
+   },
+   "colliders": [
+    "deck-colonly.003",
+    "steps-colonly.001"
+   ],
+   "tris_lod1": 796
+  },
+  "dl_reed_house_c": {
+   "id": "DL6",
+   "note": "kitchen hut: hearth at the edge (smoke on the water); a mangrove root through the floor",
+   "height": 6.55,
+   "tris": 1878,
+   "budget": "2.5-4k / 800 / 150",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_weave",
+    "tvd_clay",
+    "tvd_iron",
+    "tvd_bark",
+    "tvd_fish",
+    "tvd_bamboo",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_paper",
+    "tvd_cloth_madder",
+    "tvd_rope"
+   ],
+   "size_m_xyz_blender": [
+    7.3,
+    6.94,
+    8.83
+   ],
+   "anchors": {
+    "anchor_door.003": [
+     0.0,
+     -1.4,
+     1.2
+    ],
+    "anchor_hearth_light": [
+     0.6,
+     -1.75,
+     1.9
+    ],
+    "anchor_lantern_door.002": [
+     1.7,
+     -2.08,
+     2.85
+    ],
+    "anchor_mooring.008": [
+     -3.2,
+     -2.9,
+     0.4
+    ],
+    "anchor_smoke.003": [
+     0.6,
+     -1.75,
+     2.2
+    ]
+   },
+   "colliders": [
+    "deck-colonly.004"
+   ],
+   "tris_lod1": 799
+  },
+  "dl_screen_rack": {
+   "id": "DL6",
+   "height": 2.9,
+   "tris": 144,
+   "budget": "300-600",
+   "materials": [
+    "tvd_bamboo",
+    "tvd_screen"
+   ],
+   "size_m_xyz_blender": [
+    5.0,
+    0.24,
+    2.9
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_soak_trough": {
+   "id": "§3 Floodborn-built",
+   "height": 0.64,
+   "tris": 72,
+   "budget": "150",
+   "materials": [
+    "tvd_timber",
+    "tvd_clay"
+   ],
+   "size_m_xyz_blender": [
+    2.08,
+    0.92,
+    0.64
+   ],
+   "anchors": {
+    "anchor_water_surface": [
+     0.0,
+     0.0,
+     0.52
+    ]
+   },
+   "colliders": []
+  },
+  "dl_tally_post": {
+   "id": "DL7",
+   "height": 2.6,
+   "tris": 150,
+   "budget": "150-300",
+   "materials": [
+    "tvd_tally",
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_rope",
+    "tvd_cloth_madder"
+   ],
+   "size_m_xyz_blender": [
+    0.85,
+    0.98,
+    4.4
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "dl_watch_tower": {
+   "id": "DL2",
+   "lookout_deck_m": 16.5,
+   "height": 21.8,
+   "tris": 2234,
+   "budget": "1-1.5k / 300",
+   "materials": [
+    "tvd_pile",
+    "tvd_timber",
+    "tvd_plank",
+    "tvd_thatch",
+    "tvd_reed",
+    "tvd_paper",
+    "tvd_cloth_madder",
+    "tvd_rope",
+    "tvd_clay"
+   ],
+   "size_m_xyz_blender": [
+    7.8,
+    7.18,
+    24.91
+   ],
+   "anchors": {
+    "anchor_lantern": [
+     1.65,
+     -1.65,
+     18.1
+    ],
+    "anchor_mooring.009": [
+     0.0,
+     -4.2,
+     0.4
+    ]
+   },
+   "colliders": [
+    "landing-colonly",
+    "lookout-colonly"
+   ],
+   "tris_lod1": 263
+  }
+ }
+}
