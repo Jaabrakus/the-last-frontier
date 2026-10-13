@@ -25,6 +25,7 @@ func _ready() -> void:
 	_gen.mix_rate = RATE
 	_gen.buffer_length = 0.1
 	stream = _gen
+	playback_type = AudioServer.PLAYBACK_TYPE_STREAM   # (a generator streams: the web build's default, samples, can't play it)
 	volume_db = VOLUME_DB
 	if AudioServer.get_bus_index(&"SFX") >= 0:
 		bus = &"SFX"
