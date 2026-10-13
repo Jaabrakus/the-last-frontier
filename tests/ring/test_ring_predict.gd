@@ -4,7 +4,7 @@ extends SceneTree
 ## under the lip, the curtain 10 m out):
 ##   KO speeds   RingPredict.ko_speed at 25/30/35 degrees from 17, 7 and 2 m inside the lip within 5% of the model's
 ##               (lead_model.py v2: smash_r3 spec §2.2's figures, rebuilt as scratchpad move_r3/lead_model_v2.py)
-##   reach       RingPredict.reach per element within 1 m of the spec's 11.3 / 14.3 (water's Stream) / 15.8 / 17.4 m (the model's own deck
+##   reach       RingPredict.reach per element within 1 m of the spec's 11.3 / 14.7 (water's Stream) / 15.8 / 17.4 m (the model's own deck
 ##               test, which counts any touch of the deck's face as a landing), and the engine's own (RingMoves.simulate with
 ##               the model's order of moves, plan "lead") within 1 m of the model with an honest face (only the deck's top,
 ##               the grab box and the scramble save: air 14.7 m, the others as the spec)
@@ -21,10 +21,10 @@ const OWN_CFG := "user://ring_predict_test.cfg"
 ## lead_model.py v2's KO speeds (m/s, water body): angle -> [from 17, 7, 2 m inside the lip].
 const MODEL_KO := {25: [29.42, 23.71, 20.18], 30: [29.53, 23.90, 20.06], 35: [30.68, 24.20, 20.31]}
 ## The spec's recovery reach (m past the lip) and the model's own. Water's since its Rise became the Stream (the owner,
-## 2026-10-12: "like the fire but with water ... like a dragon"; 7 m along the aim, modelled as a Jet at the model's aim):
-## 14.3 m, the spec's 11.8 the straight-up Fountain's.
-const SPEC_REACH := {"earth": 11.3, "water": 14.3, "fire": 15.8, "air": 17.4}
-const MODEL_REACH := {"earth": 11.16, "water": 14.31, "fire": 15.61, "air": 17.30}
+## 2026-10-12: "like the fire but with water ... like a dragon", "it should still rise em up"; 7.5 m along the aim, never
+## under +35, modelled as a Jet at the model's aim): 14.7 m, the spec's 11.8 the straight-up Fountain's.
+const SPEC_REACH := {"earth": 11.3, "water": 14.7, "fire": 15.8, "air": 17.4}
+const MODEL_REACH := {"earth": 11.16, "water": 14.74, "fire": 15.61, "air": 17.30}
 ## The Boulder's class (spec §2.3) for the KO read until RingRules.class_of has it.
 const BOULDER := {"d": 22.0, "base": 8.0, "growth": 12.1, "angle": 35.0, "set": false}
 

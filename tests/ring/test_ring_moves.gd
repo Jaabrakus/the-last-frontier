@@ -21,7 +21,7 @@ extends SceneTree
 ##   guard     with the guard held, Space jumps on that frame
 ##   teeter    running into the lip stops; 0.3 s toward the water steps off (an end, a long side); a knock carries over at once
 ##   rise      heights within 0.2 m (earth 5.5 along a 20 degree lean toward the lip, air 3.5; fire 7.5 along the aim, a level
-##             aim lifted to +20; water's Stream 7.0 along the aim, a level aim lifted to +10, and turning after the aim in its
+##             aim lifted to +20; water's Stream 7.5 along the aim, a level aim lifted to +35, and turning after the aim in its
 ##             travel); the scramble (air's Updraft) from 1.8 m under the grab box reaches the hang, from 2.4 m not; the
 ##             Pillar strikes a body over him; the glide no faster than 3 m/s; a self-launch from the deck uses up the Rise
 ##   hitstun   a press at 0.4 s waits for hitstun's end; a fresh press at 0.65 s ends it (the escape); the steer leans him
@@ -676,7 +676,7 @@ func _rises() -> void:
 						"earth's Pillar: %.2f m along a %.1f degree lean toward the lip" % [d.length(), lean])
 			"water":
 				var wp := rad_to_deg(asin(d.normalized().y))
-				_expect(absf(d.length() - 7.0) <= 0.2 and absf(wp - 10.0) < 1.0, "water's Stream, a level aim: %.2f m at %.1f degrees (lifted to +10)" % [d.length(), wp])
+				_expect(absf(d.length() - 7.5) <= 0.2 and absf(wp - 35.0) < 1.0, "water's Stream, a level aim: %.2f m at %.1f degrees (lifted to +35)" % [d.length(), wp])
 			"fire":
 				var pitch := rad_to_deg(asin(d.normalized().y))
 				_expect(absf(d.length() - 7.5) <= 0.2 and absf(pitch - 20.0) < 1.0, "fire's Jet, a level aim: %.2f m at %.1f degrees (lifted to +20)" % [d.length(), pitch])

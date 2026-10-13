@@ -8,7 +8,7 @@ extends "res://tools/ring/move_reel.gd"
 ##     -s tools/ring/water_rise_reel.gd -- out=<dir> fps=60 size=1280x720 quality=high upscale=off music=off character_look=soft
 ## Cut as the move reel is: python3 tools/ring/move_reel_cut.py <dir> <out>.
 
-const SIDE := 8.0
+const SIDE := 11.0
 
 var _wide := false
 
@@ -46,10 +46,10 @@ func _do(sh: Dictionary) -> void:
 	var away := to_deck + PI
 	var how := String(sh.how)
 	_wide = true
-	_cam_mid = lip + ax * 1.2 + Vector3.UP * 1.0
+	_cam_mid = lip + ax * 0.5 + Vector3.UP * 2.6
 	player.global_position = at
 	player.velocity = Vector3(0.0, -1.0, 0.0)
-	player.yaw = {"deck": to_deck, "steer": to_deck + PI * 0.5, "auto": to_deck + PI * 0.75}.get(how, away)
+	player.yaw = {"deck": to_deck, "steer": to_deck + PI * 0.5, "auto": to_deck + PI * 0.62}.get(how, away)
 	player.pitch = 0.0
 	player.rotation.y = player.yaw
 	await _frame()
