@@ -864,7 +864,9 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		BendLooks.spout_jet(from, at, float(s.get("radius_m", 1.8)), rise)
 		BendLooks.geyser(from, to - from, from.distance_to(to) + 0.8, SPOUT_JET_COL_R, rise, false)
 	else:
-		# (the column: the deck breaking, a column of water out of it; straight up, or leaning)
+		# (the column: sent from his feet along the deck (geyser_send), the deck breaking there, a column of water out of it;
+		# straight up, or leaning)
+		BendLooks.geyser_send(p.global_position, at, rise)
 		var up: Vector3 = way.get("up", Vector3.UP)
 		var cr := clampf(float(s.get("radius_m", 1.8)) * 0.32, 0.45, 1.1)
 		BendLooks.geyser(at, up, SPOUT_COL_M * (0.9 if way.has("up") else 1.0), cr, rise, true)

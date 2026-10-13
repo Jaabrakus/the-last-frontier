@@ -1467,6 +1467,34 @@ static func geyser(at: Vector3, dir: Vector3, length: float, radius: float, rise
 	scn.add_child(g)
 
 
+## The Geyser sent (the owner, 2026-10-12: "they build water at the feet and then they send the water column"): from the
+## caster's feet a crack races along the deck to the mark in `s` seconds (the rumble's time, arriving as the column bursts),
+## water spurting out of it as it goes, as the Fissure's ground breaks along its way. Our own particles; nothing on anyone.
+const SEND_STEP_M := 0.7
+static func geyser_send(from: Vector3, to: Vector3, s: float) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	var tree := pool.get_tree() if pool != null else null
+	if tree == null:
+		return
+	var flat := Vector3(to.x - from.x, 0.0, to.z - from.z)
+	var dist := flat.length()
+	if dist < 1.0:
+		return
+	var way := flat / dist
+	var n := maxi(int(ceil(dist / SEND_STEP_M)), 1)
+	var at0 := from + way * 0.5
+	burst(from + Vector3.UP * 0.1, "water", 14, Vector3.UP, 70.0, 2.0, 0.2)     # (the water leaving his feet)
+	for i in n:
+		var k := float(i + 1) / float(n)
+		var pt := at0.lerp(Vector3(to.x, to.y, to.z), k)
+		tree.create_timer(maxf(s * 0.85 * k, 0.01), false).timeout.connect(func() -> void:
+			mark_at("cracks", pt + Vector3.UP * 0.01, Vector3.UP, 0.9, 1.6)
+			burst(pt + Vector3.UP * 0.05, "water", 7, (Vector3.UP * 1.4 + way).normalized(), 30.0, 3.5, 0.17)
+			burst(pt + Vector3.UP * 0.05, "stone", 3, Vector3.UP, 50.0, 2.0, 0.08))
+
+
 ## A mark of the pool's (`mode`: cracks, frost, scorch ...) on a surface at `at` facing `normal`, `size` m, for `life` s.
 static func mark_at(mode: String, at: Vector3, normal: Vector3, size: float, life: float) -> void:
 	if not live():
