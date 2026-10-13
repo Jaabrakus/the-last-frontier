@@ -1,0 +1,473 @@
+{
+ "id": "tv_mf_shoulder_mantle",
+ "name": "Fringed shoulder mantle",
+ "description": "A short indigo-black capelet over the shoulders, its edge cut into ragged strips, a grey fur ruff at the neck and hawk feathers at the left shoulder.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "outer",
+ "alt_slots": [],
+ "layer": {
+  "default": 40
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_shoulder_mantle.glb",
+ "mesh": "tv_mf_shoulder_mantle",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_shoulder_mantle"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "forearm_a_l",
+  "forearm_a_r",
+  "forearm_b_l",
+  "forearm_b_r",
+  "neck_lower",
+  "neck_upper",
+  "upper_arm_l",
+  "upper_arm_r"
+ ],
+ "hides_regions": [
+  "chest_upper_back"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "cloth",
+   "role": "cloth",
+   "fabric": "WOOL",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_indigo_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "WOOL"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "fringe strips",
+   "role": "fringe",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_hemp",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "goat fur ruff",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_fur_grey",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "FUR"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 3,
+   "name": "feathers",
+   "role": "trim",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_walnut",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 6610,
+    "verts": 4386,
+    "zones": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "forearm_a_l",
+     "forearm_a_r",
+     "forearm_b_l",
+     "forearm_b_r",
+     "forearm_c_l",
+     "forearm_c_r",
+     "neck_lower",
+     "neck_upper",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_l",
+     "upper_arm_r",
+     "wrist_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "l_shoulder",
+     "l_elbow",
+     "r_clavicle",
+     "r_shoulder",
+     "r_elbow",
+     "neck",
+     "heada",
+     "headb",
+     "l_breast",
+     "r_breast",
+     "l_forarm_twist_a",
+     "l_forarm_twist_c",
+     "l_forarm_twist_b",
+     "r_forarm_twist_a",
+     "r_forarm_twist_c",
+     "r_forarm_twist_b",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "l_shoulder_twist_c",
+     "l_shoulder_twist_b",
+     "l_shoulder_twist_d",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 6610,
+  "verts": 4386,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0482,
+   "breast_large": 0.0592,
+   "breast_small": 0.0529
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.812,
+    "cone": 0.5
+   },
+   "neck_lower": {
+    "normal": 0.958,
+    "cone": 0.875
+   },
+   "chest_upper_front": {
+    "normal": 0.677,
+    "cone": 0.5
+   },
+   "chest_upper_side": {
+    "normal": 0.99,
+    "cone": 0.948
+   },
+   "chest_upper_back": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "chest_front": {
+    "normal": 0.604,
+    "cone": 0.427
+   },
+   "chest_side": {
+    "normal": 0.938,
+    "cone": 0.677
+   },
+   "chest_back": {
+    "normal": 0.927,
+    "cone": 0.635
+   },
+   "abdomen_front": {
+    "normal": 0.333,
+    "cone": 0.052
+   },
+   "abdomen_side": {
+    "normal": 0.573,
+    "cone": 0.104
+   },
+   "abdomen_back": {
+    "normal": 0.729,
+    "cone": 0.219
+   },
+   "pelvis_center": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "pelvis_side": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.812,
+    "cone": 0.75
+   },
+   "forearm_a_l": {
+    "normal": 0.74,
+    "cone": 0.562
+   },
+   "forearm_b_l": {
+    "normal": 0.26,
+    "cone": 0.115
+   },
+   "forearm_c_l": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.844,
+    "cone": 0.74
+   },
+   "forearm_a_r": {
+    "normal": 0.646,
+    "cone": 0.448
+   },
+   "forearm_b_r": {
+    "normal": 0.271,
+    "cone": 0.167
+   },
+   "forearm_c_r": {
+    "normal": 0.219,
+    "cone": 0.146
+   },
+   "wrist_r": {
+    "normal": 0.188,
+    "cone": 0.104
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 958.2
+ },
+ "budget": {
+  "tris_max": 7000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the shaggy shoulders of the hunter's sheet and the lineup, made readable: strips 4-5 cm wide and 10-19 cm long (each its own length, every other one standing proud), a fur roll at the neck, feathers breaking the outline on one side only. Feathers are a hunter's, not a rank; no feather crown.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_highland",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 9.62,
+    "p05_mm": 19.11,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 5.66,
+    "p05_mm": 17.9,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 9.64,
+    "p05_mm": 17.3,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 4.0,
+    "p05_mm": 19.38,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_shoulder_mantle.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_shoulder_mantle.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_mf_wrap_vest",
+  "tv_mf_short_robe"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "felt",
+   "1": "hemp",
+   "2": "fur",
+   "3": "feather"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "stone_ridge": {
+    "0": "tv_indigo_black",
+    "1": "tv_hemp",
+    "2": "tv_fur_grey"
+   },
+   "cloud_pass": {
+    "0": "tv_bone",
+    "1": "tv_jade_cloth",
+    "2": "tv_fur_grey"
+   },
+   "high_pine": {
+    "0": "tv_pine_black",
+    "1": "tv_ochre",
+    "2": "tv_walnut"
+   }
+  },
+  "recipe_note": "cloth2.tv_dress.fringe_mantle: the cloak envelope over the shoulders and the arms (150 columns), the strips from 1.12 (front) / 1.05 (back) down 10-19 cm, 4 columns wide with a 1-column cut between, every other strip 4.5 mm proud; a 5.5 cm ruff raised 2.2 cm with lumps; three 19 cm feathers at 66 deg, z 1.29, leaning out.",
+  "fringe_variant": {
+   "A": "strips 10-19 cm",
+   "B": "long strips 14-24 cm",
+   "C": "two tiers"
+  }
+ }
+}

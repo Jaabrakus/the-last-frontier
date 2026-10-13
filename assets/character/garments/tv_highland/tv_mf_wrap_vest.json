@@ -1,0 +1,403 @@
+{
+ "id": "tv_mf_wrap_vest",
+ "name": "Woven wrap vest",
+ "description": "A sleeveless wrap vest of indigo-black homespun, the left front crossed over the right and tied at the side, a woven madder band along the collar and the front edge, skirts to the top of the thigh with side slits.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "shirt",
+ "alt_slots": [],
+ "layer": {
+  "default": 20
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_wrap_vest.glb",
+ "mesh": "tv_mf_wrap_vest",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_wrap_vest"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "neck_lower",
+  "pelvis_side"
+ ],
+ "hides_regions": [
+  "abdomen_back",
+  "chest_front"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "homespun",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_indigo_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "woven band",
+   "role": "band",
+   "fabric": "LIN",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_madder",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "unused",
+   "role": "metal",
+   "fabric": "MET",
+   "palette": [
+    "tv_bronze",
+    "tv_gold",
+    "tv_bone",
+    "tv_jade"
+   ],
+   "default": "tv_bronze",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_bronze": "#976D40",
+    "tv_gold": "#D8A743",
+    "tv_bone": "#CFC4A6",
+    "tv_jade": "#6FA58E"
+   },
+   "fabrics": [
+    "MET"
+   ],
+   "metal": true
+  },
+  {
+   "zone": 3,
+   "name": "ties",
+   "role": "ribbon",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_hemp",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4603,
+    "verts": 3212,
+    "zones": [
+     0,
+     1,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "thigh_upper_l",
+     "upper_arm_l",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "r_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "l_breast",
+     "r_breast",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 4603,
+  "verts": 3212,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0571,
+   "breast_large": 0.0868,
+   "breast_small": 0.0215
+  },
+  "coverage": {
+   "neck_lower": {
+    "normal": 0.792,
+    "cone": 0.688
+   },
+   "chest_upper_front": {
+    "normal": 1.0,
+    "cone": 0.948
+   },
+   "chest_upper_side": {
+    "normal": 0.719,
+    "cone": 0.646
+   },
+   "chest_upper_back": {
+    "normal": 0.75,
+    "cone": 0.729
+   },
+   "chest_front": {
+    "normal": 1.0,
+    "cone": 0.979
+   },
+   "chest_side": {
+    "normal": 0.958,
+    "cone": 0.948
+   },
+   "chest_back": {
+    "normal": 0.969,
+    "cone": 0.969
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.969
+   },
+   "abdomen_side": {
+    "normal": 0.979,
+    "cone": 0.917
+   },
+   "abdomen_back": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "pelvis_center": {
+    "normal": 0.083,
+    "cone": 0.073
+   },
+   "pelvis_side": {
+    "normal": 0.49,
+    "cone": 0.354
+   },
+   "upper_arm_l": {
+    "normal": 0.125,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.125,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.073,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 688.8
+ },
+ "budget": {
+  "tris_max": 6000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the porter's vest of the Common Folk lineup and the Tr\u01b0\u1eddng S\u01a1n pass sheet. Read as one dark wedge from the shoulders to the hips, so the madder band and the sash carry the colour; the arms stay bare for the tattoos. The band is our own ridge-and-ladder weave (band_motif), straight cuts only.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_highland",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 5.04,
+    "p05_mm": 8.8,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 3.54,
+    "p05_mm": 10.06,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 1.79,
+    "p05_mm": 6.05,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 5.73,
+    "p05_mm": 9.61,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_wrap_vest.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_wrap_vest.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_mf_trousers"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "weave",
+   "2": "metal",
+   "3": "cord"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "tv_motif": {
+   "1": {
+    "motif": "band_motif",
+    "threads": [
+     "tv_bone",
+     "tv_indigo_black",
+     "tv_ochre"
+    ],
+    "scale_m": [
+     0.12,
+     0.12
+    ]
+   }
+  },
+  "presets": {
+   "stone_ridge": {
+    "0": "tv_indigo_black",
+    "1": "tv_madder"
+   },
+   "cloud_pass": {
+    "0": "tv_bone",
+    "1": "tv_jade_cloth"
+   },
+   "high_pine": {
+    "0": "tv_pine_black",
+    "1": "tv_ochre"
+   }
+  },
+  "recipe_note": "cloth2.dress.robe mode crossed, sleeves None (round armholes, recipes.coat sleeveless); hem 0.86 with side slits to 0.95; a 3 cm collar band raised 3 mm along the neck and the overlapping edge (zone 1); two ties at -50 deg."
+ }
+}

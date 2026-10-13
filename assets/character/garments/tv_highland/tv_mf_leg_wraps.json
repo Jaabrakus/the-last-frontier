@@ -1,0 +1,270 @@
+{
+ "id": "tv_mf_leg_wraps",
+ "name": "Leg wraps with cross-cords",
+ "description": "Undyed hemp strips wound down each shin from the knee to the ankle over the trousers, a madder cord crossing over them, tied under the knee.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "legs.over",
+ "alt_slots": [],
+ "layer": {
+  "default": 35
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_leg_wraps.glb",
+ "mesh": "tv_mf_leg_wraps",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_leg_wraps"
+  }
+ ],
+ "occupies_regions": [
+  "ankle_l",
+  "ankle_r",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r"
+ ],
+ "hides_regions": [
+  "shin_lower_l",
+  "shin_lower_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "hemp strip",
+   "role": "cloth",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_hemp",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "cord",
+   "role": "ribbon",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_madder",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 2748,
+    "verts": 1634,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "ankle_l",
+     "ankle_r",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r"
+    ],
+    "max_influences": 3,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "l_ankle",
+     "l_heel",
+     "r_upper_leg",
+     "r_knee",
+     "r_ankle",
+     "r_heel"
+    ]
+   }
+  },
+  "tris": 2748,
+  "verts": 1634,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0404,
+   "breast_large": 0.0015,
+   "breast_small": 0.0015
+  },
+  "coverage": {
+   "thigh_lower_l": {
+    "normal": 0.094,
+    "cone": 0.052
+   },
+   "shin_upper_l": {
+    "normal": 0.948,
+    "cone": 0.938
+   },
+   "shin_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_l": {
+    "normal": 0.51,
+    "cone": 0.385
+   },
+   "thigh_lower_r": {
+    "normal": 0.052,
+    "cone": 0.021
+   },
+   "shin_upper_r": {
+    "normal": 0.917,
+    "cone": 0.906
+   },
+   "shin_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "ankle_r": {
+    "normal": 0.458,
+    "cone": 0.344
+   }
+  },
+  "glb_kb": 318.9
+ },
+ "budget": {
+  "tris_max": 3500
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the bound white shins of every Mountain Folk figure (the hunter, the porter, the Tr\u01b0\u1eddng S\u01a1n bridge). Chunky on purpose: each turn stands proud of the one below, so the wrap reads at walking distance as rings of light and shade.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_highland",
+  "tv_common",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.13,
+    "p05_mm": 7.08,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 2.0,
+    "p05_mm": 6.79,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 2.13,
+    "p05_mm": 7.08,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 2.13,
+    "p05_mm": 7.08,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_leg_wraps.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_leg_wraps.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_mf_trousers"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "hemp",
+   "1": "cord"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "hemp_madder": {
+    "0": "tv_hemp",
+    "1": "tv_madder"
+   },
+   "hemp_indigo": {
+    "0": "tv_hemp",
+    "1": "tv_indigo_black"
+   },
+   "indigo_hemp": {
+    "0": "tv_indigo_black",
+    "1": "tv_hemp"
+   }
+  },
+  "recipe_note": "cloth2.tv_dress.leg_wraps: a 6.8 cm strip on a helix from 0.44 to 0.105 (30% overlap, ~7.2 turns), each turn's lower edge 3.5 mm prouder, fitted over tv_mf_trousers; two 4.5 mm cords on opposite helices crossing 4 times; a knot under the knee with two 8.5 cm ends."
+ }
+}
