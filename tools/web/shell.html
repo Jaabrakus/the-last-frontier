@@ -208,7 +208,7 @@ const engine = new Engine(GODOT_CONFIG);
 			while (next < list.parts.length) {
 				const i = next++;
 				const p = list.parts[i];
-				const chunks = await fetchPart(p.file, p.size, 3);
+				const chunks = await fetchPart(p.file + (list.build ? '?v=' + list.build : ''), p.size, 3);
 				let at = p.offset;
 				for (const c of chunks) {
 					out.set(c, at);

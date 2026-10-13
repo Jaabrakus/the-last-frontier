@@ -3,6 +3,7 @@ index.pck.000, .001, ... of at most --mb MB each, listed in index.pck.parts.json
 join them in the browser. The whole index.pck is removed (--keep keeps it).
     python3 -I tools/web/split_pck.py <build dir> [--mb 24] [--keep]
 """
+import hashlib
 import json
 import os
 import sys
@@ -30,8 +31,14 @@ def main(argv: list) -> int:
                 out.write(data)
             parts.append({'file': name, 'offset': i * step, 'size': len(data)})
             i += 1
+    # (the build's id: the page asks for each part with ?v=<id>, so a browser's cached parts of another build are never
+    # joined with this one's)
+    h = hashlib.sha1()
+    with open(src, 'rb') as f:
+        for block in iter(lambda: f.read(1 << 20), b''):
+            h.update(block)
     with open(os.path.join(d, 'index.pck.parts.json'), 'w') as f:
-        json.dump({'size': size, 'parts': parts}, f, indent=1)
+        json.dump({'size': size, 'build': h.hexdigest()[:12], 'parts': parts}, f, indent=1)
     if not keep:
         os.remove(src)
     print('index.pck %.1f MB -> %d parts of up to %.0f MB' % (size / 1048576, len(parts), mb))
