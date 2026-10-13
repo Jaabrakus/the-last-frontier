@@ -390,7 +390,7 @@ func _warm_looks() -> void:
 				var t_soft := Time.get_ticks_usec()
 				await SoftLook.warm_up(cam)
 				WebPerf.note("warm soft look: %.0f ms" % ((Time.get_ticks_usec() - t_soft) / 1000.0))
-			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
+			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f), _warm_elements())
 			# Draw the large fall effects only behind the loading screen. Direct scene launches
 			# must not cover the live competitors in a warm-up splash.
 			if ring.water != null and LoadingScreen.covering():
@@ -409,6 +409,23 @@ func _warm_looks() -> void:
 		WebPerf.note("warm total %.0f ms, longest frame %.0f ms" % [warm_ms, warm_frame_ms])
 	set_meta(&"loading_progress", 1.0)
 	set_meta(&"loading_hold", false)
+
+
+## The elements whose looks the warm-up compiles: on the web build only those in the match (the player's and every
+## competitor's: a browser compiles each shader slowly, ~1 s a group the first time; the owner, 2026-10-13: "how can we get it
+## to run better?"), else [] (all of them, as ever).
+func _warm_elements() -> Array:
+	if not OS.has_feature("web"):
+		return []
+	var out := [MatchSetup.element]
+	if mode != null and mode.has_method(&"competitors"):
+		for b: Node in mode.call(&"competitors"):
+			var el := String(b.get("arena_element") if b.get("arena_element") != null else b.get("element"))
+			if el == "" and Bending.of(b as Node3D) != null:
+				el = Bending.of(b as Node3D).element
+			if el != "" and not el in out:
+				out.append(el)
+	return out
 
 
 ## Sound (scripts/audio/): the buses and voices, the player's footsteps, the music outside script runs (or with music=on).

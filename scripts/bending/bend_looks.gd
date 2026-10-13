@@ -2951,7 +2951,11 @@ const WARM_EMITTER_KINDS := ["fire", "water", "smoke", "dust", "steam", "ice", "
 const WARM_ZONES := ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum",
 		"wind_wall", "puddle", "redirect", "parry"]
 
-static func warm_up(cam: Camera3D, progress := Callable()) -> void:
+## The element whose looks each KINDS kind is (warm_up's `elements` keeps the others' out).
+const KIND_ELEMENT := {"stone": "earth", "ice": "water", "water": "water", "fire": "fire", "lightning": "fire", "air": "air"}
+
+
+static func warm_up(cam: Camera3D, progress := Callable(), elements: Array = []) -> void:
 	if cam == null or not cam.is_inside_tree() or not live():
 		return
 	var pool := _pool()
@@ -2972,6 +2976,8 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 		for el: String in Bending.ELEMENTS:
 			pool.play("monsoon_seal", xf, 0.1, 0.01, 0.01, MonsoonIdentity.accent(el), Color.WHITE, MonsoonIdentity.mesh(el)))
 	for k: String in KINDS:
+		if not elements.is_empty() and not String(KIND_ELEMENT.get(k, "")) in elements:
+			continue                                 # (an element not in the match: its kind compiles if it ever comes)
 		groups.append(func() -> void:
 			burst(at, k, 2, Vector3.UP, 30.0, 0.1, 0.01)
 			blast(at, Vector3.FORWARD, 60.0, 0.05, k)
