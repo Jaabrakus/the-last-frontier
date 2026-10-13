@@ -31,7 +31,7 @@ extends SceneTree
 ##                     window, no Beat
 ##   Kiln Stone        a Fire Wall (the bot's) between them: the player's Pebbles and Spike thrown through it come out heated
 ##                     (Classic: plain) and knock the bot with base x1.15; the bot's Parry on the beat sends heated pebbles back
-##                     (plain ones it only stops); its Turn douses them; a stone of the bot's caught by his Catch and thrown
+##                     (since 2026-10-12 plain ones too, as magma); its Turn douses them; a stone of the bot's caught by his Catch and thrown
 ##                     back through the fire comes out heated and knocks with base x1.15 (Classic: plain, x1); the bot wearing it
 ##                     heats its own Spike the same
 ##   Rubble Wall       the wearer's wall rises in 0.8 s (0.7); shot down it leaves two loose stones of his at its foot, broken
@@ -994,7 +994,9 @@ func _kiln_stone() -> void:
 			"Kiln Stone: a stone he caught, thrown back through the Fire Wall, comes out heated (Classic: plain)")
 	_expect(float(rt[""][0]) > 0.0 and rdiff > 0.6 * w * 5.8 * 0.15 and rdiff < 1.05 * w * 5.8 * 0.15,
 			"Kiln Stone: the heated return launches the bot harder by its base x1.15 (%.2f m/s, Classic %.2f)" % [rt[id][0], rt[""][0]])
-	# the guards: a Parry on the beat sends heated pebbles back, plain ones it only stops; a Turn douses them
+	# the guards: a Parry on the beat sends the pebbles back, each circling the bot once first (the moon), heated ones and,
+	# since 2026-10-12, plain ones too: melted to magma balls (the owner: "if fire catches earth then magma ball"); a Turn
+	# douses heated ones (then swings them back as mud). Watched long enough for the moon and the way back (1.6 s)
 	var bbc := BendCaster.of(bot)
 	var guard := {}
 	for g: Array in [["", "fire_parry", "parry"], [id, "fire_parry", "parry"], [id, "water_redirect", "redirect"]]:
@@ -1002,14 +1004,14 @@ func _kiln_stone() -> void:
 		await _aim_at(NpcSenses.chest_of(bot))
 		BendEffects.apply(bbc, String(g[1]), String(g[2]), (SwayMoves.move(String(g[1])).bend as Dictionary)[String(g[2])])
 		BendEffects.apply(pc, "rock_jab", "pebbles", SwayMoves.move("rock_jab").bend.pebbles)
-		guard["%s/%s" % [g[0], g[2]]] = await _stone_bolts(player, 0.6)
+		guard["%s/%s" % [g[0], g[2]]] = await _stone_bolts(player, 1.6)
 		await _secs(0.8)
 		await _stage(-4.5, 1.5)
 	var pp: Array = guard["%s/parry" % id]
 	var cp: Array = guard["/parry"]
 	var tt: Array = guard["%s/redirect" % id]
 	_expect(int(pp[2]) >= 2, "Kiln Stone: the bot's Parry on the beat sends the heated pebbles back, his now (%d of %d)" % [pp[2], pp[3].size()])
-	_expect(int(cp[2]) == 0, "Classic: plain pebbles at a Parry are stopped, none sent back (%s)" % [cp[3]])
+	_expect(int(cp[2]) >= 2, "Classic: plain pebbles at a Parry are sent back as magma too (%s)" % [cp[3]])
 	var doused := 0
 	for e: Array in tt[3]:
 		if bool(e[3]) and not bool(e[1]):

@@ -324,8 +324,10 @@ func _coverage(el: String) -> void:
 		clips[String(lk.get("clip", ""))] = true
 	var own_ok := true
 	for k: String in clips:
-		own_ok = own_ok and (k == "cast_push" or k.begins_with("own-"))
-	_expect(own_ok and not clips.is_empty(), "%s: every cast pose one of our own clips (%s)" % [el, ", ".join(clips.keys())])
+		# (our own, or a clip the pose file lets a pose play by name: BendPoses.usable, the owner's Frontier tech, the pistol's
+		# aim the Air Lance's since 2026-10-12)
+		own_ok = own_ok and (k == "cast_push" or k.begins_with("own-") or BendPoses.usable(k))
+	_expect(own_ok and not clips.is_empty(), "%s: every cast pose one of our own clips or the owner's picks (%s)" % [el, ", ".join(clips.keys())])
 	if el == "earth":
 		var bend_clip := false
 		for k: String in clips:

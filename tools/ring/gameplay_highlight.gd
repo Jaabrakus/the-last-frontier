@@ -54,6 +54,11 @@ func _block_user_input() -> void:
 	DisplayServer.window_set_title("Video rendering — saved playback at normal speed")
 	for action in InputMap.get_actions():
 		Input.action_release(action)
+	# light=noon|golden|night; public=on: footage for posting, only our own effects (as team_fight_film.gd's public=on)
+	MatchSetup.light = String(args.get("light", MatchSetup.light))
+	if String(args.get("public", "off")) == "on":
+		SbFx.force_on = false
+		BendLooks.sb_bolt = false
 
 
 func _setup() -> bool:

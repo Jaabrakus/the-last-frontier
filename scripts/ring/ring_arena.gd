@@ -450,7 +450,7 @@ func clear_dropped() -> int:
 		if st is Node and is_instance_valid(st):
 			seated[(st as Node).get_instance_id()] = true
 	var groups: Array[StringName] = [FormRaised.GROUP, FormHollow.GROUP, FormCircle.GROUP, FormStone.GROUP, BendBolt.GROUP,
-			BendZone.GROUP, GustLift.GROUP, FormEffects.Throw.GROUP, NpcBending.FLIGHT_GROUP]
+			BendZone.GROUP, GustLift.GROUP, FormEffects.Throw.GROUP, NpcBending.FLIGHT_GROUP, RockDebris.GROUP]
 	for g: StringName in groups:
 		for x: Node in tree.get_nodes_in_group(g):
 			if x.is_queued_for_deletion() or seated.has(x.get_instance_id()):

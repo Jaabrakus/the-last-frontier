@@ -43,6 +43,9 @@ const ICE := Color(0.6, 0.88, 1.0)
 const AIR := Color(0.85, 0.95, 1.0)
 const DUST := Color(0.72, 0.6, 0.45)
 const DUST_LIGHT := Color(0.88, 0.78, 0.6)
+## Mud's splash (the guards' mud, 2026-10-12): its body and its light.
+const MUD := Color(0.36, 0.24, 0.13)
+const MUD_LIGHT := Color(0.6, 0.47, 0.31)
 const ELEC := Color(0.45, 0.68, 1.0)
 
 
@@ -100,8 +103,23 @@ static func _pool() -> ToonFxPool:
 ## A bolt's body: under `parent`, its forward -Z (a long one, a shard or a slice, drawn along it). `shape` (a thrown one's,
 ## BendThrow): "disc" (stone: a flat faceted rock standing in the flight's plane, its rim chipped so a turn reads; fire: a
 ## wheel of flame tongues round a hot core), "spear" (ice: a long crystal shaft behind a heavy faceted head and a glint at
-## its point; stone: a long rock spike), else the kind's own body.
+## its point; stone: a long rock spike), else the kind's own body. A guard's fusion (the owner, 2026-10-12: where two elements
+## meet in a guard what goes back is made of both; BendZone): "pebbles" a fist of pebbles (air caught by earth), "shards" mini
+## ice spears (air turned by water), "magma" or "mud" a ball of it (earth and fire, earth and water), "mud_spear" a spear of
+## mud (a stone turned by water).
 static func bolt_body(parent: Node3D, kind: String, r: float, long := false, shape := "ball") -> void:
+	if shape == "pebbles":
+		_pebbles_body(parent, r)
+		return
+	if shape == "shards" and kind == "ice":
+		_shards_body(parent, r)
+		return
+	if shape in ["magma", "mud"]:
+		_molten_body(parent, r, shape)
+		return
+	if shape == "mud_spear":
+		_mud_spear_body(parent, r)
+		return
 	if shape == "disc" and kind in ["stone", "fire"]:
 		_disc_body(parent, kind, r)
 		return
@@ -326,6 +344,103 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 		g.scale = Vector3.ONE * maxf(r * 4.0, 0.4)
 
 
+## A fist of pebbles (air caught by earth; the owner, 2026-10-12: "shoot the pebbels instead of a spread it will be a more
+## centered"): PEBBLES small rocks packed round the bolt's heart, a little drawn out along its flight: one tight shot.
+const PEBBLES := 7
+
+
+static func _pebbles_body(parent: Node3D, r: float) -> void:
+	var pr := clampf(r * 0.42, 0.045, 0.1)
+	var spread := clampf(r * 0.95, 0.09, 0.2)
+	for i in PEBBLES:
+		# (on a golden spiral round the heart: evenly packed, no two on one spot)
+		var y := 1.0 - (float(i) + 0.5) / float(PEBBLES) * 2.0
+		var rr := sqrt(maxf(1.0 - y * y, 0.0))
+		var a := float(i) * 2.39996
+		var mi := _mesh(parent, FormModels.ball_mesh(pr * (0.8 + 0.08 * float(i % 4)), 41 + i), ToonFx.mat("rock"))
+		mi.position = Vector3(cos(a) * rr, y * 0.8, sin(a) * rr * 1.4) * spread
+		mi.rotation = Vector3(float(i) * 1.1, float(i) * 0.7, 0.0)
+		_core(mi)
+	_shadow(parent, "stone", spread, Vector3(1.2, 1.0, 1.6), Vector3.ZERO)
+
+
+## Mini ice spears (air turned by a water Turn; the owner, 2026-10-12: "if water parries wind then it shoots mini spears"): three
+## thin crystal spears side by side round the bolt's heart, a little staggered, a glint at each point.
+static func _shards_body(parent: Node3D, r: float) -> void:
+	var w := clampf(r * 0.45, 0.025, 0.06)
+	var l := w * 16.0
+	var spread := clampf(r * 0.8, 0.07, 0.16)
+	for i in 3:
+		var a := TAU * float(i) / 3.0 + 0.5
+		var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, (i + ToonFx.vis_rng.randi()) % 4), ToonFx.mat("ice"))
+		mi.scale = Vector3(w * 5.0, w * 5.0, l)
+		mi.position = Vector3(cos(a) * spread, sin(a) * spread, -l * 0.12 * float(i))
+		_core(mi)
+		if live():
+			var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("star_still"))
+			g.position = mi.position + Vector3(0.0, 0.0, -l * 0.72)
+			g.scale = Vector3.ONE * maxf(w * 4.0, 0.2)
+	_shadow(parent, "ice", spread, Vector3(1.0, 1.0, 2.5), Vector3.ZERO)
+
+
+## Our own mud meshes (tools/fx/blender/mud_meshes.py: metaballs melted into dripping blobs, a spear, clods and the mud wave's
+## lump; assets/fx/mud/SOURCE.md): mud_mesh(name) one of mud_blob, mud_spear, mud_clod_a/b/c, mud_lump (about 1 m; the
+## spear's point on -Z), null when the glb is missing (the old rock shapes stand in).
+const MUD_GLB := "res://assets/fx/mud/mud.glb"
+static var _mud_meshes := {}
+
+
+static func mud_mesh(name: String) -> Mesh:
+	if _mud_meshes.is_empty():
+		_mud_meshes["_tried"] = true
+		var ps := load(MUD_GLB) as PackedScene if ResourceLoader.exists(MUD_GLB) else null
+		if ps != null:
+			var n := ps.instantiate()
+			for mi in n.find_children("*", "MeshInstance3D", true, false):
+				_mud_meshes[String((mi as MeshInstance3D).name)] = (mi as MeshInstance3D).mesh
+			n.free()
+	return _mud_meshes.get(name) as Mesh
+
+
+## A ball of magma or of mud (earth and fire met in a guard, or earth and water: BendZone): our dripping mud blob (mud_mesh) in
+## the matter's own liquid look (ToonFx "magma": a crust over molten cracks; "mud": wet mud oozing); magma glows. The rock
+## ball when the meshes are missing.
+static func _molten_body(parent: Node3D, r: float, look: String) -> void:
+	var rr := clampf(r, 0.12, 0.4)
+	var m := mud_mesh("mud_blob")
+	var mi := _mesh(parent, m if m != null else FormModels.ball_mesh(rr, ToonFx.vis_rng.randi() % 50), ToonFx.mat(look))
+	if m != null:
+		mi.scale = Vector3.ONE * rr * 2.1
+		mi.rotation = Vector3(0.0, ToonFx.vis_rng.randf() * TAU, 0.0)
+	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+	_core(mi)
+	_shadow(parent, "stone", rr, Vector3.ONE, Vector3.ZERO)
+	if look == "magma":
+		_glow(parent, Vector3.ONE * rr * 5.0, Vector3.ZERO)
+
+
+## A spear of mud (a stone turned by a water Turn; the owner, 2026-10-12: "water catch earth ... creates a mud spear"): our
+## dripping mud spear (mud_mesh "mud_spear"), its point on the flight, in mud's wet look. The rock spike when it is missing.
+static func _mud_spear_body(parent: Node3D, r: float) -> void:
+	var rr := clampf(r, 0.08, 0.25)
+	var m := mud_mesh("mud_spear")
+	var mi := MeshInstance3D.new()
+	mi.name = "Body"
+	if m != null:
+		mi.mesh = m
+		mi.scale = Vector3(rr * 6.5, rr * 6.5, rr * 9.0)
+	else:
+		mi.mesh = FormModels.spike_mesh(rr, rr * 9.0, ToonFx.vis_rng.randi() % 50, 0.0)
+		mi.rotation.x = -PI / 2.0
+		mi.position = Vector3(0.0, 0.0, rr * 4.0)
+	mi.material_override = ToonFx.mat("mud")
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+	parent.add_child(mi)
+	_core(mi)
+	_shadow(parent, "stone", rr, Vector3(1.0, 1.0, 4.5), Vector3.ZERO)
+
+
 static var _discs := {}
 
 ## A stone disc 2 m across in local YZ (its axis X), a lens of rock facets: nine uneven rim points, the faces between its
@@ -481,7 +596,7 @@ static func trail(parent: Node3D, kind: String, r: float) -> GPUParticles3D:
 	var pool := _pool()
 	if pool == null:
 		return null
-	var k := kind if kind in KINDS else "air"
+	var k := kind if kind in KINDS or kind == "mud" else "air"
 	var g := pool.trail_take(k, func() -> GPUParticles3D: return _make_trail(k))
 	if g == null:
 		return null
@@ -529,6 +644,12 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 			rb.main_mat = ToonFx.mat("water_strip")
 			rb.coil_mat = ToonFx.mat("water_strip")
 			rb.coils = 2
+		"mud":
+			# (mud's: muddy water coiling round it, drops of mud falling off; the owner, 2026-10-12)
+			g = _stream("drop_mud", 22, 0.6)
+			rb.main_mat = ToonFx.mat("mud_strip")
+			rb.coil_mat = ToonFx.mat("mud_strip")
+			rb.coils = 2
 		"ice":
 			g = _stream("puff_frost", 16, 0.3)
 			g.add_child(_stream("star", 10, 0.45))
@@ -571,7 +692,7 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 			_pm(pm, Vector2(0.3, 1.2), Vector2(maxf(r * 0.7, 0.12), maxf(r * 1.25, 0.2)), Vector3(0, 2.5, 0), 1.5)
 			_pm(sub.process_material, Vector2(1.0, 3.0), Vector2(0.025, 0.045), Vector3(0, -2.0, 0), 1.0)
 			_ribbon(rb, maxf(r * 1.5, 0.12), 0.2, 0.14)
-		"water":
+		"water", "mud":
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)
 			_ribbon(rb, r * 1.05, 0.45, 0.13)
 			rb.coil_r = r * 1.5
@@ -626,6 +747,9 @@ static func emitter(parent: Node3D, kind: String, extents: Vector3, amount := 60
 			gravity = Vector3(0, 1.0, 0)
 		"water", "spray":
 			key = "drop"
+			gravity = Vector3(0, -9.0, 0)
+		"mud":
+			key = "drop_mud"
 			gravity = Vector3(0, -9.0, 0)
 		"smoke":
 			key = "puff_smoke"
@@ -751,6 +875,18 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 				pool.mark("wet", g.pos, g.normal, 1.6 * k, 4.0)
 			else:
 				pool.play("flash", up, 0.14, 0.4 * k, 1.0 * k, WATER, FOAM)
+		"mud":
+			# (a splat of mud: heavy drops flung out and falling, a few fat globs slower after them, and a dark wet stain on the
+			# deck; no crown (a band of mud read as a jagged ring floating over the deck) and no dust (its tan cloud read as dirt,
+			# not mud): the 2026-10-12 films)
+			pool.shoot("drop_mud", at, int(n * 1.3), d, spread, Vector2(speed * 0.5, speed * 1.6), Vector2(0.12, 0.24) * k,
+					0.8, Vector3(0, -16.0, 0), 0.5, {"r": 0.12 * k}.merged(occl))
+			pool.shoot("drop_mud", at, maxi(2, int(n * 0.25)), d, spread * 0.7, Vector2(speed * 0.25, speed * 0.7),
+					Vector2(0.26, 0.4) * k, 0.9, Vector3(0, -12.0, 0), 0.5, {"r": 0.1 * k}.merged(occl))
+			if not g.is_empty():
+				pool.mark("wet", g.pos, g.normal, 1.5 * k, 6.0)
+			else:
+				pool.play("flash", up, 0.12, 0.3 * k, 0.8 * k, MUD, MUD_LIGHT)
 		"steam":
 			pool.shoot("puff_steam", at, n, d, spread, Vector2(speed * 0.3, speed), Vector2(0.4, 0.9) * k, 1.1,
 					Vector3(0, 1.8, 0), 2.0, {"r": 0.3 * k}.merged(occl))
@@ -832,6 +968,7 @@ const BURST_CLOUD := {
 	"ice": [[0.6, 0.6, 0.55, 2.0], [0.0, 1.2, 0.0, 0.0]],
 	"air": [[0.8, 0.45, 0.4, 3.0], [0.0, 1.9, 0.0, 0.0]],
 	"stone": [[0.6, 1.1, 1.0, 3.0]],
+	"mud": [[0.7, 0.4, 0.9, 0.5], [0.0, 0.8, 0.0, 0.0]],
 	"lightning": [[0.0, 1.3, 0.0, 0.0]],
 }
 
@@ -1101,6 +1238,75 @@ static func lightning(a: Vector3, b: Vector3) -> void:
 		pool.play("ring", _flat(g), 0.25, 0.3, 1.4, c1, c2)
 
 
+## The air beam's strike from `a` to `b` (the Air Lance since 2026-10-12, the owner: "the air should get the pistol animation
+## thats perfect for that one like. beam", "it will be light lightning but straight"; BendEffects.lightning with a kind not
+## lightning): a straight shaft of wind, a white core in a pale sheath, rings of wind along it blown outward, all thinning away
+## over BEAM_S; a burst of air and a ring where it ends, a cool light along it. Looks only: where and when it strikes are
+## BendEffects'.
+const BEAM_S := 0.32
+const BEAM_CORE := Color(0.95, 1.0, 1.0)
+const BEAM_EDGE := Color(0.62, 0.86, 0.95)
+
+
+static func beam(a: Vector3, b: Vector3, kind := "air") -> void:
+	if not live():
+		return
+	var scn := _scene()
+	if scn == null or a.distance_to(b) < 0.05:
+		return
+	var y := (b - a).normalized()
+	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
+	var basis := Basis(x, y, x.cross(y).normalized())
+	var length := a.distance_to(b)
+	var root := Node3D.new()
+	root.name = "AirBeam"
+	scn.add_child(root)
+	root.global_transform = Transform3D(basis, (a + b) * 0.5)
+	for layer: Array in [[0.045, "bubble"], [0.11, "wind_band_fast"]]:
+		var cm := CylinderMesh.new()
+		cm.top_radius = float(layer[0])
+		cm.bottom_radius = float(layer[0])
+		cm.height = length
+		cm.radial_segments = 10
+		cm.rings = 1
+		var mi := _mesh(root, cm, ToonFx.mat(String(layer[1])))
+		mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+	# rings of wind along it, blown outward as it fades
+	var n := clampi(int(length / 2.5), 3, 12)
+	for i in n:
+		var band := _mesh(root, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
+		band.position = Vector3(0.0, lerpf(-length * 0.5 + 0.6, length * 0.5, (float(i) + 0.5) / float(n)), 0.0)
+		band.scale = Vector3.ONE * 0.22
+		band.set_instance_shader_parameter(&"seed", float(i) * 0.37)
+		var bt := band.create_tween()
+		bt.tween_property(band, ^"scale", Vector3.ONE * 0.55, BEAM_S)
+	var tw := root.create_tween()
+	tw.tween_property(root, ^"scale", Vector3(0.05, 1.0, 0.05), BEAM_S).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(root.queue_free)
+	var pool := _pool()
+	if pool != null:
+		pool.play("flash", Transform3D(Basis.IDENTITY, b), 0.2, 0.5, 1.4, BEAM_CORE, BEAM_EDGE)
+		pool.play("ring", Transform3D(basis, b), 0.25, 0.3, 1.2, BEAM_CORE, BEAM_EDGE)
+		pool.shoot("puff_air", b, 10, -y, 70.0, Vector2(1.0, 3.0), Vector2(0.25, 0.45), 0.4, Vector3.ZERO, 1.0, {"r": 0.3})
+		pool.light((a + b) * 0.5, Color(0.75, 0.92, 1.0), 2.5, 0.2, length * 0.5 + 3.0)
+	burst(b, kind, 12, -y, 80.0, 3.0, 0.25)
+
+
+## The air beam's tell on the fingers at the release (its flash_s before it strikes, as Lightning's flash): a white flash, a
+## ring of wind and a puff of air at `at` on `body`'s hand.
+static func beam_flash(body: Node3D, at: Vector3, kind := "air") -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var fwd := -body.global_basis.z
+	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.15, 0.3, 1.0, BEAM_CORE, BEAM_EDGE)
+	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.18, 0.2, 0.9, BEAM_CORE, BEAM_EDGE)
+	pool.shoot("puff_air", at, 8, fwd, 60.0, Vector2(0.6, 1.8), Vector2(0.15, 0.3), 0.3, Vector3.ZERO, 1.0, {"r": 0.15})
+	burst(at, kind, 8, fwd, 60.0, 2.0, 0.15)
+
+
 ## The bolt's look (the owner, 2026-10-09: "for lightning i like our lightning but maybe make it look like spellbreaks or
 ## use its shaders"). true: our own forked bolt (the same ToonFx.lightning_strips forks, widths, flicker and timing as
 ## ToonFxPool.lightning) drawn with Spellbreak's lightning shading (shaders/cascade/lightning_bolt.gdshader, on Spellbreak's
@@ -1284,7 +1490,10 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 	if SbFx.fire(body, "%s/%s" % [String(g.get("id", "")), String(g.get("mode", ""))], result, {"at": at, "el": el}):
 		return                                   # (the guard's Spellbreak result played instead: SbFx)
 	var pool := _pool()
-	if pool == null:
+	if pool == null or el == "earth":
+		# (earth answers with no aura round him (it fell back to air's white and blue; the owner, 2026-10-12: "no blue aura
+		# catching a water no aura"): its catch shows in the stone it holds, its flow in the rocks it sweeps up as it swirls,
+		# BendCharge.RocksInto)
 		return
 	var tint: Array = GUARD_TINTS.get(el, [Color.WHITE, Color.WHITE])
 	var xf := Transform3D(Basis.IDENTITY, at)
@@ -1313,7 +1522,8 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 ## is drawn). Loaded by its path (FISSURE_FX): a class name new to the project is unknown to a run until the editor has scanned
 ## the project, and naming it here made a launcher run of an unscanned checkout fail to compile every effect (2026-10-11).
 const FISSURE_FX := preload("res://scripts/bending/fissure_fx.gd")
-static func fissure_body(parent: Node3D, width: float, height: float) -> Node3D:
+## `look` "mud": a wave of mud (a water Turn's stone wave, earth's mud wave; the owner, 2026-10-12): FissureFx in mud's look.
+static func fissure_body(parent: Node3D, width: float, height: float, look := "stone") -> Node3D:
 	if not live():
 		var holder := Node3D.new()
 		holder.name = "Fissure"
@@ -1323,6 +1533,7 @@ static func fissure_body(parent: Node3D, width: float, height: float) -> Node3D:
 	f.name = "Fissure"
 	f.width = width
 	f.height = height
+	f.look = look
 	parent.add_child(f)
 	return f
 
@@ -1610,17 +1821,20 @@ static func prison(body: Node3D, s: float) -> void:
 
 
 ## Drenched (BendStatus.drench) for `s`: water dripping off `body` the while (Drip: a few drops every DRIP_S from his shoulders
-## and arms, falling).
-static func drench(body: Node3D, s: float) -> void:
+## and arms, falling); `look` "mud" (a guard's mud): clods of mud falling off him instead.
+static func drench(body: Node3D, s: float, look := "water") -> void:
 	if not live() or body == null or not is_instance_valid(body):
 		return
 	for c in body.get_children():
 		if c is Drip:
 			(c as Drip).life = maxf((c as Drip).life, (c as Drip).t + s)
+			if look == "mud":
+				(c as Drip).look = look
 			return
 	var d := Drip.new()
 	d.name = "Drip"
 	d.life = s
+	d.look = look
 	body.add_child(d)
 
 
@@ -1630,6 +1844,7 @@ class Drip:
 	const DRIP_S := 0.12
 	var life := 1.5
 	var t := 0.0
+	var look := "water"
 	var _next := 0.0
 
 	func _process(dt: float) -> void:
@@ -1640,8 +1855,8 @@ class Drip:
 			var pool := BendLooks._pool()
 			var p := get_parent() as Node3D
 			if pool != null and p != null:
-				pool.shoot("drop", p.global_position + Vector3.UP * randf_range(0.6, 1.5), 4, Vector3.DOWN, 25.0, Vector2(0.5, 1.5),
-						Vector2(0.04, 0.08), 0.45, Vector3(0, -9.0, 0), 0.0, {"r": 0.25})
+				pool.shoot("drop_mud" if look == "mud" else "drop", p.global_position + Vector3.UP * randf_range(0.6, 1.5), 4,
+						Vector3.DOWN, 25.0, Vector2(0.5, 1.5), Vector2(0.04, 0.08), 0.45, Vector3(0, -9.0, 0), 0.0, {"r": 0.25})
 		if t >= life:
 			queue_free()
 

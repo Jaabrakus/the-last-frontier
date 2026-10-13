@@ -31,19 +31,36 @@ extends Node3D
 ##               (meta bend_stone_d) and a clean catch marked (bend_clean). E again (or Shove) throws it back: return_stone
 ##               (the lock return_lock_s, perfect_return_lock_s off a clean catch; x perfect_mult when clean, x the rally:
 ##               +rally_step a return, +rally_clean_step off a clean catch, at most rally_max; never under gust.stone.hurl).
-##               Fire, water and air pass
+##               Only earth is caught and held for E, straight into his hands, no swing round him (the owner, 2026-10-12:
+##               "for earth the only catch and press e is when its a earth on earth everything else is flow", then "for the
+##               earth on earth E dont spin"): air, fire, water and ice bolts, perfect, circle him once like
+##               a moon and leave along his aim x perfect_mult made of both (_earth_flow: EARTH_FLOWS): air a fist of pebbles
+##               (one tight shot), fire a magma ball (it burns: heated, fire to the guards), water and ice turned to mud as
+##               they circle and slapped down at the swing's end as a wave of mud along the deck, the Fissure's in mud, that
+##               drenches whom it hits ("earth catching water should be the fissure mud": BendBolt.to_floor_wave, MUD_WAVE,
+##               MUD_S); late, half through. A wave along the deck and lightning pass. A held stone
+##               packed by another's guard (a Boulder a Turn sent back as mud: _lift_swing) is thrown as it is; mud thrown
+##               with E is a mud wave along the deck (_mud_wave)
 ##   Turn        water or ice: perfect, it swings once round the guard's waist (SWING_S) and leaves along his aim x
 ##               perfect_mult (steered by Flowing); the Air Lance (an air bolt of shape spear, the Gust held long; the
 ##               owner, 2026-10-11): the same, and it turns to ice as it is caught (BendBolt.become), wraps round him and
-##               leaves an ice lance along his aim; late, half gets through as every late Turn; fire: perfect, doused to
-##               steam; a Wave on the beat parts round him (cone_mult). Stone and other air pass
-##   parry       fire of any shape (a bolt, the Kick's floor wave, the High Kick's crescent): perfect, straight back along
-##               his aim at once x perfect_mult (no dice: never a random side); ice: perfect, melted to a puddle; lightning:
-##               back along his aim only on a parry in its first perfect_s when it strikes (lightning_back), else it hits.
-##               Water, stone and air pass
-##   Wind Guard  air: perfect, bounced straight back along his aim x perfect_mult, and his Carried wind charged; stone: perfect,
-##               cushioned and dropped at his feet, a loose stone. Fire, water, ice and lightning pass. (The 2.5 s return
-##               shield is gone.)
+##               leaves an ice lance along his aim; any other air (the owner, 2026-10-12): the same, leaving as mini ice
+##               spears; stone (a bolt, a Spike, a Boulder): the same, swung round in water, leaving as mud that drenches
+##               whom it hits (a mud spear: _turn_back, _lift_swing); late, half gets through as every late Turn; fire:
+##               perfect, doused to steam; a Wave on the beat parts round him (cone_mult)
+##   parry       fire of any shape (a bolt, the Kick's floor wave, the High Kick's crescent) and air (the owner, 2026-10-12,
+##               "Counter it": turned to fire as it is caught): perfect, it circles him once like a moon and leaves along his
+##               aim x perfect_mult (_moon_back; no dice: never a random side; a floor wave straight back along the floor at
+##               once); stone (a bolt, a Spike, a Boulder): the same, melted to a magma ball, burning; water: perfect,
+##               boiled to steam; ice: perfect, melted to a puddle; lightning: back along his aim only on a parry in its
+##               first perfect_s when it strikes (lightning_back), else it hits
+##   Wind Guard  everything but lightning (the owner, 2026-10-12: "the wind can parry a rock and send back most attacks
+##               back"): perfect, it circles him once like a moon and leaves along his aim x perfect_mult, still what it was
+##               (_moon_back; a Spike or a Boulder: _lift_swing), and air charges his Carried wind. Lightning passes. (The
+##               2.5 s return shield is gone.)
+##   Where two elements meet the return is made of both (fire and water never send each other back): earth and fire magma,
+##   earth and water mud, air taken by earth pebbles, by water ice, by fire fire. Whoever swings a return round him turns with
+##   it, his lead hand after it (GuardSpin: visual only).
 ## Each result is told: the owner's BendCaster.guarded(result, what), his meta bend_last_guard, the counts (counts), and
 ## its look and sound on the guarder only (BendLooks.guard_result; no cue on whoever sent it).
 ## Round 2's zones too: wind_wall (a standing wall of wind: light shots blown up and aside, stone and lightning pass, a body
@@ -83,6 +100,19 @@ const WIND_GUARD_S := 0.8
 ## A Turn's swing round the guard's waist (s) and its radius (m).
 const SWING_S := 0.3
 const SWING_R := 1.0
+## A Parry's and a Wind Guard's moon (_moon_back): one lap round the guard in this long (s), this far out (m).
+const MOON_S := 0.35
+const MOON_R := 1.25
+## Earth's Catch on the beat of another element (the owner, 2026-10-12): the shape each flows back as (_earth_flow; "mud_wave":
+## swung round as mud, then slapped down as a wave of mud along the deck, "earth catching water should be the fissure mud").
+const EARTH_FLOWS := {"air": "pebbles", "fire": "magma", "water": "mud_wave", "ice": "mud_wave"}
+## Mud's drench (s: BendStatus.drench, as Drenching Wave's, its look mud's; RingRules mud_s): a water Turn's mud spear, earth's
+## mud wave (the owner, 2026-10-12: "a mud spear or blast that slows", "either mud spear or a mud wave").
+const MUD_S := 1.5
+## Earth's mud wave (a mud stone thrown back with E: _mud_wave): a wave of mud along the deck, as the Kick's floor wave (jumped
+## over, stopped by walls), at least these numbers.
+const MUD_WAVE := {"do": "floor_wave", "kind": "stone", "shape": "mud", "mps": 16.0, "range_m": 16.0, "width_m": 2.4,
+		"height_m": 0.8, "miss_above_m": 0.6, "damage": 16.0, "knock_mps": 7.0, "up_mps": 1.2}
 ## A body walking into a wind wall is pushed back at this (m/s), once each PUSH_EVERY_S.
 const WIND_WALL_KNOCK := 4.0
 const PUSH_EVERY_S := 0.5
@@ -560,8 +590,7 @@ func _physics_process(dt: float) -> void:
 		_tick = 0.25
 		if decides:
 			_every(0.25)
-	if decides and (kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard"]) \
-			or (r2 and BendR3.stock() and kind in ["redirect", "parry"])):
+	if decides and (kind in ["catch", "deflect", "cushion"] or (r2 and kind in ["air_shield", "wind_guard", "redirect", "parry"])):
 		_stones()
 	if kind == "wind_wall" and decides:
 		_wind_push()
@@ -967,7 +996,17 @@ func _guard_bolt(b: BendBolt) -> bool:
 	match kind:
 		"catch":
 			if what != "stone":
-				return _shield_bolt(b, perfect, what)
+				# (the owner, 2026-10-12: earth answers the other elements too, but "the only catch and press e is when its a
+				# earth on earth everything else is flow": round him and back on its own, made of both; _earth_flow)
+				if not EARTH_FLOWS.has(what) or b.floor_wave:
+					return _shield_bolt(b, perfect, what)
+				if perfect:
+					_earth_flow(b, what)
+				else:
+					_late(b)
+				took += 1
+				_result("perfect" if perfect else "late", what, shooter)
+				return true
 			if stock and t > window_s:
 				_late_drop(b.damage, b.knock_mps, b.up_mps, b.velocity, b.global_position, b._by(), b.lock_s, b.info, b.weight)
 				b.end("dropped")
@@ -1000,6 +1039,13 @@ func _guard_bolt(b: BendBolt) -> bool:
 							swing_hold_s if BendLoadout.wears(owner_node, WHIRL) else 0.0)
 				else:
 					_late(b)
+			elif what in ["air", "stone"]:
+				# (the owner, 2026-10-12: "if water parries wind then it shoots mini spears", and "water catch earth ... creates a
+				# mud spear": the Turn's swing, leaving as mini ice spears or as a spear of mud that slows; _turn_back)
+				if perfect:
+					_turn_back(b, what)
+				else:
+					_late(b)
 			elif what == "fire":
 				if perfect:
 					if not SbFx.fire(owner_node, SbFx.key_of(info, move_id, "redirect"), "doused", {"at": b.global_position, "dir": b.velocity}):
@@ -1011,10 +1057,32 @@ func _guard_bolt(b: BendBolt) -> bool:
 			else:
 				return _shield_bolt(b, perfect, what)
 		"parry":
-			if what == "fire" or (what == "stone" and b.heated):
-				# (a heated stone burns: a Parry takes it as fire, Kiln Stone)
+			if what == "fire":
 				if perfect:
-					_straight_back(b)
+					_moon_back(b)
+				else:
+					_late(b)
+			elif what == "stone":
+				# (the owner, 2026-10-12: "if fire catches earth then magma ball": melted as it circles him, a magma ball back along
+				# his aim, burning (heated: a Turn douses it); a stone wave along the deck back along the floor, heated)
+				if perfect:
+					_moon_back(b, "stone", "magma")
+					b.heat()
+				else:
+					_late(b)
+			elif what == "water":
+				# (the owner, 2026-10-12: fire and water never send each other back: boiled to steam where it meets him)
+				if perfect:
+					if not SbFx.fire(owner_node, SbFx.key_of(info, move_id, "parry"), "doused", {"at": b.global_position, "dir": b.velocity}):
+						BendLooks.burst(b.global_position, "steam", 22, Vector3.UP, 120.0, 2.0, 0.7)
+					BendBolt.steam(owner_node, b.global_position)
+					b.end("steam")
+				else:
+					_late(b)
+			elif what == "air":
+				# (the owner, 2026-10-12: a Parry counters air too, turned to fire as it circles him)
+				if perfect:
+					_moon_back(b, "fire")
 				else:
 					_late(b)
 			elif what == "ice":
@@ -1032,13 +1100,15 @@ func _guard_bolt(b: BendBolt) -> bool:
 			if what == "air":
 				if perfect:
 					if not AirTalents.eye_catch(self, b):
-						_straight_back(b)                 # (Eye of the Gale's wearer, E held: it circles him first)
+						_moon_back(b)                     # (Eye of the Gale's wearer, E held: it circles him while held)
 					carry_wind(owner_node, AirTalents.guard_carry_s(owner_node))
 				else:
 					_late(b)
-			elif what == "stone":
+			elif what in ["fire", "stone", "water", "ice"]:
+				# (the owner, 2026-10-12: a Wind Guard counters fire too, sent back as fire; then "the wind can parry a rock and
+				# send back most attacks back": stone, water and ice as well, each still what it was. Lightning passes)
 				if perfect:
-					_cushion(b)
+					_moon_back(b)
 				else:
 					_late(b)
 			else:
@@ -1101,6 +1171,133 @@ func _late(b: BendBolt) -> void:
 
 ## Sent straight back along the guard's aim at once (the Parry's, the Wind Guard's bounce): his now, perfect_mult of its
 ## speed, damage and knock. A floor wave stays on the floor (its line the aim's yaw).
+## A perfect Parry's or Wind Guard's return (the owner, 2026-10-12: "when put parry i want it to loop around like a moon
+## before it fires back"; "Counter it"): it circles its guard once at the waist (BendBolt.begin_swing: MOON_S, MOON_R, as a
+## Turn's swing but wider) and leaves along his aim x perfect_mult, made `to_kind` as it is caught (a Parry's air: fire).
+## A wave along the deck cannot circle him: it goes back along the floor at once (_straight_back), made `to_kind` too.
+func _moon_back(b: BendBolt, to_kind := "", p_shape := "") -> void:
+	if b.floor_wave or b.low:
+		if to_kind != "":
+			b.become(to_kind)
+		_straight_back(b)
+		return
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	b.begin_swing(owner_node, MOON_S, MOON_R, k, to_kind, 0.0, p_shape)
+
+
+## A water Turn on the beat of air or stone (the owner, 2026-10-12: "if water parries wind then it shoots mini spears"; "water
+## catch earth ... creates a mud spear or blast that slows", "either mud spear or a mud wave"): the Turn's swing (Whirl Turn's
+## hold as ever), leaving along his aim as mini ice spears (air) or a spear of mud (stone: wrapped in water as it circles, it
+## drenches whom it hits for MUD_S, RingRules mud_s). A wave along the deck goes straight back along the floor (a stone one in
+## mud).
+func _turn_back(b: BendBolt, what: String) -> void:
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	var hold := swing_hold_s if BendLoadout.wears(owner_node, WHIRL) else 0.0
+	if what == "stone":
+		# (the water round it turns muddy as it takes the stone; the owner, 2026-10-12: "for the water parry channel i also want
+		# it to turn muddy")
+		b.info["mud_s"] = MUD_S
+		b.sheath("mud")                                  # (its splat of mud, the ring muddy: sheath)
+		if b.floor_wave or b.low:
+			b.become("stone", "mud")
+			_straight_back(b)
+			return
+		b.begin_swing(owner_node, SWING_S, SWING_R, k, "stone", hold, "mud_spear")
+		return
+	if b.floor_wave or b.low:
+		_straight_back(b)
+		return
+	b.begin_swing(owner_node, SWING_S, SWING_R, k, "ice", hold, "shards")
+
+
+## Earth's Catch on the beat of a bolt not of stone (the owner, 2026-10-12: "if a earth parries wind they can shoot the pebbels
+## instead of a spread it will be a more centered", "if earth parries fire then magma ball", of earth and water "a mud spear or
+## a mud wave", then "for earth the only catch and press e is when its a earth on earth everything else is flow"): never held,
+## no E; it circles him once like a moon (his body turning with it, GuardSpin) and leaves along his aim x perfect_mult made of
+## both (EARTH_FLOWS): air a fist of pebbles (one tight shot), fire a magma ball (burning: heated, fire to the guards); water and
+## ice turn to mud as they circle and are slapped down at the swing's end as a wave of mud along the deck toward his aim, the
+## Fissure's in mud, that drenches whom it hits (the owner: "earth catching water should be the fissure mud"; MUD_WAVE, MUD_S;
+## BendBolt.to_floor_wave). One along the ground goes straight back along it, already what it becomes.
+func _earth_flow(b: BendBolt, what: String) -> void:
+	var shape := String(EARTH_FLOWS[what])
+	if shape == "mud_wave":
+		b.info["mud_s"] = MUD_S
+		b.sheath("mud")
+		var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+		b.begin_swing(owner_node, MOON_S, MOON_R, k, "stone", 0.0, "mud", "mud_wave")
+		return
+	if b.low:
+		b.become("stone", shape)
+		_straight_back(b)
+	else:
+		_moon_back(b, "stone", shape)
+	if shape == "magma":
+		b.heat()
+
+
+## Every water Turn's ring within reach of `at` made muddy (a stone it swings round turned to mud: BendBolt.sheath and GustLift.
+## sheath "mud", on every machine, so whoever plays the guard sees his own; the owner, 2026-10-12: "for the water parry channel
+## i also want it to turn muddy"): its strip mud's, its drops mud.
+static func muddy_near(from: Node, at: Vector3) -> void:
+	if from == null or not from.is_inside_tree():
+		return
+	for n in from.get_tree().get_nodes_in_group(GROUP):
+		var z := n as BendZone
+		if z == null or z.kind != "redirect" or not z.r2 or z._muddied:
+			continue
+		var d := z.global_position - at
+		d.y = 0.0
+		if d.length() <= SWING_R + 1.5:
+			z._muddy()
+
+
+## This Turn's ring muddy (muddy_near).
+var _muddied := false
+
+
+func _muddy() -> void:
+	_muddied = true
+	var look := get_node_or_null(^"Look")
+	if look == null:
+		return
+	for c in look.get_children():
+		if c is MeshInstance3D:
+			(c as MeshInstance3D).material_override = ToonFx.mat("mud_strip")
+	for e in _fx:
+		if is_instance_valid(e) and e is GPUParticles3D:
+			(e as GPUParticles3D).emitting = false
+	var drops := BendLooks.emitter(self, "mud", Vector3(SWING_R, 0.1, SWING_R), 12, 0.5, 1.2, 0.1)
+	if drops != null:
+		_fx.append(drops)
+
+
+## A flying stone (a GustLift's: a Spike, a Boulder, a stone thrown back) met on the beat by a guard but earth's (the owner,
+## 2026-10-12: "the wind can parry a rock and send back"): it swings round him and leaves along his aim, his (GustLift.
+## begin_swing): the Wind Guard's moon as it is; the Turn's swing in water, a heated one doused, leaving as mud that drenches
+## whom it hits (MUD_S); the Parry's moon, melted to a magma ball, burning.
+func _lift_swing(lift: GustLift) -> void:
+	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
+	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+	match kind:
+		"redirect":
+			lift.douse()
+			lift.sheath("mud")                    # (the water round it muddy as it swings: a stone turned to mud)
+			BendLooks.burst(lift.stone.global_position, "mud", 18, Vector3.UP, 150.0, 3.0, 0.35)
+			lift.stone.set_meta(FormStone.PACK_META, "mud")
+			FormStone.pack_look(lift.stone as FormStone)
+			var li: Dictionary = (lift.get_meta(&"bend_info", {}) as Dictionary).duplicate()
+			li["mud_s"] = MUD_S
+			lift.set_meta(&"bend_info", li)
+			lift.begin_swing(owner_node, SWING_S, SWING_R, k)
+		"parry":
+			lift.heat()
+			lift.stone.set_meta(FormStone.PACK_META, "magma")
+			FormStone.pack_look(lift.stone as FormStone)
+			lift.begin_swing(owner_node, MOON_S, MOON_R, k)
+		_:
+			lift.begin_swing(owner_node, MOON_S, MOON_R, k)
+
+
 func _straight_back(b: BendBolt) -> void:
 	var to := guard_aim(owner_node, b.global_position)
 	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
@@ -1132,25 +1329,6 @@ func _avalanche_drop(b: BendBolt) -> void:
 	stones.append(s)
 	FormStone.make_loose(s, by)
 	BendLooks.burst(foot + Vector3.UP * 0.2, "stone", 10)
-
-
-## A stone bolt cushioned on the beat (the Wind Guard): it stops and drops at the guard's feet, a loose stone of whoever
-## threw it (FormStone.make_loose).
-func _cushion(b: BendBolt) -> void:
-	var at := b.global_position
-	var rad := clampf(b.radius, 0.12, 0.45)
-	var by: Node = b.caster if b.caster != null and is_instance_valid(b.caster) else null
-	b.end("cushioned")
-	var foot := FormEffects.ground_at(owner_node, owner_node.global_position + way * 0.9)
-	var s := FormStone.ball(get_tree().current_scene, foot, {"radius_m": rad, "mass_kg": 20.0, "rise_s": 0.01, "life_s": 30.0,
-			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
-	s.state = FormStone.State.RESTING
-	s.freeze = false
-	s.set_meta(&"bend_weight", b.weight)
-	stones.append(s)
-	FormStone.make_loose(s, by)
-	if not SbFx.fire(owner_node, SbFx.key_of(info), "cushion", {"at": foot, "dir": way}):
-		BendLooks.burst(at, "air", 18)
 
 
 ## Where guard `owner` (a body) aims now (its caster's aim point: the player's crosshair, a bot's target), from `from`; along
@@ -1346,6 +1524,10 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 	SbFx.stop(fs, "held")                        # (its held look let go: the throw's own flight follows)
 	if fs.has_meta(BendR3.POP_STONE_META):
 		return _throw_pop_stone(bc, fs, toward)
+	var pack := String(fs.get_meta(FormStone.PACK_META, ""))
+	if pack == "mud":
+		_mud_wave(bc, fs, toward)
+		return null
 	var kind := GustLift.kind_of(fs)
 	var floor_d: Dictionary = ((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get(kind,
 			((SwayMoves.move("gust").get("stone", {}) as Dictionary).get("hurl", {}) as Dictionary).get("stone", {}))
@@ -1397,9 +1579,51 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 		inf["origin_tag"] = origin
 		inf.erase("jab")
 		th.info = inf
+		if pack == "magma" and th.lift != null:
+			th.lift.heat()                          # (a magma ball burns as it flies: fire to the guards, a Turn douses it)
 	BendLooks.burst(fs.global_position, "stone", 12)
 	BendSounds.play(&"earth_cast_crack", fs.global_position, 1.0 if clean else -1.0)
 	return th
+
+
+## A mud stone of `bc`'s held (a Spike or a Boulder a water Turn sent back as mud, then caught by earth: _lift_swing) thrown back
+## with E (the owner, 2026-10-12: "either mud spear or a mud wave"): it is slapped down before him and runs on along the deck as
+## a wave of mud toward `toward` (INF: his aim), MUD_WAVE's, its own numbers x return_mult when they are more (as any return;
+## the rally grows), drenching whom it hits for MUD_S (RingRules mud_s; a jump clears it, a wall stops it). A return: the
+## returner's class, his. The stone is spent.
+static func _mud_wave(bc: BendCaster, fs: FormStone, toward := Vector3.INF) -> BendBolt:
+	var p := bc.body
+	var own: Dictionary = fs.get_meta(&"bend_stone_d", {})
+	var mult := return_mult(fs, p)
+	var a := BendEffects.aim(bc)
+	var to: Vector3 = toward if toward.is_finite() else (a.point as Vector3)
+	var flat := Vector3(to.x - p.global_position.x, 0.0, to.z - p.global_position.z)
+	if flat.length_squared() < 1e-4:
+		var d0: Vector3 = a.dir
+		flat = Vector3(d0.x, 0.0, d0.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-6 else -p.global_basis.z
+	var spec := MUD_WAVE.duplicate()
+	spec["damage"] = maxf(float(own.get("damage", 0.0)) * mult, float(MUD_WAVE.damage))
+	spec["knock_mps"] = maxf(float(own.get("knock_mps", 0.0)) * mult, float(MUD_WAVE.knock_mps))
+	var origin := String(fs.get_meta(BendR3.ORIGIN_META, "water_jet/splash"))
+	var inf := BendR3.info_for(bc, "stone_catch", "catch")
+	inf["tag"] = origin + ".return"
+	inf["returned"] = true
+	inf["ret_mult"] = mult
+	inf["origin_tag"] = origin
+	inf["mud_s"] = MUD_S
+	inf.erase("jab")
+	spec["_info"] = inf
+	var from := FormEffects.ground_at(p, p.global_position + flat * 0.9)
+	var b := BendBolt.launch(p, from, flat, spec)
+	BendLooks.burst(fs.global_position, "stone", 16, Vector3.DOWN, 120.0, 3.0, 0.3)
+	BendLooks.burst(from + Vector3.UP * 0.2, "mud", 18, Vector3.UP, 120.0, 3.0, 0.3)
+	BendSounds.play(&"earth_cast_crack", from, 0.0)
+	for k: StringName in [&"bend_held_by", &"bend_clean"]:
+		if fs.has_meta(k):
+			fs.remove_meta(k)
+	fs.queue_free()
+	return b
 
 
 ## Earth's Return to Sender (data/sway/skill_tree.json earth.catch.return_to_sender; the owner, 2026-10-11: "make sure all the
@@ -1600,48 +1824,12 @@ func _stones() -> void:
 		var lead := lift._lead() if BendR3.stock() else Vector3.ZERO
 		if (lift.stone.global_position + lead).distance_to(me) > radius or lift.has_meta("bend_guarded_%d" % mine):
 			continue
-		if r2 and BendR3.stock() and kind in ["redirect", "parry"] and lift.heated:
-			# (Kiln Stone: a heated stone burns: a Turn douses it to a plain stone (then as any stone, below); a Parry takes it
-			# as fire: on the beat sent straight back along his aim, his now; late, half through)
-			if kind == "redirect":
-				lift.douse()
-			else:
-				var thrower_h := _body_of(lift.caster)
-				if perfect:
-					_lift_back(lift)
-				else:
-					_late_lift(lift)
-				took += 1
-				_result("perfect" if perfect else "late", "stone", thrower_h)
-				continue
-		if r2 and BendR3.stock() and kind in ["redirect", "parry"]:
-			# (round 3, every guard a shield: a stone met on the beat drops where it is, nothing through, no reward; late,
-			# half as a slide)
-			var thrower0 := _body_of(lift.caster)
-			if perfect:
-				var st0 := lift.stone as Node3D
-				var by0 := _body_of(lift.caster)
-				lift.drop(false)
-				FormStone.make_loose(st0, by0)
-			else:
-				_late_lift(lift)
-			took += 1
-			_result("perfect" if perfect else "late", "stone", thrower0)
-			continue
-		if r2 and kind in ["air_shield", "wind_guard"]:
-			# (the Wind Guard on a flying stone: on the beat cushioned and dropped at his feet, a loose stone; late, half)
+		if r2 and kind in ["air_shield", "wind_guard", "redirect", "parry"]:
+			# (the owner, 2026-10-12: "the wind can parry a rock and send back", water's Turn makes it mud and fire's Parry
+			# magma: on the beat it swings round him and leaves along his aim, his (_lift_swing); late, half through)
 			var thrower1 := _body_of(lift.caster)
 			if perfect:
-				var st := lift.stone as Node3D
-				var by := _body_of(lift.caster)
-				lift.drop(false)
-				var rb0 := st as RigidBody3D
-				if rb0 != null:
-					rb0.freeze = false
-					rb0.linear_velocity = lift.velocity * 0.05
-				FormStone.make_loose(st, by)
-				if not SbFx.fire(owner_node, SbFx.key_of(info), "cushion", {"at": st.global_position, "dir": way}):
-					BendLooks.burst(st.global_position, "air", 18)
+				_lift_swing(lift)
 			else:
 				_late_lift(lift)
 			took += 1
@@ -1700,25 +1888,6 @@ func _stones() -> void:
 const KILN_STONE := "earth.stone.kiln_stone"
 const KILN_MULT := 1.15
 const KILN_FIRES := ["fire_wall", "burn", "seam"]
-
-
-## A heated flying stone parried on the beat (Kiln Stone): straight back along the guard's aim, perfect_mult faster, his now (a
-## return: his class, never the thrower's).
-func _lift_back(lift: GustLift) -> void:
-	lift.set_meta("bend_guarded_%d" % get_instance_id(), true)
-	var at := lift.stone.global_position
-	var to := guard_aim(owner_node, at)
-	var k := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
-	lift.velocity = (to - at).normalized() * lift.velocity.length() * k
-	var bc := BendCaster.of(owner_node)
-	if bc != null and bc.valid():
-		lift.caster = bc
-		lift._ex = bc.exclude()
-		if lift.stone is CollisionObject3D:
-			lift._ex.append((lift.stone as CollisionObject3D).get_rid())
-	lift.hit = {}
-	lift.set_meta(&"bend_info", return_info(lift.get_meta(&"bend_info", {}), owner_node, at, k))
-	BendLooks.burst(at, "fire", 12)
 
 
 ## A flying stone met late by a guard that halves (the Wind Guard): late_mult of its damage and its knock go on (its hurl's

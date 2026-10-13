@@ -140,7 +140,8 @@ def montage(takes, total, seg, min_on):
 
 
 def esc(s):
-    return s.replace("\\", "\\\\").replace(":", "\\:").replace("'", "’").replace("%", "\\%")
+    # (the drawtexts run with expansion=none, so a % in a line is drawn as it is)
+    return s.replace("\\", "\\\\").replace(":", "\\:").replace("'", "’")
 
 
 def fade_edges(part, head, tail):
@@ -230,16 +231,16 @@ def main():
     if a.hook:
         out_at = min(a.hook_s, dur)
         alpha = f"if(lt(t,0.15),t/0.15,if(gt(t,{out_at - 0.35:.2f}),max(0,({out_at:.2f}-t)/0.35),1))"
-        vf.append(f"drawtext=fontfile='{FONT}':text='{esc(a.hook)}':fontsize=104:fontcolor=white:borderw=7:bordercolor=black@0.85"
+        vf.append(f"drawtext=fontfile='{FONT}':text='{esc(a.hook)}':expansion=none:fontsize=104:fontcolor=white:borderw=7:bordercolor=black@0.85"
                   f":x=(w-text_w)/2:y=h*0.15:alpha='{alpha}':enable='lt(t,{out_at:.2f})'")
     if a.end:
         e0 = max(dur - a.end_s, 0.0)
         lines = a.end.split("|")
         vf.append(f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.62:t=fill:enable='gte(t,{e0:.2f})'")
-        vf.append(f"drawtext=fontfile='{FONT}':text='{esc(lines[0])}':fontsize=150:fontcolor=white:x=(w-text_w)/2:y=h*0.36"
+        vf.append(f"drawtext=fontfile='{FONT}':text='{esc(lines[0])}':expansion=none:fontsize=150:fontcolor=white:x=(w-text_w)/2:y=h*0.36"
                   f":enable='gte(t,{e0:.2f})'")
         if len(lines) > 1:
-            vf.append(f"drawtext=fontfile='{FONT_B}':text='{esc(lines[1])}':fontsize=54:fontcolor=0x21d4c2:x=(w-text_w)/2:y=h*0.58"
+            vf.append(f"drawtext=fontfile='{FONT_B}':text='{esc(lines[1])}':expansion=none:fontsize=54:fontcolor=0x21d4c2:x=(w-text_w)/2:y=h*0.58"
                       f":enable='gte(t,{e0:.2f})'")
     vf.append("fade=t=in:st=0:d=0.2")
     vf.append(f"fade=t=out:st={max(dur - 0.35, 0):.2f}:d=0.35")

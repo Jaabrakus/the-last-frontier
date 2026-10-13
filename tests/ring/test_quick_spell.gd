@@ -231,7 +231,10 @@ func _cast() -> void:
 			"LMB held: a lock of the quick spell (%s, %s at %s)" % [c.lock_src, c.move, c.mode_of("stone_form")])
 	_expect(absf(c.lock_s - want_s) < 0.02, "the same lock time as RMB's (%.2f s, %.2f wanted)" % [c.lock_s, want_s])
 	await _ticks(4)
-	_expect(c.form.circle != null and is_instance_valid(c.form.circle) and c.pose.posing(), "the circle drawn, the pose on")
+	# (in the ring a bending lock gathers its element round the body instead of the circle: BendCharge, 2026-10-12)
+	_expect(c.form.charge != null and is_instance_valid(c.form.charge) and c.form.charge.element == "earth"
+			and (c.form.circle == null or not is_instance_valid(c.form.circle)) and c.pose.posing(),
+			"earth gathered round the body (no circle), the pose on")
 	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "spike" and String(hud.bend_strip.column(0).mode) == "spike"
 			and p.hotbar.spell == "stone_form", "meanwhile the key is as it was: Stone Form at Spike, the strip's column too")
 	_expect(c.spell_label("stone_form") == "Stone Form (Spike)" and hud._spell_mode("stone_form") == "spike",

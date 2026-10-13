@@ -7,7 +7,8 @@ extends SceneTree
 ##               every pose's timing within its clip
 ##   the pick    a variation's own pose over the skill's over the element's default (a bend spec only); an excluded or a
 ##               missing clip passed over; the Sway's old spells without a pose keep their tier clip; the Kick (round 2) is
-##               own-bend-fire-kick-low from Frontier_Bend.res with its mirror, no stand-in, the High Kick own-bend-fire-kick
+##               the low kick, the High Kick the waist-high (2026-10-12: Motifect kicks on own-bend-fire-kick-low's and
+##               own-bend-fire-kick's timing, those standing in)
 ##   the poses   held_override in the duel: Earth Wall wall plays own-bend-earth-raise (the stomp-rise) and roots the
 ##               caster, Stone boulder own-bend-earth-boulder (the owner's "left kick to stomp and then push") rooted, Punch
 ##               own-bend-fire-punch, Wind Guard own-bend-air-guard (its own guard clip, round 2; its first mapping,
@@ -27,6 +28,9 @@ extends SceneTree
 const NAME := "BEND POSES"
 ## The in-test watchdog (below the run's GODOT_TIMEOUT of 300 s).
 const LIMIT_S := 240.0
+## Water's stance (Wing Chun's hands on a fighting stagger since 2026-10-12, the owner's pick; poses.json's stance.water, Tai
+## Chi's own-bend-stance-water its stand-in).
+const WATER_STANCE := "own-bend-stance-water-wing-chun"
 
 var fails := 0
 var p: FrontierPlayer
@@ -87,13 +91,20 @@ func _provenance() -> void:
 		# (the owner's one pick of Frontier tech, 2026-10-11, the Ice Spear's since 2026-10-12: built from the game's own pistol aim; not
 		# ours, so held to its own rule: its own library, named frontier-, listed by name in poses.json, its lineage in its metas)
 		var frontier := BendPoses.frontier_tech(nm)
+		# (the owner's Motifect picks, 2026-10-12: the Motifect pack's motion retargeted onto our rig, not key-posed by us; held
+		# to their own rule: their own library, named motifect-, listed by name in poses.json's "motifect", the pack's clip and
+		# frames in their source meta)
+		var mot := BendPoses.motifect(nm)
+		var msrc := String(a.get_meta(&"source", "")) if a != null else ""
 		if a == null:
 			why = "in no library"
 		elif frontier and (lib != BendPoses.FRONTIER_LIBRARY or not String(a.get_meta(&"lineage", "")).contains("base library")):
 			why = "Frontier tech outside its own library or without its lineage (%s)" % lib
-		elif not frontier and not lib in BendPoses.LIBRARIES:
+		elif mot and (lib != BendPoses.MOTIFECT_LIBRARY or not msrc.contains("Motifect") or not msrc.contains(".bvh frames")):
+			why = "a Motifect move outside its own library or without its source (%s)" % lib
+		elif not frontier and not mot and not lib in BendPoses.LIBRARIES:
 			why = "not one of our own libraries (%s)" % lib
-		elif not frontier and not nm.begins_with("own-"):
+		elif not frontier and not mot and not nm.begins_with("own-"):
 			why = "not named own-"
 		elif BendPoses.excluded(nm) or nm.begins_with("own-axe-d") or nm.begins_with("own-axe-w") or nm.begins_with("own-axe-a"):
 			why = "excluded"
@@ -107,7 +118,7 @@ func _provenance() -> void:
 			why = "no row in animations/SOURCE.md"
 		if why != "":
 			bad.append("%s: %s" % [nm, why])
-	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md (or the owner's listed Frontier tech, in its own library with its lineage)%s"
+	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md (or the owner's listed Frontier tech, in its own library with its lineage; or a listed Motifect move, in its own library with its source)%s"
 			% [names.size(), "" if bad.is_empty() else " -- " + "; ".join(bad)])
 	var ft: Array = BendPoses.data().get("frontier_tech", [])
 	_expect(ft == ["frontier-pistol-ice"] and BendPoses.usable("frontier-pistol-ice") and not BendPoses.usable("frontier-pistol-lightning")
@@ -158,16 +169,27 @@ func _picks() -> void:
 	_expect(String(j.get("clip", "")) == "own-bend-fire-punch" and is_equal_approx(float(j.get("strike_s", -1.0)), 8.0 / 30.0)
 			and String(j.get("hand", "")) == "r_palm" and j.has("hold_s") and String(j.get("alt", "")) == "own-bend-fire-punch-l",
 			"a pick filled from the clips table and the clip's metas, its alt the other hand (%s)" % str(j))
-	# the Kick's tell never lies (round 2, spec 7): the low kick, ours, in the own bending library; the High Kick the waist-high
+	# the Kick's tell never lies (round 2, spec 7): the low kick; the High Kick the waist-high. Since 2026-10-12 (the owner's
+	# Motifect picks) both play a Motifect kick on the old clip's timing (timed_as), the old clip, ours in the own bending
+	# library, standing in: the Kick's is the Muay Thai roundhouse with its leg capped to the shin, so the tell stays low
 	var kk := BendPoses.pick("fire_kick", "kick", "fire")
 	var hk := BendPoses.pick("fire_kick", "high_kick", "fire")
-	_expect(String(kk.get("clip", "")) == "own-bend-fire-kick-low" and String(kk.get("from", "")) == "mode"
-			and BendPoses.library_of("own-bend-fire-kick-low") == "res://animations_extra/Frontier_Bend.res"
-			and String(kk.get("alt", "")) == "own-bend-fire-kick-low-l",
-			"the Kick: own-bend-fire-kick-low, in Frontier_Bend.res, no stand-in (%s from %s, %s)" % [kk.get("clip", "-"),
-			kk.get("from", "-"), BendPoses.library_of("own-bend-fire-kick-low")])
-	_expect(String(hk.get("clip", "")) == "own-bend-fire-kick" and String(hk.get("from", "")) == "mode",
-			"the High Kick: the waist-high kick (%s)" % hk.get("clip", "-"))
+	var kraw: Dictionary = BendPoses.data().moves.fire_kick.modes.kick
+	var old_k := BendPoses._filled({"clip": "own-bend-fire-kick-low"}, BendPoses.data())
+	_expect(String(kk.get("clip", "")) == "motifect-fire-kick-low" and String(kk.get("from", "")) == "mode"
+			and String(BendPoses._as_pose(kk.get("alt", "")).get("clip", "")) == "motifect-fire-kick-low-l"
+			and is_equal_approx(float(kk.get("strike_s", -1.0)), float(old_k.get("strike_s", -2.0)))
+			and is_equal_approx(float(kk.get("hold_s", -1.0)), float(old_k.get("hold_s", -2.0)))
+			and String(BendPoses._as_pose(kraw.get("stand_in", "")).get("clip", "")) == "own-bend-fire-kick-low"
+			and BendPoses.library_of("own-bend-fire-kick-low") == "res://animations_extra/Frontier_Bend.res",
+			"the Kick: the low Motifect kick on own-bend-fire-kick-low's timing, which stands in from Frontier_Bend.res (%s from %s: hold %s strike %s; the old %s %s)"
+			% [kk.get("clip", "-"), kk.get("from", "-"), kk.get("hold_s", "-"), kk.get("strike_s", "-"), old_k.get("hold_s", "-"),
+			old_k.get("strike_s", "-")])
+	var old_h := BendPoses._filled({"clip": "own-bend-fire-kick"}, BendPoses.data())
+	_expect(String(hk.get("clip", "")) == "motifect-fire-kick-high" and String(hk.get("from", "")) == "mode"
+			and is_equal_approx(float(hk.get("strike_s", -1.0)), float(old_h.get("strike_s", -2.0))),
+			"the High Kick: the Motifect high roundhouse on the waist-high kick's timing (%s, strike %s; the old %s)"
+			% [hk.get("clip", "-"), hk.get("strike_s", "-"), old_h.get("strike_s", "-")])
 	# every guard its own clip, a pose that reads at a glance (the owner's answers, 2026-10-05: the same care as earth's)
 	var gc := {"earth": ["stone_catch", "catch", "own-bend-earth-catch"],
 			"water": ["water_redirect", "redirect", "own-bend-water-turn"], "fire": ["fire_parry", "parry", "own-bend-fire-parry"],
@@ -196,7 +218,8 @@ func _picks() -> void:
 	for el: String in Bending.ELEMENTS:
 		var nm := SwayPose.stance_name(el)
 		var a2 := BendPoses.animation(nm)
-		if nm != "own-bend-stance-" + el or a2 == null or a2.loop_mode != Animation.LOOP_LINEAR:
+		if not (nm == "own-bend-stance-" + el or nm.begins_with("own-bend-stance-%s-" % el)) or a2 == null \
+				or a2.loop_mode != Animation.LOOP_LINEAR:
 			bad.append("%s: %s" % [el, st.get(el, "-")])
 	_expect(bad.is_empty(), "each element's stance is its own loop (own-bend-stance-<element>)%s" % ("" if bad.is_empty() else ": " + ", ".join(bad)))
 	var tiers: Array[String] = []
@@ -454,7 +477,7 @@ func _stance() -> void:
 			"standing still as earth: the earth stance loops on the body (%s, weight %.2f; %s)" % [c.pose.stance_clip(), w, hf])
 	_element("water")
 	await _secs(0.8)
-	_expect(String(c.pose.stance_clip()) == "own-bend-stance-water" and c.pose.stance_weight() > 0.9,
+	_expect(String(c.pose.stance_clip()) == WATER_STANCE and c.pose.stance_weight() > 0.9,
 			"as water: the water stance (%s, %.2f)" % [c.pose.stance_clip(), c.pose.stance_weight()])
 	Input.action_press("move_forward")
 	var lo := 1.0
@@ -472,7 +495,7 @@ func _stance() -> void:
 	var t := await _hold_until(Vector3.INF, func() -> bool: return c.state != SwayCaster.State.IDLE)
 	await _secs(0.15)
 	var ls: Array = c.pose._pose.layers if c.pose._pose != null else []
-	_expect(t != INF and ls.size() >= 2 and (ls[0] as Dictionary).anim == BendPoses.animation("own-bend-stance-water")
+	_expect(t != INF and ls.size() >= 2 and (ls[0] as Dictionary).anim == BendPoses.animation(WATER_STANCE)
 			and String(c.pose.current_clip()).begins_with("own-bend-water-whip"),
 			"a lock over the stance: the stance's layer first, the cast's over it (%s over %d layers)" % [c.pose.current_clip(), ls.size()])
 	await _let_go_and_settle()

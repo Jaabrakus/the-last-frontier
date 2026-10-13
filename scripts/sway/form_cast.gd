@@ -24,7 +24,9 @@ extends Node
 ##   the cast    lock_started: the circle (FormCircle) comes up at the target and draws itself as the lock fills; the crackle
 ##               (FormCrackle) runs from the palms (SwayPose: the body's clip by mastery) to it from half. locked: the circle
 ##               flashes and pulses. cast: the circle swells out, a burst of crackle; the
-##               effect is FormEffects' (SwayEffects.apply hands it on). A lock broken or fizzled: the circle dims out
+##               effect is FormEffects' (SwayEffects.apply hands it on). A lock broken or fizzled: the circle dims out.
+##               A bending lock (BendCharge.wanted; the owner, 2026-10-12) shows no circle and no crackle: its element
+##               gathers round the caster's body instead (BendCharge, `charge`); the same fill, click and ending
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const WALL_NORMAL_Y := 0.55
@@ -38,6 +40,8 @@ const HINTS := {"no earth": "No earth to raise there", "steep": "Too steep to ra
 var caster: SwayCaster
 var circle: FormCircle
 var crackle: FormCrackle
+## A bending lock's element round the caster's body in place of the circle (BendCharge; the owner, 2026-10-12).
+var charge: BendCharge
 ## The ground moves' lock target: where the circle is (a point under the player, top_level).
 var mark: Node3D
 ## The circle (world): its centre, its up, its radius; on an upright (the wall clip).
@@ -386,6 +390,17 @@ func _on_started(m: String, t: Node3D) -> void:
 	on_wall = up.y < WALL_NORMAL_Y
 	_clear_fx()
 	var scn := get_tree().current_scene
+	if BendCharge.wanted(m, caster.player):
+		# (a bending lock in the ring: its element round the caster's body, no circle and no crackle; every one of them a lock
+		# under the caster there, SwayCaster.self_lock_of)
+		var bel := Bending.element_of(m)
+		if not bel in BendCharge.ELEMENTS:
+			bel = caster.player.arena_element if caster.player.arena_element in BendCharge.ELEMENTS else "earth"
+		charge = BendCharge.make(caster.player, bel)
+		charge.limb_fn = _strike_limb              # (channelled to the limb the move's clip leaves from)
+		if m in MATTER_MOVES and lock_matter not in ["", "earth"] and caster.player.interactor != null and caster.player.is_local:
+			caster.player.interactor.notice("%s: %s" % [SwayCaster.label_with(m, caster.mode_of(m), not caster.elem()), FormMatter.label(lock_matter)], 1.4)
+		return
 	var col := FormMatter.circle_color(lock_matter) if m in MATTER_MOVES else SwayMoves.art_color("form")
 	var el := Bending.element_of(m)
 	if el in ["water", "fire", "air"]:
@@ -403,11 +418,32 @@ func _on_started(m: String, t: Node3D) -> void:
 
 
 func _on_locked(m: String, _t: Node3D) -> void:
-	if not is_form(m) or circle == null or not is_instance_valid(circle):
+	if not is_form(m):
+		return
+	for c: BendCharge in _charges():
+		c.full = true
+		c.fill = 1.0
+		c.flash()
+	if circle == null or not is_instance_valid(circle):
 		return
 	circle.full = true
 	circle.fill = 1.0
 	circle.flash()
+
+
+## The limb the locking move's clip leaves from (SwayPose.strike_limb; "" none): the charge's channel.
+func _strike_limb() -> String:
+	if caster == null or not is_instance_valid(caster) or caster.pose == null or not is_instance_valid(caster.pose):
+		return ""
+	return caster.pose.strike_limb()
+
+
+## The lock's element round the body (none, or [it] while it is there).
+func _charges() -> Array[BendCharge]:
+	var out: Array[BendCharge] = []
+	if charge != null and is_instance_valid(charge):
+		out.append(charge)
+	return out
 
 
 func _on_cast(m: String, _t: Node3D) -> void:
@@ -422,6 +458,12 @@ func _on_cast(m: String, _t: Node3D) -> void:
 ## The cast (or a hold begun): the circle swells out, a burst of crackle.
 func _swell(m: String) -> void:
 	if not is_form(m):
+		return
+	for c: BendCharge in _charges():
+		c.fill = 1.0
+		c.end("cast")
+	charge = null
+	if circle == null and crackle == null:
 		return
 	if circle != null and is_instance_valid(circle):
 		circle.fill = 1.0
@@ -441,6 +483,9 @@ func _on_end(kind: String) -> void:
 	edge = false
 	lock_matter = ""
 	lock_tree = -1
+	for c: BendCharge in _charges():
+		c.end(kind)
+	charge = null
 	if circle != null and is_instance_valid(circle):
 		circle.end(kind)
 	if crackle != null and is_instance_valid(crackle):
@@ -450,6 +495,9 @@ func _on_end(kind: String) -> void:
 
 
 func _clear_fx() -> void:
+	for c: BendCharge in _charges():
+		c.end("break")
+	charge = null
 	if circle != null and is_instance_valid(circle):
 		circle.end("break")
 	if crackle != null and is_instance_valid(crackle):
@@ -477,6 +525,10 @@ func _process(_dt: float) -> void:
 			circle.global_position = sp + Vector3.UP * 0.025
 		if crackle != null and is_instance_valid(crackle):
 			crackle.center = sp
+	if locking:
+		for c: BendCharge in _charges():
+			c.fill = caster.fill
+			c.full = caster.state == SwayCaster.State.FULL
 	if circle != null and is_instance_valid(circle) and locking:
 		circle.fill = caster.fill
 		circle.full = caster.state == SwayCaster.State.FULL

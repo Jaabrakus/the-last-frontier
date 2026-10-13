@@ -64,7 +64,8 @@ var _seconds := 40.0
 func _block_user_input() -> void:
 	super._block_user_input()
 	fmt = String(args.get("format", "4v4"))
-	if not fmt in MatchSetup.FORMATS or fmt == "1v1":
+	# (format=1v1 only when asked: a duel filmed by the same director, its cameras on the two of them)
+	if not fmt in MatchSetup.FORMATS:
 		fmt = "4v4"
 	MatchSetup.set_match()
 	MatchSetup.format = fmt
@@ -179,6 +180,8 @@ func _cam(dt: float) -> Array:
 	var want_look := c
 	var want_pos := c
 	var fov := 50.0
+	# (a duel: the two kept in the picture, the camera further back the further apart they are)
+	var back := 1.0 + (_spread() / 14.0 if fmt == "1v1" else 0.0)
 	match _shot:
 		"wide":
 			want_look = c.lerp(_centroid(c), 0.6)
@@ -186,11 +189,11 @@ func _cam(dt: float) -> Array:
 			fov = 50.0
 		"follow":
 			want_look = _busiest(c) + Vector3.UP * 0.4
-			want_pos = want_look + across * 12.5 + Vector3.UP * 6.0 - ax * 3.5
+			want_pos = want_look + (across * 12.5 + Vector3.UP * 6.0 - ax * 3.5) * back
 			fov = 44.0
 		"low":
 			want_look = _busiest(c) + Vector3.UP * 0.9
-			want_pos = want_look + ax * 8.5 * _corner + across * 5.5 + Vector3.UP * 1.6
+			want_pos = want_look + (ax * 8.5 * _corner + across * 5.5) * back + Vector3.UP * 1.6
 			fov = 50.0
 		"flight":
 			# (behind and above the flyer, a little to the side: its flight and where it lands ahead in the picture)
@@ -237,9 +240,20 @@ func _centroid(def: Vector3) -> Vector3:
 	return s / fs.size()
 
 
-## Where the fight is thickest: the fighter with the most others within 8 m (their middle).
+## How far the fighters in play are from their middle at most (m).
+func _spread() -> float:
+	var mid := _centroid(Vector3.ZERO)
+	var most := 0.0
+	for b: Node3D in _in_play():
+		most = maxf(most, Vector3(b.global_position.x - mid.x, 0.0, b.global_position.z - mid.z).length())
+	return most
+
+
+## Where the fight is thickest: the fighter with the most others within 8 m (their middle); a duel's, the two's middle.
 func _busiest(def: Vector3) -> Vector3:
 	var fs := _in_play()
+	if fmt == "1v1":
+		return _centroid(def)
 	var best := def
 	var best_n := -1
 	for a: Node3D in fs:

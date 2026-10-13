@@ -104,6 +104,7 @@ to keep each knee on one side. Nothing imported, retargeted or sampled (same doc
 | `own-bend-stance-earth` | 2026-10-05 (second set) | `bend_clips.py` (`stance_earth`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-stance-fire` | 2026-10-05 (second set) | `bend_clips.py` (`stance_fire`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-stance-water` | 2026-10-05 (second set) | `bend_clips.py` (`stance_water`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-stance-water-wing-chun` | 2026-10-12 (the owner: "can we change the water idle stance to wing chun", then of three legs under its hands "A"; water's stance since, `own-bend-stance-water` its stand-in) | `bend_clips.py` (`stance_water_wing_chun`, `_wc_stance`) | the rig's rest pose; keys typed in `bend_clips.py`: Wing Chun's Man Sau and Wu Sau hands on a fighting stagger, keyed from the stance's standard mechanics (no video was looked at for it) | (for the owner to fill) |
 | `own-bend-stance-air` | 2026-10-05 (second set) | `bend_clips.py` (`stance_air`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-earth-boulder` | 2026-10-05 (second set) | `bend_clips.py` (`earth_boulder`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-earth-raise` | 2026-10-05 (second set) | `bend_clips.py` (`earth_raise`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
@@ -499,9 +500,11 @@ to keep each knee on one side. Nothing imported, retargeted or sampled (same doc
   timeline, with a raise from water's stance over 0.3 s, a kick at the strike and a lowering from `back_s`. In the game `BendAimArm` (the pistol's `JogAimArm`, aiming the two fingers) turns the arm onto the
   crosshair and the head toward it after the clip.
 - It is NOT one of our own key-posed clips and is not named `own-`: it lives in its own library, and `BendPoses` lets a pose
-  play it only because `data/bending/poses.json` lists it by name in `frontier_tech` (`BendPoses.frontier_tech`). It is cast
-  by no move: the Lightning Pistol twist (`fire.lightning.pistol`) was taken out of the tree on 2026-10-12, and later that
-  day the owner picked our own overhand throw for the Ice Spear over this aim. Lightning is `own-bend-fire-lightning`. Its `authored` and `lineage` metas name the inputs above; it carries no
+  play it only because `data/bending/poses.json` lists it by name in `frontier_tech` (`BendPoses.frontier_tech`). The
+  Lightning Pistol twist (`fire.lightning.pistol`) was taken out of the tree on 2026-10-12, and later that day the owner
+  picked our own overhand throw for the Ice Spear over this aim. Since the evening of 2026-10-12 it is the Air Beam's (the
+  Gust held long, `air_gust` gust's `grow`, timed as `own-bend-throw-overhand`): the owner, "the air should get the pistol
+  animation thats perfect for that one like. beam". Lightning is `own-bend-fire-lightning`. Its `authored` and `lineage` metas name the inputs above; it carries no
   `native_asset_id`, `source_attribution` or `original_name`.
 - Tracing it: the inputs that bear on its origin are the two `Frontier_Downgraded.res` clips (built by
   `tools/anim_author/mocap_downgrade_all.gd` from `actor_b-p-bow-aim-idle` and `actor_b-p-pistol-aim-idle` in
@@ -598,3 +601,40 @@ and stay outside the project animation libraries. See
 `docs/animation_reference_lessons.md` for source observations, inferences,
 conversion boundaries and validation.
 Spellbreak licence (2026-10-08): Proletariat licensed all Spellbreak assets for use in Tidebreak, including public release. Written grant: [where you keep it].
+
+## Motifect-derived clips (`animations_extra/Frontier_Motifect.res`)
+
+Recorded 2026-10-12 from the generator code (observations, not an independent audit of the library). These are NOT our own
+key-posed clips: their motion comes from the Motifect martial arts pack (Motifect AI, motifect.io: 40 AI-generated clips as BVH
+and FBX; its README: "Free for personal and commercial use in your projects. Do not redistribute or resell these raw animation
+files as a standalone product."). The owner found the pack (`~/Downloads/Motifect_martial_arts_v1_0`) and chose to take moves from
+it into the game's clips (2026-10-12: "we can take some moves and then add it into our own", then "do and add what u can so we can
+see what it looks like"). The pack's files are not copied into the project: the generator reads the BVH files from that folder,
+as text, when it bakes.
+
+| Clip | Made | Generator | Input (the pack's clip, its frames) | Edits on top of the retarget |
+| --- | --- | --- | --- | --- |
+| `motifect-fire-kick-low` | 2026-10-12 | `tools/anim_author/blender/motifect_clips.py` (`fire_kick_low`) | `muay_thai_roundhouse.bvh` f56-106 | the kicking (right) leg swung down about its hip so the ankle is at most 0.34 m over the deck through the kick (in over f68-73, out over f84-94): a leg kick, so the Kick's tell stays low |
+| `motifect-fire-kick-low-l` | 2026-10-12 | the same (`mirror`) | the same, mirrored left for right before the retarget | as its original, on the left leg |
+| `motifect-fire-kick-high` | 2026-10-12 | `motifect_clips.py` (`fire_kick_high`) | `tkd_roundhouse_high.bvh` f12-56 | none |
+| `motifect-fire-kick-high-l` | 2026-10-12 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-fire-teep` | 2026-10-12 | `motifect_clips.py` (`fire_teep`) | `muay_thai_teep.bvh` f2-52 | the kicking leg's ankle at most 0.78 m (in over f19-23, out over f31-38): a push kick to the belly |
+| `motifect-fire-teep-l` | 2026-10-12 | the same (`mirror`) | the same, mirrored | as its original, on the left leg |
+| `motifect-air-jump-spin-kick` | 2026-10-12 | `motifect_clips.py` (`air_jump_spin_kick`) | `tkd_jump_spinning_kick.bvh` f34-72 (cut before its landing) | its lift off the deck taken off from its takeoff (f54: the game's jump carries the body); its heading made a whole turn by f72 (the turn short of it spread over f46-72) |
+
+- The retarget, per frame: the BVH's global joint rotations (its rest is a T-pose, every joint unrotated) carried onto
+  Actor_B's bones (`assets/character/actor_b_body.glb`, `rigkit.SK`) through each mapped bone's rest frame (our rest bone's
+  direction and a second axis turned onto the BVH rest's: the left, the forward, the hip line or the knuckles' line), so a bone
+  points where the BVH's points and twists as it twists; `spinec` half way between its neighbours; the bones the BVH has no
+  match for (the bases, the pelvis, the palms, the heels) keep our rest under their parents. The fingers are our own closed fist
+  (`style_kit.py`'s boxing hands at grip 1, the boxing clips' input), not the BVH's. The root's place is the BVH hips' scaled by
+  the legs' lengths, the whole clip set down so its first frame's feet stand on the deck as our rest's do, and its drift across
+  the deck taken back by its end. Mirrored twins are the BVH mirrored left for right before the retarget.
+- `tools/anim_author/install_motifect.gd` installs them as `install_bend.gd` installs ours (the track path prefix from
+  `own-form-release` in `Frontier_Form.res`, no `native_asset_id`, `source_attribution` or `original_name`), each with an
+  `authored` meta naming the generator and a `source` meta naming the pack's clip and frames, so the library itself says what
+  each clip was made from.
+- The game plays one only as `data/bending/poses.json` lists it by name in `motifect` (`BendPoses.motifect`, `usable`):
+  fire's Kick and its twin, the Kick held long (its `grow`: the teep), the High Kick and its twin, air's Leap. Each is timed as
+  the move's own clip it replaces (`timed_as`: its hold, strike, back and end exactly the old ones, so the move's gameplay is
+  unchanged) and that own clip stands in when the library is missing.

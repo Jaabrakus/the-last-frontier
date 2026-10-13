@@ -262,8 +262,11 @@ static func library() -> AnimationLibrary:
 	# each element's stance, looped, for an element bot's idle
 	var stances: Dictionary = BendPoses.data().get("stance", {})
 	for el: String in stances:
-		var snm := String(BendPoses._as_pose(stances[el]).get("clip", ""))
-		if snm != "" and BendPoses.usable(snm):
+		var sp := BendPoses._as_pose(stances[el])
+		while not sp.is_empty() and not BendPoses.usable(String(sp.clip)):
+			sp = BendPoses._as_pose(sp.get("stand_in", ""))          # (a stance not in the libraries: its stand-in)
+		var snm := String(sp.get("clip", ""))
+		if snm != "":
 			var sa := BendPoses.animation(snm)
 			if sa.loop_mode != Animation.LOOP_LINEAR:
 				sa = sa.duplicate() as Animation
@@ -682,6 +685,12 @@ func shown_clip() -> String:
 			pz = BendPoses._as_pose(pz.get("stand_in", ""))
 		return String(pz.get("clip", k))
 	return k
+
+
+## The limb a cast leaves from (the pose's "hand": l_palm, r_palm, both, l_foot, r_foot), else the right palm. BendCharge
+## channels the element to it.
+func strike_limb() -> String:
+	return String(cast_pick.get("hand", "r_palm"))
 
 
 ## Where a cast leaves the body (world): the pose's limb (its "hand": l_palm, r_palm, both, l_foot, r_foot), else the

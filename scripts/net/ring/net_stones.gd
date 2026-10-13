@@ -20,7 +20,7 @@ extends RefCounted
 const SEND_MOVING_S := 0.2
 ## The marks told with a stone (beside its holder, loose maker and raiser): each as it is.
 const MARKS: Array[StringName] = [&"bend_weight", &"bend_shape", &"bend_stone_d", &"bend_rally", &"bend_origin_tag",
-		&"bend_pop_stone", &"bend_clean", &"bend_returns", &"form_grown"]
+		&"bend_pop_stone", &"bend_clean", &"bend_returns", &"form_grown", &"bend_pack"]
 const BODY_MARKS: Array[StringName] = [&"bend_held_by", &"bend_loose_by", &"bend_raised_by"]
 
 
@@ -111,6 +111,7 @@ static func apply(id: String, d: Dictionary) -> void:
 	var marks: Dictionary = d.get("marks", {})
 	for k: String in marks:
 		s.set_meta(StringName(k), marks[k])
+	FormStone.pack_look(s)                              # (a stone a guard made magma or mud as it sent it back)
 	var bodies: Dictionary = d.get("bodies", {})
 	for k in BODY_MARKS:
 		if not bodies.has(String(k)):

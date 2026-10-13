@@ -280,6 +280,12 @@ func strike_point() -> Vector3:
 	return _strike_at if phase != "" else Vector3.INF
 
 
+## The limb the move leaves from (the clip's "hand": l_palm, r_palm, both, l_foot, r_foot; a combo's other side when it
+## takes it), "" when no clip plays or it names none. BendCharge channels the element to it.
+func strike_limb() -> String:
+	return _hand if phase != "" else ""
+
+
 ## Seconds from now to the strike of the release a cast now would play (-1: no strike time known; the effect lands at once).
 func strike_wait() -> float:
 	if phase != "press" or _anim == null:
@@ -849,8 +855,10 @@ static func stance_name(element: String, body: Node = null) -> String:
 	if element == "":
 		return ""
 	var v: Variant = BendPoses.stance_pose(element, body)          # (a fighting style's own stance, else the element's)
-	var nm := String(BendPoses._as_pose(v).get("clip", ""))
-	return nm if nm != "" and BendPoses.usable(nm) else ""
+	var p := BendPoses._as_pose(v)
+	while not p.is_empty() and not BendPoses.usable(String(p.clip)):
+		p = BendPoses._as_pose(p.get("stand_in", ""))               # (a stance not in the libraries: its stand-in)
+	return String(p.get("clip", ""))
 
 
 ## How much the stance should show now (0..1): casting as an element, on the ground, still, hands free, upright.

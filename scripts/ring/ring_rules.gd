@@ -1352,6 +1352,12 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var drench_s := float(info.get("drench_s", 0.0))
 	if drench_s > 0.0 and not returned:
 		res["drench_s"] = BendStatus.drench(n, drench_s * (BendLoadout.tune_f(n, "stock:late_mult", stock_num("late_mult", 0.5)) if late else 1.0))
+	# mud (where earth and water met in a guard, info.mud_s: a water Turn's mud spear, earth's mud wave; the owner, 2026-10-12:
+	# "a mud spear or blast that slows"): drenched as Drenching Wave drenches, in mud; a return's own (mud is always one)
+	var mud_s := float(info.get("mud_s", 0.0))
+	if mud_s > 0.0:
+		res["drench_s"] = maxf(float(res.get("drench_s", 0.0)), BendStatus.drench(n, mud_s * (BendLoadout.tune_f(n, "stock:late_mult",
+				stock_num("late_mult", 0.5)) if late else 1.0), "mud"))
 	# a bind (a skill tree twist's hit, info.bind_s: BendStatus.bind): his feet held, no launch, no hitstun, no string hit; a
 	# late guard halves it
 	var bind_s := float(info.get("bind_s", 0.0))

@@ -282,8 +282,9 @@ func _blocks() -> void:
 	var catch := _spec("stone_catch", "catch")
 	check(is_equal_approx(float(catch.get("window_s", 0.0)), 1.0) and is_equal_approx(float(catch.get("radius_m", 0.0)), 3.5)
 			and bool(catch.get("holds", false)), "earth's Catch: 1.0 s, 3.5 m, it holds (as before round 2)")
-	var want := {"water": ["water_redirect", "redirect", "swing", 0.8], "fire": ["fire_parry", "parry", "straight", 0.8],
-			"air": ["air_shield", "shield", "bounce", 0.8]}
+	# (fire's Parry and air's Wind Guard loop what they take round the guard once before it goes back since 2026-10-12, the moon)
+	var want := {"water": ["water_redirect", "redirect", "swing", 0.8], "fire": ["fire_parry", "parry", "moon", 0.8],
+			"air": ["air_shield", "shield", "moon", 0.8]}
 	for el: String in want:
 		var w: Array = want[el]
 		var g := _spec(String(w[0]), String(w[1]))
@@ -347,18 +348,20 @@ func _bots() -> void:
 			"the bots' guards answer what each guard takes (catch stone; turn water, ice, fire; parry fire, lightning; wind guard air, stone)")
 	check(NpcBending.shot_of("fire_kick", "kick").get("floor", false) == true and String(NpcBending.shot_of("earth_shove", "column").get("kind", "")) == "under",
 			"a bot reads the Kick's wind-up as a wave along the deck, a Column's as rising under it")
-	# the Air Lance (the Gust held long): water's Turn answers it (it turns it back as ice, the owner's 2026-10-11), and a bot
-	# reads a grown Gust as the Lance, a spear of air; every other grow is read as the move itself, as before
-	var lance := NpcBending.shot_of("air_gust", "gust", true)
+	# the Gust held long, the Air Beam since 2026-10-12 (the owner: "it will be light lightning but straight", "instant cant be
+	# sent back only block"): a bot reads a grown Gust as the beam, striking its flash after the release; water's Turn answers
+	# every air shot now (mini ice spears) and stone (a mud spear), the air spear still by name; every other grow is read as the
+	# move itself, as before
+	var beam := NpcBending.shot_of("air_gust", "gust", true)
 	var gust := NpcBending.shot_of("air_gust", "gust")
-	check("air_spear" in (NpcBending.hint_of("water_redirect", "redirect", _spec("water_redirect", "redirect")).get("answers", []) as Array)
-			and not "air" in (NpcBending.hint_of("water_redirect", "redirect", _spec("water_redirect", "redirect")).get("answers", []) as Array),
-			"water's Turn answers the Air Lance (air_spear), not every air shot")
-	check(String(lance.get("kind", "")) == "air" and String(lance.get("shape", "")) == "spear" and is_equal_approx(float(lance.get("mps", 0.0)), 40.0)
-			and is_equal_approx(float(lance.get("knock", 0.0)), 15.0) and is_equal_approx(float(gust.get("mps", 0.0)), 18.0)
+	var turn_answers: Array = NpcBending.hint_of("water_redirect", "redirect", _spec("water_redirect", "redirect")).get("answers", [])
+	check("air_spear" in turn_answers and "air" in turn_answers and "stone" in turn_answers,
+			"water's Turn answers every air shot and stone, the air spear by name too (%s)" % [turn_answers])
+	check(String(beam.get("kind", "")) == "air" and is_equal_approx(float(beam.get("flash", -1.0)), 0.12)
+			and is_equal_approx(float(beam.get("knock", 0.0)), 15.0) and is_equal_approx(float(gust.get("mps", 0.0)), 18.0)
 			and is_equal_approx(float(gust.get("knock", 0.0)), 11.0) and NpcBending._as_of("air", "spear") == "air_spear"
 			and NpcBending._as_of("air", "ball") == "",
-			"a bot reads the grown Gust as the Air Lance (air, a spear, 40 m/s, knock 15) and the Gust as the Gust (%s; %s)" % [lance, gust])
+			"a bot reads the grown Gust as the Air Beam (air, its flash 0.12 s, knock 15) and the Gust as the Gust (%s; %s)" % [beam, gust])
 	check(NpcBending.shot_of("fire_blast", "punch", true) == NpcBending.shot_of("fire_blast", "punch")
 			and NpcBending.shot_of("earth_shove", "push", true) == NpcBending.shot_of("earth_shove", "push"),
 			"every other grow is read as the move itself (the Fireball, the Fissure)")

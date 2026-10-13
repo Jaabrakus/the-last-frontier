@@ -54,6 +54,12 @@ const OWN_PREFIX := "own-"
 ## only as the file's "frontier_tech" lists it by name.
 const FRONTIER_LIBRARY := "res://animations_extra/Frontier_Bend_Aim.res"
 const FRONTIER_PREFIX := "frontier-"
+## Motifect moves the owner picked (2026-10-12: "we can take some moves and then add it into our own"; animations/SOURCE.md
+## "Motifect-derived clips"): the Motifect martial arts pack's motion retargeted onto our rig and cut to the cast shape
+## (tools/anim_author/blender/motifect_clips.py), not our key-posed clips: in a library of their own, named motifect-, a pose
+## only as the file's "motifect" lists it by name (motifect()).
+const MOTIFECT_LIBRARY := "res://animations_extra/Frontier_Motifect.res"
+const MOTIFECT_PREFIX := "motifect-"
 ## The fighting styles' poses (a style's library, stance, held guard and the modes it re-poses), and their clips' name prefix.
 const STYLES_PATH := "res://data/bending/style_poses.json"
 const STYLE_PREFIX := "own-style-"
@@ -131,6 +137,10 @@ static func animation(name: String) -> Animation:
 		var fl := _library(FRONTIER_LIBRARY)
 		if fl != null and fl.has_animation(name):
 			return fl.get_animation(name)
+	if name.begins_with(MOTIFECT_PREFIX):
+		var ml := _library(MOTIFECT_LIBRARY)
+		if ml != null and ml.has_animation(name):
+			return ml.get_animation(name)
 	return null
 
 
@@ -151,6 +161,10 @@ static func library_of(name: String) -> String:
 		var fl := _library(FRONTIER_LIBRARY)
 		if fl != null and fl.has_animation(name):
 			return FRONTIER_LIBRARY
+	if name.begins_with(MOTIFECT_PREFIX):
+		var ml := _library(MOTIFECT_LIBRARY)
+		if ml != null and ml.has_animation(name):
+			return MOTIFECT_LIBRARY
 	return ""
 
 
@@ -168,9 +182,15 @@ static func excluded(name: String) -> bool:
 	return false
 
 
-## A clip a pose may play: ours (own-) or Frontier tech the owner picked (frontier_tech), in a library, not excluded.
+## A clip a pose may play: ours (own-), Frontier tech the owner picked (frontier_tech) or a Motifect move he picked (motifect), in
+## a library, not excluded.
 static func usable(name: String) -> bool:
-	return (name.begins_with(OWN_PREFIX) or frontier_tech(name)) and not excluded(name) and clip_exists(name)
+	return (name.begins_with(OWN_PREFIX) or frontier_tech(name) or motifect(name)) and not excluded(name) and clip_exists(name)
+
+
+## Whether clip `name` is a Motifect move the owner picked for a pose (MOTIFECT_PREFIX, listed in the file's "motifect").
+static func motifect(name: String) -> bool:
+	return name.begins_with(MOTIFECT_PREFIX) and name in (data().get("motifect", []) as Array)
 
 
 ## Whether clip `name` is Frontier tech the owner picked for a pose (FRONTIER_PREFIX, listed in the file's "frontier_tech").

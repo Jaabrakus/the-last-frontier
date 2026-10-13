@@ -79,7 +79,8 @@ const AI_PATH := "res://data/npc/bend_ai.json"
 ## The one cast entry for any caster (BendCast, bend_cast.gd beside BendEffects' script): used when it exists and has its
 ## static cast().
 const BEND_CAST_FILE := "bend_cast.gd"
-## Its element's circle at its own feet while it locks (the owner allowed it: own side, own colour; never on anyone else).
+## Its element's circle at its own feet while it locks (the owner allowed it: own side, own colour; never on anyone else);
+## in the ring (BendR3.on) with BendCharge.SHOW its element round its own body instead, as the player's (the owner, 2026-10-12).
 const SHOW_LOCK_CIRCLE := true
 const CIRCLE_R := 0.9
 ## The old spells it casts its own way while BendCast is not there.
@@ -129,6 +130,8 @@ const VOLLEY_S := 1.0
 ## within which its wind-up still reads as a threat (m).
 const CONE_MPS := 400.0
 const CONE_SLACK_M := 1.0
+## A beam's "pace" as a read threat (the Air Beam: it strikes its flash after the release, at once; shot_of, _read).
+const BEAM_MPS := 400.0
 ## Round 5: the move that throws a held stone besides the guard's E (earth's Shove).
 const HELD_SHOVE := "earth_shove/push"
 ## How far a move that throws a held stone (its spec's held_stone "throw": earth's 2, the Fissure) reaches while one is held
@@ -163,6 +166,7 @@ var _talent_mode := ""
 ## The parry's cast share this lock's time took (BendStatus.cast_mult; 1 none): spent by its cast.
 var _cm_used := 1.0
 var circle: FormCircle
+var charge: BendCharge
 ## The ring's: where it may stand (pos -> pos), and metres to the open end (pos, dir -> m); invalid: no ring.
 var bounds_fn: Callable
 var edge_fn: Callable
@@ -677,6 +681,11 @@ func tick(dt: float) -> void:
 			circle.fill = fill
 			if fill >= 1.0 and not circle.full:
 				circle.full = true
+		if charge != null and is_instance_valid(charge):
+			charge.fill = fill
+			if fill >= 1.0 and not charge.full:
+				charge.full = true
+				charge.flash()
 		var t := brain.target
 		if t != null and is_instance_valid(t):
 			me.face_point(t.global_position)
@@ -1302,6 +1311,8 @@ func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dic
 	elif bool(shot.get("floor", false)):
 		th["tti"] = left + me.global_position.distance_to(t.global_position) / float(shot.mps)
 		th["read"] = true                          # (a guard may answer it; the jump waits for the wave itself)
+	elif shot.has("flash"):
+		th["tti"] = left + float(shot.flash) + 0.05      # (a beam: its flash, then it strikes at once)
 	else:
 		th["tti"] = left + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)
 	return th
@@ -1315,16 +1326,21 @@ static func _as_of(kind: String, shape: String) -> String:
 
 ## What (id, md) sends flying at whom it is cast at: {kind, mps, knock, shape} (a bolt's or a throw's spec; Stone Form's spike
 ## and boulder and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
-## `grown`: the lock grows (held past its second click); only the Air Lance's grow is read (the Gust held long is a spear of
-## air, another thing to answer), every other grow read as the move itself as before.
+## `grown`: the lock grows (held past its second click); only a grow that is another thing to answer is read (an air spear;
+## the Air Beam, the Gust held long since 2026-10-12: {kind, knock, flash}, it strikes its flash after the release, at once),
+## every other grow read as the move itself as before.
 static func shot_of(id: String, md: String, grown := false) -> Dictionary:
 	var spec := spec_of(id, md)
 	if grown:
 		var g: Variant = spec.get("grow")
-		if g is Dictionary and _as_of(String((g as Dictionary).get("kind", "")), String((g as Dictionary).get("shape", ""))) != "":
+		if g is Dictionary and (_as_of(String((g as Dictionary).get("kind", "")), String((g as Dictionary).get("shape", ""))) != ""
+				or BendEffects.is_beam(g as Dictionary) and String((g as Dictionary).get("do", "")) == "lightning"):
 			spec = spec.duplicate()
 			spec.merge(g as Dictionary, true)
 	var dn := String(spec.get("do", ""))
+	if dn == "lightning" and BendEffects.is_beam(spec):
+		return {"kind": String(spec.kind), "mps": BEAM_MPS, "knock": float(spec.get("knock_mps", 0.0)),
+				"flash": float(spec.get("flash_s", 0.0))}
 	if dn in ["bolt", "throw", "wind_wave"]:
 		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0),
 				"knock": float(spec.get("knock_mps", 0.0)), "shape": String(spec.get("shape", ""))}
@@ -1501,9 +1517,21 @@ func begin(id: String, md: String) -> void:
 		_raise_spike(t)
 	if SHOW_LOCK_CIRCLE and me.is_inside_tree():
 		var scn := me.get_tree().current_scene
-		if scn != null:
+		if BendCharge.SHOW and BendR3.on(me):
+			if charge != null and is_instance_valid(charge):
+				charge.end("break")
+			charge = BendCharge.make(me, element)
+			charge.limb_fn = _strike_limb              # (channelled to the limb its cast's clip leaves from)
+		elif scn != null:
 			var col := MatchSetup.color(element)
 			circle = FormCircle.make(scn, FormEffects.ground_at(me, me.global_position), Vector3.UP, CIRCLE_R, col)
+
+
+## The limb its locking cast's clip leaves from (NpcBody.strike_limb; "" none): its charge's channel.
+func _strike_limb() -> String:
+	if me == null or not is_instance_valid(me) or me.body == null or not is_instance_valid(me.body):
+		return ""
+	return me.body.strike_limb()
 
 
 func _release() -> void:
@@ -1516,6 +1544,9 @@ func _release() -> void:
 	if circle != null and is_instance_valid(circle):
 		circle.end("cast")
 	circle = null
+	if charge != null and is_instance_valid(charge):
+		charge.end("cast")
+	charge = null
 	_follow = FOLLOW_S
 	var t := brain.target
 	var pr := preset()
@@ -1917,6 +1948,9 @@ func _drop_lock(how: String) -> void:
 	if circle != null and is_instance_valid(circle):
 		circle.end(how)
 	circle = null
+	if charge != null and is_instance_valid(charge):
+		charge.end(how)
+	charge = null
 	_stone = null                                  # (a spike raised and not thrown stands where it rose)
 
 

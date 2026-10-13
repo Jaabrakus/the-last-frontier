@@ -24,7 +24,8 @@ extends RefCounted
 ##   the host's words word(w) to every other machine, apply_word(w) there (inside a verdict): "end" a thing ended (BendBolt,
 ##                    BendZone, FormStone), "bolt" a bolt turned or changed (its state), "guard" a guard's result
 ##                    (BendZone.report on every machine), "wall_hit" a raised wall worn, "zone" a zone made by a decision,
-##                    "stone" a stone's state (NetStones), "heave" a loose stone the Fissure threw (BendEffects.crack_heave)
+##                    "stone" a stone's state (NetStones), "heave" a loose stone the Fissure threw (BendEffects.crack_heave),
+##                    "lift" a guard's swing of a flying stone begun or sent on (GustLift.net_lift)
 ##   hits             forward(op, n, args): the host's effect on a puppet sent to its owner; apply_hit(h) there runs it on
 ##                    his own body inside a verdict (BendR3.take, BendStatus' effects); "hit_by" and "jab_guarded" go to
 ##                    the attacker's owner (his jab string, SwayCaster.note_hit)
@@ -239,6 +240,8 @@ static func apply_word(w: Array) -> void:
 			var hs := a[2] as FormStone
 			if hb != null and hs != null:
 				BendEffects.crack_heave(hb, hs, a[3] as Dictionary)
+		"lift":
+			GustLift.net_lift(a[1] as Node3D, a[2] as Dictionary)
 		_:
 			if String(a[0]).begins_with("m_"):
 				NetMatch.apply_word(a)                # (the match's: NetMatch)

@@ -432,8 +432,9 @@ static func rescue(n: Node, by: Node) -> bool:
 ## Drenched (a skill tree twist's hit, the hit's drench_s: Drenching Wave; the owner 2026-10-11: "water should be able slowdown
 ## maybe implement slows", his answer: as a twist, about 30% slower for 1.5 s, aim untouched, weaker each time): `n`'s run and
 ## his drift in the air at rules.json stock.drench.k of their speed for `s` x what his last soakings left (x decay within
-## memory_s, none under floor_s); his dashes, aim, casts and guard as ever. Returns the seconds it lasts (0 none).
-static func drench(n: Node, s: float) -> float:
+## memory_s, none under floor_s); his dashes, aim, casts and guard as ever. Returns the seconds it lasts (0 none). `look`: what
+## drips off him ("mud": a guard's mud, BendZone.MUD_S).
+static func drench(n: Node, s: float, look := "water") -> float:
 	if n == null or not is_instance_valid(n) or s <= 0.0 or not can_take(n, null):
 		return 0.0
 	var b := RingRules.stock_block("drench")
@@ -448,7 +449,7 @@ static func drench(n: Node, s: float) -> float:
 		return 0.0
 	n.set_meta(&"bend_drench", {"until": maxf(t + held, float(drench_left(n)) + t), "mult": float(b.get("k", 0.7))})
 	if n is Node3D:
-		BendLooks.drench(n as Node3D, held)
+		BendLooks.drench(n as Node3D, held, look)
 	return held
 
 

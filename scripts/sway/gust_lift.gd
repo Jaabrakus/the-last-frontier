@@ -79,6 +79,20 @@ var _rng := RandomNumberGenerator.new()
 var _q: PhysicsShapeQueryParameters3D       ## the flight's sweep (made once)
 var _lead_was := Vector3.ZERO               ## the sweep's lead last frame (the sweep runs on from where it ended)
 var _excepted: Array[PhysicsBody3D] = []    ## bodies the stone does not touch while held and flying (its caster, whom it struck)
+## A guard's swing of its flight (begin_swing; the owner, 2026-10-12: "the wind can parry a rock and send back"): the guard it
+## circles, for how long, its radius, the factor it leaves with, 0..1 of it done (-1 none), where it was caught from him (its
+## angle, flat distance and height: it glides from there onto the circle, as BendBolt's swing).
+var _sw_by: Node3D
+var _sw_s := 0.0
+var _sw_r := 1.0
+var _sw_k := 1.0
+var _sw_t := -1.0
+var _sw_a0 := 0.0
+var _sw_r0 := 1.0
+var _sw_h0 := 1.0
+## Wrapped in another element since a guard's swing (sheath: a water Turn's, "water"), and that trail.
+var sheathed := ""
+var _sheath_trail: GPUParticles3D
 
 
 ## Gust's stone data (moves.json gust.stone).
@@ -245,7 +259,10 @@ func _physics_process(dt: float) -> void:
 		Phase.HELD:
 			_held(dt)
 		Phase.FLIGHT:
-			_fly(dt)
+			if _sw_t >= 0.0:
+				_swing(dt)
+			else:
+				_fly(dt)
 
 
 # ---------------------------------------------------------------- held
@@ -312,6 +329,127 @@ func hurl(toward := Vector3.INF) -> void:
 	var sbo := {"node": stone, "dir": velocity, "info": get_meta(&"bend_info", {})}
 	if not (sbk.ends_with(".return") and SbFx.start(self, "flight", by(), "stone_catch/catch", "return_flight", sbo.merged({"el": "earth"}))):
 		SbFx.start(self, "flight", by(), sbk, "flight", sbo)
+
+
+## A guard's swing (BendZone._lift_swing; the owner, 2026-10-12: "the wind can parry a rock and send back"): its flight caught
+## by `by`'s guard on the beat circles him once at his waist over `s` s at `r` m (gliding from where it was caught onto the
+## circle, as BendBolt's swing; nothing met on it), then leaves along his aim at `k` times its speed and blow, his now: a
+## return (BendZone.return_info), his bodies out of its way, whom it struck before fair again. His body turns with it
+## (GuardSpin). The host's word begins it on the others ("lift": net_lift) and tells where and how it left.
+func begin_swing(by: Node3D, s: float, r: float, k: float) -> void:
+	if phase != Phase.FLIGHT or stone == null or not is_instance_valid(stone) or by == null:
+		return
+	_sw_by = by
+	_sw_s = maxf(s, 0.05)
+	_sw_r = r
+	_sw_k = k
+	_sw_t = 0.0
+	var off := stone.global_position - by.global_position
+	_sw_a0 = atan2(off.x, off.z)
+	_sw_r0 = clampf(Vector2(off.x, off.z).length(), 0.3, 3.0)
+	_sw_h0 = off.y
+	var bc := BendCaster.of(by)
+	if bc != null and bc.valid():
+		caster = bc
+		_ex = bc.exclude()
+		if stone is CollisionObject3D:
+			_ex.append((stone as CollisionObject3D).get_rid())
+	_except(by)
+	hit = {}
+	set_meta(&"bend_info", BendZone.return_info(get_meta(&"bend_info", {}), by, stone.global_position, k))
+	GuardSpin.follow(by, self)
+	NetSpells.word(["lift", stone, {"sw": [by, s, r, k], "p": stone.global_position, "heated": heated, "sheath": sheathed,
+			"pack": String(stone.get_meta(FormStone.PACK_META, "")), "info": get_meta(&"bend_info", {})}])
+
+
+func swinging() -> bool:
+	return _sw_t >= 0.0
+
+
+## Where its stone is now (GuardSpin's hand reaches after it; INF gone) and how far through its swing (0..1; -1 none).
+func swing_point() -> Vector3:
+	return stone.global_position if stone != null and is_instance_valid(stone) else Vector3.INF
+
+
+func swing_u() -> float:
+	return _sw_t
+
+
+func _swing(dt: float) -> void:
+	if _sw_by == null or not is_instance_valid(_sw_by):
+		_sw_t = -1.0
+		return
+	_sw_t += dt / _sw_s
+	var u := minf(_sw_t, 1.0)
+	var a := _sw_a0 - TAU * u
+	var e := smoothstep(0.0, BendBolt.SWING_IN, u)
+	var rr := lerpf(_sw_r0, _sw_r, e)
+	var hh := lerpf(_sw_h0, maxf(BendBolt.SWING_WAIST_M, radius + 0.35), e)
+	var at := _sw_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
+	var tan := Vector3(-cos(a), 0.0, sin(a))
+	var b := stone.global_basis.orthonormalized()
+	if kind == "spike":
+		b = _point_along(tan)                    # (its point leads it round)
+	else:
+		b = Basis(tan.cross(Vector3.UP).normalized(), -dt * 14.0) * b      # (rolled along the circle)
+	stone.global_transform = Transform3D(b, at)
+	if _sw_t < 1.0:
+		return
+	_sw_t = -1.0
+	# along his aim, lobbed to meet it against its own drop (its hurl's gravity over the flight there)
+	var to := BendZone.guard_aim(_sw_by, at)
+	var sp := maxf(velocity.length(), 14.0) * _sw_k
+	var dir := (to - at).normalized() if (to - at).length_squared() > 1e-4 else tan
+	var g := float(_hurl_d().get("gravity", 6.0))
+	var t_fly := at.distance_to(to) / maxf(sp, 1.0)
+	velocity = dir * sp + Vector3.UP * minf(0.5 * g * t_fly, sp * 0.3)
+	_fly_t = 0.0
+	_lead_was = Vector3.ZERO
+	BendLooks.burst(at, sheathed if sheathed != "" else ("fire" if heated else "air"), 14, velocity.normalized(), 50.0)
+	NetSpells.word(["lift", stone, {"go": true, "p": at, "v": velocity}])
+
+
+## Wrapped in `k` for the rest of its flight (a water Turn's stone swung round in water: BendZone): that kind's trail on it.
+func sheath(k: String) -> void:
+	if k == "" or k == sheathed or stone == null or not is_instance_valid(stone):
+		return
+	sheathed = k
+	BendLooks.stop_trail(_sheath_trail)
+	_sheath_trail = BendLooks.trail(stone, k, radius)
+	BendLooks.burst(stone.global_position, k, 14, Vector3.UP, 150.0, 2.5, 0.3)
+	if k == "mud":
+		BendZone.muddy_near(stone, stone.global_position)  # (the Turn's own ring of water turns muddy with it)
+
+
+## The host's word on a guard's swing of stone `s`'s flight (another machine's; NetSpells "lift"): `d.sw` begins it here as the
+## host's began (its place, its heat, its water, its matter, its return's info), `d.go` sends it on from where the host's left
+## and at its speed.
+static func net_lift(s: Node3D, d: Dictionary) -> void:
+	if s == null or not is_instance_valid(s) or not s.is_inside_tree():
+		return
+	for l in s.get_tree().get_nodes_in_group(GROUP):
+		var lift := l as GustLift
+		if lift == null or lift.stone != s or lift.phase != Phase.FLIGHT:
+			continue
+		var sw: Array = d.get("sw", [])
+		if not sw.is_empty() and sw[0] is Node3D:
+			s.global_position = d.get("p", s.global_position)
+			if bool(d.get("heated", false)):
+				lift.heat()
+			lift.sheath(String(d.get("sheath", "")))
+			if s is FormStone and String(d.get("pack", "")) != "":
+				s.set_meta(FormStone.PACK_META, String(d.pack))
+				FormStone.pack_look(s as FormStone)
+			lift.begin_swing(sw[0] as Node3D, float(sw[1]), float(sw[2]), float(sw[3]))
+			if d.get("info") is Dictionary:
+				lift.set_meta(&"bend_info", d.info)
+		elif bool(d.get("go", false)):
+			lift._sw_t = -1.0
+			s.global_position = d.get("p", s.global_position)
+			lift.velocity = d.get("v", lift.velocity)
+			lift._fly_t = 0.0
+			lift._lead_was = Vector3.ZERO
+		return
 
 
 ## The point that leads the flight, from the stone's origin (world offset): a spike's (its origin is its foot) most of the
@@ -742,6 +880,12 @@ func _shatter(at: Vector3, n: Vector3) -> void:
 	GatherFx.fall_dust(scn, at + Vector3.UP * 0.4 * k, float(sd.get("dust_m", 1.8)) * k * 0.7)
 	FormEffects.sfx("break", at, 2.0, 0.9 / sqrt(k))
 	FormEffects.sfx("strike", at, -1.0, 0.75)
+	# (a guard's fusion bursts as what it is: mud splats, magma flares)
+	var pack := String(stone.get_meta(FormStone.PACK_META, "")) if stone != null and is_instance_valid(stone) else ""
+	if pack == "mud":
+		BendLooks.burst(at, "mud", int(30 * k), out, 150.0, 5.0 * sqrt(k), 0.45 * k)
+	elif pack == "magma":
+		BendLooks.burst(at, "fire", int(24 * k), out, 150.0, 5.0 * sqrt(k), 0.45 * k)
 	var matter := (stone as FormStone).matter if stone is FormStone else "stone"
 	_chunks(scn, at, out, k, matter, sd)
 	_release_stone()
@@ -774,6 +918,9 @@ static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: Stri
 		var d := (out + side.rotated(out, a) * rng.randf_range(0.4, 1.0)).normalized()
 		var v0 := d * float(sd.get("chunk_mps", 5.5)) * rng.randf_range(0.6, 1.2) + Vector3.UP * float(sd.get("chunk_up_mps", 3.5)) * rng.randf_range(0.5, 1.1)
 		var spin := Vector3(rng.randf_range(-9, 9), rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+		# (the first few stay where they land on the deck, broken pieces an earth bender can pull in again: RockDebris)
+		var keep := ar != null and i < RockDebris.KEEP_PER_BURST
+		var fly_s := RockDebris.LAND_S if keep else life
 		var tw := mi.create_tween()
 		tw.tween_method(func(t: float) -> void:
 			if is_instance_valid(mi):
@@ -781,9 +928,21 @@ static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: Stri
 				if ar != null and is_instance_valid(ar) and ar.on_deck(p):
 					p.y = maxf(p.y, ar.deck_y() + ar.floor_at(p) + 0.05)    # (it lands on the deck, a piece, a step)
 				mi.global_position = p
-				mi.rotation = spin * t
-				mi.scale = Vector3.ONE * sz * clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0), 0.0, life, life)
-		tw.tween_callback(mi.queue_free)
+				mi.rotation = spin * (minf(t, 0.35) if keep else t)      # (a kept one stops turning as it lands)
+				mi.scale = Vector3.ONE * sz * (1.0 if keep else clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0)), 0.0, fly_s, fly_s)
+		if keep:
+			tw.tween_callback(func() -> void:
+				if not is_instance_valid(mi):
+					return
+				if is_instance_valid(ar) and ar.on_deck(mi.global_position) \
+						and mi.global_position.y <= ar.deck_y() + ar.floor_at(mi.global_position) + 0.1:
+					var deb := RockDebris.of(scn)
+					if deb != null:
+						deb.lay(mi)
+						return
+				mi.queue_free())
+		else:
+			tw.tween_callback(mi.queue_free)
 
 
 ## The hold broken: it falls where it hangs. In flight too (a Catch, a deflect, a cushion took it: BendZone): it stops there
@@ -825,6 +984,9 @@ func _release_stone() -> void:
 	if _kiln_trail != null:
 		BendLooks.stop_trail(_kiln_trail)        # (Kiln Stone: the heat ends where it lands)
 		_kiln_trail = null
+	if _sheath_trail != null:
+		BendLooks.stop_trail(_sheath_trail)      # (a Turn's water: off where it lands)
+		_sheath_trail = null
 	if stone is PhysicsBody3D and is_instance_valid(stone):
 		for b in _excepted:
 			if is_instance_valid(b):

@@ -220,6 +220,34 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.78, 0.69, 0.56), "c_mid": Color(0.55, 0.47, 0.37), "c_dark": Color(0.32, 0.26, 0.21),
 					"rim_on": 0.0, "glint": 0.0, "c_ink": Color(0.1, 0.07, 0.05)}
+		"magma":
+			# (a magma ball, where earth and fire meet in a guard; the owner 2026-10-12: "if earth parries fire then magma ball and
+			# if fire catches earth then magma ball": the cel liquid's body as molten rock: a dark crust in its shade, the lit
+			# side orange, a yellow-hot rim, bright cracks crawling over it (the flow's crests), a hard glint; slow to swell)
+			m.shader = SHADERS.water
+			p = {"c_shade": Color(0.32, 0.05, 0.02, 1.0), "c_body": Color(1.0, 0.36, 0.05, 1.0), "c_rim": Color(1.0, 0.78, 0.25, 1.0),
+					"c_foam": Color(1.0, 0.92, 0.55, 1.0), "c_ink": Color(0.12, 0.02, 0.0), "ink": 0.5, "flow": Vector2(0.0, -0.22),
+					"nscale": Vector2(2.6, 1.8), "foam": 0.74, "rim": 0.6, "wobble": 0.012}
+		"mud":
+			# (mud, where earth and water meet in a guard; the owner 2026-10-12: "a mud spear or blast that slows", "it needs to
+			# look like mud": the cel liquid as wet mud: dark brown in its shade, a lighter wet rim, pale silty streaks oozing
+			# down it (the flow's crests), the hard wet glint, a slow gloopy swell; opaque)
+			m.shader = SHADERS.water
+			p = {"c_shade": Color(0.17, 0.1, 0.05, 1.0), "c_body": Color(0.34, 0.22, 0.12, 1.0), "c_rim": Color(0.5, 0.36, 0.22, 1.0),
+					"c_foam": Color(0.58, 0.45, 0.3, 1.0), "c_ink": Color(0.05, 0.03, 0.02), "ink": 0.45, "flow": Vector2(0.0, -0.35),
+					"nscale": Vector2(2.4, 1.6), "foam": 0.8, "rim": 0.58, "wobble": 0.025}
+		"mud_strip":
+			# (the muddy water round a stone a water Turn swings (the owner, 2026-10-12: "for the water parry channel i also want
+			# it to turn muddy"): the stream's strip in mud's colours)
+			m.shader = SHADERS.water
+			p = {"mode": 1, "flow": Vector2(-1.6, 0.0), "nscale": Vector2(3.0, 1.0), "foam": 0.82, "rim": 0.55,
+					"c_shade": Color(0.2, 0.12, 0.06, 0.92), "c_body": Color(0.4, 0.27, 0.15, 0.88), "c_rim": Color(0.56, 0.42, 0.27, 0.92),
+					"c_foam": Color(0.66, 0.53, 0.38, 1.0), "c_ink": Color(0.06, 0.03, 0.02)}
+		"drop_mud":
+			# (a drop of mud: the water drop in mud's browns)
+			m.shader = SHADERS.puff
+			p = {"mode": 2, "c_a": Color(0.6, 0.46, 0.3), "c_b": Color(0.38, 0.25, 0.14), "c_c": Color(0.2, 0.12, 0.06),
+					"c_d": Color(0.82, 0.72, 0.58), "c_ink": Color(0.06, 0.03, 0.02), "wobble": 0.12}
 		"bolt":
 			m.shader = SHADERS.bolt
 		"flash":
@@ -536,8 +564,8 @@ static func recipe(key: String) -> Dictionary:
 			pm.color_ramp = fade
 			pm.scale_curve = curve([Vector2(0, 0.5), Vector2(0.25, 1.0), Vector2(1, 1.1)], 1.2)
 			r.amount = 32
-		"drop":
-			r.mat = mat("drop")
+		"drop", "drop_mud":
+			r.mat = mat(key)
 			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.7, Color(1, 1, 1, 0.85)], [1.0, Color(1, 1, 1, 0.0)]])
 			r.amount = 48
 		"spark_fire", "spark_elec", "spark_line":
