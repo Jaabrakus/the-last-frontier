@@ -24,7 +24,11 @@ uniform vec2 grow_k = vec2(0.85, 1.35);
 uniform float deck_fade_m = 0.6;
 uniform float opacity = 0.92;
 uniform float ink = 0.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float warm = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float warm = 0.0;
+#endif
 
 varying float v_seed;
 varying float v_age;

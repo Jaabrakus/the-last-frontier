@@ -652,9 +652,10 @@ func _build_items() -> void:
 	var ct := BroadcastUI.row("06", "Class & talents", _advancement_line(el), el, {"name": "ClassTalents", "badge": "NEW"})
 	ct.pressed.connect(_open_advancement)
 	_items.add_child(ct)
-	var lk := BroadcastUI.row("07", "Your look", "the character creator: face, build and dress", el, {"name": "YourLook"})
-	lk.pressed.connect(_open_look)
-	_items.add_child(lk)
+	if not OS.has_feature("public"):            # (the public web build packs no creator: the default looks)
+		var lk := BroadcastUI.row("07", "Your look", "the character creator: face, build and dress", el, {"name": "YourLook"})
+		lk.pressed.connect(_open_look)
+		_items.add_child(lk)
 	_items.add_child(BroadcastUI.gap(0, 10))
 	_util = HBoxContainer.new()
 	_util.name = "Util"
@@ -666,9 +667,10 @@ func _build_items() -> void:
 	var cr := BroadcastUI.util("09", "Credits")
 	cr.pressed.connect(_open_credits)
 	_util.add_child(cr)
-	var q := BroadcastUI.util("10", "Quit")
-	q.pressed.connect(func() -> void: get_tree().quit())
-	_util.add_child(q)
+	if not OS.has_feature("web"):               # (a browser tab is closed by the browser)
+		var q := BroadcastUI.util("10", "Quit")
+		q.pressed.connect(func() -> void: get_tree().quit())
+		_util.add_child(q)
 	_chain_focus()
 	_lobby_el = el
 
@@ -745,7 +747,7 @@ func _look_from_window(w: AdvancementWindow) -> void:
 	if w.is_pending():
 		w.request_close()
 		return
-	_look_next = true
+	_look_next = not OS.has_feature("public")   # (no creator in the public web build: the tab only closes the window)
 	w.close()
 
 
@@ -1193,7 +1195,7 @@ func _from_world(open: Callable) -> void:
 ## pressing its chip; the number keys 1 to 4 pick the element. The rule line over them is the rule set's own
 ## (MatchSetup.sport_line). The first press in a run with no look saved yet opens the character creator first, then this screen.
 func _open_match() -> void:
-	if not _look_offered and PlayerAppearance.offer_creator(offer_check_run):
+	if not _look_offered and not OS.has_feature("public") and PlayerAppearance.offer_creator(offer_check_run):
 		_look_offered = true
 		_close_panel()
 		# (the character first, then its element: the step after an Accept; Back keeps no look and the setup opens at once)

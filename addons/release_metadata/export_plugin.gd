@@ -39,8 +39,14 @@ func _get_customization_configuration_hash() -> int:
 			FileAccess.get_sha256("res://addons/release_metadata/rights.gd") + FileAccess.get_sha256(Rights.NOTICE_PATH)).hash()
 
 
-func _customize_resource(resource: Resource, _path: String) -> Resource:
+func _customize_resource(resource: Resource, path: String) -> Resource:
 	if not _release:
+		return null
+	# A resource another file only refers to (path "" here, its own file on disk) is customized when that file is exported;
+	# a copy made here would be built into the referring scene instead, packing it twice (2026-10-13: Actor_B.tscn carried a
+	# second 42 MB AnimationLibrary).
+	var own := resource.resource_path
+	if path.is_empty() and own.begins_with("res://") and not own.contains("::"):
 		return null
 	var copy := Policy.copy_resource(resource)
 	if copy != null:

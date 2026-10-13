@@ -13,8 +13,16 @@ uniform float strength = 0.55;
 uniform float flicker = 0.14;
 uniform float back_m = 0.25;
 uniform float deck_fade_m = 0.5;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float glow_k = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float glow_k = 1.0;
+#endif
 
 void vertex() {
 	vec3 c = (VIEW_MATRIX * vec4(MODEL_MATRIX[3].xyz, 1.0)).xyz;

@@ -139,7 +139,7 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 				String(d.get("species", "")), bury)
 	else:
 		r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed, bury, r.matter)
-	r.mesh_instance.set_instance_shader_parameter(&"seed", float(seed % 97))
+	FxParams.put(r.mesh_instance, &"seed", float(seed % 97))
 	r.add_child(r.mesh_instance)
 	# (round 4 LOOKS: your own wall or pillar between the camera and your head, or by the camera, drawn faded; it blocks
 	# all the same: OwnFade, form_matter's fade)
@@ -363,8 +363,8 @@ func _crack(point: Vector3, nrm: Vector3) -> void:
 	mi.mesh = ToonFx.plane()
 	mi.material_override = ToonFx.mat("mark_cracks")
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.set_instance_shader_parameter(&"t", 0.0)
-	mi.set_instance_shader_parameter(&"seed", float(hits) * 3.7 + float(get_instance_id() % 13))
+	FxParams.put(mi, &"t", 0.0)
+	FxParams.put(mi, &"seed", float(hits) * 3.7 + float(get_instance_id() % 13))
 	add_child(mi)
 	var b := Basis(x, face, x.cross(face)).rotated(face, float(hits) * 1.9)
 	var on := global_position + face * (size.z * 0.5 + 0.06)
@@ -518,7 +518,7 @@ class Rubble:
 		for i in N:
 			var mi := MeshInstance3D.new()
 			mi.mesh = mesh
-			mi.set_instance_shader_parameter(&"seed", float(i * 7))
+			FxParams.put(mi, &"seed", float(i * 7))
 			var lp := Vector3(rng.randf_range(-0.45, 0.45) * r.size.x, rng.randf_range(0.3, 0.9) * r.size.y, 0.0)
 			var side := 1.0 if i % 2 == 0 else -1.0
 			ru.add_child(mi)

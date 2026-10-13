@@ -49,7 +49,11 @@ uniform float ao_k = 0.75;
 uniform vec3 sky_amb = vec3(0.2, 0.24, 0.3);
 uniform vec3 deck_amb = vec3(0.16, 0.13, 0.09);
 
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float pose_id = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float pose_id = 0.0;
+#endif
 
 varying vec3 v_cloth;
 varying vec4 v_custom;

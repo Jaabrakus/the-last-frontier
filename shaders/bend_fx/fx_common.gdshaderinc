@@ -19,7 +19,11 @@ uniform float near_alpha = 0.25;
 uniform float range_from_m = 14.0;
 uniform float range_full_m = 25.0;
 uniform float range_max = 2.2;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float own_fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float own_fade = 1.0;
+#endif
 
 // 0 below `edge`, 1 above, blended over about a pixel (no stairs on the cut).
 float aastep(float edge, float v) {

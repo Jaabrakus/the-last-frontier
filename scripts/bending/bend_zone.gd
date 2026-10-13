@@ -296,7 +296,7 @@ func _look() -> void:
 			var mi := _part(look, ToonFx.sphere(24), ToonFx.mat("bubble"))
 			mi.scale = Vector3.ONE * radius
 			mi.position = Vector3.UP * 1.0
-			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "water", Vector3(radius * 0.7, 0.05, radius * 0.7), 14, 0.6, 1.6, 0.12))
 			_grow(look, Vector3.ONE * 0.05)
 		"air_shield":
@@ -307,8 +307,8 @@ func _look() -> void:
 				b.scale = Vector3.ONE * radius * (1.0 - i * 0.07)
 				b.position = Vector3.UP * (0.3 + i * 0.62)
 				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
-				b.set_instance_shader_parameter(&"seed", i * 0.37)
-				b.set_instance_shader_parameter(&"band_w", own_band_w())
+				FxParams.put(b, &"seed", i * 0.37)
+				FxParams.put(b, &"band_w", own_band_w())
 			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
 			_grow(look, Vector3.ONE * 0.2)
 		"water_wall":
@@ -318,7 +318,7 @@ func _look() -> void:
 			bm.subdivide_height = 10
 			var mi := _part(look, bm, ToonFx.mat("water_wall"))
 			mi.position = Vector3.UP * size.y * 0.5
-			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			var crest := BendLooks.emitter(self, "water", Vector3(size.x * 0.48, 0.05, size.z * 0.3), 40, 0.6, 2.4, 0.12)
 			var foam := BendLooks.emitter(self, "foam", Vector3(size.x * 0.48, 0.05, size.z * 0.35), 22, 0.45, 0.8, 0.32)
 			var foot := BendLooks.emitter(self, "foam", Vector3(size.x * 0.5, 0.05, size.z * 0.5), 18, 0.6, 0.4, 0.4)
@@ -337,8 +337,8 @@ func _look() -> void:
 			var sc := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
 			sc.scale = Vector3(size.x * 0.62, 1.0, size.z * 0.5 + 0.5)
 			sc.position = Vector3.UP * 0.02
-			sc.set_instance_shader_parameter(&"t", 0.25)
-			sc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(sc, &"t", 0.25)
+			FxParams.put(sc, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			var l := OmniLight3D.new()
 			l.light_color = Color(1.0, 0.55, 0.2)
 			l.light_energy = 2.0
@@ -352,8 +352,8 @@ func _look() -> void:
 			var fr := _part(look, ToonFx.plane(), ToonFx.mat("mark_frost"))
 			fr.scale = Vector3(radius, 1.0, radius)
 			fr.position = Vector3.UP * 0.03
-			fr.set_instance_shader_parameter(&"t", 0.2)
-			fr.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(fr, &"t", 0.2)
+			FxParams.put(fr, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "sparkle", Vector3(radius * 0.7, 0.05, radius * 0.7), 10, 0.8, 0.3, 0.12))
 			_grow(look, Vector3(0.1, 1.0, 0.1))
 		"gas":
@@ -368,9 +368,9 @@ func _look() -> void:
 			_fx.append(cl)
 			if kind == "smoke" and cl != null:
 				# (round 4: lit warm from under by the flame that made it, for its first warm_s)
-				cl.set_instance_shader_parameter(&"warm", 1.0)
+				FxParams.put(cl, &"warm", 1.0)
 				var tw := cl.create_tween()
-				tw.tween_method(func(v: float) -> void: cl.set_instance_shader_parameter(&"warm", v), 1.0, 0.0,
+				tw.tween_method(func(v: float) -> void: FxParams.put(cl, &"warm", v), 1.0, 0.0,
 						maxf(float(ToonFx.looks("smoke").get("warm_s", 0.5)), 0.05))
 		"steam":
 			var st := BendLooks.emitter(self, "steam", Vector3(radius * 0.7, 0.6, radius * 0.7), 30, minf(life_s, 1.4), 1.2, 1.3)
@@ -384,7 +384,7 @@ func _look() -> void:
 				b.scale = Vector3.ONE * radius * (0.32 + 0.55 * f)
 				b.position = Vector3(sin(i * 1.7) * 0.1 * f, 0.05 + i * 0.38, cos(i * 1.3) * 0.1 * f)
 				b.rotation = Vector3(0.08 * sin(i * 2.1), i * 0.9, 0.08 * cos(i * 1.4))
-				b.set_instance_shader_parameter(&"seed", i * 0.29)
+				FxParams.put(b, &"seed", i * 0.29)
 			var pivot := Node3D.new()
 			pivot.name = "Whirl"
 			add_child(pivot)
@@ -407,7 +407,7 @@ func _look() -> void:
 				var b := _part(look, ToonFx.band_mesh(1.0, 0.7, 0.4), ToonFx.mat("wind_band_fast"))
 				b.scale = Vector3.ONE * radius * (1.0 - i * 0.35)
 				b.position = Vector3.UP * (0.3 + i * 0.5)
-				b.set_instance_shader_parameter(&"seed", i * 0.5)
+				FxParams.put(b, &"seed", i * 0.5)
 			_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 0.6, radius), 24, 0.6, -1.0, 0.35))
 		"redirect":
 			# (the Turn: a ring of water spinning up round the guard's waist, drops flung off it; on the guarder only)
@@ -415,7 +415,7 @@ func _look() -> void:
 				var ring := _part(look, ToonFx.band_mesh(1.0, 0.86, 0.22), ToonFx.mat("water_strip"))
 				ring.scale = Vector3(SWING_R, 1.0, SWING_R)
 				ring.position = Vector3.UP * 1.0
-				ring.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+				FxParams.put(ring, &"seed", ToonFx.vis_rng.randf() * 5.0)
 				var tw := ring.create_tween().set_loops()
 				tw.tween_property(ring, "rotation:y", -TAU, 0.45).from(0.0)
 				_fx.append(BendLooks.emitter(self, "water", Vector3(SWING_R, 0.1, SWING_R), 12, 0.5, 1.2, 0.1))
@@ -440,7 +440,7 @@ func _look() -> void:
 				b.scale = Vector3(size.x * 0.5, size.y * 0.21, 0.14)
 				b.position = Vector3(0.0, size.y * (0.1 + 0.19 * i), 0.0)
 				b.rotation = Vector3(0.0, 0.0, 0.08 * (1.0 if i % 2 == 0 else -1.0))
-				b.set_instance_shader_parameter(&"seed", i * 0.41)
+				FxParams.put(b, &"seed", i * 0.41)
 			var foot := BendLooks.emitter(self, "dust", Vector3(size.x * 0.5, 0.1, size.z * 0.6), 22, 0.7, 1.4, 0.4)
 			var air := BendLooks.emitter(self, "air", Vector3(size.x * 0.5, size.y * 0.45, size.z * 0.4), 20, 0.5, 2.0, 0.35)
 			if air != null:
@@ -452,21 +452,21 @@ func _look() -> void:
 			var wet := _part(look, ToonFx.plane(), ToonFx.mat("mark_wet"))
 			wet.scale = Vector3(radius, 1.0, radius)
 			wet.position = Vector3.UP * 0.03
-			wet.set_instance_shader_parameter(&"t", 0.15)
-			wet.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(wet, &"t", 0.15)
+			FxParams.put(wet, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_grow(look, Vector3(0.2, 1.0, 0.2))
 		"mud":
 			# (the Mud set's pool: the scorch mark's browns with no embers, a wet sheen over them, slow bubbles rising)
 			var mud := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
 			mud.scale = Vector3(radius, 1.0, radius)
 			mud.position = Vector3.UP * 0.03
-			mud.set_instance_shader_parameter(&"t", 0.4)
-			mud.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(mud, &"t", 0.4)
+			FxParams.put(mud, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			var sheen := _part(look, ToonFx.plane(), ToonFx.mat("mark_wet"))
 			sheen.scale = Vector3(radius * 0.85, 1.0, radius * 0.85)
 			sheen.position = Vector3.UP * 0.035
-			sheen.set_instance_shader_parameter(&"t", 0.15)
-			sheen.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(sheen, &"t", 0.15)
+			FxParams.put(sheen, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_fx.append(BendLooks.emitter(self, "foam", Vector3(radius * 0.6, 0.02, radius * 0.6), 6, 1.2, 0.25, 0.12))
 			_grow(look, Vector3(0.2, 1.0, 0.2))
 
@@ -554,8 +554,8 @@ func _flames(look: Node3D) -> void:
 	mmi.material_override = ToonFx.mat("flame" if kind == "fire_wall" else "flame_low")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.extra_cull_margin = 1.0
-	mmi.set_instance_shader_parameter(&"seed", rng.randf() * 10.0)
-	mmi.set_instance_shader_parameter(&"grow", 0.0)
+	FxParams.put(mmi, &"seed", rng.randf() * 10.0)
+	FxParams.put(mmi, &"grow", 0.0)
 	look.add_child(mmi)
 	var gl := MeshInstance3D.new()
 	gl.name = "Glow"
@@ -565,10 +565,10 @@ func _flames(look: Node3D) -> void:
 	var gh := size.y if kind == "fire_wall" else 0.6
 	gl.scale = Vector3(size.x * 1.25, gh * 1.5, 1.0)
 	gl.position = Vector3.UP * gh * 0.45
-	gl.set_instance_shader_parameter(&"seed", rng.randf() * 10.0)
+	FxParams.put(gl, &"seed", rng.randf() * 10.0)
 	look.add_child(gl)
 	var tw := mmi.create_tween()
-	tw.tween_method(func(v: float) -> void: mmi.set_instance_shader_parameter(&"grow", v), 0.0, 1.0, 0.3) \
+	tw.tween_method(func(v: float) -> void: FxParams.put(mmi, &"grow", v), 0.0, 1.0, 0.3) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 

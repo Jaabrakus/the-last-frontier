@@ -18,11 +18,31 @@ uniform vec3 c_ink : source_color = vec3(0.08, 0.06, 0.06);
 uniform float ink = 0.0;
 uniform float glow = 2.5;
 uniform float rays = 8.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float t = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float t = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform vec4 tint : source_color = vec4(1.0, 0.6, 0.2, 1.0);  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform vec4 tint : source_color = vec4(1.0, 0.6, 0.2, 1.0);
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform vec4 tint2 : source_color = vec4(1.0, 0.9, 0.6, 1.0);  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform vec4 tint2 : source_color = vec4(1.0, 0.9, 0.6, 1.0);
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float range_on = 0.0;
+#endif
 
 void vertex() {
 	if (mode == 0 || mode == 3 || mode == 4) {

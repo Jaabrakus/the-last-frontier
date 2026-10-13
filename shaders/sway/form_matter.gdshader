@@ -35,10 +35,18 @@ uniform float bump = 1.0;
 uniform float wet = 0.0;
 uniform float stones = 0.0;
 uniform float top_k = 0.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
 // Round 4 (LOOKS; scripts/fx/own_fade.gd): your own wall between the camera and your head, or by the camera, drawn at
 // `fade` in a screen-door (no sorting; a look only). 1: whole (everyone else's, the open world's).
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float fade = 1.0;
+#endif
 
 varying vec3 v_obj;
 varying vec3 v_onrm;

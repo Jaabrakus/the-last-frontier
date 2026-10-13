@@ -304,7 +304,7 @@ func _build(sd: Dictionary, ox: float, oz: float, top_y: float, sides: Array, sk
 			mi.name = POSES[p].capitalize().replace(" ", "") + ("Far" if far else "")
 			mi.multimesh = mm
 			mi.material_override = material
-			mi.set_instance_shader_parameter(&"pose_id", float(p))
+			FxParams.put(mi, &"pose_id", float(p))
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 			mi.extra_cull_margin = 0.6               # (the shader stands them up and waves their arms past the mesh's box)

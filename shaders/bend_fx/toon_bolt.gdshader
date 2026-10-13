@@ -12,7 +12,11 @@ uniform vec3 c_ink : source_color = vec3(0.16, 0.08, 0.38);
 uniform float ink = 0.0;
 uniform float glow = 5.0;
 uniform float sheath_glow = 1.25;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float fade = 1.0;
+#endif
 
 void vertex() {
 	vec3 c = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;

@@ -146,7 +146,7 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			var mi := _mesh(parent, ToonFx.sphere(16), ToonFx.mat("water"))
 			mi.scale = Vector3(r * 1.0, r * 1.0, r * (2.0 if long else 1.4))
 			mi.position = Vector3(0.0, 0.0, r * 0.35)
-			mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+			FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_core(mi)
 			_shadow(parent, "water", r, Vector3(1.0, 1.0, 2.0 if long else 1.4), mi.position)
 		"ice":
@@ -170,7 +170,7 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 					b.scale = Vector3.ONE * r * (1.25 - i * 0.18)
 					b.rotation = Vector3(0.5 + i * 0.9, i * 1.3, 0.35 * i)
 					b.position = -b.basis.y.normalized() * 0.25 * b.scale.y
-					b.set_instance_shader_parameter(&"seed", i * 0.31)
+					FxParams.put(b, &"seed", i * 0.31)
 					_core(b)
 				var core := _mesh(parent, ToonFx.sphere(12), ToonFx.mat("bubble"))
 				core.scale = Vector3.ONE * r * 0.55
@@ -179,8 +179,8 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 		"lightning":
 			var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
 			o.scale = Vector3.ONE * r * 3.0
-			o.set_instance_shader_parameter(&"tint", ELEC)
-			o.set_instance_shader_parameter(&"tint2", Color(0.8, 0.9, 1.0))
+			FxParams.put(o, &"tint", ELEC)
+			FxParams.put(o, &"tint2", Color(0.8, 0.9, 1.0))
 			_core(o)
 		_:
 			var mi := MeshInstance3D.new()
@@ -209,9 +209,9 @@ static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 		return
 	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
 	o.scale = Vector3.ONE * r * 1.9
-	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
-	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12))
-	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04))
+	FxParams.put(o, &"tint2", Color(1.0, 0.7, 0.12))
+	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	_core(o)
 	_shadow(parent, "fire", r, Vector3(0.4, 1.2, 1.2), Vector3.ZERO)
 	_glow(parent, Vector3.ONE * r * 5.5, Vector3.ZERO)
@@ -233,7 +233,7 @@ static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 	mmi.multimesh = mm
 	mmi.material_override = ToonFx.mat("flame")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	mmi.extra_cull_margin = r * 4.0
 	parent.add_child(mmi)
 	if live():
@@ -259,13 +259,13 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 	# (flat across its flight, tipped up a little: the kick's sweep; fire's High Kick stood up into a rising sweep, the move
 	# review 2026-10-12: the flame went out flat, not like an uppercut)
 	arc.rotation = Vector3(1.05 if kind == "fire" else 0.35, 0.0, 0.0)
-	arc.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(arc, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "orb"))
 	o.scale = Vector3.ONE * w * 0.9
 	_core(o)
-	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
-	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
-	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
+	FxParams.put(o, &"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
+	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	if live() and kind == "fire":
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.58, 0.22)
@@ -290,7 +290,7 @@ static func _air_blade(parent: Node3D, r: float, shape: String) -> void:
 			hook.scale = Vector3.ONE * r * (5.0 - 1.8 * i)
 			hook.rotation = Vector3(0.0, PI, 0.0)            # (its bulge toward the caster: a hook pulling back)
 			hook.position = Vector3(0.0, 0.0, r * 1.2 * i)
-			hook.set_instance_shader_parameter(&"seed", 0.37 * i)
+			FxParams.put(hook, &"seed", 0.37 * i)
 			_core(hook)
 	_air_dust(parent)
 
@@ -314,7 +314,7 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 			band.scale = Vector3.ONE * r * 3.2
 			band.rotation = Vector3(PI / 2.0, float(i) * 1.3, 0.0)
 			band.position = Vector3(0.0, 0.0, -r * (1.0 + 3.5 * float(i)))
-			band.set_instance_shader_parameter(&"seed", float(i) * 0.31)
+			FxParams.put(band, &"seed", float(i) * 0.31)
 		_air_dust(parent)
 		return
 	if kind == "stone":
@@ -413,7 +413,7 @@ static func _molten_body(parent: Node3D, r: float, look: String) -> void:
 	if m != null:
 		mi.scale = Vector3.ONE * rr * 2.1
 		mi.rotation = Vector3(0.0, ToonFx.vis_rng.randf() * TAU, 0.0)
-	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+	FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 	_core(mi)
 	_shadow(parent, "stone", rr, Vector3.ONE, Vector3.ZERO)
 	if look == "magma":
@@ -436,7 +436,7 @@ static func _mud_spear_body(parent: Node3D, r: float) -> void:
 		mi.position = Vector3(0.0, 0.0, rr * 4.0)
 	mi.material_override = ToonFx.mat("mud")
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+	FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 	parent.add_child(mi)
 	_core(mi)
 	_shadow(parent, "stone", rr, Vector3(1.0, 1.0, 4.5), Vector3.ZERO)
@@ -494,7 +494,7 @@ static func _mesh(parent: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
 ## A bolt's drawn core (round 4): it grows at range in its shader (range_on; ToonFx.range_scale), and draws no shadow of
 ## its own (a grown core's shadow would grow too: its shadow is _shadow's).
 static func _core(g: GeometryInstance3D) -> void:
-	g.set_instance_shader_parameter(&"range_on", 1.0)
+	FxParams.put(g, &"range_on", 1.0)
 	g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -520,7 +520,7 @@ static func _glow(parent: Node3D, size: Vector3, at: Vector3) -> MeshInstance3D:
 	g.name = "Glow"
 	g.scale = Vector3(size.x, size.y, 1.0)
 	g.position = at
-	g.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(g, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	return g
 
 
@@ -559,9 +559,9 @@ static func _air_dust(parent: Node3D) -> void:
 static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
 	o.scale = Vector3.ONE * r * 2.5
-	o.set_instance_shader_parameter(&"tint", Color(0.95, 0.22, 0.04))
-	o.set_instance_shader_parameter(&"tint2", Color(1.0, 0.62, 0.08))
-	o.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04))
+	FxParams.put(o, &"tint2", Color(1.0, 0.62, 0.08))
+	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	_core(o)
 	_shadow(parent, "fire", r, Vector3.ONE, Vector3.ZERO)
 	_glow(parent, Vector3.ONE * r * (7.0 if long else 6.0), Vector3(0.0, 0.0, r * 1.2))
@@ -577,7 +577,7 @@ static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 	mmi.multimesh = mm
 	mmi.material_override = ToonFx.mat("flame")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	mmi.extra_cull_margin = r * 7.0
 	parent.add_child(mmi)
 	if live() and r >= 0.15:
@@ -1363,14 +1363,14 @@ static func beam(a: Vector3, b: Vector3, kind := "air") -> void:
 		cm.radial_segments = 10
 		cm.rings = 1
 		var mi := _mesh(root, cm, ToonFx.mat(String(layer[1])))
-		mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+		FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 	# rings of wind along it, blown outward as it fades
 	var n := clampi(int(length / 2.5), 3, 12)
 	for i in n:
 		var band := _mesh(root, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
 		band.position = Vector3(0.0, lerpf(-length * 0.5 + 0.6, length * 0.5, (float(i) + 0.5) / float(n)), 0.0)
 		band.scale = Vector3.ONE * 0.22
-		band.set_instance_shader_parameter(&"seed", float(i) * 0.37)
+		FxParams.put(band, &"seed", float(i) * 0.37)
 		var bt := band.create_tween()
 		bt.tween_property(band, ^"scale", Vector3.ONE * 0.55, BEAM_S)
 	var tw := root.create_tween()
@@ -1531,15 +1531,15 @@ class SbBolt:
 		left = flickers - 1
 		on = true
 		visible = true
-		set_instance_shader_parameter(&"fade", 1.0)
-		set_instance_shader_parameter(&"len_m", maxf(a.distance_to(b), 0.05))
-		set_instance_shader_parameter(&"width_k", width_k)
+		FxParams.put(self, &"fade", 1.0)
+		FxParams.put(self, &"len_m", maxf(a.distance_to(b), 0.05))
+		FxParams.put(self, &"width_k", width_k)
 		_build()
 		set_process(true)
 
 	func _build() -> void:
 		ToonFx.lightning_strips(mesh as ImmediateMesh, a, b)
-		set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf())
+		FxParams.put(self, &"seed", ToonFx.vis_rng.randf())
 		builds += 1
 
 	func _process(dt: float) -> void:
@@ -1554,7 +1554,7 @@ class SbBolt:
 			left -= 1
 			next += life * 0.22
 			_build()
-		set_instance_shader_parameter(&"fade", 1.0 - clampf((t - life * 0.55) / (life * 0.45), 0.0, 1.0))
+		FxParams.put(self, &"fade", 1.0 - clampf((t - life * 0.55) / (life * 0.45), 0.0, 1.0))
 
 
 # ---------------------------------------------------------------- round 2: the tells on the caster (or guarder) only
@@ -1656,8 +1656,8 @@ static func floor_wave_body(parent: Node3D, width: float, height: float) -> Node
 	mmi.material_override = ToonFx.mat("flame_wave")
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.extra_cull_margin = 3.0
-	mmi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
-	mmi.set_instance_shader_parameter(&"grow", 1.0)
+	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(mmi, &"grow", 1.0)
 	holder.add_child(mmi)
 	_glow(holder, Vector3(width * 1.5, top * 1.9, 1.0), Vector3(0.0, top * 0.45, 0.45))
 	var lip := ToonRibbon.new()
@@ -2082,7 +2082,7 @@ class BindLook:
 					var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, deg_to_rad(-35.0 + 35.0 * i))
 					var band := _add(ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"),
 							Transform3D(b.scaled(Vector3.ONE * (0.72 + 0.06 * i)), Vector3.UP * 0.95))
-					band.set_instance_shader_parameter(&"seed", 0.29 * i + rng.randf())
+					FxParams.put(band, &"seed", 0.29 * i + rng.randf())
 			_:
 				# (a whirl of wind round the legs: two of the Wind Ball's own spinning bands, tilted, the wind shader's noise
 				# breaking them up so they read as wind, never as a clean ring drawn round him)
@@ -2090,7 +2090,7 @@ class BindLook:
 					var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, deg_to_rad(10.0 - 20.0 * i))
 					var band := _add(ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"),
 							Transform3D(b.scaled(Vector3.ONE * (0.42 + 0.08 * i)), Vector3.UP * (0.18 + 0.3 * i)))
-					band.set_instance_shader_parameter(&"seed", 0.31 * i + rng.randf())
+					FxParams.put(band, &"seed", 0.31 * i + rng.randf())
 		_pose(0.0)
 
 	func _arcs() -> void:
@@ -2120,7 +2120,7 @@ class BindLook:
 					p.transform = Transform3D(xf.basis.scaled(Vector3.ONE * maxf(k * (1.0 - 0.8 * g), 0.01)), xf.origin)
 				_:
 					p.transform = Transform3D(xf.basis.rotated(Vector3.UP, t * (9.0 if i % 2 == 0 else -7.0)), xf.origin)
-					p.set_instance_shader_parameter(&"fade", 1.0 - g)
+					FxParams.put(p, &"fade", 1.0 - g)
 
 	func _process(dt: float) -> void:
 		t += dt
@@ -2476,8 +2476,8 @@ class Charge:
 		_glow.mesh = ToonFx.quad()
 		_glow.material_override = ToonFx.mat("orb")
 		_glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_glow.set_instance_shader_parameter(&"tint", SB_VIOLET if _arcs else ELEC)
-		_glow.set_instance_shader_parameter(&"tint2", SB_LAVENDER if _arcs else Color(0.85, 0.92, 1.0))
+		FxParams.put(_glow, &"tint", SB_VIOLET if _arcs else ELEC)
+		FxParams.put(_glow, &"tint2", SB_LAVENDER if _arcs else Color(0.85, 0.92, 1.0))
 		_glow.scale = Vector3.ONE * 0.05
 		add_child(_glow)
 
@@ -2601,7 +2601,7 @@ class HeldSpear:
 	func _build() -> void:
 		_shaft = BendLooks._mesh(self, ToonFx.sphere(16), ToonFx.mat("water"))
 		_shaft.rotation.x = -PI / 2.0                 # (the sphere's poles, its flow's way, along the spear)
-		_shaft.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+		FxParams.put(_shaft, &"seed", ToonFx.vis_rng.randf() * 5.0)
 		# (the head a cone of the same water, its point ahead: it is water until it leaves the hands)
 		if _cone == null:
 			var cm := CylinderMesh.new()
@@ -2613,7 +2613,7 @@ class HeldSpear:
 			_cone = cm
 		_head = BendLooks._mesh(self, _cone, ToonFx.mat("water"))
 		_head.rotation.x = -PI / 2.0                  # (its point, the cone's top, ahead)
-		_head.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 5.0)
+		FxParams.put(_head, &"seed", ToonFx.vis_rng.randf() * 5.0)
 		_drips = BendLooks.emitter(self, "water", Vector3(0.025, 0.025, 0.3), 7, 0.4, -0.3, 0.045)
 		_glint = BendLooks._mesh(self, ToonFx.quad(), ToonFx.mat("star_still"))
 		_glint.visible = false

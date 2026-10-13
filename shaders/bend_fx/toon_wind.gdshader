@@ -24,10 +24,26 @@ uniform float speed = 1.6;
 uniform vec2 nscale = vec2(3.0, 0.6);
 uniform float streak = 0.5;
 uniform float glow = 1.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float fade = 1.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float band_w = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float band_w = 1.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float range_on = 0.0;
+#endif
 
 void vertex() {
 	vec3 cam = CAMERA_POSITION_WORLD;

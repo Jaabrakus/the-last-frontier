@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>$GODOT_PROJECT_NAME</title>
+		<!-- Tidebreak's web page (tools/web/shell.html, the Web Public preset's custom shell). The game's pack comes in parts
+		     (tools/web/split_pck.py: Reddit takes files up to 100 MB, each upload within 30 s): index.pck.parts.json lists
+		     them; they are fetched, joined in memory and handed to the engine as index.pck. Without the list (a build not
+		     split yet) the pack loads whole, as Godot's own page does. -->
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: #e8eef2;
+	background-color: #0b1418;
+	overflow: hidden;
+	touch-action: none;
+	font-family: 'Noto Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	background: #0b1418 center / cover no-repeat;
+	padding-bottom: 9vh;
+	gap: 0.75rem;
+}
+
+#status-bar {
+	width: min(28rem, 80vw);
+	height: 0.4rem;
+	border-radius: 0.2rem;
+	background: rgba(255, 255, 255, 0.16);
+	overflow: hidden;
+}
+
+#status-fill {
+	height: 100%;
+	width: 0%;
+	background: #7fd3e6;
+	transition: width 0.2s linear;
+}
+
+#status-text {
+	font-size: 0.9rem;
+	letter-spacing: 0.04em;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+	font-variant-numeric: tabular-nums;
+}
+
+#status-notice {
+	display: none;
+	max-width: min(32rem, 86vw);
+	background-color: #4a2a33;
+	border: 1px solid #9b3943;
+	border-radius: 0.5rem;
+	padding: 1rem;
+	line-height: 1.35;
+	text-align: center;
+	white-space: pre-line;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<div id="status-notice"></div>
+			<div id="status-bar"><div id="status-fill"></div></div>
+			<div id="status-text">Loading</div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const status = document.getElementById('status');
+	const fill = document.getElementById('status-fill');
+	const text = document.getElementById('status-text');
+	const notice = document.getElementById('status-notice');
+	status.style.backgroundImage = 'url("$GODOT_SPLASH")';
+
+	const exe = GODOT_CONFIG['executable'];
+	const pack = GODOT_CONFIG['mainPack'] || (exe + '.pck');
+	// Bytes so far / in all, of the engine (wasm) and the pack.
+	const got = { wasm: 0, pack: 0 };
+	const total = { wasm: (GODOT_CONFIG['fileSizes'] || {})[exe + '.wasm'] || 0, pack: 0 };
+
+	function show() {
+		const all = total.wasm + total.pack;
+		const now = got.wasm + got.pack;
+		if (all > 0) {
+			fill.style.width = Math.min(100, (100 * now) / all).toFixed(1) + '%';
+			text.textContent = 'Loading  ' + (now / 1048576).toFixed(0) + ' / ' + (all / 1048576).toFixed(0) + ' MB';
+		}
+	}
+
+	function fail(err) {
+		console.error(err);
+		notice.textContent = (err instanceof Error) ? err.message : String(err || 'Something went wrong while loading.');
+		notice.style.display = 'block';
+		text.textContent = '';
+	}
+
+	// One part, with its bytes counted as they come; tried again (3 times in all) when the network drops it.
+	async function fetchPart(url, size, tries) {
+		let seen = 0;
+		try {
+			const res = await fetch(url);
+			if (!res.ok) {
+				throw new Error(url + ': ' + res.status);
+			}
+			const reader = res.body.getReader();
+			const chunks = [];
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) {
+					break;
+				}
+				chunks.push(value);
+				seen += value.length;
+				got.pack += value.length;
+				show();
+			}
+			if (seen !== size) {
+				throw new Error(url + ': ' + seen + ' bytes of ' + size);
+			}
+			return chunks;
+		} catch (err) {
+			got.pack -= seen;
+			if (tries > 1) {
+				return fetchPart(url, size, tries - 1);
+			}
+			throw err;
+		}
+	}
+
+	// The pack from its parts (three at a time), joined in one buffer: null when the build has no parts list.
+	async function loadParts() {
+		let list;
+		try {
+			const res = await fetch(pack + '.parts.json', { cache: 'no-cache' });
+			if (!res.ok) {
+				return null;
+			}
+			list = await res.json();
+		} catch (err) {
+			return null;
+		}
+		total.pack = list.size;
+		show();
+		const out = new Uint8Array(list.size);
+		let next = 0;
+		async function worker() {
+			while (next < list.parts.length) {
+				const i = next++;
+				const p = list.parts[i];
+				const chunks = await fetchPart(p.file, p.size, 3);
+				let at = p.offset;
+				for (const c of chunks) {
+					out.set(c, at);
+					at += c.length;
+				}
+			}
+		}
+		await Promise.all([worker(), worker(), worker()]);
+		return out;
+	}
+
+	// The mouse held by the game (Input.MOUSE_MODE_CAPTURED): a browser locks the pointer only while it handles a click or a
+	// key, and Godot asks once, when the game says so (a match starting: no click then), so the ask is kept here and made
+	// again at the next click or key. Esc (the browser's own key out of the lock) and the game letting go drop it.
+	const canvasEl = document.getElementById('canvas');
+	let wantLock = false;
+	let gameExit = false;
+	const lockNow = HTMLCanvasElement.prototype.requestPointerLock;
+	const exitNow = Document.prototype.exitPointerLock;
+	function lock() {
+		try {
+			const p = lockNow.call(canvasEl);
+			if (p && p.catch) {
+				p.catch(() => {});
+			}
+		} catch (err) {
+			// (no lock now: the next click asks again)
+		}
+	}
+	if (lockNow && exitNow) {
+		canvasEl.requestPointerLock = function () {
+			wantLock = true;
+			lock();
+		};
+		document.exitPointerLock = function () {
+			wantLock = false;
+			gameExit = true;
+			exitNow.call(document);
+		};
+		const again = function (e) {
+			if (e.key === 'Escape') {
+				return;
+			}
+			if (wantLock && document.pointerLockElement !== canvasEl) {
+				lock();
+			}
+		};
+		canvasEl.addEventListener('mousedown', again, true);
+		document.addEventListener('keydown', again, true);
+		document.addEventListener('pointerlockchange', function () {
+			if (document.pointerLockElement !== canvasEl && !gameExit) {
+				wantLock = false;               // (Esc: the browser let go; the game's own click asks again)
+			}
+			gameExit = false;
+		});
+	}
+
+	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+	if (missing.length !== 0) {
+		fail('This browser is missing what the game needs:\n' + missing.join('\n'));
+		return;
+	}
+
+	engine.config.update({
+		onProgress: function (current, max) {
+			if (max > 0) {
+				got.wasm = current;
+				total.wasm = max;
+				show();
+			}
+		},
+	});
+	Promise.all([engine.init(exe), loadParts()]).then(([, joined]) => {
+		if (joined === null) {
+			// Not split: the whole pack, the usual way (the engine's progress then counts it with the wasm).
+			return engine.preloadFile(pack, pack);
+		}
+		// (its ArrayBuffer: preloadFile looks the file up in fileSizes by its argument, and a Uint8Array as a key is
+		// turned into a string of every byte)
+		return engine.preloadFile(joined.buffer, pack);
+	}).then(() => {
+		text.textContent = 'Starting';
+		return engine.start({ args: ['--main-pack', pack].concat(GODOT_CONFIG['args'] || []) });
+	}).then(() => {
+		status.remove();
+	}, fail);
+}());
+		</script>
+	</body>
+</html>

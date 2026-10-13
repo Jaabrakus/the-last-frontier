@@ -80,4 +80,4 @@ func _process(dt: float) -> void:
 	if not is_equal_approx(was, fade):
 		for t in targets:
 			if is_instance_valid(t):
-				t.set_instance_shader_parameter(param, fade)
+				FxParams.put(t, param, fade)

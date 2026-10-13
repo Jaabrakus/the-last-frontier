@@ -38,9 +38,21 @@ uniform float embers = 1.0;
 uniform float deck_fade_m = 0.3;
 // 1: an instance's colour red is its heat (the Kick's rows, a MultiMesh with colours); 0: every tongue whole heat.
 uniform float heat_on = 0.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float grow = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float grow = 1.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float range_on = 0.0;
+#endif
 
 varying float v_seed;
 varying float v_heat;

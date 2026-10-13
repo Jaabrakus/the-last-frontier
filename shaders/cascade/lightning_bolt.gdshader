@@ -67,10 +67,26 @@ uniform float cut_reach = 0.95;
 uniform float core_die = 0.3;                // band_core + (1 - fade) x this: the white core is gone by fade ~0.6
 uniform float sheath_die = 0.5;              // band_sheath + (1 - fade) x this
 uniform float dim_die = 0.25;                // the colours x (1 - (1 - fade) x this)
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;           // 1 -> 0 over the end of its life (the erosion)
+#else
 instance uniform float fade = 1.0;           // 1 -> 0 over the end of its life (the erosion)
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float len_m = 8.0;          // the main stroke's length (metres along a fork)
+#else
 instance uniform float len_m = 8.0;          // the main stroke's length (metres along a fork)
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;           // a new pattern each time the bolt is rebuilt
+#else
 instance uniform float seed = 0.0;           // a new pattern each time the bolt is rebuilt
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float width_k = 1.0;        // the strip's width x this (a short crackle's thin forks)
+#else
 instance uniform float width_k = 1.0;        // the strip's width x this (a short crackle's thin forks)
+#endif
 
 varying float v_along;
 varying float v_thick;

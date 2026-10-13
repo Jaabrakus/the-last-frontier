@@ -73,7 +73,7 @@ static func spike(parent: Node, foot: Vector3, way: Vector3, d: Dictionary, seed
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
 	s.mesh_instance.mesh = FormModels.spike_mesh(s.radius, s.height, 31 + seed % 7, FormModels.BURY_M, p_matter)
-	s.mesh_instance.set_instance_shader_parameter(&"seed", float(seed))
+	FxParams.put(s.mesh_instance, &"seed", float(seed))
 	s.add_child(s.mesh_instance)
 	parent.add_child(s)
 	s.global_transform = s._risen(0.0)
@@ -97,7 +97,7 @@ static func ball(parent: Node, foot: Vector3, d: Dictionary, seed := 0, p_matter
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
 	s.mesh_instance.mesh = FormModels.ball_mesh(s.radius, 41 + seed % 7, p_matter)
-	s.mesh_instance.set_instance_shader_parameter(&"seed", float(seed))
+	FxParams.put(s.mesh_instance, &"seed", float(seed))
 	s.add_child(s.mesh_instance)
 	parent.add_child(s)
 	s.global_transform = s._risen(0.0)
@@ -236,7 +236,7 @@ static func pack_look(s: FormStone) -> void:
 				mi.name = "Mud"
 				mi.mesh = mm
 				mi.material_override = ToonFx.mat(pack)
-				mi.set_instance_shader_parameter(&"seed", float(s.get_instance_id() % 97) * 0.13)
+				FxParams.put(mi, &"seed", float(s.get_instance_id() % 97) * 0.13)
 				if s.kind == "spike":
 					mi.rotation.x = PI / 2.0                 # (its point, -Z, up the spike)
 					mi.scale = Vector3(s.radius * 3.6, s.radius * 3.6, s.height * 0.85)

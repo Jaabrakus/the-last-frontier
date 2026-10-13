@@ -88,7 +88,7 @@ func shoot(key: String, at: Vector3, count: int, dir: Vector3, spread: float, v:
 		pm.angular_velocity_min = -float(opt.ang)
 		pm.angular_velocity_max = float(opt.ang)
 	if (rec.mat as ShaderMaterial).shader == ToonFx.SHADERS.puff:
-		g.set_instance_shader_parameter(&"occl", opt.get("occl", Vector4.ZERO))
+		FxParams.put(g, &"occl", opt.get("occl", Vector4.ZERO))
 	g.lifetime = life
 	g.amount_ratio = clampf(float(count) / float(g.amount), 0.02, 1.0)
 	g.global_transform = Transform3D(opt.get("basis", Basis.IDENTITY), at)
@@ -138,10 +138,10 @@ func play(key: String, xf: Transform3D, life: float, s0: float, s1: float, tint 
 		mesh: Mesh = null) -> MeshInstance3D:
 	var mi := _shape(key, mesh)
 	mi.global_transform = xf.scaled_local(Vector3.ONE * maxf(s0, 0.001))
-	mi.set_instance_shader_parameter(&"t", 0.0)
-	mi.set_instance_shader_parameter(&"tint", tint)
-	mi.set_instance_shader_parameter(&"tint2", tint2)
-	mi.set_instance_shader_parameter(&"seed", ToonFx.vis_rng.randf() * 10.0)
+	FxParams.put(mi, &"t", 0.0)
+	FxParams.put(mi, &"tint", tint)
+	FxParams.put(mi, &"tint2", tint2)
+	FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	mi.visible = true
 	for i in _playing.size():
 		if _playing[i][0] == mi:
@@ -237,7 +237,7 @@ func lightning(a: Vector3, b: Vector3, life := 0.26, flickers := 3) -> void:
 	e.on = true
 	var mi: MeshInstance3D = e.mi
 	mi.visible = true
-	mi.set_instance_shader_parameter(&"fade", 1.0)
+	FxParams.put(mi, &"fade", 1.0)
 	ToonFx.lightning_strips(mi.mesh as ImmediateMesh, a, b)
 
 
@@ -257,7 +257,7 @@ func _bolt_step(e: Dictionary, dt: float) -> void:
 		e.next = float(e.next) + float(e.life) * 0.22
 		ToonFx.lightning_strips(mi.mesh as ImmediateMesh, e.a, e.b)
 	var fade := 1.0 - clampf((float(e.t) - float(e.life) * 0.55) / (float(e.life) * 0.45), 0.0, 1.0)
-	mi.set_instance_shader_parameter(&"fade", fade)
+	FxParams.put(mi, &"fade", fade)
 
 
 # ---------------------------------------------------------------- trails
@@ -323,7 +323,7 @@ func _process(dt: float) -> void:
 			continue
 		p[1] = float(p[1]) + dt
 		var t := clampf(float(p[1]) / float(p[2]), 0.0, 1.0)
-		mi.set_instance_shader_parameter(&"t", t)
+		FxParams.put(mi, &"t", t)
 		if not is_equal_approx(float(p[3]), float(p[4])):
 			var e := 1.0 - pow(1.0 - t, 2.4)
 			mi.global_transform = (p[5] as Transform3D).scaled_local(Vector3.ONE * maxf(lerpf(p[3], p[4], e), 0.001))

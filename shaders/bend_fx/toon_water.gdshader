@@ -24,9 +24,21 @@ uniform float foam = 0.66;
 uniform float rim = 0.52;
 uniform float wobble = 0.0;
 uniform float alpha_mul = 1.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float fade = 1.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float range_on = 0.0;
+#endif
 
 varying vec3 v_side;
 varying vec3 v_wpos;

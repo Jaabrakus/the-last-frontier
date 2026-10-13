@@ -150,7 +150,7 @@ static func spike_burst(from: Node, at: Vector3, dir: Vector3, width := 2.4) -> 
 		if spear != null:
 			mi.mesh = spear
 			mi.material_override = ToonFx.mat("mud")
-			mi.set_instance_shader_parameter(&"seed", rng.randf() * 5.0)
+			FxParams.put(mi, &"seed", rng.randf() * 5.0)
 			mi.rotation.x = PI / 2.0                   # (the spear's point, -Z, up; the mesh about 1.1 m long, 0.4 m thick)
 			var w := 0.8 + 0.4 * big
 			mi.scale = Vector3(w, w, tall / 1.1)

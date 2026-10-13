@@ -26,7 +26,11 @@ uniform float wobble = 0.45;
 uniform float nfreq = 0.55;
 uniform float stretch = 1.0;
 uniform float half_k = 0.5;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform vec4 occl = vec4(0.0);  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform vec4 occl = vec4(0.0);
+#endif
 
 varying float v_seed;
 varying float v_half;

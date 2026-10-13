@@ -18,9 +18,17 @@ uniform float rim = 0.62;
 uniform float rim_on = 1.0;
 uniform float glint = 1.0;
 uniform float glow = 1.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float range_on = 0.0;
+#endif
 // (your own Ice Wall seen through, OwnFade: `fade` in a screen-door as form_matter's; 1 whole, every other use)
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float fade = 1.0;
+#endif
 
 varying vec3 v_wpos;
 

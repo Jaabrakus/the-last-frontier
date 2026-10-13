@@ -12,8 +12,16 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabl
 uniform int mode = 0;
 uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
 uniform float ink = 0.0;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float t = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float t = 0.0;
+#endif
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float seed = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
+#else
 instance uniform float seed = 0.0;
+#endif
 
 void fragment() {
 	if (near_cut(VERTEX, FRAGCOORD.xy)) {
