@@ -1570,6 +1570,156 @@ const GUARD_SOUNDS := {"earth": [&"guard_earth_clean", &"stone_catch"], "water":
 ## A guard's result on the guarder `body` (BendZone.report): perfect, a bright flash and a sharp crack ring round his chest
 ## in his element's colours, stars and the element's own bits flung off, his element's clean sound; late, a smaller puff and
 ## its late sound; whiff, a dull puff at his hands, no sound.
+# ---------------------------------------------------------------- a hit's impact
+## A launch landed on `n` (BendImpact.on_hit, after its hit-stop is set; testers 2026-10-13: "the hits feel like they have no
+## impact"): `k` 0..1 how hard (the hold's own scale), `v` the launch, `hold` the hit-stop (s), `el` the hitter's element (its
+## tint; "" white). Visual only, each part's numbers in data/ring/feel.json "impact":
+##   the flash    the struck one's body lit white over his own look for the hold and flash_tail_s after it (HitFlash: a
+##                material_overlay, put back after)
+##   the spark    at his chest: a hot flash, a ring flat to the blow and sharp streaks thrown on along it, more and bigger
+##                the harder (hit_spark)
+##   the trail    a launch of trail_min_mps or more leaves puffs behind him for trail_s once he flies (LaunchTrail)
+## Nothing touches anyone's aim, camera turn, movement or lock.
+static func hit_impact(n: Node3D, v: Vector3, k: float, hold: float, el: String, cfg: Dictionary) -> void:
+	if n == null or not is_instance_valid(n) or not n.is_inside_tree() or not live():
+		return
+	if bool(cfg.get("flash", true)):
+		HitFlash.begin(n, hold + float(cfg.get("flash_tail_s", 0.06)), lerpf(float(cfg.get("flash_min", 0.55)), 1.0, k))
+	if bool(cfg.get("spark", true)):
+		hit_spark(n.global_position + Vector3.UP * 1.15, v, k, el, float(cfg.get("spark_k", 1.0)))
+	if v.length() >= float(cfg.get("trail_min_mps", 11.0)):
+		LaunchTrail.begin(n, hold, float(cfg.get("trail_s", 0.4)), el)
+
+
+## The tint of a hitter of element `el` on a hit's spark (white hot at its heart either way).
+static func hit_tint(el: String) -> Color:
+	match el:
+		"fire":
+			return FIRE_HOT
+		"water":
+			return FOAM
+		"earth":
+			return DUST_LIGHT
+		"air":
+			return AIR
+	return Color(1.0, 0.95, 0.85)
+
+
+## A hit's spark at `at` (see hit_impact): `k` 0..1 how hard, `v` the blow's way, `size_k` the whole of it scaled.
+static func hit_spark(at: Vector3, v: Vector3, k: float, el: String, size_k := 1.0) -> void:
+	var pool := _pool()
+	if pool == null:
+		return
+	var d := v.normalized() if v.length_squared() > 1e-6 else Vector3.UP
+	var tint := hit_tint(el)
+	var s := lerpf(0.7, 1.5, k) * size_k
+	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.1, 0.5 * s, 1.6 * s, Color.WHITE, tint)
+	# (the ring faces the blow: its plane across the way the hit drives him)
+	var up := d.cross(Vector3.RIGHT if absf(d.dot(Vector3.RIGHT)) < 0.9 else Vector3.FORWARD).normalized()
+	var ring_b := Basis(up.cross(d).normalized(), d, up)
+	pool.play("ring", Transform3D(ring_b, at), 0.16, 0.3 * s, 2.0 * s, tint, Color.WHITE)
+	pool.shoot("spark_line", at, int(lerpf(8.0, 18.0, k)), d, lerpf(70.0, 50.0, k), Vector2(9.0, 18.0) * lerpf(0.8, 1.3, k),
+			Vector2(0.05, 0.09) * s, 0.2, Vector3.ZERO, 12.0)
+	pool.shoot("star", at, int(lerpf(4.0, 10.0, k)), d, 120.0, Vector2(2.0, 5.0), Vector2(0.16, 0.3) * s, 0.3, Vector3.ZERO, 6.0)
+	pool.light(at, tint.lerp(Color.WHITE, 0.4), lerpf(2.5, 5.0, k), 0.12, lerpf(3.0, 5.0, k))
+
+
+## The struck one's flash (hit_impact): every mesh of his body given the hit flash over its own materials (material_overlay,
+## the one it had put back after), faded from `strength` to nothing over `secs`. A second hit while it shows starts it again.
+class HitFlash:
+	extends Node
+
+	const NODE_NAME := "HitFlash"
+	const SHADER := preload("res://shaders/ring/hit_flash.gdshader")
+	static var _mat: ShaderMaterial = null
+
+	var secs := 0.15
+	var strength := 1.0
+	var t := 0.0
+	## [GeometryInstance3D, the overlay it had]
+	var _meshes: Array = []
+
+	static func begin(body: Node3D, p_secs: float, p_strength: float) -> void:
+		var old := body.get_node_or_null(NODE_NAME) as HitFlash
+		if old != null and not old.is_queued_for_deletion():
+			old.secs = maxf(old.secs - old.t, p_secs)
+			old.t = 0.0
+			old.strength = maxf(old.strength, p_strength)
+			return
+		if _mat == null:
+			_mat = ShaderMaterial.new()
+			_mat.shader = SHADER
+		var f := HitFlash.new()
+		f.name = NODE_NAME
+		f.secs = maxf(p_secs, 0.05)
+		f.strength = p_strength
+		for m in body.find_children("*", "MeshInstance3D", true, false):
+			var mi := m as MeshInstance3D
+			if mi == null or not mi.visible or mi.top_level:
+				continue                               # (what flies with him on its own: a held stone, a trail)
+			f._meshes.append([mi, mi.material_overlay])
+			mi.material_overlay = _mat
+			mi.set_instance_shader_parameter(&"flash", p_strength)
+		body.add_child(f)
+
+	func _process(dt: float) -> void:
+		t += dt
+		var a := strength * (1.0 - smoothstep(0.0, secs, t))
+		for pair: Array in _meshes:
+			if is_instance_valid(pair[0]):
+				(pair[0] as MeshInstance3D).set_instance_shader_parameter(&"flash", a)
+		if t >= secs:
+			queue_free()
+
+	func _exit_tree() -> void:
+		for pair: Array in _meshes:
+			var mi := pair[0] as MeshInstance3D
+			if is_instance_valid(mi) and mi.material_overlay == _mat:
+				mi.material_overlay = pair[1]
+				mi.set_instance_shader_parameter(&"flash", 0.0)
+		_meshes.clear()
+
+
+## A launched one's trail (hit_impact): once his hold is over, puffs left where he flies every STEP_S for `secs`, thinning
+## out; the hitter's tint in them.
+class LaunchTrail:
+	extends Node
+
+	const STEP_S := 0.035
+	var body: Node3D
+	var wait := 0.0
+	var secs := 0.4
+	var t := 0.0
+	var next := 0.0
+	var tint := Color.WHITE
+
+	static func begin(p_body: Node3D, p_wait: float, p_secs: float, el: String) -> void:
+		var lt := LaunchTrail.new()
+		lt.name = "LaunchTrail"
+		lt.body = p_body
+		lt.wait = maxf(p_wait, 0.0)
+		lt.secs = maxf(p_secs, 0.05)
+		lt.tint = BendLooks.hit_tint(el)
+		p_body.get_tree().current_scene.add_child(lt)
+
+	func _process(dt: float) -> void:
+		t += dt
+		if body == null or not is_instance_valid(body) or t > wait + secs:
+			queue_free()
+			return
+		if t < wait or t < next:
+			return
+		next = t + STEP_S
+		var pool := BendLooks._pool()
+		if pool == null:
+			return
+		var u := (t - wait) / secs
+		var at := body.global_position + Vector3.UP * 0.9
+		pool.shoot("puff_air", at, 2, Vector3.UP, 180.0, Vector2(0.1, 0.4), Vector2(0.28, 0.5) * (1.0 - 0.6 * u), 0.45,
+				Vector3.ZERO, 2.0)
+		pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.08, 0.3, 0.6 * (1.0 - u), tint, Color.WHITE)
+
+
 static func guard_result(body: Node3D, el: String, result: String) -> void:
 	var at := body.global_position + Vector3.UP * 1.2
 	var snd: Array = GUARD_SOUNDS.get(el, [&"stone_catch", &"stone_catch"])

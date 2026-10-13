@@ -15,7 +15,9 @@ extends RefCounted
 ##                 was within melee_m of the struck one (the jab string, the Pop, the Slam, kicks: a bolt landing 15 m away
 ##                 holds nothing on its caster). Nobody's movement, aim, camera or lock ever waits: for the player nothing
 ##                 but his pose (spec §3: a hit never touches the camera's turn, the aim or the lock). knock_thud plays at the
-##                 hold's start, its pitch and gain from |v|. Nothing is drawn on anyone. Round 5 (CLIPWIRE): the held pose
+##                 hold's start, its pitch and gain from |v|. Since 2026-10-13 (testers: "the hits feel like they have no
+##                 impact") the impact is drawn on him too, visual only: his flash, the spark, a big launch's trail
+##                 (BendLooks.hit_impact, feel.json "impact"). Round 5 (CLIPWIRE): the held pose
 ##                 is the struck contact pose (own-bend-hit-impact-<side>, by where the hit came from: see "the struck pose"),
 ##                 on the player's visible ring pose too (SwayPose holds by pose_rate as PlayerAnim does).
 ##   the jolt      the owner's "camera kick" is CameraShake.jolt: an offset jolt of the view (h_offset, v_offset) that never
@@ -138,6 +140,11 @@ static func on_hit(n: Node, v: Vector3, by: Node, _info: Dictionary, hitstun_s: 
 	var at := (n as Node3D).global_position + Vector3.UP if n is Node3D else Vector3.INF
 	BendSounds.play(&"knock_thud", at, lerpf(num("hitstop", "thud_db_lo", -6.0), num("hitstop", "thud_db_hi", 2.0), k),
 			lerpf(num("hitstop", "thud_pitch_lo", 1.12), num("hitstop", "thud_pitch_hi", 0.82), k))
+	# the impact drawn on him (testers 2026-10-13: "the hits feel like they have no impact"): his flash, the spark, a big
+	# launch's trail; visual only (BendLooks.hit_impact, feel.json "impact")
+	if n is Node3D:
+		BendLooks.hit_impact(n as Node3D, v, k, hold, BendPoses.element_of(by) if by != null and is_instance_valid(by) else "",
+				block("impact"))
 	# the jolts, on the hold's last frame (they land with the release)
 	var at_t := now + maxf(hold - 1.0 / float(Engine.physics_ticks_per_second), 0.0)
 	var take := mps >= num("jolt", "take_min_mps", 6.0)

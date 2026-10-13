@@ -180,9 +180,10 @@ func _run() -> void:
 	for v: float in [6.0, 12.0, 18.0]:
 		var hs := RingRules.hitstun_of(v)
 		print("METRIC hold_ms_%d=%.1f (hitstun %.0f ms)" % [int(v), BendImpact.hold_for(v, hs) * 1000.0, hs * 1000.0])
-	_expect(absf(BendImpact.hold_for(18.0, 0.81) - 0.11) < 1e-6 and absf(BendImpact.hold_for(5.0, 0.12) - 0.045) < 1e-3
-			and BendImpact.hold_for(3.9, 0.5) == 0.0 and absf(BendImpact.hold_for(18.0, 0.12) - 0.048) < 1e-6,
-			"the hold: 0.11 s at 18 m/s, capped at 0.4 of a 0.12 s stun (0.048), none under 4 m/s")
+	# (feel.json since 2026-10-13, testers' "the hits feel like they have no impact": 0.06-0.16 s, at most half the stun)
+	_expect(absf(BendImpact.hold_for(18.0, 0.81) - 0.16) < 1e-6 and absf(BendImpact.hold_for(5.0, 0.2) - 0.0671) < 1e-3
+			and BendImpact.hold_for(3.9, 0.5) == 0.0 and absf(BendImpact.hold_for(18.0, 0.12) - 0.06) < 1e-6,
+			"the hold: 0.16 s at 18 m/s, 0.067 s at 5 m/s, capped at half a 0.12 s stun (0.06), none under 4 m/s")
 	await _bot_checks()
 	await _player_checks()
 	await _hitter_checks()

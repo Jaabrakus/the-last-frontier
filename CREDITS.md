@@ -14,6 +14,10 @@ Made with the Godot Engine (https://godotengine.org), used under the MIT licence
 - The woolly mammoth, from "Low Poly Ice Age" by Riley Kuhlman (https://rkuhlf-assets.itch.io/ice-age).
 - Recordings mixed into the gathering and impact sounds: "Impact Sounds" and "RPG Audio" by Kenney (Kenney Vleugels, https://www.kenney.nl); "75 CC0 breaking / falling / hit sfx", "100 CC0 metal and wood SFX" and "100 CC0 SFX #2" by rubberduck (https://opengameart.org); "Tree chop, fall, thud" by kheetor (https://opengameart.org/content/tree-chop-fall-thud).
 
+## Effects and motion
+- Some spell effects are built from the particle textures, meshes and effect settings of Spellbreak by Proletariat Inc., including a few files from the Unreal Engine Marketplace pack "VFX_Toolkit_V1" that ship inside Spellbreak's client.
+- Some martial-arts moves (the fire Kick, the High Kick and the air Leap) are retargeted from the Motifect martial arts pack by Motifect, under its licence for commercial use.
+
 ## Type
 Barlow Condensed and Barlow Semi Condensed, by The Barlow Project Authors (https://github.com/jpt/barlow), under the SIL Open Font License 1.1. The licence text is in assets/fonts/barlow/OFL.txt.
 
