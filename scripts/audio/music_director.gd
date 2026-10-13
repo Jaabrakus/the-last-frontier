@@ -159,14 +159,20 @@ static func ensure_bus() -> void:
 	AudioServer.set_bus_send(i, &"Master")
 
 
-## The main menu's music: the main theme, again after a rest. Returns the node (a child of `host`).
+## The main menu's music: Tidebreak's lobby (tidebreak_lobby, 2026-10-13: the lobby is the arena's front door, its music the
+## ring score's, "avatar inspired") when it is rendered, else the main theme; again after a rest. Returns the node (a child of
+## `host`).
 static func play_menu(host: Node) -> MusicDirector:
 	var d := MusicDirector.new()
 	d.name = "MenuMusic"
 	d.mode = Mode.MENU
 	host.add_child(d)
-	d.play(&"main_theme", 0.0, 2.5)
+	d.play(menu_cue(), 0.0, 2.5)
 	return d
+
+
+static func menu_cue() -> StringName:
+	return &"tidebreak_lobby" if M.CUES.has("tidebreak_lobby") else &"main_theme"
 
 
 ## A mission's music (StoryEffects' "music"): `id` once ("" fades what plays); not over a giant's fight.
@@ -236,7 +242,7 @@ func _menu(dt: float) -> void:
 	_menu_wait -= dt
 	if _menu_wait <= 0.0:
 		_menu_wait = -1.0
-		play(&"main_theme", 0.0, 2.5)
+		play(menu_cue(), 0.0, 2.5)
 
 
 ## What the giants want, and where the player is, every SCAN_S.

@@ -33,4 +33,5 @@ const CUES := {
 	"ring_sting_sudden_death": {"path": "res://audio/music/ring_sting_sudden_death.wav", "bpm": 132.0, "beats": 4, "length": 6.011, "loop_start": -1.0000},
 	"story_home": {"path": "res://audio/music/story_home.wav", "bpm": 84.0, "beats": 3, "length": 41.459, "loop_start": -1.0000},
 	"story_sorrow": {"path": "res://audio/music/story_sorrow.wav", "bpm": 56.0, "beats": 4, "length": 74.184, "loop_start": -1.0000},
+	"tidebreak_lobby": {"path": "res://audio/music/tidebreak_lobby.wav", "bpm": 84.0, "beats": 4, "length": 68.571, "loop_start": 0.0000},
 }
