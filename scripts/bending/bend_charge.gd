@@ -11,8 +11,10 @@ extends Node3D
 ##   water  as air's, in water (the owner, 2026-10-12: "water gathering is like trash it should be more fluid like maybe
 ##          smoke water", "the water gather should be like air", "we want the water to gather where the attack is going to
 ##          be"): thin wisps of water coil and spiral up round the body, a blue mist swirling with them, then wind tight round
-##          the limb; the Geyser's gathers on the deck at his feet instead, a low whirl closing in, where it is sent from
-##          (_water_on_deck); drops shake off the wisps
+##          the limb; the Geyser's flows out along the deck to where it will rise and gathers there (then: "have it charge
+##          where the spells are going to be or let it flow there"): from before his feet to the cast's own place as the
+##          lock fills (_water_spot: the foe he tracks, else the aim's ground, within its reach), a low whirl closing in;
+##          cast, the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops shake off
 ##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
 ##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
 ##   earth  stones lift off the deck round the feet one by one, circle the body, then gather round the hands or the foot; a
@@ -42,6 +44,9 @@ const FALLBACK := {"l_palm": Vector3(-0.22, 1.12, -0.32), "r_palm": Vector3(0.22
 const LIGHT_RANGE := 2.6
 ## The share of the lock's level over which the element goes from round the body to the limb.
 const CHANNEL := Vector2(0.3, 0.85)
+## Water: a Geyser's water flowed out to its place while it charged (marked on the body as it is cast, BendStatus.now()):
+## main's BendEffects.spout then sends none from his feet (BendLooks.geyser_send).
+const WATER_SENT_META := &"bend_water_sent"
 ## Water: its wisps' width and colours (air's strip in water: a pale blue body, a deeper blue edge, a navy line).
 const WISP_W := 0.08
 const WISP_MAIN := Color(0.62, 0.86, 1.0, 0.9)
@@ -88,9 +93,10 @@ var _emit: Array = []
 ## Fire's flames: the left fist's, the right fist's, the kicking foot's.
 var _flames: Array = []
 var _light: OmniLight3D
-## Water: its mist, and whether it gathers on the deck at his feet now (the Geyser's).
+## Water: its mist, and whether it gathers on the deck where it will rise now (the Geyser's), and that place.
 var _mist: GPUParticles3D
 var _deck := false
+var _spot := Vector3.ZERO
 var _shown := 0.0
 ## Earth: the raised stone being made from the rocks (its look, its own scale), the level when it rose, done.
 var _stone: Node3D
@@ -213,6 +219,11 @@ func end(kind: String) -> void:
 			rk.vel = away * 5.0 + out * 7.0 + Vector3.UP * 1.5
 		else:
 			rk.vel = Vector3.ZERO
+	if element == "water" and ending == "cast" and _deck and body != null and is_instance_valid(body):
+		body.set_meta(WATER_SENT_META, BendStatus.now())     # (its water is there already: no send from his feet)
+		for run: Dictionary in _runs:
+			var v2: Vector3 = run.vel
+			run.vel = Vector3(v2.x * 0.2, 7.5, v2.z * 0.2)       # (the Geyser's: its wisps go up with the column)
 	if _visual and ending == "cast":
 		match element:
 			"water":
@@ -452,11 +463,11 @@ func _water_run(mat: ShaderMaterial, phase: float) -> Dictionary:
 	return run
 
 
-## Whether the move charging gathers its water on the deck at his feet (the Geyser: sent from there along the deck,
-## BendLooks.geyser_send): the player's lock (SwayCaster), a bot's (its brain's NpcBending).
-func _water_on_deck() -> bool:
+## The bend spec of the move charging when its water gathers on the deck where it will rise (the Geyser's, do "spout"),
+## else {}: the player's lock (SwayCaster), a bot's (its brain's NpcBending).
+func _deck_spec() -> Dictionary:
 	if body == null or not is_instance_valid(body):
-		return false
+		return {}
 	var m := ""
 	var md := ""
 	var sc := SwayCaster.of(body)
@@ -468,13 +479,30 @@ func _water_on_deck() -> bool:
 		md = (body as NpcFighter).brain.bending.mode
 	var b: Variant = SwayMoves.move(m).get("bend", {}) if m != "" else {}
 	var s: Variant = (b as Dictionary).get(md, {}) if b is Dictionary else {}
-	return s is Dictionary and String((s as Dictionary).get("do", "")) == "spout"
+	if s is Dictionary and String((s as Dictionary).get("do", "")) == "spout":
+		return s
+	return {}
 
 
-## Where the water gathers now: on the deck before his feet (the Geyser's), else the limb's tip.
+## Where the Geyser will rise (its cast's own place): the foe the player's lock tracks (SwayCaster.track_target, where the
+## game has it), else the aim's ground (BendEffects.aim, the bot's own pick for a bot) within the spec's reach.
+func _water_spot(spec: Dictionary) -> Vector3:
+	var sc := SwayCaster.of(body)
+	var tt: Variant = sc.get(&"track_target") if sc != null else null
+	if tt is Node3D and is_instance_valid(tt) and float(sc.get(&"track_off")) <= 0.25:
+		return FormEffects.ground_at(body, (tt as Node3D).global_position) + Vector3.UP * 0.08
+	var bc := BendCaster.of(body)
+	if bc == null:
+		return _center() + _forward() * 2.0
+	return BendEffects._ground_at(body, BendEffects.aim(bc, spec), spec) + Vector3.UP * 0.08
+
+
+## Where the water gathers now: the Geyser's flowing from before his feet out along the deck to where it will rise as the
+## lock fills; else the limb's tip.
 func _water_tip() -> Vector3:
 	if _deck:
-		return _center() + _forward() * 0.35 + Vector3.UP * 0.08
+		var from := _center() + _forward() * 0.35 + Vector3.UP * 0.08
+		return from.lerp(_spot, smoothstep(0.1, 0.9, minf(_level(), 1.0)))
 	return _tip(limb())
 
 
@@ -483,7 +511,10 @@ func _water(dt: float) -> void:
 	var ch := _channel()
 	var l := limb()
 	var seg := _seg(l)
-	_deck = _water_on_deck()
+	var ds := _deck_spec()
+	_deck = not ds.is_empty()
+	if _deck:
+		_spot = _water_spot(ds)
 	var w := lerpf(4.5, 9.5, minf(k, 1.0)) + 6.0 * _flash
 	var c := _center()
 	var wrap_r := 0.25 if l.ends_with("foot") else 0.22
