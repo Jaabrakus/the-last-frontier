@@ -717,10 +717,10 @@ func _shift_dir() -> void:
 			c3.key3_press()
 
 
-## A readied move's own variants (BendVariants: the Column's way) picked with its key held and a direction pressed (the owner,
-## 2026-10-12: "maybe hold the key and then hit a direction keey?"; the wheel picks them too, wheel()): W up, A left, D right,
-## S from a wall.
-const KEY_DIR := {&"move_forward": "up", &"move_left": "left", &"move_right": "right", &"move_back": "wall"}
+## A readied move's own variants (BendVariants: the Column's way, the Geyser's) picked with its key held and a direction
+## pressed (the owner, 2026-10-12: "maybe hold the key and then hit a direction keey?"; the wheel picks them too, wheel()): W up,
+## A left, D right, S from the side (the Column's wall, the Geyser's water: whichever the move has).
+const KEY_DIR := {&"move_forward": ["up"], &"move_left": ["left"], &"move_right": ["right"], &"move_back": ["wall", "water"]}
 func _key_dir() -> void:
 	if player == null or spell == "" or not player.arena or player.is_dead:
 		return
@@ -736,10 +736,13 @@ func _key_dir() -> void:
 	if k < 0 or c == null or not c.pressed(StringName(ACTION % (k + 1))):
 		return
 	for a: StringName in KEY_DIR:
-		if c.just_pressed(a) and String(KEY_DIR[a]) in l:
-			BendVariants.set_to(player, spell, md, String(KEY_DIR[a]))
-			_dirty_strip()
-			return
+		if not c.just_pressed(a):
+			continue
+		for v: String in KEY_DIR[a]:
+			if v in l:
+				BendVariants.set_to(player, spell, md, v)
+				_dirty_strip()
+				return
 
 
 ## The player's key event (FrontierPlayer._unhandled_input): true when it was a slot key or the wheel.

@@ -247,8 +247,9 @@ func _bracket(c: Vector2, r: float, mid: float, f: float, col: Color, track: Col
 		draw_arc(c, r, lo, lo + way * METER_SPAN * f, 32, col, METER_W, true)
 
 
-## The readied move's way (BendVariants: the Column's), a small arrow under the ring while it is readied or locking: up, up and
-## to the right or left, or a bar with an arrow out of it (from a wall). No arrow for a move with none.
+## The readied move's way (BendVariants: the Column's, the Geyser's), a small arrow under the ring while it is readied or
+## locking: up, up and to the right or left, or a bar with an arrow out of it (from a wall; a ripple, from the water). No arrow
+## for a move with none.
 func _draw_way(c: Vector2) -> void:
 	var body: Node = caster.player
 	var m := caster.lock_spell() if caster.state != SwayCaster.State.IDLE else (caster.readied_spell if caster.readied else "")
@@ -266,13 +267,20 @@ func _draw_way(c: Vector2) -> void:
 			d = Vector2(0.7, -0.7)
 		"left":
 			d = Vector2(-0.7, -0.7)
-		"wall":
+		"wall", "water":
 			d = Vector2.RIGHT
 	var tail := o - d * 6.0
 	var tip := o + d * 6.0
 	if v == "wall":
 		draw_line(tail + Vector2(-1.5, -6.0), tail + Vector2(-1.5, 6.0), sh, 4.0, true)
 		draw_line(tail + Vector2(-1.5, -6.0), tail + Vector2(-1.5, 6.0), col, 2.0, true)
+	elif v == "water":
+		var wave := PackedVector2Array()
+		for i in 9:
+			var t := float(i) / 8.0
+			wave.append(tail + Vector2(-2.0 + 1.6 * sin(t * TAU * 1.5), -6.0 + 12.0 * t))
+		draw_polyline(wave, sh, 4.0, true)
+		draw_polyline(wave, col, 2.0, true)
 	for w: Array in [[sh, 3.6], [col, 1.8]]:
 		draw_line(tail, tip, w[0], w[1], true)
 		draw_line(tip, tip - d.rotated(0.6) * 4.5, w[0], w[1], true)

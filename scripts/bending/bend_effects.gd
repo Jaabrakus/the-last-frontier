@@ -827,7 +827,9 @@ static func status_at(p: Node3D, at: Vector3, spec: Dictionary) -> void:
 ## The Geyser (spec do "spout"; §3.2): a column of water rising at `at` (the aim's ground, range_m), low and weak at first
 ## and at its peak rise_s later, when it throws whoever stands there up (up_mps, damage; status_at). Over a grate or the
 ## caster's own puddle within source_m (Bending.POOLS) it is source_mult wider and a third of that higher. No mark on the
-## deck: the rising water is the tell.
+## deck: the rising water is the tell. Its way (BendVariants, _spout_way; the owner, 2026-10-12: "do the same for geyser"):
+## leaning right or left it erupts tilted and throws them that way; from the water, the nearest water by the mark swells for
+## rise_s and a jet shoots across the deck through the mark, throwing them away from it (no source bonus: it is the source).
 static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
@@ -835,7 +837,17 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 	var p := bc.body
 	var s := spec.duplicate()
 	s["kind"] = String(spec.get("kind", "water"))
-	if _source_near(p, at, float(spec.get("source_m", 2.5))):
+	var way := {} if float(spec.get("bind_s", 0.0)) > 0.0 else _spout_way(p, at, spec)
+	if not way.is_empty():
+		var inf: Dictionary = (spec.get("_info", {}) as Dictionary).duplicate()
+		if inf.has("tag"):
+			inf["tag"] = String(inf.tag) + String(way.suffix)        # (its own class: wave/spout.lean, .side)
+		inf["dir"] = way.flat
+		s["_info"] = inf
+		s["kv_dir"] = way.kv_dir
+	if way.has("from"):
+		s["radius_m"] = float(spec.get("radius_m", 1.8)) * SPOUT_JET_R_K
+	elif _source_near(p, at, float(spec.get("source_m", 2.5))):
 		var k := float(spec.get("source_mult", 2.0))
 		s["radius_m"] = float(spec.get("radius_m", 1.8)) * k
 		s["up_mps"] = float(spec.get("up_mps", 12.0)) * (1.0 + (k - 1.0) / 3.0)
@@ -845,10 +857,21 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 	if float(spec.get("bind_s", 0.0)) > 0.0:
 		# (Frost Geyser, a bind twist: ice closes round his feet where the water would throw him up; no water column)
 		BendLooks.bind_tell(at, "water", float(s.get("radius_m", 1.8)), rise)
-	elif not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
-		BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise)
+	elif way.has("from"):
+		_cur["spout_from"] = way.from
+		var to := at + Vector3.UP * 0.9
+		var from: Vector3 = way.from
+		BendLooks.spout_jet(from, at, float(s.get("radius_m", 1.8)), rise)
+		BendLooks.geyser(from, to - from, from.distance_to(to) + 0.8, SPOUT_JET_COL_R, rise, false)
+	else:
+		# (the column: the deck breaking, a column of water out of it; straight up, or leaning)
+		var up: Vector3 = way.get("up", Vector3.UP)
+		var cr := clampf(float(s.get("radius_m", 1.8)) * 0.32, 0.45, 1.1)
+		BendLooks.geyser(at, up, SPOUT_COL_M * (0.9 if way.has("up") else 1.0), cr, rise, true)
+		if not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "low", {"at": at, "radius": float(s.get("radius_m", 1.8))}):
+			BendLooks.spout(at, float(s.get("radius_m", 1.8)), rise, up)
 	var rec := _cur
-	var mound := BendLoadout.wears(p, MOUND)
+	var mound := BendLoadout.wears(p, MOUND) and not way.has("from")      # (a jet throws no plug up where it hits)
 	var wash := float(spec.get("bind_s", 0.0)) <= 0.0           # (a water column: Frost Geyser's ice throws no water up)
 	if rise <= 0.0:
 		status_at(p, at, s)
@@ -868,6 +891,60 @@ static func spout(c: Variant, at: Vector3, spec: Dictionary) -> void:
 		if mound:
 			_cur["mound"] = _mud_mound(p, at)
 		_cur = keep)
+
+
+## The Geyser's way for `p`'s cast at `at` (BendVariants.of: up, right, left, water): {} up as ever; else {flat (the throw's way
+## on the deck), kv_dir, suffix (its class's)} and up (right, left: the column's tilt, the caster's right or left at the cast)
+## or from (water: the jet's start, at the nearest water within SPOUT_WATER_M of the mark: a grate or his own puddle
+## (Bending.POOLS), or the deck's lip over the tank (RingArena.nearest_lip), the jet rising out of the water below it; none
+## near, or the mark on the water itself: up).
+const SPOUT_LEAN_DEG := 35.0
+const SPOUT_WATER_M := 8.0
+## The jet's hit at the mark, of the Geyser's radius (a jet is narrower than a column).
+const SPOUT_JET_R_K := 0.8
+## The column's look (BendLooks.geyser): its height (m) and a jet's thickness.
+const SPOUT_COL_M := 3.6
+const SPOUT_JET_COL_R := 0.38
+static func _spout_way(p: Node3D, at: Vector3, spec: Dictionary) -> Dictionary:
+	var info: Dictionary = spec.get("_info", {})
+	var way := BendVariants.of(p, String(info.get("move", "wave")), String(info.get("mode", "spout")))
+	if way in ["", "up"]:
+		return {}
+	if way in ["right", "left"]:
+		var bc := BendCaster.wrap(p)
+		var fwd := bc.facing() if bc != null and bc.valid() else -p.global_basis.z
+		fwd.y = 0.0
+		fwd = fwd.normalized() if fwd.length_squared() > 1e-4 else Vector3.FORWARD
+		var right := fwd.cross(Vector3.UP).normalized()
+		var flat := right if way == "right" else -right
+		var tilt := deg_to_rad(SPOUT_LEAN_DEG)
+		var a := deg_to_rad(40.0)
+		return {"up": (Vector3.UP * cos(tilt) + flat * sin(tilt)).normalized(), "flat": flat,
+				"kv_dir": (flat * cos(a) + Vector3.UP * sin(a)).normalized(), "suffix": ".lean"}
+	# water: the nearest water by the mark
+	var best := Vector3.INF
+	var best_d := SPOUT_WATER_M
+	for n in p.get_tree().get_nodes_in_group(Bending.POOLS):
+		var n3 := n as Node3D
+		if n3 == null or (n3 is BendZone and (n3 as BendZone).owner_node != p):
+			continue
+		var d := Vector2(n3.global_position.x - at.x, n3.global_position.z - at.z).length()
+		if d < best_d and d > 0.6:
+			best = n3.global_position
+			best_d = d
+	var ra := RingArena.find(p.get_tree())
+	if ra != null:
+		var lip := ra.nearest_lip(at)
+		var lp: Vector3 = lip.point
+		var d2 := Vector2(lp.x - at.x, lp.z - at.z).length()
+		if d2 < best_d and d2 > 0.6:
+			best = lp + (lip.normal as Vector3) * 0.4 + Vector3.DOWN * 0.6      # (out over the water, under the lip)
+			best_d = d2
+	if best == Vector3.INF:
+		return {}                                 # (no water near the mark: up as ever)
+	var flat2 := Vector3(at.x - best.x, 0.0, at.z - best.z).normalized()
+	var a2 := deg_to_rad(20.0)
+	return {"from": best, "flat": flat2, "kv_dir": (flat2 * cos(a2) + Vector3.UP * sin(a2)).normalized(), "suffix": ".side"}
 
 
 ## The gas (a BendZone of kind gas: earth's Sulphur set's cloud) that a Geyser's water rising at `at` `r` m round reaches, whoever's,

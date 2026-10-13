@@ -7,11 +7,15 @@ extends RefCounted
 ##   earth_shove/column   up (the knock-up, as before), right / left (it rises leaning and throws them that way, the caster's
 ##                        right and left at the cast), wall (it punches out of the nearest Earth Wall's face by the mark, any
 ##                        side's; no wall near: up)
+##   wave/spout           the Geyser the same (the owner, 2026-10-12: "do the same for geyser allow water from the side of the
+##                        ring or the vents to shoot and attac ksomeone side ways"): up, right / left (it erupts leaning), water
+##                        (a jet out of the nearest water by the mark, a grate, his own puddle or the deck's edge over the tank,
+##                        across the deck through him: thrown away from it; none near: up)
 
 const META := &"bend_variants"
-const SETS := {"earth_shove/column": ["up", "right", "left", "wall"]}
+const SETS := {"earth_shove/column": ["up", "right", "left", "wall"], "wave/spout": ["up", "right", "left", "water"]}
 ## The words the strip shows after the move's name.
-const WORDS := {"up": "up", "right": "throw right", "left": "throw left", "wall": "from a wall"}
+const WORDS := {"up": "up", "right": "throw right", "left": "throw left", "wall": "from a wall", "water": "from the water"}
 
 
 static func list(m: String, md: String) -> Array:

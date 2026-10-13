@@ -1421,7 +1421,7 @@ static func wave_tongues(width: float, top: float) -> Array[Dictionary]:
 
 ## The Geyser's water at `at` (BendEffects.spout): low and weak at once, its column at its peak `rise_s` later, `r` round.
 ## No mark on the deck: the rising water is the tell.
-static func spout(at: Vector3, r: float, rise_s: float) -> void:
+static func spout(at: Vector3, r: float, rise_s: float, up := Vector3.UP) -> void:
 	if not live():
 		return
 	var pool := _pool()
@@ -1437,12 +1437,77 @@ static func spout(at: Vector3, r: float, rise_s: float) -> void:
 		var p2 := _pool()
 		if p2 == null:
 			return
-		p2.shoot("drop", at, 48, Vector3.UP, 12.0, Vector2(7.0, 13.0), Vector2(0.12, 0.24), 1.1, Vector3(0, -12.0, 0), 0.0,
+		# (up: its column's way, a leaning Geyser's tilt, BendEffects._spout_way)
+		p2.shoot("drop", at, 48, up, 12.0, Vector2(7.0, 13.0), Vector2(0.12, 0.24), 1.1, Vector3(0, -12.0, 0), 0.0,
 				{"r": r * 0.7})
-		p2.shoot("foam", at + Vector3.UP * 0.5, 22, Vector3.UP, 20.0, Vector2(3.0, 7.0), Vector2(0.4, 0.8), 0.8, Vector3(0, -4.0, 0),
+		p2.shoot("foam", at + up * 0.5, 22, up, 20.0, Vector2(3.0, 7.0), Vector2(0.4, 0.8), 0.8, Vector3(0, -4.0, 0),
 				1.0, {"r": r * 0.6})
 		p2.play("crown", Transform3D(Basis.IDENTITY, at + Vector3.UP * 0.05), 0.6, r * 0.6, r * 1.4, WATER, FOAM,
 				ToonFx.band_mesh(1.0, 1.5, 1.0)))
+
+
+## The Geyser's column (GeyserFx, scripts/bending/geyser_fx.gd; the owner, 2026-10-12: "like fissure water plus column of
+## water"): the deck cracking at `at` (crack) through the rumble, then a solid column of water `length` m along `dir`, `radius`
+## m thick, bursting out at rise_s, held and collapsing. Loaded by its path, as FISSURE_FX. Headless: nothing.
+const GEYSER_FX := preload("res://scripts/bending/geyser_fx.gd")
+static func geyser(at: Vector3, dir: Vector3, length: float, radius: float, rise_s: float, crack := true) -> void:
+	if not live():
+		return
+	var scn := _scene()
+	if scn == null:
+		return
+	var g := GEYSER_FX.new()
+	g.name = "Geyser"
+	g.dir = dir
+	g.length = length
+	g.radius = radius
+	g.rise_s = rise_s
+	g.crack = crack
+	g.foot = at                                   # (placed in its _ready, before its crack and spikes are laid)
+	scn.add_child(g)
+
+
+## A mark of the pool's (`mode`: cracks, frost, scorch ...) on a surface at `at` facing `normal`, `size` m, for `life` s.
+static func mark_at(mode: String, at: Vector3, normal: Vector3, size: float, life: float) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool != null:
+		pool.mark(mode, at, normal, size, life)
+
+
+## A Geyser from the water (BendEffects._spout_way): the water at `from` (a grate, a puddle, the tank under the deck's lip)
+## swells and spits for rise_s, then a jet shoots from it across to `to` and a little past, bursting there (r across).
+static func spout_jet(from: Vector3, to: Vector3, r: float, rise_s: float) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var d := to + Vector3.UP * 0.9 - from
+	var len := d.length()
+	var dir := d / maxf(len, 0.01)
+	pool.shoot("drop", from, 16, (Vector3.UP + dir).normalized(), 25.0, Vector2(2.0, 4.0), Vector2(0.08, 0.16), 0.5,
+			Vector3(0, -9.0, 0), 0.0, {"r": 0.4})
+	pool.shoot("foam", from, 10, Vector3.UP, 35.0, Vector2(0.8, 1.8), Vector2(0.3, 0.5), 0.5, Vector3.ZERO, 1.0, {"r": 0.4})
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	tree.create_timer(maxf(rise_s, 0.01), false).timeout.connect(func() -> void:
+		var p2 := _pool()
+		if p2 == null:
+			return
+		# (the jet: drops thrown along the line at a spread of speeds, a streak crossing it in about a fifth of a second;
+		# foam along it; the burst where it meets the mark)
+		var mps := len / 0.22
+		p2.shoot("drop", from, 80, (dir + Vector3.UP * 0.05).normalized(), 4.0, Vector2(mps * 0.4, mps * 1.2),
+				Vector2(0.12, 0.26), 0.28, Vector3(0, -6.0, 0), 0.0, {"r": 0.25})
+		p2.shoot("foam", from + dir * 0.4, 26, dir, 6.0, Vector2(mps * 0.6, mps), Vector2(0.35, 0.7), 0.4, Vector3(0, -3.0, 0),
+				1.0, {"r": 0.3})
+		p2.shoot("drop", to + Vector3.UP * 0.9, 34, dir, 50.0, Vector2(3.0, 7.0), Vector2(0.1, 0.22), 0.8, Vector3(0, -12.0, 0),
+				0.0, {"r": r * 0.5})
+		p2.shoot("foam", to + Vector3.UP * 0.9, 14, dir, 40.0, Vector2(2.0, 5.0), Vector2(0.4, 0.8), 0.7, Vector3(0, -4.0, 0),
+				1.0, {"r": r * 0.5}))
 
 
 ## A bind's tell where it is cast (Stone Grip and Frost Geyser, the skill tree's binds, 2026-10-11: what shows in place of the
