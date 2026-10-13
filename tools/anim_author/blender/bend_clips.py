@@ -41,7 +41,9 @@ table's SET2 part, authored the same way; the first ten polished: the keys the I
 few settle keys, their hold_s and strike_s kept):
   stance_<element>   each element's idle loop while casting (meta loop: installed looping; no gait): earth Hung Gar's low wide
                      horse, the left forearm forward, breathing; fire up on the balls of the feet side-on, the fists up, a
-                     bounce; water the weight flowing forward and back with the soft hands; air light, turning about the waist
+                     bounce; water the weight flowing forward and back with the soft hands (since 2026-10-12 its stand-in:
+                     water's stance is stance_water_wing_chun, Wing Chun's hands on a fighting stagger, the owner's pick);
+                     air light, turning about the waist
   earth_boulder      the owner's "left kick to stomp and then push": the left foot kicks the rock up, the knee high, the foot
                      stamped down out ahead, the palms drawn back (held), the two-hand push.  strike_s: the push
   earth_raise        the stomp-rise (a wall or a column): the right foot stamped, sunk (held), the palms driven up
@@ -728,6 +730,8 @@ FACING.update({
     "palm_up_wide": ((-0.5, 0.0, 0.86), (0.0, 1.0, 0.0)),      # the hand out to the side and forward, the palm up
     "press_down": ((0.4, 0.0, 0.92), (0.0, -1.0, 0.0)),        # pressed down in front, the palm down
     "claw": ((0.05, 0.6, 0.8), (0.2, -0.8, 0.55)),             # the stance's forward hand, the fingers up and out, the palm forward-down
+    "wc_man": ((0.0, 0.72, 0.7), (1.0, 0.0, 0.0)),             # Wing Chun's Man Sau: the fingers up and out, the palm side-on to the centreline
+    "wc_wu": ((0.0, 0.96, 0.28), (0.55, 0.0, 0.83)),           # Wing Chun's Wu Sau: the fingers up, the palm forward and in
 })
 
 ## A stance's own stand under the loop (the feet and the hands where the stance keeps them): every stance channel keys its own.
@@ -812,6 +816,8 @@ SET2 = {
         "fyaw_l": [(0, 4), (108, 4)], "fyaw_r": [(0, 30), (108, 30)],
         "knee_l": [(0, (0.25, 0.0, 1.0)), (108, (0.25, 0.0, 1.0))], "knee_r": [(0, (-0.45, 0.0, 1.0)), (108, (-0.45, 0.0, 1.0))],
     },
+    # water: Wing Chun's hands on a fighting stagger (stance_water_wing_chun, made by _wc_stance below; water's stance since
+    # 2026-10-12, this Tai Chi one its stand-in)
     # air: Baguazhang's circle walker standing: light on the feet, the heels just up, the body turning a little one way and the
     # other about the waist, the lead palm out at the shoulder's height facing in, the rear palm by the elbow; the palms
     # trading their height as it turns
@@ -1570,6 +1576,52 @@ SET2 = {
         "heel_r": [(0, 0), (13, 8), (24, 6), (32, 0)],
     },
 }
+
+
+def _wc_stance(legs):
+    """Water's Wing Chun hands (the owner kept them: "the wing chun is okay") on the legs `legs` gives: the lead (left) Man Sau
+    up and out on the centreline, the palm open and side-on, the fingertips at the chin's height, the elbow down and in; the
+    rear (right) Wu Sau, the palm open and up just behind the lead elbow; the hands stay on the line to the mark however the
+    body turns over the legs. A slow breath, the weight settling, the lead hand easing out and back a finger's width (96
+    frames). `legs`: root (its place), yaw, twist, hips, chest, head, the feet (foot_l/r, fyaw_l/r, heel_l/r), the knees'
+    poles, how far out the lead hand reaches (reach) and the breath's sink (sink)."""
+    L = 96
+    r0 = legs["root"]
+    r1 = (r0[0], r0[1] - legs.get("sink", 0.006), r0[2] - 0.004)
+    reach = legs.get("reach", 0.44)
+
+    def still(v):
+        return [(0, v), (L, v)]
+    c = {
+        "length": L, "loop": True, "meta": {"hand": "both", "mask": "full", "root": "place"},
+        "root": [(0, r0), (48, r1), (L, r0)],
+        "yaw": [(0, legs["yaw"]), (48, legs["yaw"] + 1.5), (L, legs["yaw"])],
+        "twist": [(0, legs["twist"]), (48, legs["twist"] + 1.0), (L, legs["twist"])],
+        "hips": still(legs["hips"]),
+        "chest": [(0, legs["chest"]), (30, legs["chest"] + 1.2), (60, legs["chest"] + 0.4), (L, legs["chest"])],
+        "head": still(legs["head"]),
+        "clav_l": [(0, (4, -2)), (30, (5, -2.5)), (L, (4, -2))],
+        "clav_r": [(0, (2, -1)), (30, (3, -1.5)), (L, (2, -1))],
+        "hand_l": [(0, (0.03, 1.22, reach)), (48, (0.03, 1.215, reach + 0.022)), (L, (0.03, 1.22, reach))],
+        "hand_r": [(0, (-0.03, 1.12, reach - 0.2)), (48, (-0.026, 1.128, reach - 0.194)), (L, (-0.03, 1.12, reach - 0.2))],
+        "face_l": still("wc_man"), "face_r": still("wc_wu"),
+        "pole_l": still((-0.15, -1.0, 0.0)), "pole_r": still((-0.25, -1.0, -0.1)),
+        "grip_l": still(-0.12), "grip_r": still(-0.12),
+    }
+    for k in ("foot_l", "foot_r", "fyaw_l", "fyaw_r", "heel_l", "heel_r", "knee_l", "knee_r"):
+        c[k] = still(legs[k])
+    return c
+
+
+## Water's stance (own-bend-stance-water-wing-chun; the owner, 2026-10-12, of three legs under the Wing Chun hands: "A"): a
+## fighting stagger (the character's frame: +X his left, +Z ahead): the left foot ahead pointing at the mark, the right back
+## and turned out, the knees soft and over the toes, the rear heel just up, the body turned a little. The two it was picked
+## over: low and wide (a waterbender's long base) and Wing Chun's side stance (turned 40, the weight back, the front foot
+## light); the first try, the square Yee Jee Kim Yeung Ma (knees and toes in), was turned down for its legs.
+SET2["stance_water_wing_chun"] = _wc_stance({
+    "root": (0.0, -0.075, 0.0), "yaw": -18.0, "twist": -6.0, "hips": 3.0, "chest": 4.0, "head": 3.0, "reach": 0.46,
+    "foot_l": (0.13, 0.077, 0.21), "foot_r": (-0.17, 0.077, -0.19), "fyaw_l": -4.0, "fyaw_r": 34.0, "heel_l": 2.0, "heel_r": 12.0,
+    "knee_l": (0.15, 0.0, 1.0), "knee_r": (-0.45, 0.0, 1.0)})
 CLIPS.update(SET2)
 
 ## ---------------------------------------------------------------- the third set (2026-10-05, round 2 of the skills: the moves

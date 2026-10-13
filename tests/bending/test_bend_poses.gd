@@ -28,6 +28,9 @@ extends SceneTree
 const NAME := "BEND POSES"
 ## The in-test watchdog (below the run's GODOT_TIMEOUT of 300 s).
 const LIMIT_S := 240.0
+## Water's stance (Wing Chun's hands on a fighting stagger since 2026-10-12, the owner's pick; poses.json's stance.water, Tai
+## Chi's own-bend-stance-water its stand-in).
+const WATER_STANCE := "own-bend-stance-water-wing-chun"
 
 var fails := 0
 var p: FrontierPlayer
@@ -215,7 +218,8 @@ func _picks() -> void:
 	for el: String in Bending.ELEMENTS:
 		var nm := SwayPose.stance_name(el)
 		var a2 := BendPoses.animation(nm)
-		if nm != "own-bend-stance-" + el or a2 == null or a2.loop_mode != Animation.LOOP_LINEAR:
+		if not (nm == "own-bend-stance-" + el or nm.begins_with("own-bend-stance-%s-" % el)) or a2 == null \
+				or a2.loop_mode != Animation.LOOP_LINEAR:
 			bad.append("%s: %s" % [el, st.get(el, "-")])
 	_expect(bad.is_empty(), "each element's stance is its own loop (own-bend-stance-<element>)%s" % ("" if bad.is_empty() else ": " + ", ".join(bad)))
 	var tiers: Array[String] = []
@@ -473,7 +477,7 @@ func _stance() -> void:
 			"standing still as earth: the earth stance loops on the body (%s, weight %.2f; %s)" % [c.pose.stance_clip(), w, hf])
 	_element("water")
 	await _secs(0.8)
-	_expect(String(c.pose.stance_clip()) == "own-bend-stance-water" and c.pose.stance_weight() > 0.9,
+	_expect(String(c.pose.stance_clip()) == WATER_STANCE and c.pose.stance_weight() > 0.9,
 			"as water: the water stance (%s, %.2f)" % [c.pose.stance_clip(), c.pose.stance_weight()])
 	Input.action_press("move_forward")
 	var lo := 1.0
@@ -491,7 +495,7 @@ func _stance() -> void:
 	var t := await _hold_until(Vector3.INF, func() -> bool: return c.state != SwayCaster.State.IDLE)
 	await _secs(0.15)
 	var ls: Array = c.pose._pose.layers if c.pose._pose != null else []
-	_expect(t != INF and ls.size() >= 2 and (ls[0] as Dictionary).anim == BendPoses.animation("own-bend-stance-water")
+	_expect(t != INF and ls.size() >= 2 and (ls[0] as Dictionary).anim == BendPoses.animation(WATER_STANCE)
 			and String(c.pose.current_clip()).begins_with("own-bend-water-whip"),
 			"a lock over the stance: the stance's layer first, the cast's over it (%s over %d layers)" % [c.pose.current_clip(), ls.size()])
 	await _let_go_and_settle()

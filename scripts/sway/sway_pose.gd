@@ -804,8 +804,10 @@ static func stance_name(element: String, body: Node = null) -> String:
 	if element == "":
 		return ""
 	var v: Variant = BendPoses.stance_pose(element, body)          # (a fighting style's own stance, else the element's)
-	var nm := String(BendPoses._as_pose(v).get("clip", ""))
-	return nm if nm != "" and BendPoses.usable(nm) else ""
+	var p := BendPoses._as_pose(v)
+	while not p.is_empty() and not BendPoses.usable(String(p.clip)):
+		p = BendPoses._as_pose(p.get("stand_in", ""))               # (a stance not in the libraries: its stand-in)
+	return String(p.get("clip", ""))
 
 
 ## How much the stance should show now (0..1): casting as an element, on the ground, still, hands free, upright.

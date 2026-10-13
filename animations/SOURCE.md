@@ -104,6 +104,7 @@ to keep each knee on one side. Nothing imported, retargeted or sampled (same doc
 | `own-bend-stance-earth` | 2026-10-05 (second set) | `bend_clips.py` (`stance_earth`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-stance-fire` | 2026-10-05 (second set) | `bend_clips.py` (`stance_fire`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-stance-water` | 2026-10-05 (second set) | `bend_clips.py` (`stance_water`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
+| `own-bend-stance-water-wing-chun` | 2026-10-12 (the owner: "can we change the water idle stance to wing chun", then of three legs under its hands "A"; water's stance since, `own-bend-stance-water` its stand-in) | `bend_clips.py` (`stance_water_wing_chun`, `_wc_stance`) | the rig's rest pose; keys typed in `bend_clips.py`: Wing Chun's Man Sau and Wu Sau hands on a fighting stagger, keyed from the stance's standard mechanics (no video was looked at for it) | (for the owner to fill) |
 | `own-bend-stance-air` | 2026-10-05 (second set) | `bend_clips.py` (`stance_air`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-earth-boulder` | 2026-10-05 (second set) | `bend_clips.py` (`earth_boulder`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
 | `own-bend-earth-raise` | 2026-10-05 (second set) | `bend_clips.py` (`earth_raise`) | the rig's rest pose; keys in `CLIPS` (`SET2`) | (for the owner to fill) |
