@@ -83,6 +83,12 @@ func aim_point(_ex: Array = [], _from := Vector3.INF) -> Vector3:
 	return chest() + facing() * 20.0
 
 
+## (his flights' point as his machine gave it; after his run his streamed crosshair point: aim_point's)
+func flight_point(ex: Array = [], from := Vector3.INF) -> Vector3:
+	var v: Variant = _take("flight_point")
+	return v if v is Vector3 else aim_point(ex, from)
+
+
 func aim_target() -> Node3D:
 	var v: Variant = _take("aim_target")
 	return v as Node3D if v is Node3D else null

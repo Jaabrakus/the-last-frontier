@@ -302,12 +302,13 @@ static func lock_of(m: String, mode: String) -> float:
 
 # ---------------------------------------------------------------- the aim
 ## Caster `c`'s aim now: {from (where a bolt leaves: BendCaster.launch_point), dir (to the point), flat (level), point (the
-## caster's aim_point, or its target's: target_point, led for a bolt of spec.mps), target (aim_target)}.
+## caster's flight_point: the player's crosshair line at the foe's depth, his eye not his hand; or its target's:
+## target_point, led for a bolt of spec.mps), target (aim_target)}.
 static func aim(c: Variant, spec := {}) -> Dictionary:
 	var bc := BendCaster.wrap(c)
 	var p := bc.body
 	var chest := bc.chest()
-	var point := bc.aim_point()
+	var point: Vector3 = bc.flight_point()
 	var target: Node3D = null
 	# (to_crosshair: the player's cast goes where his crosshair is, the aim's help never bending it to a body: the High Kick's
 	# blast, the owner 2026-10-11: "exactly to the crosshair". A bot aims with its own pick, lead and scatter as ever)
@@ -432,7 +433,7 @@ static func wind_wave(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	s["radius_m"] = float(spec.get("width_m", 2.0)) * 0.5
 	s["mps"] = float(spec.get("mps", 18.0))
 	s["range_m"] = float(spec.get("range_m", 14.0))
-	var point := bc.aim_point()
+	var point: Vector3 = bc.flight_point()
 	var from: Vector3 = a.from
 	var dir: Vector3 = (point - from).normalized() if point.is_finite() and point.distance_to(from) > 0.5 else (a.dir as Vector3)
 	var b := BendBolt.launch(p, from, dir, s)

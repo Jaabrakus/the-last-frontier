@@ -820,13 +820,13 @@ class Throw:
 			var f := FormEffects.assist_target(caster, from if from != Vector3.INF else cam.global_position, -cam.global_basis.z, [stone.get_rid()])
 			if f != null:
 				return caster.target_point(f, _mps())     # (the player's: his aim-help setting; PlayerBendCaster)
-			return FormEffects.aim_point(caster, [stone.get_rid()], from)
+			return caster.flight_point([stone.get_rid()], from)     # (the crosshair's line at the foe's depth: PlayerBendCaster)
 		if caster is PlayerBendCaster:
-			return FormEffects.aim_point(caster, [stone.get_rid()])       # (no camera: INF, as ever)
+			return caster.flight_point([stone.get_rid()])       # (no camera: INF, as ever)
 		var who := caster.aim_target()
 		if who != null:
 			return caster.target_point(who, _mps()) if final else NpcSenses.chest_of(who)
-		return caster.aim_point([stone.get_rid()])
+		return caster.flight_point([stone.get_rid()])
 
 	## Its flight's speed (the hurl's last).
 	func _mps() -> float:

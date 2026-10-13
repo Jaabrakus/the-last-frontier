@@ -92,6 +92,50 @@ func aim_point(ex: Array = [], from := Vector3.INF) -> Vector3:
 	return _rec("aim_point", h.position if not h.is_empty() else from + dir * 80.0)
 
 
+## Eye and hand (the owner, 2026-10-12: "in the videos you record the cross hair is perfect on target but in the run build i
+## play i have to aim higher"): the crosshair looks from the camera, 2.4-3.2 m over the hand a cast leaves from, and a cast
+## sent from the hand to where the crosshair's ray stops crosses the crosshair's line only THERE. On a foe that is him: exact.
+## Past him (the dot over his head, beside him, ahead of a runner: the ray on the deck or the stands 16-80 m off) the cast
+## passed 0.6-1.7 m under the dot where he stood, so a dot over his head hit his belly. A flight goes instead to the
+## crosshair's line at the depth of the foe nearest that line (within CONVERGE_DEG of it, ahead), when the ray runs on past
+## him: it crosses the dot exactly where he stands. Depth only: the point never leaves the crosshair's line, nothing is
+## pulled toward him (no help, the Off setting too; the help is assist_target / target_point's). The ray stopping on him or
+## on anything before him (a wall, a stone) keeps its point; bodies of the player's side are left out of the ray as his
+## bolts pass them (BendCaster.ally_rids). No foe by the line: aim_point.
+const CONVERGE_DEG := 10.0
+
+
+func flight_point(ex: Array = [], from := Vector3.INF) -> Vector3:
+	_tape_d += 1
+	var cam := _cam()
+	var exl: Array = ex.duplicate()
+	exl.append_array(BendCaster.ally_rids(self))
+	var pt := aim_point(exl, from)
+	if cam == null or not pt.is_finite():
+		return _rec("flight_point", pt)
+	var o := cam.global_position if from == Vector3.INF else from
+	var dir := -cam.global_basis.z
+	var best_a := deg_to_rad(CONVERGE_DEG)
+	var depth := -1.0
+	var pool: Array = player.get_tree().get_nodes_in_group(NpcFighter.GROUP).duplicate()
+	for pl in player.get_tree().get_nodes_in_group(&"player"):
+		if not pool.has(pl):
+			pool.append(pl)
+	for n in pool:
+		var f := n as CharacterBody3D
+		if f == null or f == player or not NpcSenses.can_fight(f) or BendCaster.same_team(player, f):
+			continue
+		var to := NpcSenses.chest_of(f) - o
+		var along := to.dot(dir)
+		var a := to.angle_to(dir)
+		if along > 1.0 and a < best_a:
+			best_a = a
+			depth = along
+	if depth < 0.0 or (pt - o).dot(dir) <= depth:
+		return _rec("flight_point", pt)          # (no foe by the line, or the ray stops on him or before him)
+	return _rec("flight_point", o + dir * depth)
+
+
 func aim_target() -> Node3D:
 	_tape_d += 1
 	var cam := _cam()
@@ -101,18 +145,58 @@ func aim_target() -> Node3D:
 
 
 ## The aim's help by the player's setting (MatchSetup.aim_help; the owner, 2026-10-05: "the auto aim is to strong"): its
-## cone (none when off), then BendCaster's rule.
+## cone (none when off), then BendCaster's rule. Normal's cone is the casting ring (ring_deg; the owner, 2026-10-12: "for the
+## aim assit anything within the circle not just the dot"), and it never takes one of the player's side, nor lets one of
+## them standing on the way hide a foe in the ring (his bolts pass them: BendCaster.ally_rids, as flight_point's ray).
 func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 	_tape_d += 1
 	var deg := MatchSetup.aim_cone_deg()
+	if deg < 0.0:
+		deg = ring_deg()
+		ex = ex.duplicate()
+		ex.append_array(BendCaster.ally_rids(self))
 	if deg <= 0.0:
 		return _rec("assist_target", null)
 	assist_deg = deg
 	return _rec("assist_target", super.assist_target(from, dir, ex))
 
 
-## Where a cast helped onto `t` goes: "strong" his chest led by his pace over the flight (the old help); "light" the
-## crosshair's point pulled part of the way toward his chest (MatchSetup.aim_pull), no lead.
+## The ring's help never takes one of the player's side (BendCaster.same_team).
+func assist_skips(f: Node3D) -> bool:
+	return MatchSetup.aim_cone_deg() < 0.0 and BendCaster.same_team(player, f)
+
+
+## The casting ring's angular radius now (deg): SwayRing.RADIUS as the ring is drawn on the screen (its canvas's scale, over
+## the height of the viewport it is drawn in) through the camera's vertical FOV. The ring's size whether or not it is drawn
+## at this moment (a tap, the jab, a flick): the help is what the ring shows. Headless (no screen) the game window's height
+## from the project's settings stands for the viewport's. 0 with no camera.
+func ring_deg() -> float:
+	var cam := player.camera if player != null else null
+	if cam == null or not is_instance_valid(cam):
+		return 0.0
+	var r := SwayRing.RADIUS
+	var h := 0.0
+	var rn: SwayRing = sway.ring if sway != null and is_instance_valid(sway) else null
+	if rn != null and is_instance_valid(rn) and rn.is_inside_tree():
+		r *= absf(rn.get_global_transform_with_canvas().get_scale().y)
+		h = rn.get_viewport_rect().size.y
+	elif cam.is_inside_tree():
+		h = cam.get_viewport().get_visible_rect().size.y
+	if DisplayServer.get_name() == "headless":
+		# (no screen, the root a 64 px stub: the ring as the game's own window would show it)
+		h = float(ProjectSettings.get_setting("display/window/size/viewport_height", h))
+	if h <= 0.0:
+		return 0.0
+	var half := tan(deg_to_rad(cam.fov) * 0.5)
+	if cam.keep_aspect == Camera3D.KEEP_WIDTH and cam.is_inside_tree():
+		var sz := cam.get_viewport().get_visible_rect().size
+		half *= sz.y / maxf(sz.x, 1.0)       # (the FOV the width's: the height's half-angle from it)
+	return rad_to_deg(atan(half * r / (h * 0.5)))
+
+
+## Where a cast helped onto `t` goes: "strong" and Normal (the ring) his chest led by his pace over the flight; a partial
+## pull (none set now) the crosshair's point at his depth (flight_point) pulled part of the way toward his chest
+## (MatchSetup.aim_pull), no lead.
 func target_point(t: Node3D, mps := 0.0) -> Vector3:
 	_tape_d += 1
 	var at := NpcSenses.chest_of(t)
@@ -122,7 +206,7 @@ func target_point(t: Node3D, mps := 0.0) -> Vector3:
 			var v := NpcSenses.velocity_of(t)
 			return _rec("target_point", at + Vector3(v.x, 0.0, v.z) * at.distance_to(chest()) / mps)
 		return _rec("target_point", at)
-	var cross := aim_point()
+	var cross := flight_point()
 	if cross == Vector3.INF:
 		return _rec("target_point", at)
 	return _rec("target_point", cross.lerp(at, pull))

@@ -547,7 +547,7 @@ func _steer(dt: float) -> void:
 	var bc := BendCaster.of(_by())
 	if bc == null or not bc.valid():
 		return
-	var aim := bc.aim_point([], Vector3.INF)
+	var aim: Vector3 = bc.flight_point([], Vector3.INF)
 	if not aim.is_finite():
 		return
 	var want := aim - global_position
@@ -761,7 +761,7 @@ func _through_ice_wall(w: FormRaised) -> bool:
 		var tg := bc.aim_target()
 		# (a fighter by the crosshair: his chest; else where the crosshair is, through the wall it just passed, which the
 		# crosshair's own ray meets first when the wall stands before him)
-		aim = bc.target_point(tg, velocity.length()) if tg != null else bc.aim_point([w.get_rid()], Vector3.INF)
+		aim = bc.target_point(tg, velocity.length()) if tg != null else bc.flight_point([w.get_rid()], Vector3.INF)
 	if aim.is_finite():
 		var want := aim - global_position
 		if want.length_squared() > 1.0 and rad_to_deg(velocity.angle_to(want)) < 25.0:

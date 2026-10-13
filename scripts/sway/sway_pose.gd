@@ -29,6 +29,9 @@ extends Node
 ## throw, a cone, a ring or a shove then: one mechanism, nothing else waits on it), strike_point() where it leaves from (the
 ## pose's limb, "hand": l_palm, r_palm, both, l_foot, r_foot; INF when no clip plays or it names none). A lock let go
 ## before its wind-up is drawn releases from where the clip is (not the hold's moment). current_clip() the clip on the body.
+## The next lock taking the body before the strike has come leaves it owed when its cast waits on it (_owe_strike; the
+## owner, 2026-10-12, one at a time: nothing is forced out early): told at its own moment all the same, the strike point where
+## the limb was as the next lock took the body.
 ##
 ## THE KNOCK (Tidebreak's knock reactions, the player's; the owner's own clips, animations_extra/Frontier_Bend.res): while
 ## his BendKnock says he is knocked (its reaction window with a carry of KNOCK_MIN_MPS or more) own-bend-knock-slide plays
@@ -138,6 +141,12 @@ var _struck := true
 var _hand := ""
 var _strike_at := Vector3.INF
 var _limb_ids := {}
+## The strike owed (see THE STRIKE): the last cast's move ("" none), the pose's time left to its strike, where its limb was
+## (strike_point answers it meanwhile); being told now.
+var _owed := ""
+var _owed_left := 0.0
+var _owed_at := Vector3.INF
+var _telling_owed := false
 ## The cast's layers this frame (the knock's go over them).
 var _cast_layers: Array = []
 var _cast_from: Array = []
@@ -262,8 +271,12 @@ func rooting() -> bool:
 
 
 ## Where the move leaves from (world): the pose's limb as the clip has it after every modifier. INF when no clip plays or
-## it names none (the tier clips: the caster's chest is used).
+## it names none (the tier clips: the caster's chest is used). A strike owed (told, or its cast landed by the caster's
+## fallback first: a step jab's): where its limb was as the next lock took the body (one at a time: no other cast lands
+## meanwhile).
 func strike_point() -> Vector3:
+	if _owed != "" or _telling_owed:
+		return _owed_at
 	return _strike_at if phase != "" else Vector3.INF
 
 
@@ -331,7 +344,7 @@ func _limb(sk: Skeleton3D, which: String) -> Vector3:
 func _on_started(m: String, _t: Node3D) -> void:
 	if not caster.is_spell(m):
 		return                              # (the first lock: the pointing arm)
-	_strike_now()                           # (the last cast's strike, not yet come: it leaves as the next lock begins)
+	_owe_strike()                           # (the last cast's strike, not yet come: told at its own moment, not as this one begins)
 	move = m
 	tier = caster.tier(m)
 	var el := BendPoses.element_of(caster.player)
@@ -413,6 +426,43 @@ func _strike_now() -> void:
 		return
 	_struck = true
 	struck.emit(move)
+
+
+## The release cut by the next lock before its strike: when its cast waits on it (SwayCaster.waits_on_strike) the strike is
+## owed, told at its own moment (_tick_owed: the time its clip had left to it, on this pose's clock), from where its limb is
+## now; else (nothing waits on it: a zone, a dash, the Kick's wave, a puppet's) told now, as ever. (One at a time: a cast is
+## never let go while another waits on its strike, so no older one is owed by then: told, or spent by strike_spent.)
+func _owe_strike() -> void:
+	if _struck:
+		return
+	if not caster.waits_on_strike(move):
+		_strike_now()
+		return
+	_struck = true
+	_owed = move
+	_owed_left = maxf(minf(_strike, _end()) - _from_held - clip_t, 0.0) if phase == "release" else 0.0
+	_owed_at = _strike_at
+
+
+## Each frame before the clip's own: the owed strike's moment come, it is told.
+func _tick_owed(dt: float) -> void:
+	if _owed == "":
+		return
+	_owed_left -= dt
+	if _owed_left > 0.0:
+		return
+	var m := _owed
+	_owed = ""
+	_telling_owed = true
+	struck.emit(m)
+	_telling_owed = false
+
+
+## The caster landed this cast's effect (SwayCaster._land_pending; by its fallback too: a step jab's, the clip held up by the
+## hit-stop): the strike is spent, never told after (it would be read as the next cast's of the same move).
+func strike_spent() -> void:
+	_struck = true
+	_owed = ""
 
 
 func _on_end() -> void:
@@ -545,6 +595,7 @@ func _process(dt: float) -> void:
 		return
 	dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
+	_tick_owed(dt)
 	_cast_layers = []
 	_aim_w = 0.0
 	_aim_kick = 0.0
@@ -837,6 +888,7 @@ func _tick_stance(dt: float) -> void:
 
 func _exit_tree() -> void:
 	knock = ""
+	_owed = ""                      # (an owed strike goes untold with it too: SwayCaster's fallback lands its cast)
 	_stop()
 	if _aim_arm != null and is_instance_valid(_aim_arm):
 		_aim_arm.queue_free()

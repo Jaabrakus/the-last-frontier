@@ -97,7 +97,11 @@ extends Node
 ## bolt, throw, cone, ring, shove) lands as SwayPose says `struck`, or by a fallback timer (the wait + STRIKE_SLACK_S) when
 ## it never does; the rest (guard and other zones, dashes, buffs, ...) land on the release as ever, the pose following, so a
 ## Catch stands the very frame the lock lets go. One mechanism: whatever SwayEffects starts (a BendThrow) launches at once.
-## A spent cast always lands, a hit taken in between or not; a cast still waiting lands as the next one is cast.
+## A spent cast always lands, a hit taken in between or not. One at a time (the owner, 2026-10-12: "he was able to get a fire
+## knock up and a fireball at the same time" ... "that shouldnt be allowed right?"): nothing is forced out before its strike.
+## The next lock may begin and fill while a cast still waits on its strike (SwayPose tells that strike at its own moment), but
+## nothing is let go meanwhile: a release then (a held one let go, a click, E's guard, key 3, any move) is kept (_queued) and
+## goes the moment the waiting one has landed (_land_pending: _go_kept), its own strike wait counted from then.
 ## The hotbar: spells() (static: every spell, {kind "spell", id, label, art, motes, lock_s, range_m, icon, modes}),
 ## known_spells() (those granted, every one with free use: the Tab screen's Spells list, dragged onto the bar),
 ## ready_spell(id) (spell_readied), readied_spell, spell_icon(id) (its SVG), spell_label(id) (with its mode). The launch
@@ -1824,6 +1828,9 @@ func _click_runs_on() -> bool:
 
 ## The cast going now is a held one let go (the let-go branch): the Beat may count.
 var _let_go := false
+## A held cast let go while another still waited on its strike (_cast keeps it): its let go's [_beat_go, full_t], so it goes
+## as the let go it was once that one has landed ([] none).
+var _kept_go: Array = []
 ## Key 3's Beat (Peak Wind's Leap; AirTalents.beat_worn): key 3 is a click and stays one (its move goes the moment the lock is
 ## full, held or tapped, as ever), so a wearer who still holds key 3 as it goes has his let go read: when its lock filled
 ## (-INF: nothing to read; Classic never sets it). _key3_beat_watch settles it (AirTalents.key3_let_go).
@@ -3268,6 +3275,19 @@ func _cast() -> void:
 	if _cast_wait():
 		_queued = true                            # (every release path shares the stun/movement/ground gate)
 		return
+	if not _pending.is_empty():
+		# (one at a time, the header's strike: the last cast still waits on its strike; this one is kept and goes the moment
+		# that one has landed, _land_pending, never forcing it out early; a held cast let go keeps its let go for then)
+		if _let_go:
+			_kept_go = [_beat_go, full_t]
+		_queued = true
+		return
+	var kept := _kept_go if _queued and not _let_go and not _kept_go.is_empty() and full_t >= float(_kept_go[1]) else []
+	_kept_go = []
+	if not kept.is_empty():
+		_let_go = true                            # (the kept let go goes as it was let go: its Beat as then)
+		_beat_go = bool(kept[0])
+		full_t = float(kept[1])
 	if not is_equal_approx(_cm_used, 1.0):
 		BendStatus.spend_cast_mult(player)        # (the parry's cast reward or penalty this lock took: spent by its cast)
 		_cm_used = 1.0
@@ -3322,7 +3342,6 @@ func _cast() -> void:
 	if player.is_local:
 		player.add_recoil(0.7, 0.0)
 	_sfx("cast", -2.0, at)
-	_land_pending()                           # (one still waiting on its strike lands first)
 	var wait := strike_wait(m)
 	var slack := STRIKE_SLACK_S
 	if r3_on and stepped and wait > BendR3.num("jab_strike_max_s", 0.05):
@@ -3355,6 +3374,9 @@ func _cast() -> void:
 	_pinning = false
 	_pin_id = String(keep[0])
 	_pin_mode = String(keep[1])
+	if not kept.is_empty():
+		_let_go = false
+		_beat_go = false
 
 
 ## Seconds a cast of `m` let go now waits for its pose's strike before its effect lands (0: at once). Only a bend spec in
@@ -3369,28 +3391,42 @@ func strike_wait(m: String) -> float:
 	return maxf(pose.strike_wait(), 0.0)
 
 
-## A cast waiting on its strike lands now (`n` its number: the fallback timer's, or any with -1). Once.
+## A cast waiting on its strike lands now (`n` its number: the fallback timer's, or any with -1). Once. A release kept
+## meanwhile (one at a time: _cast) goes then.
 func _land_pending(n := -1) -> void:
 	if _pending.is_empty() or (n >= 0 and int(_pending.n) != n):
 		return
 	var d := _pending
 	_pending = {}
+	if player == null or not is_instance_valid(player) or not is_inside_tree():
+		return                                  # (the caster gone: nothing to land on, nothing kept to go)
+	if _queued and state == State.FULL:
+		_go_kept.call_deferred()                # (once this frame's pose is done: the kept one's strike counted from then)
 	var t: Variant = d.t
-	if player == null or not is_instance_valid(player) or not is_inside_tree() or not is_instance_valid(t):
-		return                                  # (the caster gone, or what it was cast at: nothing to land on)
 	var pin: Array = d.get("pin", [])
-	if pin.is_empty():
-		_apply_grown(String(d.m), t as Node3D, d.at, bool(d.get("grown", false)), d.get("rel", {}))
-		return
 	# (a quick cast: its own variation while it lands, whatever lock runs now)
 	var keep := [_pin_id, _pin_mode, _pinning]
-	_pin_id = String(pin[0])
-	_pin_mode = String(pin[1])
-	_pinning = true
-	_apply_grown(String(d.m), t as Node3D, d.at, bool(d.get("grown", false)), d.get("rel", {}))
+	if not pin.is_empty():
+		_pin_id = String(pin[0])
+		_pin_mode = String(pin[1])
+		_pinning = true
+	if is_instance_valid(t):                    # (what it was cast at gone: nothing to land on)
+		_apply_grown(String(d.m), t as Node3D, d.at, bool(d.get("grown", false)), d.get("rel", {}))
 	_pin_id = String(keep[0])
 	_pin_mode = String(keep[1])
 	_pinning = bool(keep[2])
+	if pose != null and is_instance_valid(pose):
+		pose.strike_spent()                     # (its strike spent, told or not: one the pose still owes never told for the next)
+
+
+## One at a time (the header's strike): a release kept while the last cast waited on its strike goes the moment that one has
+## landed (_land_pending), as _hold's queued click would on the next tick, while it still may.
+func _go_kept() -> void:
+	if puppet or player == null or not is_instance_valid(player) or not is_inside_tree():
+		return
+	if state == State.FULL and _queued and enabled and blocked() == "" and BendStatus.now() >= _switch_hold_until \
+			and not _cast_wait():
+		_cast()
 
 
 ## The cast's effect (SwayEffects.apply), grown (▲: the caster's BendCaster.grown while it lands, BendEffects merging the
@@ -3411,8 +3447,13 @@ func _apply_grown(m: String, t: Node3D, at: Vector3, grew_now: bool, rel := {}) 
 
 
 func _on_struck(m: String) -> void:
-	if not _pending.is_empty() and String(_pending.m) == m:
+	if waits_on_strike(m):
 		_land_pending()
+
+
+## Whether a cast of `m` waits on its pose's strike now (SwayPose owes a strike cut by the next lock only then).
+func waits_on_strike(m: String) -> bool:
+	return not _pending.is_empty() and String(_pending.m) == m
 
 
 # ---------------------------------------------------------------- online: a puppet's (docs/tidebreak/ring_netcode.md)
@@ -3539,6 +3580,7 @@ func _end_lock() -> void:
 	_air_keep_full_timer = false
 	hold_t = 0.0
 	_queued = false
+	_kept_go = []
 	_sputtered = false
 	_switch_hold_until = -INF
 	raised = null                             # (thrown by the cast, or dropped loose by _break / _fizzle first)

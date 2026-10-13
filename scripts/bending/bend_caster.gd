@@ -9,6 +9,8 @@ extends RefCounted
 ##   chest()         where ranges are measured from; facing() its flat way (the aim's when it has one)
 ##   aim_ray()       [from, dir]: the line the aim looks along (the camera's for the player; the chest to the target's for a body)
 ##   aim_point(ex, from)  where the aim falls NOW (live: a throw re-reads it while the stone rises); `ex` RIDs left out of its ray
+##   flight_point(ex, from)  where a thing flying from the hand is sent (aim_point; the player's: on his crosshair's line at the
+##                   depth of the foe by it, PlayerBendCaster)
 ##   aim_target()    a fighter or the player the aim is on (null: none); target_point(t, mps) where to send a thing at him
 ##                   (his chest; a body's led by his pace over the flight, scattered by its skill)
 ##   launch_point(f) where a bolt leaves from (the chest a little along `f`; the player's: the pose's strike point when it has
@@ -123,6 +125,12 @@ func aim_ray() -> Array:
 func aim_point(ex: Array = [], from := Vector3.INF) -> Vector3:
 	var r := aim_ray()
 	return ray_point(r[0] if from == Vector3.INF else from, r[1], ex)
+
+
+## Where a cast flying from the hand is sent (a bolt, a throw, a hurled stone, a steer): aim_point for a body (its aim
+## looks from its own chest); the player's PlayerBendCaster.flight_point (his eye is not his hand).
+func flight_point(ex: Array = [], from := Vector3.INF) -> Vector3:
+	return aim_point(ex, from)
 
 
 func aim_target() -> Node3D:
@@ -262,7 +270,7 @@ func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 			pool.append(pl)
 	for n in pool:
 		var f := n as CharacterBody3D
-		if f == null or f == body or not NpcSenses.can_fight(f):
+		if f == null or f == body or not NpcSenses.can_fight(f) or assist_skips(f):
 			continue
 		var to := NpcSenses.chest_of(f) - from
 		var dist := to.length()
@@ -280,6 +288,11 @@ func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 		best = f
 		best_a = a
 	return best
+
+
+## Whether the help leaves fighter `f` out (none here; the player's Normal leaves out his side: PlayerBendCaster).
+func assist_skips(_f: Node3D) -> bool:
+	return false
 
 
 ## `n`'s side for the team filter (&"" none): its TEAM_META, else a ring faction's side (and then the player is "player").

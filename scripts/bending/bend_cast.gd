@@ -220,7 +220,7 @@ class Hurl:
 		var who := caster.aim_target()
 		var ex: Array = [(lift.stone as CollisionObject3D).get_rid()] if lift.stone is CollisionObject3D else []
 		if who == null:
-			return caster.aim_point(ex)
+			return caster.flight_point(ex)
 		if not final:
 			return NpcSenses.chest_of(who)
 		var hd := lift._hurl_d()
