@@ -3023,17 +3023,25 @@ static func warm_up(cam: Camera3D, progress := Callable()) -> void:
 	# progress after the cel groups')
 	var sb_n := SbFx.ids().size()
 	var toon_k := 1.0 if sb_n == 0 else 0.55
+	# (the web build times each group: ?perf=1 prints the slow ones, where the browser's shader compiles go)
+	var timed := OS.has_feature("web") and WebPerf.on()
 	for i in groups.size():
 		if not is_instance_valid(holder) or not holder.is_inside_tree():
 			return                               # (the level left meanwhile)
+		var t0 := Time.get_ticks_usec()
 		groups[i].call()
 		if progress.is_valid():
 			progress.call(toon_k * float(i + 1) / float(groups.size() + 1))
 		await tree.process_frame
+		if timed:
+			WebPerf.note("warm group %d: %.0f ms" % [i, (Time.get_ticks_usec() - t0) / 1000.0])
+	var t_sb := Time.get_ticks_usec()
 	if sb_n > 0:
 		await SbFx.prewarm(cam, func(f: float) -> void:
 			if progress.is_valid():
 				progress.call(toon_k + (1.0 - toon_k) * f * 0.95))
+	if timed:
+		WebPerf.note("warm spellbreak: %.0f ms" % ((Time.get_ticks_usec() - t_sb) / 1000.0))
 	for i in WARM_FRAMES:
 		await tree.process_frame
 	if progress.is_valid():

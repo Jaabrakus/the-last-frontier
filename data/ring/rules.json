@@ -204,11 +204,11 @@
 	"seed": 7300,
 	"fight_cues": ["ring_fight", "giant_battle"],
 	"stings": {
-		"_about": "The round's moments, the ring's own sounds (BendSounds ids, audio/sfx/bend: synthesized, none borrowed; an Sfx id also plays): [id, gain dB, pitch]. The countdown's tick, the gong at the go, the bell at a round's end (a ring-out or the time), the match's gong.",
+		"_about": "The round's moments, the ring's own sounds (BendSounds ids, audio/sfx/bend: synthesized, none borrowed; an Sfx id also plays): [id, gain dB, pitch]. The countdown's tick, the gong at the go, a lighter gong at a ring-out and a round's end (the owner, 2026-10-13: 'the bell thing is bad': the round bell is no longer played), the match's gong.",
 		"count": ["count_tick", 0.0, 1.0],
 		"go": ["round_gong", 0.0, 1.0],
-		"ringout": ["round_bell", 0.0, 1.0],
-		"over": ["round_bell", -1.0, 0.94],
+		"ringout": ["match_gong", -5.0, 1.22],
+		"over": ["match_gong", -3.0, 1.08],
 		"match": ["match_gong", 0.0, 1.0]
 	},
 	"words": {

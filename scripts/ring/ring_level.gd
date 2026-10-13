@@ -387,7 +387,9 @@ func _warm_looks() -> void:
 		var run := func() -> void:
 			# (the Soft character look's shaders, SoftLook, when the build had no camera of its own: each drawn once here)
 			if not _soft_warmed:
+				var t_soft := Time.get_ticks_usec()
 				await SoftLook.warm_up(cam)
+				WebPerf.note("warm soft look: %.0f ms" % ((Time.get_ticks_usec() - t_soft) / 1000.0))
 			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
 			# Draw the large fall effects only behind the loading screen. Direct scene launches
 			# must not cover the live competitors in a warm-up splash.
@@ -404,6 +406,7 @@ func _warm_looks() -> void:
 		warm_ms = (Time.get_ticks_usec() - t0) / 1000.0
 		warm_frame_ms = longest / 1000.0
 		print("RING warm_ms=%.0f longest_frame_ms=%.0f" % [warm_ms, warm_frame_ms])
+		WebPerf.note("warm total %.0f ms, longest frame %.0f ms" % [warm_ms, warm_frame_ms])
 	set_meta(&"loading_progress", 1.0)
 	set_meta(&"loading_hold", false)
 

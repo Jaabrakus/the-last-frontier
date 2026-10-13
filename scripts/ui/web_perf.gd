@@ -15,8 +15,26 @@ var _worst := 0.0
 var _last := 0
 
 
+static var _on: Variant = null
+
+
+## Whether ?perf=1 is in the page's address (the web build only).
+static func on() -> bool:
+	if _on == null:
+		_on = OS.has_feature("web") and bool(JavaScriptBridge.eval("/[?&]perf=1/.test(location.search)", true))
+	return bool(_on)
+
+
+## A line printed and kept in the page (window.tbPerf: the console keeps only its last few hundred lines).
+static func note(line: String) -> void:
+	if not on():
+		return
+	print("PERF " + line)
+	JavaScriptBridge.eval("(window.tbPerf = window.tbPerf || []).push(%s)" % JSON.stringify(line))
+
+
 static func attach(host: Node) -> WebPerf:
-	if host == null or not OS.has_feature("web") or not bool(JavaScriptBridge.eval("/[?&]perf=1/.test(location.search)", true)):
+	if host == null or not on():
 		return null
 	var p := WebPerf.new()
 	p.name = "WebPerf"
