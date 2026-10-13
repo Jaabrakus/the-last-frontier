@@ -33,6 +33,15 @@ var _column_sink := -1.0
 ## The earth column leans back from the lip (the way back's Rise); the in-ring Rise's stands straight.
 var _column_lean := true
 var _trail: GPUParticles3D
+## The water's Stream (the Rise's dragon of water, the owner 2026-10-12): its body from the water along the way he flew to
+## his feet (_path, rebuilt as he goes), sinking once the Rise is over.
+var _stream: MeshInstance3D
+var _path := PackedVector3Array()
+var _stream_sink := -1.0
+var _stream_head := Vector3.ZERO
+const STREAM_STEP_M := 0.3
+const STREAM_R := Vector2(0.6, 0.32)        ## its thickness at the water and at his feet
+const STREAM_SEGS := 10
 
 
 func _ready() -> void:
@@ -135,7 +144,7 @@ func rise_tell(el: String, at: Vector3, lip: Vector3, lean := true) -> void:
 			BendLooks.rise(Vector3(lip.x, lip.y, lip.z), Vector3(1.4, 1.0, 1.4), Vector3.UP, "earth")
 			BendLooks.burst(tell, "stone", 26, Vector3.UP, 25.0, 6.0, 0.25)
 		"water":
-			_column_up("water", at)
+			_stream_up(at, lean)
 			BendLooks.spout(Vector3(lip.x, lip.y, lip.z), 0.9, 0.08)
 			BendLooks.burst(tell, "water", 30, Vector3.UP, 20.0, 7.0, 0.2)
 		"fire":
@@ -147,9 +156,11 @@ func rise_tell(el: String, at: Vector3, lip: Vector3, lean := true) -> void:
 			BendLooks.burst(tell, "air", 36, Vector3.UP, 30.0, 7.0, 0.35)
 
 
-## The Rise over: its column sinks (rise.earth.sink_after_s), the trail stops.
+## The Rise over: its column sinks (rise.earth.sink_after_s), the trail stops, the Stream falls back.
 func rise_end(el: String, _at: Vector3) -> void:
 	_column_sink = float(RingMoves.rise_of(el).get("sink_after_s", 0.4))
+	if _stream != null and is_instance_valid(_stream):
+		_stream_sink = 0.25
 	if _trail != null and is_instance_valid(_trail):
 		BendLooks.stop_trail(_trail)
 	_trail = null
@@ -212,6 +223,86 @@ func _column_to(top: Vector3) -> void:
 	(_column.mesh as CylinderMesh).height = h
 
 
+## The Stream begun: from the water under him (the in-ring Rise's, `from_water` false: from the deck at his feet) to his feet.
+func _stream_up(at: Vector3, from_water: bool) -> void:
+	if not BendLooks.live() or not is_inside_tree():
+		return
+	if _stream != null and is_instance_valid(_stream):
+		_stream.queue_free()
+	var wy := at.y - 6.0
+	var gg: Dictionary = moves._geo() if moves != null else {}
+	if not gg.is_empty():
+		wy = float(gg.water_y)
+	var feet := _feet()
+	_path = PackedVector3Array([Vector3(feet.x, wy if from_water else feet.y - 0.3, feet.z)])
+	_stream_head = feet
+	_stream = MeshInstance3D.new()
+	_stream.name = "RiseStream"
+	_stream.top_level = true
+	_stream.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/ring/ring_curtain.gdshader")
+	mat.set_shader_parameter(&"tint", Color(0.3, 0.64, 0.95))
+	mat.set_shader_parameter(&"foam", Color(0.92, 0.97, 1.0))
+	mat.set_shader_parameter(&"alpha", 0.88)
+	mat.set_shader_parameter(&"flow_mps", -8.0)       # (its water running up it toward him)
+	mat.set_shader_parameter(&"height", 8.0)
+	_stream.material_override = mat
+	add_child(_stream)
+	_stream_sink = -1.0
+	_stream_mesh()
+
+
+## The Stream's tube along _path and on to its head (his feet; thick at the water, thinner at his feet), UV.y metres back
+## from his feet.
+func _stream_mesh() -> void:
+	if _stream == null or _path.is_empty():
+		return
+	var pts := _path.duplicate()
+	if _stream_head.distance_to(pts[pts.size() - 1]) > 0.02:
+		pts.append(_stream_head)
+	if pts.size() < 2:
+		return
+	var n := pts.size()
+	var dist := PackedFloat32Array()
+	dist.resize(n)
+	dist[n - 1] = 0.0
+	for i in range(n - 2, -1, -1):
+		dist[i] = dist[i + 1] + pts[i].distance_to(pts[i + 1])
+	var total := maxf(dist[0], 0.01)
+	(_stream.material_override as ShaderMaterial).set_shader_parameter(&"height", total)    # (its white water at the tank's end)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var ref := Vector3.RIGHT
+	for i in n:
+		var t := (pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)])
+		t = t.normalized() if t.length_squared() > 1e-6 else Vector3.UP
+		var a := t.cross(ref)
+		if a.length_squared() < 1e-4:
+			a = t.cross(Vector3.FORWARD)
+		a = a.normalized()
+		var b := t.cross(a).normalized()
+		ref = b.cross(t).normalized()             # (carried along: the tube never twists at a turn)
+		var r := lerpf(STREAM_R.y, STREAM_R.x, dist[i] / total)
+		for k in STREAM_SEGS + 1:
+			var ang := TAU * float(k) / float(STREAM_SEGS)
+			var nrm := a * cos(ang) + b * sin(ang)
+			st.set_normal(nrm)
+			st.set_uv(Vector2(TAU * r * float(k) / float(STREAM_SEGS), dist[i]))
+			st.add_vertex(pts[i] + nrm * r)
+	for i in n - 1:
+		for k in STREAM_SEGS:
+			var v0 := i * (STREAM_SEGS + 1) + k
+			var v1 := v0 + STREAM_SEGS + 1
+			st.add_index(v0)
+			st.add_index(v1)
+			st.add_index(v0 + 1)
+			st.add_index(v0 + 1)
+			st.add_index(v1)
+			st.add_index(v1 + 1)
+	_stream.mesh = st.commit()
+
+
 ## The exhale (his own ears) and a dull puff of his element (on him): his last air move gone.
 func exhale(el: String) -> void:
 	BendLooks.burst(_feet() + Vector3.UP * 1.4, _kind(el), 6, Vector3.UP, 60.0, 0.7, 0.14)
@@ -266,6 +357,20 @@ func tick(_dt: float) -> void:
 	var b := _body()
 	if b == null:
 		return
+	if _stream != null and is_instance_valid(_stream):
+		if moves.mode == "rise" and _stream_sink < 0.0:
+			_stream_head = _feet()
+			if _stream_head.distance_to(_path[_path.size() - 1]) >= STREAM_STEP_M:
+				_path.append(_stream_head)        # (a point of its body laid; the head follows his feet between them)
+			_stream_mesh()
+		elif _stream_sink >= 0.0:
+			_stream_sink -= _dt
+			if _stream_sink <= 0.0:
+				var sm := _stream
+				_stream = null
+				var tw := sm.create_tween()
+				tw.tween_property(sm, "global_position", sm.global_position - Vector3.UP * 7.0, 0.6).set_ease(Tween.EASE_IN)
+				tw.tween_callback(sm.queue_free)
 	if moves.mode == "rise" and _column != null and is_instance_valid(_column):
 		_column_to(b.global_position)
 	elif _column_sink >= 0.0 and _column != null and is_instance_valid(_column):

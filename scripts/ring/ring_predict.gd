@@ -114,15 +114,15 @@ static func run1d(kv: float, vy: float, stun: float, lip_m: float, el: String, t
 		if rise_t >= 0.0:
 			rise_t += DT
 			if rise_t < startup:
-				if kind == "jet" or kind == "pillar":
+				if kind in ["jet", "stream", "pillar"]:
 					vy = 0.0
 					grav = 0.0
-				if kind == "jet":
+				if kind in ["jet", "stream"]:
 					own = 0.0
 			elif rise_t < startup + dur:
 				grav = 0.0
 				var sp := h / dur
-				if kind == "jet":
+				if kind in ["jet", "stream"]:          # (the Stream modelled as a Jet held at the model's aim)
 					vy = sp * sin(jet)
 					own = -sp * cos(jet)
 				elif kind == "pillar":
@@ -135,7 +135,8 @@ static func run1d(kv: float, vy: float, stun: float, lip_m: float, el: String, t
 				rise_t = -1.0
 				rise_end = t
 				helpless = true
-				vy = float(rr.get("end_vy", 3.0)) if kind == "pillar" else minf(vy, float(rr.get("end_vy", 2.0)))
+				vy = float(rr.get("end_vy", 3.0)) if kind == "pillar" else (float(rr.get("end_vy", 2.0)) if kind == "stream" \
+						else minf(vy, float(rr.get("end_vy", 2.0))))
 				if kind == "pillar":
 					own = maxf(own, -drift * extra)
 		if ctl and dodge_t < 0.0 and rise_t < 0.0:

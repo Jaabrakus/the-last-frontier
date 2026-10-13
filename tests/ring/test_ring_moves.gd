@@ -20,8 +20,9 @@ extends SceneTree
 ##             ends 0.3 m inside; the duck intangible at 0.1 s; a repeat within 1.0 s 0.1 s longer
 ##   guard     with the guard held, Space jumps on that frame
 ##   teeter    running into the lip stops; 0.3 s toward the water steps off (an end, a long side); a knock carries over at once
-##   rise      heights within 0.2 m (earth 5.5 along a 20 degree lean toward the lip, water 4.5, air 3.5; fire 7.5 along the aim,
-##             a level aim lifted to +20); the scramble from 1.8 m under the grab box reaches the hang, from 2.4 m not; the
+##   rise      heights within 0.2 m (earth 5.5 along a 20 degree lean toward the lip, air 3.5; fire 7.5 along the aim, a level
+##             aim lifted to +20; water's Stream 7.0 along the aim, a level aim lifted to +10, and turning after the aim in its
+##             travel); the scramble (air's Updraft) from 1.8 m under the grab box reaches the hang, from 2.4 m not; the
 ##             Pillar strikes a body over him; the glide no faster than 3 m/s; a self-launch from the deck uses up the Rise
 ##   hitstun   a press at 0.4 s waits for hitstun's end; a fresh press at 0.65 s ends it (the escape); the steer leans him
 ##   break     broken falls: stand (intangible), roll 2.5 m (never off the lip), wall (spring off); lying: up, roll, attack
@@ -245,7 +246,8 @@ func _jumps() -> void:
 	# a third Space over the deck: the in-ring Rise (2026-10-11, the owner: "the tripple jump should allow the arena jump back
 	# button ... with its own cooldown", 6 s, the way back's Rise kept), straight up where he is; again within its cooldown
 	# nothing; the earth Pillar's too straight up (no lip to lean to); its cooldown over after 6 s. Off the deck, 0.2 s after the
-	# double jump: the Rise
+	# double jump: the Rise. (Air's Updraft: water's Stream goes along the aim, the one Rise steered: _rises)
+	await _el("air")
 	await _ground()
 	rm._ring_rise_at = -INF
 	moves_seen.clear()
@@ -347,10 +349,10 @@ func _masher() -> void:
 
 # ---------------------------------------------------------------- the simulation against the engine
 func _sim_vs_engine() -> void:
-	await _el("water")
+	await _el("air")                          # (an unsteered Rise: water's Stream follows the camera, a simulation has none)
 	await _air_at(2.0, 0.0, false)
 	var start := p.global_position
-	var st := {"pos": start - Rig.D, "vel": Vector3.ZERO, "element": "water", "air": true, "geo": RingMoves.box_geo(Vector3.ZERO, 6.0, 10.0)}
+	var st := {"pos": start - Rig.D, "vel": Vector3.ZERO, "element": "air", "air": true, "geo": RingMoves.box_geo(Vector3.ZERO, 6.0, 10.0)}
 	# the same inputs: the double jump at once, the Rise 0.3 s later, toward the deck all the way
 	var plan := [{"t": 0.0, "move": Vector3(1.0, 0.0, 0.0), "jump": true}, {"t": 0.3, "jump": true}]
 	var hz := float(Engine.physics_ticks_per_second)
@@ -647,10 +649,13 @@ func _rises() -> void:
 	for el: String in ELS:
 		await _el(el)
 		await _air_at(3.0, -1.0, true)
-		if el == "fire":
-			# (the Jet aimed level out over the water: its full 7.5 m with no face in the way to scramble up)
+		if el in ["fire", "water"]:
+			# (the Jet (the Stream) aimed level out over the water: its full length with no face in the way to scramble up; the
+			# recovery turn off for the airtime, as a mouse moved in it does, so the camera never turns the Stream's aim back
+			# toward the deck)
 			p.yaw = PI * 0.5
 			p.rotation.y = p.yaw
+			rm._turn_off = true
 		rig.tap(&"jump")
 		var r := RingMoves.rise_of(el)
 		var su := float(r.startup_s)
@@ -663,14 +668,15 @@ func _rises() -> void:
 			if rm.mode_t < su - 1e-4:
 				a = p.global_position
 		var d := p.global_position - a
-		r_m[el] = snappedf(d.length() if el in ["earth", "fire"] else d.y, 0.01)
+		r_m[el] = snappedf(d.length() if el in ["earth", "fire", "water"] else d.y, 0.01)
 		match el:
 			"earth":
 				var lean := rad_to_deg(Vector3.UP.angle_to(d))
 				_expect(absf(d.length() - 5.5) <= 0.2 and absf(lean - 20.0) < 1.5 and d.x > 0.0,
 						"earth's Pillar: %.2f m along a %.1f degree lean toward the lip" % [d.length(), lean])
 			"water":
-				_expect(absf(d.y - 4.5) <= 0.2, "water's Fountain: %.2f m up" % d.y)
+				var wp := rad_to_deg(asin(d.normalized().y))
+				_expect(absf(d.length() - 7.0) <= 0.2 and absf(wp - 10.0) < 1.0, "water's Stream, a level aim: %.2f m at %.1f degrees (lifted to +10)" % [d.length(), wp])
 			"fire":
 				var pitch := rad_to_deg(asin(d.normalized().y))
 				_expect(absf(d.length() - 7.5) <= 0.2 and absf(pitch - 20.0) < 1.0, "fire's Jet, a level aim: %.2f m at %.1f degrees (lifted to +20)" % [d.length(), pitch])
@@ -678,13 +684,36 @@ func _rises() -> void:
 				_expect(absf(d.y - 3.5) <= 0.2 and not rm.helpless() and rm._glide and rm.can_cast(), "air's Updraft: %.2f m up, then a controlled glide" % d.y)
 		await rig.secs(2.5)
 	print("METRIC rise_m %s" % str(r_m))
-	# the scramble: a Rise meeting the face with the head 1.8 m under the grab box reaches the hang; 2.4 m does not
+	# water's Stream steers: the aim turned a quarter round in its travel, its way turns after it (the owner, 2026-10-12: "the
+	# user uses the aim to move like a dragon")
 	await _el("water")
+	await _air_at(3.0, -1.0, true)
+	p.yaw = PI * 0.5
+	p.rotation.y = p.yaw
+	rm._turn_off = true
+	rig.tap(&"jump")
+	await rig.until(func() -> bool: return rm.mode == "rise" and rm._m.has("way"), 0.5)
+	var w0: Vector3 = rm._m.get("way", Vector3.ZERO)
+	p.yaw += PI * 0.5
+	p.rotation.y = p.yaw
+	rm.note_mouse()
+	var w1 := w0
+	for i in 90:
+		await physics_frame
+		if rm.mode != "rise":
+			break
+		w1 = rm._m.get("way", w1)
+	var turned := rad_to_deg(Vector2(w0.x, w0.z).angle_to(Vector2(w1.x, w1.z)))
+	_expect(absf(turned) > 60.0, "water's Stream turns after the aim: %.0f degrees in its travel" % turned)
+	await rig.secs(2.5)
+	# the scramble: a Rise meeting the face with the head 1.8 m under the grab box reaches the hang; 2.4 m does not (air's
+	# Updraft: straight up, 3.5 m less its 0.05 s startup's fall)
+	await _el("air")
 	var lip_y := Rig.D.y
 	var res := {}
 	for under: float in [1.8, 2.4]:
 		var head_top := lip_y - 0.5 - under
-		var start_feet := head_top - 1.6 - 4.456
+		var start_feet := head_top - 1.6 - 3.492
 		rig.release_all()
 		rig.place(p, Vector3(rig.lip(0.0).x - 0.31, start_feet, Rig.D.z), -PI * 0.5)
 		await physics_frame

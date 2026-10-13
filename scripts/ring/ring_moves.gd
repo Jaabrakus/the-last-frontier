@@ -1565,8 +1565,9 @@ func _tell_point() -> Vector3:
 	return Vector3(lip.point)
 
 
-## The Rise's travel way, fixed as the startup ends: the Pillar leaning lean_deg toward the nearest lip, the Jet along the
-## aim (pitch floored at pitch_floor_deg), the others up.
+## The Rise's travel way, fixed as the startup ends: the Pillar leaning lean_deg toward the nearest lip, the Jet (and the
+## water's Stream, which then turns on toward the aim: _stream_turn) along the aim (pitch floored at pitch_floor_deg), the
+## others up.
 func _rise_dir() -> Vector3:
 	var kind := String(_m.kind)
 	var r: Dictionary = _m.r
@@ -1583,7 +1584,7 @@ func _rise_dir() -> Vector3:
 		if to.length() < 0.05:
 			return Vector3.UP
 		return (Vector3.UP * cos(lean) + to.normalized() * sin(lean)).normalized()
-	if kind == "jet":
+	if kind == "jet" or kind == "stream":
 		var aim := _v3("aim")
 		if aim.length() < 0.1:
 			# (no aim given: toward the nearest lip at 45 degrees)
@@ -1592,15 +1593,32 @@ func _rise_dir() -> Vector3:
 				to2 = Vector3(_lip(g, _pos()).point) - _pos()
 			to2.y = 0.0
 			aim = (to2.normalized() + Vector3.UP).normalized() if to2.length() > 0.05 else Vector3.UP
-		aim = aim.normalized()
-		var floor_rad := deg_to_rad(float(r.get("pitch_floor_deg", 20.0)))
-		var flat := Vector3(aim.x, 0.0, aim.z)
-		var pitch := asin(clampf(aim.y, -1.0, 1.0))
-		if pitch < floor_rad:
-			var f := flat.normalized() if flat.length() > 1e-3 else Vector3.FORWARD
-			aim = (f * cos(floor_rad) + Vector3.UP * sin(floor_rad)).normalized()
-		return aim
+		return _floored(aim.normalized(), float(r.get("pitch_floor_deg", 20.0)))
 	return Vector3.UP
+
+
+## `aim` with its pitch no lower than `floor_deg` (the Jet's, the Stream's).
+static func _floored(aim: Vector3, floor_deg: float) -> Vector3:
+	var floor_rad := deg_to_rad(floor_deg)
+	var flat := Vector3(aim.x, 0.0, aim.z)
+	if asin(clampf(aim.y, -1.0, 1.0)) < floor_rad:
+		var f := flat.normalized() if flat.length() > 1e-3 else Vector3.FORWARD
+		return (f * cos(floor_rad) + Vector3.UP * sin(floor_rad)).normalized()
+	return aim
+
+
+## The water's Stream through its travel: its way turned toward this frame's aim (floored) at most turn_deg_s; no aim given
+## (a bot's intent after its press): kept.
+func _stream_turn(way: Vector3, r: Dictionary, dt: float) -> Vector3:
+	var aim := _v3("aim")
+	if aim.length() < 0.1:
+		return way
+	var want := _floored(aim.normalized(), float(r.get("pitch_floor_deg", 10.0)))
+	var ang := way.angle_to(want)
+	var step := deg_to_rad(float(r.get("turn_deg_s", 220.0))) * dt
+	if ang <= step or ang < 1e-4:
+		return want
+	return way.slerp(want, step / ang).normalized()
 
 
 func _step_rise(dt: float) -> void:
@@ -1613,8 +1631,8 @@ func _step_rise(dt: float) -> void:
 	var el := String(_m.el)
 	var ending := false
 	if mode_t < startup:
-		if kind == "jet":
-			_o = Vector3.ZERO                        # (the hover: held in place, its roar the tell)
+		if kind == "jet" or kind == "stream":
+			_o = Vector3.ZERO                        # (the hover: held in place, its roar (the water's rising) the tell)
 		elif kind == "pillar":
 			_o.y = 0.0
 		else:
@@ -1631,6 +1649,10 @@ func _step_rise(dt: float) -> void:
 			"pillar":
 				_o = way * sp * frac + _move_vec() * d.x * float(_m.drift) * frac
 			"jet":
+				_o = way * sp * frac
+			"stream":
+				way = _stream_turn(way, r, dt)
+				_m.way = way
 				_o = way * sp * frac
 			_:
 				var flat := Vector3(_o.x, 0.0, _o.z).move_toward(_move_vec() * d.x * float(_m.drift), d.y * dt)
@@ -1663,6 +1685,8 @@ func _end_rise() -> void:
 	var cap := drift_of(el).x
 	if kind == "pillar":
 		_o.y = float(r.get("end_vy", 3.0))
+	elif kind == "stream":
+		_o.y = float(r.get("end_vy", 2.0))       # (the water lets him go with its lift, however it was steered)
 	else:
 		_o.y = minf(_o.y, float(r.get("end_vy", 2.0)))
 	var flat := Vector3(_o.x, 0.0, _o.z).limit_length(cap)
