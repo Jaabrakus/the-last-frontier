@@ -1718,13 +1718,17 @@ static func slam(c: Variant, a: Dictionary, spec: Dictionary) -> Strike:
 	var st := Strike.start(bc, "slam", a, spec)
 	var box := slam_box(bc, a, spec)
 	var slk := SbFx.key_of(spec.get("_info", {}))
-	if not SbFx.fire(p, slk, "slam", {"dir": box.fwd}):
-		BendLooks.burst(p.global_position + Vector3.UP * 0.4, kind, 30, ((box.foot as Vector3) - p.global_position).normalized(), 25.0, 10.0, 0.4)
-	BendLooks.sound(kind, "hit", p.global_position, -2.0)
 	var floor_at := _floor_under(bc, box)
+	if not SbFx.fire(p, slk, "slam", {"dir": box.fwd}):
+		if kind == "water":
+			# (the Downpour as the water's charge: wisps spiralling down to where it lands, mist and drops there)
+			BendLooks.downpour(p.global_position + Vector3.UP * 0.9, floor_at if floor_at != Vector3.INF else box.foot as Vector3)
+		else:
+			BendLooks.burst(p.global_position + Vector3.UP * 0.4, kind, 30, ((box.foot as Vector3) - p.global_position).normalized(), 25.0, 10.0, 0.4)
+	BendLooks.sound(kind, "hit", p.global_position, -2.0)
 	_cur["deck"] = floor_at != Vector3.INF
 	if floor_at != Vector3.INF:
-		if not SbFx.fire(p, slk, "slam_deck", {"at": floor_at, "dir": box.fwd}):
+		if kind != "water" and not SbFx.fire(p, slk, "slam_deck", {"at": floor_at, "dir": box.fwd}):
 			BendLooks.burst(floor_at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 70.0, 4.0, 0.4)
 		if bool(spec.get("put_out", false)):
 			for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):

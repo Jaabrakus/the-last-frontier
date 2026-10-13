@@ -1141,8 +1141,11 @@ static func _patch_ring(body: Node3D, el: String, y: float, cols: Array) -> void
 
 
 ## The Wave's water going out from `at` (the caster's chest) along `dir`, `deg` wide, to `reach` m at `mps` (BendEffects.cone's
-## travel_mps: its hits land as this front reaches them, the move review 2026-10-12: he flew before the foam got there): a blue
-## curl of water, `tall` m, risen afresh every step along the way, spray thrown off its lip and drops left on the deck.
+## travel_mps: its hits land as this front reaches them, the move review 2026-10-12: he flew before the foam got there). As the
+## water's charge (the owner, 2026-10-12: "reeffect our water moves now with the new water charge"): WAVE_WISPS wisps of water
+## fanned across the cone surge out with the front, rising to `tall` m and breaking at its end, a blue mist rolling along it
+## and drops thrown off its top (it was a run of blue crown bands).
+const WAVE_WISPS := 7
 static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps: float, tall := 1.2) -> void:
 	if not live():
 		return
@@ -1157,29 +1160,129 @@ static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps:
 		return
 	var foot := FormEffects.ground_at(pool, at)
 	var span := deg_to_rad(clampf(deg, 20.0, 160.0))
-	var mesh := ToonFx.band_arc_mesh(1.0, 1.12, 1.0, span)
-	var look := Basis.looking_at(d, Vector3.UP)
+	var side := d.cross(Vector3.UP).normalized()
 	pool.shoot("drop", at, 16, d, deg * 0.4, Vector2(4.0, 8.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -10, 0), 0.0)
-	var steps := clampi(int(ceil(reach / 0.55)), 6, 24)
+	pool.shoot("puff_frost", foot + d * 0.6 + Vector3.UP * 0.4, 10, d + Vector3.UP * 0.3, deg * 0.5, Vector2(1.5, 3.0),
+			Vector2(0.4, 0.8), 0.5, Vector3(0, 0.5, 0), 2.0, {"r": 0.4})
+	# (the wisps: each its own way across the cone and its own height, weaving a little as it surges)
+	var dur := maxf(reach - 0.7, 0.5) / maxf(mps, 1.0)
+	var wm := water_wisp_mat()
+	for i in WAVE_WISPS:
+		var u := (float(i) + 0.5) / float(WAVE_WISPS)
+		var wd := d.rotated(Vector3.UP, lerpf(-span * 0.45, span * 0.45, u))
+		var h0 := tall * lerpf(0.35, 0.95, fposmod(u * 2.7, 1.0))
+		var ph := u * TAU * 1.3
+		var head := Node3D.new()
+		head.top_level = true
+		pool.add_child(head)
+		head.global_position = foot + wd * 0.7 + Vector3.UP * 0.15
+		var rb := ToonRibbon.new()
+		rb.main_mat = wm
+		rb.width = 0.09
+		rb.tail_w = 0.2
+		rb.life = 0.3
+		rb.coils = 1
+		rb.coil_mat = wm
+		rb.coil_r = 0.13
+		rb.coil_w = 0.035
+		rb.coil_spin = 20.0
+		pool.add_child(rb)
+		rb.follow(head)
+		var tw := head.create_tween()
+		tw.tween_method(func(k: float) -> void:
+			var r := 0.7 + (reach - 0.7) * k
+			var h := 0.15 + h0 * sin(PI * minf(k * 1.1, 1.0)) * (1.0 if k < 0.85 else 1.0 - (k - 0.85) / 0.15 * 0.6)
+			head.global_position = foot + wd * r + Vector3.UP * h + side * 0.12 * sin(k * TAU * 1.5 + ph), 0.0, 1.0, dur)
+		tw.tween_callback(func() -> void:
+			rb.stop()
+			tree.create_timer(rb.life + 0.1, false).timeout.connect(func() -> void:
+				if is_instance_valid(rb):
+					rb.queue_free()
+				if is_instance_valid(head):
+					head.queue_free()))
+	# (the mist along its front and the drops off its top, as it goes)
+	var steps := clampi(int(ceil(reach / 0.7)), 5, 18)
 	for i in steps:
 		var r := 0.7 + (reach - 0.7) * float(i + 1) / steps
-		var h := tall * lerpf(0.75, 1.0, sin(PI * float(i + 1) / (steps + 1)))   # (it swells, then breaks at its end)
+		var h := tall * lerpf(0.6, 1.0, sin(PI * float(i + 1) / (steps + 1)))
 		var wait := r / maxf(mps, 1.0)
 		var last := i == steps - 1
 		tree.create_timer(maxf(wait - 0.04, 0.0), false).timeout.connect(func() -> void:
 			var p2 := _pool()
 			if p2 == null:
 				return
-			var xf := Transform3D(look * Basis.from_scale(Vector3(r, h, r)), foot + Vector3.UP * 0.02)
-			p2.play("crown", xf, 0.32, 1.0, 1.06, WATER, FOAM, mesh)
-			var lip := foot + d * r + Vector3.UP * h
-			p2.shoot("foam", lip, 3, d + Vector3.UP * 0.6, 50.0, Vector2(1.0, 2.5), Vector2(0.25, 0.45), 0.4, Vector3(0, -3, 0), 1.5,
-					{"r": r * sin(span * 0.5) * 0.8})
-			p2.shoot("drop", lip, 5, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0), 0.0,
-					{"r": r * sin(span * 0.5) * 0.8})
+			var lip := foot + d * r + Vector3.UP * h * 0.6
+			var w := r * sin(span * 0.5) * 0.8
+			p2.shoot("puff_frost", lip, 4, d + Vector3.UP * 0.5, 40.0, Vector2(0.8, 2.0), Vector2(0.35, 0.7), 0.45,
+					Vector3(0, 0.4, 0), 1.8, {"r": w})
+			p2.shoot("drop", lip, 4, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0),
+					0.0, {"r": w})
 			if last:
-				p2.shoot("foam", foot + d * r + Vector3.UP * 0.3, 10, d + Vector3.UP, 70.0, Vector2(1.0, 3.0), Vector2(0.3, 0.6), 0.6,
-						Vector3(0, -2, 0), 1.0, {"r": r * sin(span * 0.5)}))
+				p2.shoot("puff_frost", foot + d * r + Vector3.UP * 0.4, 12, d + Vector3.UP, 70.0, Vector2(1.0, 3.0),
+						Vector2(0.4, 0.8), 0.6, Vector3(0, 0.3, 0), 1.5, {"r": w}))
+
+
+## Water's Downpour (its Slam) as the water's charge (the owner, 2026-10-12: "reeffect our water moves now with the new water
+## charge"): four wisps of water spiral down from `from` (before the caster's chest) to `to` (the deck under its box, or its
+## foot in the air) in DOWNPOUR_S, closing in as they go, drops pouring with them; where they land a burst of blue mist and
+## drops thrown out round it.
+const DOWNPOUR_S := 0.16
+static func downpour(from: Vector3, to: Vector3) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var tree := pool.get_tree()
+	if tree == null:
+		return
+	var axis := to - from
+	var len := axis.length()
+	if len < 0.2:
+		return
+	var dn := axis / len
+	var a := dn.cross(Vector3.UP)
+	a = a.normalized() if a.length_squared() > 1e-4 else Vector3.RIGHT
+	var b := dn.cross(a).normalized()
+	var wm := water_wisp_mat()
+	for i in 4:
+		var ph := TAU * float(i) / 4.0
+		var head := Node3D.new()
+		head.top_level = true
+		pool.add_child(head)
+		head.global_position = from + (a * cos(ph) + b * sin(ph)) * 0.55
+		var rb := ToonRibbon.new()
+		rb.main_mat = wm
+		rb.width = 0.1
+		rb.tail_w = 0.2
+		rb.life = 0.25
+		rb.coils = 1
+		rb.coil_mat = wm
+		rb.coil_r = 0.14
+		rb.coil_w = 0.035
+		rb.coil_spin = 22.0
+		pool.add_child(rb)
+		rb.follow(head)
+		var tw := head.create_tween()
+		tw.tween_method(func(k: float) -> void:
+			var th := ph + k * TAU * 1.1
+			head.global_position = from + dn * len * k + (a * cos(th) + b * sin(th)) * lerpf(0.55, 0.2, k), 0.0, 1.0, DOWNPOUR_S)
+		tw.tween_callback(func() -> void:
+			rb.stop()
+			tree.create_timer(rb.life + 0.1, false).timeout.connect(func() -> void:
+				if is_instance_valid(rb):
+					rb.queue_free()
+				if is_instance_valid(head):
+					head.queue_free()))
+	pool.shoot("drop", from, 20, dn, 25.0, Vector2(6.0, 11.0), Vector2(0.08, 0.16), 0.4, Vector3(0, -10, 0), 0.0)
+	tree.create_timer(DOWNPOUR_S, false).timeout.connect(func() -> void:
+		var p2 := _pool()
+		if p2 == null:
+			return
+		p2.shoot("puff_frost", to + Vector3.UP * 0.2, 18, Vector3.UP, 85.0, Vector2(1.5, 3.5), Vector2(0.4, 0.9), 0.6,
+				Vector3(0, 0.3, 0), 2.0, {"r": 0.5, "radial": 3.0})
+		p2.shoot("drop", to + Vector3.UP * 0.1, 24, Vector3.UP, 70.0, Vector2(2.5, 5.0), Vector2(0.07, 0.14), 0.6,
+				Vector3(0, -10, 0), 0.0, {"r": 0.4}))
 
 
 ## The dust and cracks along the foot of an earth wall coming up at `at` (its foot's middle), `size` (x across), facing
