@@ -4,23 +4,31 @@ extends SceneTree
 ## who shoots): each element's guard made on the player (BendZone with his element: r2) and met by a shot timed to arrive
 ## at 0.2 s (perfect) or 0.6 s (late) of it, the specs passed straight to BendZone, BendBolt, BendEffects and BendThrow:
 ##   earth     Catch: every stone kind (a bolt, a pebble, a spike, a boulder, a chunk) caught and held, perfect or late, the
-##             catcher not moved an inch; its window and radius today's; fire passes. The return: the lock 0.35 s, 0.1 s
-##             off a clean catch; x1.2 clean; the rally's steps and its x1.6 cap; never under gust.stone.hurl; two taps of E
-##             in all (catch, throw back); held 10 s with hold_drop_s 0 and still held
+##             catcher not moved an inch; its window and radius today's; fire, air and water on the beat never held but
+##             circled once and back along the aim x1.2 (the owner, 2026-10-12: "the only catch and press e is when its a
+##             earth on earth everything else is flow"): a burning magma ball, a fist of pebbles, water slapped down as a
+##             drenching wave of mud along the deck ("the fissure mud").
+##             The return: the lock 0.35 s, 0.1 s off a clean catch; x1.2 clean; the rally's steps and its x1.6
+##             cap; never under gust.stone.hurl; two taps of E in all (catch, throw back); held 10 s with hold_drop_s 0 and
+##             still held
 ##   water     Turn: a water bolt on the beat swings round the waist and leaves along the aim x1.2; fire on the beat is
-##             doused; a Wave on the beat parts round him; late, half gets through; stone passes; a whiff makes the next
-##             guard's lock whiff_lock_s. The Air Lance (the Gust held long; the owner, 2026-10-11): on the beat it wraps
-##             round him and turns to ice (its body made anew, drawn short on the circle), his, and leaves an ice lance along
-##             his aim x1.2; late, half gets through and it stays air; a plain air bolt passes as before
+##             doused; a Wave on the beat parts round him; late, half gets through; a stone on the beat swung round in water
+##             and back as a mud spear, a thrown Boulder back as mud (2026-10-12); a whiff makes the next guard's lock
+##             whiff_lock_s. The Air Lance (the Gust held long; the owner, 2026-10-11): on the beat it wraps round him and
+##             turns to ice (its body made anew, drawn short on the circle), his, and leaves an ice lance along his aim x1.2;
+##             late, half gets through and it stays air; a plain air bolt on the beat back as mini ice spears (2026-10-12)
 ##   fire      Parry: fire on the beat circles him once like a moon (the owner, 2026-10-12) and leaves along the aim x1.2, no
-##             dice thrown; air on the beat the same, turned to fire as it is caught; ice on the beat melts to a puddle;
-##             lightning back only on the beat; late, half; water passes
-##   air       Wind Guard: air on the beat circles him once and goes back x1.2, Carried wind charged; fire on the beat the
-##             same, still fire; stone on the beat cushioned and dropped loose, late half
+##             dice thrown; air on the beat the same, turned to fire as it is caught; a stone (a bolt, a thrown Boulder) the
+##             same, back as a burning magma ball; ice on the beat melts to a puddle, water boils to steam; lightning back
+##             only on the beat; late, half
+##   air       Wind Guard: air on the beat circles him once and goes back x1.2, Carried wind charged; fire, a stone, water and
+##             a thrown Boulder on the beat the same, each as it was; late half
 ##   the Kick  the floor wave strikes a man standing and misses one 0.7 m up; a wall stops it; its line and form the same at
 ##             any crosshair pitch; a jump 0.2 s before it reaches him clears it
 ##   High Kick its crescent clears a 2 m wall
 ##   lightning it strikes flash_s after the release; a man 1.5 m aside by then is missed
+##   Air Beam  the Gust held long (2026-10-12): Lightning's strike in air, its flash_s after the release; any element's guard on
+##             the beat stops it whole, nothing sent back; late, half through
 ##   steer     Flowing: a water bolt bends 15 deg at most
 ##   weight    the heavier stone goes on, equal ones both break
 ##   each      every element's guard alike (the owner: "dont forget the other elements"): a guard that took nothing is a
@@ -221,13 +229,11 @@ func _shoot(spec: Dictionary, d: float) -> BendBolt:
 	return BendBolt.launch(foe, _chest() - dir * d, dir, spec)
 
 
-## The Air Lance's bolt: the Gust's spec with its grow (moves.json air_gust gust: a spear of air thrown point first).
+## An air spear's bolt (the Air Lance's numbers as it flew until 2026-10-12, when the Gust held long became the Air Beam: a spear
+## of air thrown point first; water's Turn still answers any air spear as an ice lance).
 func _lance_spec() -> Dictionary:
-	var g: Dictionary = ((SwayMoves.move("air_gust").bend as Dictionary).gust as Dictionary).duplicate(true)
-	var grow: Dictionary = g.get("grow", {})
-	g.erase("grow")
-	g.merge(grow, true)
-	return g
+	return {"do": "throw", "kind": "air", "shape": "spear", "flight": "point_first", "mps": 40.0, "gravity": 1.0, "damage": 18.0,
+			"knock_mps": 15.0, "up_mps": 1.5, "radius_m": 0.18, "range_m": 34.0, "long": true, "look_r": 0.18}
 
 
 ## A guard `kind` of `spec` made on the player now.
@@ -250,9 +256,11 @@ func _moon(kind: String, gspec: Dictionary, spec: Dictionary, kind_after: String
 	var r0 := randf()
 	seed(4242)
 	var acted := z.on_bolt(b)
+	_moon_muddy = z._muddied
 	var r1 := randf()
 	var circling: bool = acted and b.caster == p and b.swinging() and b.kind == kind_after
 	b.set_physics_process(true)
+	_moon_bolt = b
 	await _until(func() -> bool: return not is_instance_valid(b) or not b.swinging(), BendZone.MOON_S + 0.3)
 	await _ticks(2)
 	var left := false
@@ -262,6 +270,43 @@ func _moon(kind: String, gspec: Dictionary, spec: Dictionary, kind_after: String
 		left = b.velocity.normalized().dot((aim - b.global_position).normalized()) > 0.97 and absf(b.velocity.length() - v0 * 1.2) < 0.05
 		k = b.kind
 	return [acted, circling, left, r0 == r1, k]
+
+
+## The last _moon's bolt (its shape, heat and info read after: a guard's fusion), and whether its guard's ring went muddy as
+## it took it (a water Turn's of a stone: BendZone.muddy_near).
+var _moon_bolt: BendBolt
+var _moon_muddy := false
+
+
+## A stone thrown by the foe (a GustLift's flight: a Boulder's throw) met on the beat by guard `kind` (made as it comes within
+## its radius + 2.5 m): [it swung round him, his (its caster's body the player's), left along his aim once the lap was over,
+## the zone's results, the lift].
+func _lift_moon(kind: String, gspec: Dictionary) -> Array:
+	await _calm()
+	var from := NpcSenses.chest_of(foe) + (_chest() - NpcSenses.chest_of(foe)).normalized() * 1.5
+	var s := FormStone.ball(current_scene, from - Vector3.UP * 0.3, {"radius_m": 0.3, "mass_kg": 30.0, "rise_s": 0.01, "life_s": 30.0},
+			7, "stone")
+	s.state = FormStone.State.RESTING
+	var td: Dictionary = (SwayMoves.move("stone_form").get("throw", {}) as Dictionary).duplicate(true)
+	td["rise_s"] = 0.05
+	var th := FormEffects.Throw.start(fbc, s, td, _chest())
+	await _until(func() -> bool: return th != null and is_instance_valid(th.lift) and th.lift.phase == GustLift.Phase.FLIGHT, 1.0)
+	var lift: GustLift = th.lift if th != null and is_instance_valid(th.lift) else null
+	if lift == null:
+		return [false, false, false, [], null]
+	var reach := float(gspec.get("radius_m", 2.2)) + 2.5
+	await _until(func() -> bool: return not is_instance_valid(lift) or lift.stone.global_position.distance_to(_chest()) < reach, 2.0)
+	var z := _guard(kind, gspec)
+	var swung := await _until(func() -> bool: return is_instance_valid(lift) and lift.swinging(), 0.6)
+	var mine := is_instance_valid(lift) and lift.caster != null and lift.caster.body == p
+	await _until(func() -> bool: return not is_instance_valid(lift) or not lift.swinging(), 1.0)
+	await _ticks(2)
+	var left := false
+	if is_instance_valid(lift) and lift.phase == GustLift.Phase.FLIGHT:
+		var at := lift.stone.global_position
+		var aim := BendZone.guard_aim(p, at)
+		left = Vector2(lift.velocity.x, lift.velocity.z).normalized().dot(Vector2(aim.x - at.x, aim.z - at.z).normalized()) > 0.95
+	return [swung < INF, mine, left, z.results, lift]
 
 
 ## The player's health lost to a shot of `spec` met by guard `kind` (none: "") made `wait` s before it arrives: [lost, zone,
@@ -317,10 +362,37 @@ func _earth() -> void:
 		all = all and _late_kinds[k] == ["late"]
 	_expect(all and slide < 0.05, "a late catch of every stone kind holds it with no slide (%s %s; slid %s m)" % [kinds, _late_kinds, slides])
 	metrics["late_catch_zero_slide_ok"] = all and slide < 0.05
-	# fire, water, air pass
-	var base := await _met("", {}, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.0)
-	var thru := await _met("catch", cspec, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(base[0]) > 0.0 and is_equal_approx(float(thru[0]), float(base[0])), "Catch lets fire through (%.1f of %.1f)" % [thru[0], base[0]])
+	# fire, air and water on the beat (the owner, 2026-10-12: "for earth the only catch and press e is when its a earth on earth
+	# everything else is flow"): never held; circled once like a moon and back along his aim x1.2, his, made of both: air a fist
+	# of pebbles, fire a burning magma ball, water a spear of mud that drenches
+	var flows := {}
+	var all_flow := true
+	for sp: Dictionary in [{"kind": "fire", "mps": 40.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0},
+			{"kind": "air", "mps": 40.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0},
+			{"kind": "water", "mps": 40.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}]:
+		var fm := await _moon("catch", cspec, sp, "stone")
+		var fb := _moon_bolt
+		var made := false
+		var left: bool = fm[2]
+		if is_instance_valid(fb):
+			match String(sp.kind):
+				"fire":
+					made = fb.shape == "magma" and fb.heated
+				"air":
+					made = fb.shape == "pebbles"
+				"water":
+					# (the owner: "earth catching water should be the fissure mud": slapped down as the swing ends, a wave of mud
+					# along the deck toward his aim, his, drenching; its speed the mud wave's, not the shot's)
+					var aim := BendZone.guard_aim(p, fb.global_position) - fb.global_position
+					var fv := Vector2(fb.velocity.x, fb.velocity.z)
+					left = fv.length() > 1.0 and fv.normalized().dot(Vector2(aim.x, aim.z).normalized()) > 0.97
+					made = fb.floor_wave and fb.kind == "stone" and fb.shape == "mud" and fb.caster == p \
+							and float(fb.info.get("mud_s", 0.0)) > 0.0 and fb._wave_look != null
+		var ok: bool = fm[0] and fm[1] and left and made and _held() == null
+		flows[String(sp.kind)] = [fm[1], left, fb.shape if is_instance_valid(fb) else "-", fb.floor_wave if is_instance_valid(fb) else false,
+				_held() == null]
+		all_flow = all_flow and ok
+	_expect(all_flow, "Catch on the beat of fire, air and water: never held, each circled once and back along his aim, x1.2 as a magma ball (burning) and a fist of pebbles, water as a wave of mud along the deck (drenching) (%s)" % [flows])
 
 
 ## A stone of kind `k` thrown at the player by the foe, met late by a catch (made as it flies).
@@ -449,8 +521,19 @@ func _water() -> void:
 	_late_ok = _late_ok and half
 	var fire := await _met("redirect", tspec, {"kind": "fire", "mps": 40.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
 	_expect(float(fire[0]) == 0.0 and fire[3] == ["perfect"], "Turn on the beat douses fire (%.1f through)" % fire[0])
-	var st := await _met("redirect", tspec, STONE, 0.2)
-	_expect(float(st[0]) > 0.0 and st[3].is_empty(), "Turn lets stone pass (%.1f)" % st[0])
+	# a stone on the beat (the owner, 2026-10-12: "water catch earth ... creates a mud spear"): swung round in water, back as
+	# a spear of mud that drenches, his
+	var mud := await _moon("redirect", tspec, STONE, "stone")
+	# (the water round it muddy as it swings: the owner, 2026-10-12, "for the water parry channel i also want it to turn muddy")
+	var mud_spear := is_instance_valid(_moon_bolt) and _moon_bolt.shape == "mud_spear" and _moon_bolt.sheathed == "mud" \
+			and float(_moon_bolt.info.get("mud_s", 0.0)) > 0.0
+	_expect(mud[0] and mud[1] and mud[2] and mud_spear and _moon_muddy,
+			"Turn on the beat: a stone swung round in water, the Turn's ring gone muddy, and sent back as a mud spear x1.2 (%s %s ring muddy %s)"
+			% [mud, mud_spear, _moon_muddy])
+	# a Boulder on the beat: the same, his, in mud
+	var lm := await _lift_moon("redirect", tspec)
+	var l_mud := lm[4] != null and is_instance_valid(lm[4]) and String((lm[4] as GustLift).stone.get_meta(FormStone.PACK_META, "")) == "mud"
+	_expect(lm[0] and lm[1] and lm[2] and l_mud and lm[3] == ["perfect"], "Turn on the beat: a thrown Boulder swung round and sent back along his aim as mud (%s mud %s)" % [lm.slice(0, 4), l_mud])
 	# the Air Lance: on the beat it wraps round him as ice and leaves along his aim x1.2, his
 	var lance := _lance_spec()
 	var lbase := await _met("", {}, lance, 0.0)
@@ -477,8 +560,13 @@ func _water() -> void:
 	var l_half := absf(float(ll[0]) - float(lbase[0]) * 0.5) < 1.0
 	var l_air := not is_instance_valid(ll[2]) or (ll[2] as BendBolt).kind == "air"
 	_expect(ll[3] == ["late"] and l_half and l_air, "Turn late on the Air Lance: half gets through, still air (%.1f of %.1f)" % [ll[0], lbase[0]])
-	var airb := await _met("redirect", tspec, {"kind": "air", "mps": 30.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(airb[0]) > 0.0 and airb[3].is_empty(), "Turn lets a plain air bolt pass, the Lance alone is taken (%.1f)" % airb[0])
+	# a plain air bolt on the beat (the owner, 2026-10-12: "if water parries wind then it shoots mini spears"): swung round and
+	# sent back as mini ice spears, his
+	var airb := await _moon("redirect", tspec, {"kind": "air", "mps": 30.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2,
+			"range_m": 30.0}, "ice")
+	var shards := is_instance_valid(_moon_bolt) and _moon_bolt.shape == "shards"
+	_expect(airb[0] and airb[1] and airb[2] and airb[4] == "ice" and shards,
+			"Turn on the beat: a plain air bolt swung round and sent back as mini ice spears x1.2 (%s shards %s)" % [airb, shards])
 	# a Wave on the beat parts round him
 	await _calm()
 	_guard("redirect", tspec)
@@ -526,8 +614,19 @@ func _fire() -> void:
 	var ice := await _met("parry", pspec, {"kind": "ice", "mps": 38.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.15, "range_m": 30.0}, 0.2)
 	var puddle := get_nodes_in_group(BendZone.GROUP).any(func(n: Node) -> bool: return (n as BendZone).kind == "puddle")
 	_expect(float(ice[0]) == 0.0 and puddle, "Parry on the beat melts ice to a puddle (%.1f through)" % ice[0])
+	# water on the beat: boiled to steam (fire and water never send each other back; the owner, 2026-10-12)
 	var water := await _met("parry", pspec, {"kind": "water", "mps": 30.0, "damage": 20.0, "knock_mps": 2.0, "radius_m": 0.2, "range_m": 30.0}, 0.2)
-	_expect(float(water[0]) > 0.0, "Parry lets water pass (%.1f)" % water[0])
+	var steam := get_nodes_in_group(BendZone.GROUP).any(func(n: Node) -> bool: return (n as BendZone).kind == "steam")
+	_expect(float(water[0]) == 0.0 and water[3] == ["perfect"] and steam, "Parry on the beat boils water to steam (%.1f through, %s)" % [water[0], steam])
+	# a stone on the beat (the owner, 2026-10-12: "if fire catches earth then magma ball"): circled once, back as a magma ball,
+	# burning, his
+	var magma := await _moon("parry", pspec, STONE, "stone")
+	var hot := is_instance_valid(_moon_bolt) and _moon_bolt.shape == "magma" and _moon_bolt.heated
+	_expect(magma[0] and magma[1] and magma[2] and hot, "Parry on the beat: a stone circled once and sent back as a burning magma ball x1.2 (%s %s)" % [magma, hot])
+	var lp := await _lift_moon("parry", pspec)
+	var l_hot := lp[4] != null and is_instance_valid(lp[4]) and (lp[4] as GustLift).heated \
+			and String((lp[4] as GustLift).stone.get_meta(FormStone.PACK_META, "")) == "magma"
+	_expect(lp[0] and lp[1] and lp[2] and l_hot and lp[3] == ["perfect"], "Parry on the beat: a thrown Boulder circled and sent back along his aim as magma (%s hot %s)" % [lp.slice(0, 4), l_hot])
 	# lightning: back only on the beat
 	var light := {"do": "lightning", "kind": "lightning", "damage": 30.0, "range_m": 45.0, "knock_mps": 2.0}
 	await _calm()
@@ -564,9 +663,15 @@ func _air() -> void:
 	_expect(bounced and z.results == ["perfect"] and BendStatus.until(p, &"bend_carry_until") > 0.0,
 			"Wind Guard on the beat: air circled once and sent back x1.2, Carried wind charged (%s)" % [z.results])
 	_perfect_ok = _perfect_ok and bounced
-	var st := await _met("air_shield", gspec, STONE, 0.2)
-	var loose := get_nodes_in_group(FormStone.GROUP).any(func(n: Node) -> bool: return n.has_meta(FormStone.LOOSE_META))
-	_expect(float(st[0]) == 0.0 and loose, "Wind Guard on the beat: a stone cushioned and dropped loose (%.1f through)" % st[0])
+	# a stone and water on the beat (the owner, 2026-10-12: "the wind can parry a rock and send back most attacks back"): each
+	# circled once and sent back as it was, his; a thrown Boulder too
+	var st := await _moon("air_shield", gspec, STONE, "stone")
+	_expect(st[0] and st[1] and st[2] and st[4] == "stone", "Wind Guard on the beat: a stone circled once and sent back along his aim x1.2 (%s)" % [st])
+	var wat := await _moon("air_shield", gspec, {"kind": "water", "mps": 30.0, "gravity": 0.0, "damage": 20.0, "knock_mps": 5.0, "radius_m": 0.2,
+			"range_m": 30.0}, "water")
+	_expect(wat[0] and wat[1] and wat[2] and wat[4] == "water", "Wind Guard on the beat: water circled once and sent back along his aim x1.2 (%s)" % [wat])
+	var lw := await _lift_moon("air_shield", gspec)
+	_expect(lw[0] and lw[1] and lw[2] and lw[3] == ["perfect"], "Wind Guard on the beat: a thrown Boulder circled once and sent back along his aim (%s)" % [lw.slice(0, 4)])
 	var base := await _met("", {}, STONE, 0.0)
 	var late := await _met("air_shield", gspec, STONE, 0.6)
 	var half := absf(float(late[0]) - float(base[0]) * 0.5) < 1.0
@@ -674,6 +779,60 @@ func _lightning() -> void:
 	var dodged := int(rec.get("hit", 1)) == 0 and p.health == p.max_health
 	_expect(dodged, "a man 1.5 m aside by the strike is missed (%s)" % rec.get("hit"))
 	metrics["lightning_flash_dodge_ok"] = dodged and absf(lag - 0.25) < 0.04
+	await _beam()
+
+
+## The Air Beam (the Gust held long since 2026-10-12; the owner: "it will be light lightning but straight", "instant cant be
+## sent back only block"): it strikes its flash_s after the release along the line at once; any guard of his on the beat (his
+## own element's, whatever it is) stops it whole and sends nothing back; a late guard lets half through as a slide.
+func _beam() -> void:
+	var g: Dictionary = ((SwayMoves.move("air_gust").bend as Dictionary).gust as Dictionary).duplicate(true)
+	var grow: Dictionary = g.get("grow", {})
+	_expect(String(grow.get("do", "")) == "lightning" and BendEffects.is_beam(grow) and String(grow.get("kind", "")) == "air",
+			"the Gust held long is the Air Beam: Lightning's strike, its kind air (%s)" % [grow])
+	var beam := g.duplicate()
+	beam.erase("grow")
+	beam.merge(grow, true)
+	var flash := float(beam.get("flash_s", 0.0))
+	await _calm("earth")
+	var t0 := BendStatus.now()
+	BendEffects.apply(fbc, "air_gust", "gust", beam)
+	var rec := BendEffects.last_of(foe)
+	await _secs(flash + 0.2)
+	var lag := float(rec.get("struck_at", -1.0)) - t0
+	var hit := int(rec.get("hit", 0)) == 1 and p.health < p.max_health
+	_expect(absf(lag - flash) < 0.04 and hit, "the Air Beam strikes %.2f s after the release, along the line (%.2f s, hit %s)" % [flash, lag, hit])
+	# any guard on the beat stops it whole, nothing sent back
+	for el: Array in [["catch", (SwayMoves.move("stone_catch").bend as Dictionary).catch, "earth"],
+			["parry", {"do": "zone", "zone": "parry", "window_s": 0.8, "radius_m": 2.5}, "fire"],
+			["air_shield", {"do": "zone", "zone": "air_shield", "at": "self", "window_s": 0.8, "radius_m": 2.2}, "air"]]:
+		await _calm(String(el[2]))
+		var z := _guard(String(el[0]), el[1] as Dictionary)
+		var zres: Array[String] = z.results                 # (its own array: read after the zone is gone)
+		await _secs(0.1)
+		var foe_hp := foe.health
+		BendEffects.apply(fbc, "air_gust", "gust", beam)
+		var r2 := BendEffects.last_of(foe)
+		await _secs(flash + 0.25)
+		_expect(p.health == p.max_health and bool(r2.get("blocked", false)) and zres == ["perfect"] and foe.health == foe_hp
+				and not bool(r2.get("redirected", false)),
+				"%s's guard on the beat stops the Air Beam whole, nothing sent back (%s, %.1f through)" % [el[2], zres, p.max_health - p.health])
+	# late: half through as a slide
+	await _calm("air")
+	BendEffects.apply(fbc, "air_gust", "gust", beam)
+	var rb := BendEffects.last_of(foe)
+	await _secs(flash + 0.25)
+	var full := p.max_health - p.health
+	await _calm("air")
+	var zl := _guard("air_shield", {"do": "zone", "zone": "air_shield", "at": "self", "window_s": 0.8, "radius_m": 2.2})
+	var lres: Array[String] = zl.results
+	await _secs(0.5)
+	BendEffects.apply(fbc, "air_gust", "gust", beam)
+	var rl := BendEffects.last_of(foe)
+	await _secs(flash + 0.25)
+	var half := p.max_health - p.health
+	_expect(lres == ["late"] and full > 0.0 and absf(half - full * 0.5) < 1.0 and int(rl.get("hit", 0)) == 1 and int(rb.get("hit", 0)) == 1,
+			"a late guard lets half the Air Beam through (%.1f of %.1f)" % [half, full])
 
 
 # ---------------------------------------------------------------- Flowing's steer

@@ -169,7 +169,7 @@
 		"rules": {
 			"lock": "Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
-			"web": "Water douses fire, fire melts ice, air drops stone.",
+			"web": "Water douses fire and fire boils water. Meeting elements fuse: earth and fire make magma, earth and water mud.",
 			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground."
 		},
 		"passives": {
@@ -179,10 +179,10 @@
 			"air": {"name": "Carried wind", "line": "hit straight out of a dash and you knock harder."}
 		},
 		"guards": {
-			"earth": "{guard} catches stones; {guard} again throws them back.",
-			"water": "{guard} on the beat swings their water round you and sends it back; their Air Lance comes back as ice.",
-			"fire": "{guard} on the beat sends fire straight back: the only answer to lightning.",
-			"air": "{guard} on the beat bounces their wind back and drops a stone at your feet."
+			"earth": "{guard} catches stones and {guard} again throws them back. On the beat it loops the rest round you and sends it back: wind as pebbles, fire as magma, water as a wave of mud along the ground.",
+			"water": "{guard} on the beat swings their shot round you and sends it back: wind as ice spears, stone as a mud spear. Fire goes out.",
+			"fire": "{guard} on the beat loops their shot round you and sends it back: wind as fire, stone as magma. Water boils away. The only answer to lightning.",
+			"air": "{guard} on the beat loops anything round you and sends it back as it was. An Air Beam can only be blocked."
 		},
 		"controls": "Controls",
 		"controls_line": "your buttons, the rules of the deck, and other ways to pick moves",

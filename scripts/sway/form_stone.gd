@@ -20,6 +20,11 @@ const GROUP := &"form_stones"
 ## body's instance id) and keeps at most Bending.stones().loose_max of one maker's lying: a fourth sinks the oldest. Any earth
 ## fighter may shove a loose stone within shove_loose_m of himself (BendEffects.shove); a raised or held one is its raiser's.
 const LOOSE_META := &"bend_loose_by"
+## A stone another element's guard made of both as it swung it back (BendZone._lift_swing; the owner, 2026-10-12: where two
+## elements meet in a guard what goes back is made of both): "magma" (a Spike or a Boulder a Parry melted), "mud" (one a Turn
+## swung round in water). Its look (pack_look) and its flight's (magma burns, mud slows) by it, kept should an earth Catch take
+## it (E throws it so: BendZone.return_stone, mud as a mud wave); told the others with the stone (NetStones.MARKS).
+const PACK_META := &"bend_pack"
 
 ## Loose stones in the order they were let fall: maker's instance id -> [FormStone].
 static var _loose := {}
@@ -197,6 +202,57 @@ func _physics_process(dt: float) -> void:
 			global_transform = Transform3D(_sink_from.basis, _sink_from.origin - Vector3.UP * (height + 0.15) * u * u)
 			if u >= 1.0:
 				queue_free()
+
+
+## Stone `s` shown as what it was packed of (PACK_META; on every machine; made again when it changes: a mud stone a Parry
+## turns to magma): pebbles a fist of small stones in place of its own body, magma molten rock glowing with a warm light, mud
+## wet earth. Nothing to show: as it is.
+static func pack_look(s: FormStone) -> void:
+	if s == null or not is_instance_valid(s) or s.mesh_instance == null:
+		return
+	var pack := String(s.get_meta(PACK_META, ""))
+	var old := s.get_node_or_null(^"Pack")
+	if old != null:
+		if String(old.get_meta(&"pack", "")) == pack:
+			return
+		s.remove_child(old)
+		old.queue_free()
+		s.mesh_instance.visible = true
+		s.mesh_instance.material_override = null
+	if pack == "":
+		return
+	var holder := Node3D.new()
+	holder.name = "Pack"
+	holder.set_meta(&"pack", pack)
+	s.add_child(holder)
+	match pack:
+		"magma", "mud":
+			# (our dripping mud blob in the matter's liquid look in place of the rock, a spike's the mud spear stood up along
+			# it, its foot at the stone's; the rock tinted when the meshes are missing)
+			var mm := BendLooks.mud_mesh("mud_spear" if s.kind == "spike" else "mud_blob")
+			if mm != null:
+				s.mesh_instance.visible = false
+				var mi := MeshInstance3D.new()
+				mi.name = "Mud"
+				mi.mesh = mm
+				mi.material_override = ToonFx.mat(pack)
+				mi.set_instance_shader_parameter(&"seed", float(s.get_instance_id() % 97) * 0.13)
+				if s.kind == "spike":
+					mi.rotation.x = PI / 2.0                 # (its point, -Z, up the spike)
+					mi.scale = Vector3(s.radius * 3.6, s.radius * 3.6, s.height * 0.85)
+					mi.position = Vector3(0.0, s.height * 0.5, 0.0)
+				else:
+					mi.scale = Vector3.ONE * s.radius * 2.15
+				holder.add_child(mi)
+			else:
+				s.mesh_instance.material_override = ToonFx.mat(pack)
+			if pack == "magma" and BendLooks.live():
+				var l := OmniLight3D.new()
+				l.light_color = Color(1.0, 0.5, 0.15)
+				l.light_energy = 1.6
+				l.omni_range = 2.2
+				l.shadow_enabled = false
+				holder.add_child(l)
 
 
 ## Stone `s` lies loose, `by`'s (null: no one's, uncapped): past loose_max of `by`'s the oldest sinks. It is held by no one.

@@ -5,10 +5,15 @@ extends SceneTree
 ## % rules take): none is 0%, one with slide_only is the late half.
 ##   the shield  the four guards (Catch, Turn, Parry, Wind Guard) each met by a stone, a water, a fire, an air shot and the Air
 ##               Lance (an air spear: water's Turn swings it back as ice, the owner's 2026-10-11; the Wind Guard bounces it; a
-##               Parry sends air and the Lance back as fire, a Wind Guard fire back, each circling once, 2026-10-12) timed
-##               to arrive 0.2 s after it stands (perfect: nothing through; the reward only in the guard's own matrix cell, a
-##               cell round 2 let pass stopped with none) and 0.6 s (late: half the knock through as a slide; earth's catch
-##               of stone a full catch within its window); a cone (the Wave), a Column and a flying Spike the same
+##               Parry sends air and the Lance back as fire, a Wind Guard fire back, each circling once, 2026-10-12; then
+##               every cell answered, the return made of both elements: earth holds only earth, air, fire and water flowing
+##               back on their own as pebbles, a magma ball or mud (a wave along the deck as its swing ends); water's Turn
+##               sends air back as mini ice spears and
+##               a stone as a mud spear; fire's
+##               Parry a stone as a magma ball, water boiled to steam; the Wind Guard everything as it was) timed to arrive
+##               0.2 s after it stands (perfect: nothing through, the cell's reward) and 0.6 s (late: half the knock through
+##               as a slide; earth's catch of stone a full catch within its window); a cone (the Wave), a Column and a
+##               flying Spike the same
 ##   lightning   only fire's Parry on the beat sends it back; every other guard, and a late Parry, takes it late
 ##   earth       its catch within 1.0 s of standing a full catch; the guard held past it: a stone late (half through) and
 ##               dropped loose at his feet
@@ -36,10 +41,17 @@ const SHOTS := {"earth": {"kind": "stone", "mps": 40.0, "damage": 20.0, "knock_m
 				"knock_mps": 6.0, "up_mps": 0.0, "radius_m": 0.18, "range_m": 30.0, "long": true}}
 ## The reward each guard gives in its own cells (round 2's matrix): the shot's element -> what becomes of the shot.
 ## (2026-10-12, the owner: a Parry counters air too, as fire; a Wind Guard counters fire: each circles its guard once, the
-## moon, BendZone._moon_back)
-const REWARD := {"earth": {"earth": "caught"}, "water": {"water": "swing", "fire": "steam", "air_lance": "swing"},
-		"fire": {"fire": "back", "air": "back", "air_lance": "back"},
-		"air": {"air": "back", "earth": "cushioned", "air_lance": "back", "fire": "back"}}
+## moon, BendZone._moon_back. Then every cell answered, where two elements meet the return made of both: earth catches and
+## holds only earth, "everything else is flow": air, fire and water circle him and come back as pebbles, a magma ball, mud
+## slapped down as a wave along the deck; water's Turn swings air back as mini ice spears and a stone as a mud spear; fire's
+## Parry sends a stone back as a
+## magma ball and boils water to steam; the Wind Guard sends everything back)
+const REWARD := {"earth": {"earth": "caught", "water": "back", "fire": "back", "air": "back", "air_lance": "back"},
+		"water": {"water": "swing", "fire": "steam", "air_lance": "swing", "air": "swing", "earth": "swing"},
+		"fire": {"fire": "back", "air": "back", "air_lance": "back", "earth": "back", "water": "steam"},
+		"air": {"air": "back", "earth": "back", "air_lance": "back", "fire": "back", "water": "back"}}
+## The shape each shot flows back from earth's catch as (BendZone.EARTH_FLOWS).
+const FLOWED := {"air": "pebbles", "air_lance": "pebbles", "fire": "magma", "water": "mud"}
 
 
 class FakeRules:
@@ -290,16 +302,34 @@ func _shield() -> void:
 					rok = end == "" or end in ["hit", "world", "range"]      # (sent on: it flies off again, not at him)
 				"steam":
 					rok = end == "steam"
-				"cushioned":
-					rok = end == "cushioned"
 				_:
 					rok = end == "blocked"                                  # (a cell round 2 let pass: stopped, no reward)
+			if el == "earth" and se != "earth":
+				# (earth's other elements flow back on their own, nothing held: pebbles, a magma ball, a mud spear, the catcher's)
+				rok = rok and BendZone.held_stone(p) == null and is_instance_valid(_last_bolt) and _last_bolt.kind == "stone" \
+						and _last_bolt.shape == String(FLOWED.get(se, "")) and _last_bolt.caster == p
 			if el == "water" and se == "air_lance":
 				# (the Turn's Lance leaves as an ice lance, the turner's)
 				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "ice" and _last_bolt.caster == p
 			if el == "fire" and se in ["air", "air_lance"]:
 				# (a Parry's air leaves as fire, the parrier's)
 				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "fire" and _last_bolt.caster == p
+			if el == "water" and se == "air":
+				# (the Turn's air leaves as mini ice spears, the turner's)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == "ice" and _last_bolt.shape == "shards" \
+						and _last_bolt.caster == p
+			if el == "water" and se == "earth":
+				# (the Turn's stone leaves as a spear of mud that drenches, the turner's)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.shape == "mud_spear" and _last_bolt.caster == p \
+						and float(_last_bolt.info.get("mud_s", 0.0)) > 0.0
+			if el == "fire" and se == "earth":
+				# (the Parry's stone leaves as a magma ball, burning, the parrier's)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.shape == "magma" and _last_bolt.heated \
+						and _last_bolt.caster == p
+			if el == "air" and se in ["earth", "water"]:
+				# (the Wind Guard sends it back as it was, his)
+				rok = rok and is_instance_valid(_last_bolt) and _last_bolt.kind == String((SHOTS[se] as Dictionary).kind) \
+						and _last_bolt.caster == p
 			var ok_p := through.is_empty() and (pf[1] as Array).has("perfect") and rok
 			_expect(ok_p, "%s's guard, a %s shot on the beat: nothing through, %s (%s, %s)" % [el, se, reward if reward != "" else "no reward", pf[1], end])
 			var lt := await _met(el, se, 0.6)
@@ -569,7 +599,12 @@ func _classic() -> void:
 	c.guard_override = false
 	var after := await _until(func() -> bool: return c.guard_up(), 0.5) < INF
 	_expect(not during and after, "in the classic ring the guard stands at E's release as round 2 (held %s, after %s)" % [during, after])
+	# (round 2's matrix since 2026-10-12: earth's catch sends fire on the beat back on its own as a magma ball, nothing held, as
+	# in the % ring)
 	var r := await _met("earth", "fire", 0.2)
-	_expect((r[0] as Array).size() == 1 and (r[1] as Array).is_empty() and not bool((r[0] as Array)[0].info.get("slide_only", false)),
-			"and its catch lets fire through as round 2 (%s, %d hits)" % [r[1], (r[0] as Array).size()])
+	var held := BendZone.held_stone(p)
+	var magma := is_instance_valid(_last_bolt) and _last_bolt.shape == "magma" and _last_bolt.heated and _last_bolt.caster == p
+	_expect((r[0] as Array).is_empty() and (r[1] as Array) == ["perfect"] and held == null and magma,
+			"and its catch sends fire back on its own as a burning magma ball, nothing held, as round 2 (%s, %d hits, magma %s)"
+			% [r[1], (r[0] as Array).size(), magma])
 	_stock(true)

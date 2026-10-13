@@ -103,7 +103,7 @@ const TOPICS := {
 			"[E]  Guard: on the beat it's yours. Late, half gets through",
 			"Fire along the floor? [Space]  Jump. In the air: dash or guard"]},
 	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
-			"Into the water behind them takes the round", "Water douses fire, fire melts ice, air drops stone",
+			"Into the water behind them takes the round", "Water douses fire, fire boils water; earth and fire make magma, earth and water mud",
 			"Rising under you: step off as it starts  ·  earth always catches stone"]},
 	# (round 3, the % ring: the movement and the edge, in the player's words)
 	"ring_stock": {"title": "Jumps, the edge, the water", "steps": [

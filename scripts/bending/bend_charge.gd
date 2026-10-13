@@ -849,3 +849,146 @@ func _air(dt: float) -> void:
 	for e in _emit:
 		if is_instance_valid(e) and ending == "":
 			(e as GPUParticles3D).amount_ratio = clampf(0.1 + 0.7 * k + 0.5 * _flash, 0.05, 1.0) * _shown
+
+
+# ---------------------------------------------------------------- earth's flow
+## Earth's flow (BendZone._earth_flow; the owner, 2026-10-12: "as it swirls it catches rocks from the rocks chanel", and of a
+## water catch "it swirls on the ground so it can be like a mud fissure"): while a shot a perfect Catch took swings round its
+## catcher (BendBolt.begin_swing), the channel's rocks come up out of the deck round his feet on the swing's path (broken
+## pieces lying near, RockDebris, pulled in to their places first), and the shot sweeps each into itself as it passes them: the
+## wind's pebbles, the magma, the mud are made of them. Low (water's swirl along the deck) they lie on the deck and are swept up
+## where they lie; high (wind, fire) they rise to meet it. Visual only, drawn where effects are (BendLooks.live()): made with
+## the swing on every machine and freed once it is over, a rock never reached laid down as a piece for the next charge.
+class RocksInto:
+	extends Node3D
+
+	const N := 6
+	const SIZE := Vector2(0.16, 0.26)
+	## The share of the swing over which its path meets the rocks (the first a little after it starts, the last before its
+	## end), how long one takes to fly into the shot once met (share of the swing), and how long they take to come up (s).
+	const SWEEP := Vector2(0.12, 0.8)
+	const INTO := 0.12
+	const RISE_S := 0.12
+	## Pieces lying near pulled in (within PULL_M flat, at most PULL_MAX).
+	const PULL_M := 4.0
+	const PULL_MAX := 3
+
+	var by: Node3D
+	var shot: Node3D
+	var s := 0.35
+	var a0 := 0.0
+	var r := 1.0
+	var low := false
+	var t := 0.0
+	## The puff each rock makes as it goes into the shot (its matter's: "stone" pebbles, "fire" magma, "mud").
+	var puff := "stone"
+	## {mesh, at (its place on the path), deck, u (the swing's share when the path meets it), size, src (a piece's place, INF
+	## a new rock), into (-1 not yet; 0..1 flying in), from, gone, axis, spin}
+	var _rocks: Array = []
+
+	## The rocks for `p_shot`'s swing round `p_by` (`p_s` s, from angle `p_a0`, radius `p_r`; `p_low` along the deck); null
+	## where nothing is drawn.
+	static func begin(p_by: Node3D, p_shot: Node3D, p_s: float, p_a0: float, p_r: float, p_low: bool, p_puff := "stone") -> RocksInto:
+		if not BendLooks.live() or p_by == null or p_shot == null or not p_by.is_inside_tree():
+			return null
+		var ri := RocksInto.new()
+		ri.name = "RocksInto"
+		ri.by = p_by
+		ri.shot = p_shot
+		ri.s = maxf(p_s, 0.1)
+		ri.a0 = p_a0
+		ri.r = p_r
+		ri.low = p_low
+		ri.puff = p_puff
+		ri.top_level = true
+		p_by.get_tree().current_scene.add_child(ri)
+		ri._lay()
+		return ri
+
+	func _lay() -> void:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(str(shot.get_instance_id()))
+		var c := by.global_position
+		var deck := FormEffects.ground_at(by, c).y
+		var deb := get_tree().current_scene.get_node_or_null(RockDebris.NODE_NAME) as RockDebris
+		var pieces: Array = deb.take(c, PULL_M, PULL_MAX) if deb != null else []
+		for i in N:
+			var u := lerpf(SWEEP.x, SWEEP.y, (float(i) + 0.5) / float(N))
+			var a := a0 - TAU * u
+			var rr := r * rng.randf_range(0.85, 1.1)
+			var at := Vector3(c.x + sin(a) * rr, deck + (0.1 if low else rng.randf_range(0.4, 0.85)), c.z + cos(a) * rr)
+			var m: Node3D
+			var src := Vector3.INF
+			var size := rng.randf_range(SIZE.x, SIZE.y)
+			if i < pieces.size():
+				m = pieces[i] as Node3D
+				var xf := m.global_transform
+				m.get_parent().remove_child(m)
+				add_child(m)
+				m.top_level = true
+				m.global_transform = xf
+				src = m.global_position
+				size = m.scale.x
+			else:
+				var mi := MeshInstance3D.new()
+				mi.mesh = ToonFx.chunk_mesh(i % 4)
+				mi.material_override = ToonFx.mat("rock")
+				mi.top_level = true
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+				add_child(mi)
+				mi.global_position = Vector3(at.x, deck - 0.15, at.z)
+				mi.scale = Vector3.ONE * 0.01
+				m = mi
+				BendLooks.burst(Vector3(at.x, deck + 0.05, at.z), "stone", 2, Vector3.UP, 50.0, 1.0, 0.14, false)
+			_rocks.append({"mesh": m, "at": at, "deck": deck, "u": u, "size": size, "src": src, "into": -1.0,
+					"from": Vector3.ZERO, "gone": false, "spin": rng.randf_range(2.0, 5.0),
+					"axis": Vector3(rng.randf_range(-1.0, 1.0), 1.0, rng.randf_range(-1.0, 1.0)).normalized()})
+
+	func _process(dt: float) -> void:
+		t += dt
+		var su := t / s
+		var alive := shot != null and is_instance_valid(shot) and not bool(shot.get(&"spent"))
+		var left := 0
+		for rk: Dictionary in _rocks:
+			var m := rk.mesh as Node3D
+			if bool(rk.gone) or not is_instance_valid(m):
+				continue
+			left += 1
+			var at: Vector3 = rk.at
+			var size := float(rk.size)
+			if float(rk.into) < 0.0:
+				# (coming up out of the deck to its place on the path, or a piece pulled in from where it lay)
+				var rise := clampf(t / RISE_S, 0.0, 1.0)
+				if rk.src != Vector3.INF:
+					m.global_position = (rk.src as Vector3).lerp(at, rise) + Vector3.UP * 0.35 * sin(PI * rise)
+				else:
+					m.global_position = Vector3(at.x, lerpf(float(rk.deck) - 0.15, at.y, 1.0 - pow(1.0 - rise, 3.0)), at.z)
+					m.scale = Vector3.ONE * size * rise
+				if alive and su >= float(rk.u) - INTO:
+					rk.into = 0.0
+					rk.from = m.global_position
+			else:
+				# (met by the swirl: swept into the shot, gone into it with a puff of its matter)
+				var into := minf(float(rk.into) + dt / (INTO * s), 1.0)
+				rk.into = into
+				var to: Vector3 = (shot as Node3D).global_position if alive else (rk.from as Vector3)
+				m.global_position = (rk.from as Vector3).lerp(to, into * into)
+				m.scale = Vector3.ONE * size * (1.0 - 0.6 * into)
+				if into >= 1.0:
+					rk.gone = true
+					m.visible = false
+					BendLooks.burst(to, puff, 4, Vector3.UP, 120.0, 1.5, 0.15, false)
+			m.rotate(rk.axis as Vector3, dt * float(rk.spin))
+		if left == 0 or t > s * 2.0 + 0.4 or not alive:
+			_done()
+
+	## Over: a rock the swirl never reached laid on the deck, a piece for the next charge (RockDebris); then freed.
+	func _done() -> void:
+		var deb := RockDebris.of(get_tree().current_scene)
+		for rk: Dictionary in _rocks:
+			var m := rk.mesh as Node3D
+			if deb != null and is_instance_valid(m) and not bool(rk.gone) and m.visible and m.scale.x > 0.05:
+				m.global_position.y = float(rk.deck) + 0.06
+				deb.lay(m)
+		set_process(false)
+		queue_free()

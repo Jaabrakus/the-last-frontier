@@ -130,6 +130,8 @@ const VOLLEY_S := 1.0
 ## within which its wind-up still reads as a threat (m).
 const CONE_MPS := 400.0
 const CONE_SLACK_M := 1.0
+## A beam's "pace" as a read threat (the Air Beam: it strikes its flash after the release, at once; shot_of, _read).
+const BEAM_MPS := 400.0
 ## Round 5: the move that throws a held stone besides the guard's E (earth's Shove).
 const HELD_SHOVE := "earth_shove/push"
 ## How far a move that throws a held stone (its spec's held_stone "throw": earth's 2, the Fissure) reaches while one is held
@@ -1301,6 +1303,8 @@ func _read(shot: Dictionary, id: int, left: float, c: Vector3, t: Node3D) -> Dic
 	elif bool(shot.get("floor", false)):
 		th["tti"] = left + me.global_position.distance_to(t.global_position) / float(shot.mps)
 		th["read"] = true                          # (a guard may answer it; the jump waits for the wave itself)
+	elif shot.has("flash"):
+		th["tti"] = left + float(shot.flash) + 0.05      # (a beam: its flash, then it strikes at once)
 	else:
 		th["tti"] = left + c.distance_to(NpcSenses.chest_of(t)) / float(shot.mps)
 	return th
@@ -1314,16 +1318,21 @@ static func _as_of(kind: String, shape: String) -> String:
 
 ## What (id, md) sends flying at whom it is cast at: {kind, mps, knock, shape} (a bolt's or a throw's spec; Stone Form's spike
 ## and boulder and Earth Shove a stone; Gust lift a stone), {} for anything else (the wind-up a bot reads: _threats).
-## `grown`: the lock grows (held past its second click); only the Air Lance's grow is read (the Gust held long is a spear of
-## air, another thing to answer), every other grow read as the move itself as before.
+## `grown`: the lock grows (held past its second click); only a grow that is another thing to answer is read (an air spear;
+## the Air Beam, the Gust held long since 2026-10-12: {kind, knock, flash}, it strikes its flash after the release, at once),
+## every other grow read as the move itself as before.
 static func shot_of(id: String, md: String, grown := false) -> Dictionary:
 	var spec := spec_of(id, md)
 	if grown:
 		var g: Variant = spec.get("grow")
-		if g is Dictionary and _as_of(String((g as Dictionary).get("kind", "")), String((g as Dictionary).get("shape", ""))) != "":
+		if g is Dictionary and (_as_of(String((g as Dictionary).get("kind", "")), String((g as Dictionary).get("shape", ""))) != ""
+				or BendEffects.is_beam(g as Dictionary) and String((g as Dictionary).get("do", "")) == "lightning"):
 			spec = spec.duplicate()
 			spec.merge(g as Dictionary, true)
 	var dn := String(spec.get("do", ""))
+	if dn == "lightning" and BendEffects.is_beam(spec):
+		return {"kind": String(spec.kind), "mps": BEAM_MPS, "knock": float(spec.get("knock_mps", 0.0)),
+				"flash": float(spec.get("flash_s", 0.0))}
 	if dn in ["bolt", "throw", "wind_wave"]:
 		return {"kind": String(spec.get("kind", "stone")), "mps": maxf(float(spec.get("mps", 30.0)), 5.0),
 				"knock": float(spec.get("knock_mps", 0.0)), "shape": String(spec.get("shape", ""))}

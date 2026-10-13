@@ -694,8 +694,10 @@
           "radius_m": 3.5,
           "perfect_s": 0.3,
           "holds": true,
-          "takes": ["stone"],
-          "return": "hold"
+          "takes": ["stone", "air", "fire", "water", "ice"],
+          "flows": {"air": "pebbles", "fire": "magma", "water": "mud_wave", "ice": "mud_wave"},
+          "return": "hold (stone); flow (the rest)",
+          "_flows": "The owner, 2026-10-12: earth answers the other elements too, made of both (air a fist of pebbles, \"more centered\" than a spread; fire a magma ball that burns; water and ice swirled along the deck taking up rocks, turned to mud and slapped down as a wave of mud along the deck that drenches and ends in mud spikes, \"earth catching water should be the fissure mud\", \"it swirls on the ground\", \"mude spikes\"), but \"for earth the only catch and press e is when its a earth on earth everything else is flow\": a stone is caught and held, no spin (\"for the earth on earth E dont spin\"), E throws it (\"the earth on earth parry catch is nice actually where it catches it and e to fire again\"); the rest loop round him like a moon and come back on their own. takes, flows and return are notes; BendZone's catch arm (EARTH_FLOWS, _earth_flow, _take_stone; BendBolt.to_floor_wave) is the rule."
         },
         "deflect": {"do": "zone", "zone": "deflect", "window_s": 1.0, "radius_m": 3.5},
         "brace": {"do": "brace", "kind": "stone", "range_m": 12.0}
@@ -1108,8 +1110,9 @@
           "radius_m": 2.2,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["water", "ice", "air_gust/gust.grown"],
+          "takes": ["water", "ice", "air_gust/gust.grown", "air", "stone"],
           "handles": ["fire", "wave"],
+          "_fusion": "The owner, 2026-10-12: air turned on the beat leaves as mini ice spears (\"if water parries wind then it shoots mini spears\"), a stone (a bolt, a Spike, a Boulder) swung round in water leaves as mud that drenches (\"water catch earth ... creates a mud spear\"); fire is doused (water and fire never send each other back).",
           "return": "swing",
           "swing_s": 0.3,
           "_lance": "The Air Lance too (the owner, 2026-10-11: \"lets have water be able to turn it or catch the lance and then turn it back as it wraps around the body for a ice lance\"; \"we can aim it anywhere not just return to sender\"): on the beat it turns to ice as it is caught (BendBolt.become), wraps round the turner (drawn short on the swing's circle) and leaves an ice lance along his aim x perfect_mult; late, half through as every late Turn. Only the Lance (an air bolt of shape spear): the Gust, the Pull, the Slice and the Wind Ball pass as before. takes, handles, return and swing_s are notes; BendZone's Turn arm is the rule."
@@ -1507,10 +1510,11 @@
           "radius_m": 2.5,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["fire", "air"],
-          "handles": ["lightning", "ice"],
+          "takes": ["fire", "air", "stone"],
+          "handles": ["lightning", "ice", "water"],
           "lightning": "perfect",
-          "return": "moon"
+          "return": "moon",
+          "_fusion": "The owner, 2026-10-12: a stone parried on the beat melts as it circles him and leaves as a magma ball (\"if fire catches earth then magma ball\"); water is boiled to steam where it meets him (fire and water never send each other back)."
         },
         "redirect_lightning": {"do": "buff", "buff": "redirect_lightning", "kind": "lightning", "s": 1.0},
         "flare": {
@@ -1604,8 +1608,9 @@
           "up_mps": 1.0,
           "carry": true,
           "look_r": 0.22,
-          "grow": {"do": "throw", "kind": "air", "shape": "spear", "flight": "point_first", "mps": 40.0, "gravity": 1.0, "damage": 18.0, "knock_mps": 15.0, "up_mps": 1.5, "radius_m": 0.18, "range_m": 34.0, "long": true, "look_r": 0.18},
-          "grow_label": "Air Lance",
+          "grow": {"do": "lightning", "kind": "air", "flash_s": 0.12, "damage": 18.0, "knock_mps": 15.0, "up_mps": 1.5, "range_m": 34.0},
+          "_beam": "2026-10-12, the owner: \"the air should get the pistol animation thats perfect for that one like. beam\", \"it will be light lightning but straight\", then \"instant cant be sent back only block\": the Gust held long is an air beam from two fingers on the pistol's aim (poses.json air_gust gust grow): Lightning's strike (do lightning, its kind air: BendEffects.is_beam), a flash on the fingers flash_s before it strikes along the aim at once, drawn as a straight shaft of wind (BendLooks.beam); any guard on the beat stops it whole, a late one lets half through, nothing sends it back. The Lance's numbers kept (damage, knock, range); its class the grown Gust's as before (air_gust/gust.grown).",
+          "grow_label": "Air Beam",
           "air": "slam"
         },
         "pull": {
@@ -1761,10 +1766,9 @@
           "life_s": 0.8,
           "perfect_s": 0.3,
           "late_mult": 0.5,
-          "takes": ["air", "fire"],
-          "handles": ["stone"],
-          "stone": "drop_on_perfect",
-          "return": "moon"
+          "takes": ["air", "fire", "stone", "water", "ice"],
+          "return": "moon",
+          "_all": "The owner, 2026-10-12: \"the wind can parry a rock and send back most attacks back\": every kind but lightning circles him on the beat and leaves along his aim as it was (a Spike or a Boulder too)."
         },
         "cyclone": {"do": "ring", "kind": "air", "radius_m": 5.0, "damage": 6.0, "knock_mps": 11.0, "up_mps": 3.5},
         "tornado": {

@@ -922,6 +922,10 @@ static func _source_near(p: Node3D, at: Vector3, r: float) -> bool:
 ## (§3.3): the flash and crack on the caster's hand at the release, and the strike flash_s later along the line he had
 ## then (a man who moves off it on the flash is missed). Its target's Parry within its first perfect_s as it strikes sends it
 ## back along his aim (BendZone.lightning_back); the open world's redirect_lightning buff as before.
+## A BEAM (a spec whose kind is not lightning: air's, the Air Lance since 2026-10-12; the owner: "it will be light lightning but
+## straight", "instant cant be sent back only block"): the same flash and strike, drawn as a straight shaft of its kind
+## (BendLooks.beam_flash, beam); any guard of the struck one's on the beat stops it whole, a late one lets half through as a
+## slide (BendZone.guard_take), nothing sends it back; Lightning's talents and gas are lightning's only.
 static func lightning(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null:
@@ -930,8 +934,12 @@ static func lightning(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 	var rec := _cur
 	if flash > 0.0:
 		var flashed := SbFx.fire(bc.body, SbFx.key_of(spec.get("_info", {})), "flash", {"at": a.from, "dir": a.dir})
-		BendLooks.lightning_flash(bc.body, a.from, not flashed)
-		BendSounds.play(&"lightning_crack", a.from, 0.0)
+		if is_beam(spec):
+			BendLooks.beam_flash(bc.body, a.from, String(spec.kind))
+			BendLooks.sound(String(spec.kind), "cast", a.from, -2.0)
+		else:
+			BendLooks.lightning_flash(bc.body, a.from, not flashed)
+			BendSounds.play(&"lightning_crack", a.from, 0.0)
 		rec["flash_s"] = flash
 		rec["hit"] = 0
 		var from: Vector3 = a.from
@@ -944,10 +952,16 @@ static func lightning(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 	_strike(bc, a.from, a.dir, a.flat, spec, rec)
 
 
+## Whether lightning's `spec` is a beam (its kind not lightning: the air beam; see lightning).
+static func is_beam(spec: Dictionary) -> bool:
+	return String(spec.get("kind", "lightning")) != "lightning"
+
+
 ## The lightning's strike from `from` along `dir` (see lightning), written into `rec` (its cast's record): hit, redirected,
-## struck_at.
+## blocked (a beam a guard stopped), struck_at.
 static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, spec: Dictionary, rec: Dictionary) -> void:
 	var p := bc.body
+	var beam := is_beam(spec)
 	var r := float(spec.get("range_m", 45.0))
 	var space := p.get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(from, from + dir * r, 0xFFFFFFFF, bc.exclude())
@@ -955,11 +969,14 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	var end: Vector3 = h.position if not h.is_empty() else from + dir * r
 	var lk := SbFx.key_of(spec.get("_info", {}))
 	if not SbFx.fire(p, lk, "strike", {"at": from, "to": end, "dir": dir}):
-		BendLooks.lightning(from, end)
-	BendLooks.sound("lightning", "cast", from)
-	if BendZone.BendGas.live_n > 0:
+		if beam:
+			BendLooks.beam(from, end, String(spec.kind))
+		else:
+			BendLooks.lightning(from, end)
+	BendLooks.sound(String(spec.kind) if beam else "lightning", "cast", from)
+	if not beam and BendZone.BendGas.live_n > 0:
 		BendZone.BendGas.live(p, from, end, spec.get("_info", {}))   # (Live Gas: the strike charges the gas it crosses)
-	if FireTalents.any(p):
+	if not beam and FireTalents.any(p):
 		rec["live"] = FireTalents.struck(bc, from, end)      # (a worn Forked Lightning's fork to the nearest water)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
 	rec["hit"] = 0
@@ -969,7 +986,17 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	var info: Dictionary = spec.get("_info", {})
 	var late_k := 1.0
 	var back: BendZone = null
-	if BendR3.stock():
+	if beam:
+		# (a beam: any guard of his on the beat stops it whole, a late one lets half through as a slide; never sent back)
+		var g := BendZone.guard_take(who, String(spec.kind), p, info)
+		if String(g.result) == "perfect":
+			BendLooks.burst(end, String(spec.kind), 18, -dir, 90.0, 3.5, 0.3)
+			rec["blocked"] = true
+			return
+		if String(g.result) == "late":
+			late_k = float(g.mult)
+			info = g.info
+	elif BendR3.stock():
 		# (round 3, spec §2.5: only fire's Parry on the beat sends it back; any other guard, or a late Parry, takes it late)
 		var lg := BendZone.lightning_guard(who, p, info)
 		back = lg.zone if String(lg.result) == "back" else null

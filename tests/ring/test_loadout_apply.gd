@@ -443,7 +443,9 @@ func _run() -> void:
 				continue
 			n_picks += 1
 			_expect(String(sp.get("clip", "")) == String(want.clip) and String(sp.get("from", "")) == "style", "%s: Boxing's %s for the wearer" % [tag, want.clip])
-			_expect(bp == e and String(bp.clip).begins_with("own-bend-") and String(e.clip) != String(sp.clip), "%s: the element's own %s for a bot" % [tag, e.clip])
+			# (the element's own: an own-bend- clip, or one of the owner's listed Motifect moves since 2026-10-12, the Kicks)
+			_expect(bp == e and (String(bp.clip).begins_with("own-bend-") or BendPoses.motifect(String(bp.clip)))
+					and String(e.clip) != String(sp.clip), "%s: the element's own %s for a bot" % [tag, e.clip])
 			var ea := BendPoses.animation(String(e.clip))
 			# (the element's end: its pick's own end_s when it is itself timed as another clip, the gun-style Embers)
 			var e_end := float(e.get("end_s", ea.length))
@@ -713,9 +715,12 @@ func _casts() -> void:
 			BendEffects.apply(caster, "air_gust", "gust", SwayMoves.move("air_gust").bend.gust)
 			var g := _newest_bolt(body)
 			if grown:
-				# (grown, the Gust is the Air Lance since 2026-10-10: a spear thrown point first, Full Sail or not)
-				_expect(g != null and g.kind == "air" and g.shape == "spear", "%s's grown Gust is the Air Lance, a spear (%s)" % [who[2],
-						"%s %s" % [g.kind, g.shape] if g != null else "no bolt"])
+				# (grown, the Gust is the Air Beam since 2026-10-12 (the Air Lance before it): an instant straight beam on the
+				# aim, Lightning's strike in air, no bolt flown; Full Sail or not. The owner: "it will be light lightning but
+				# straight")
+				var gg: Dictionary = (SwayMoves.move("air_gust").bend.gust as Dictionary).get("grow", {})
+				_expect(g == null and String(gg.get("do", "")) == "lightning" and BendEffects.is_beam(gg),
+						"%s's grown Gust is the Air Beam, no bolt (%s)" % [who[2], "a %s %s bolt" % [g.kind, g.shape] if g != null else "none"])
 			else:
 				var want_w: float = 2.4 if worn else 2.0
 				_expect(g != null and absf(g.radius - want_w * 0.5) < 0.001, "%s's Gust is %.1f m wide (%s)" % [who[2], want_w,
