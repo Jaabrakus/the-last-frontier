@@ -8,8 +8,11 @@ extends Node3D
 ## the ring (wanted): the player's (FormCast), a bot's (NpcBending), an online opponent's puppet (its own FormCast). The
 ## circle's face, so the callers swap one for the other: fill (0..1, the lock), full (it pulses), flash() (the click),
 ## end(kind) ("cast": thrown out with the cast; "break" / "fizzle": it falls away), freed after.
-##   water  three streams wind up round the body off the deck, then round the limb: the forearm, the shin and foot, or the
-##          space between the hands; drops shake off them
+##   water  as air's, in water (the owner, 2026-10-12: "water gathering is like trash it should be more fluid like maybe
+##          smoke water", "the water gather should be like air", "we want the water to gather where the attack is going to
+##          be"): thin wisps of water coil and spiral up round the body, a blue mist swirling with them, then wind tight round
+##          the limb; the Geyser's gathers on the deck at his feet instead, a low whirl closing in, where it is sent from
+##          (_water_on_deck); drops shake off the wisps
 ##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
 ##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
 ##   earth  stones lift off the deck round the feet one by one, circle the body, then gather round the hands or the foot; a
@@ -39,6 +42,11 @@ const FALLBACK := {"l_palm": Vector3(-0.22, 1.12, -0.32), "r_palm": Vector3(0.22
 const LIGHT_RANGE := 2.6
 ## The share of the lock's level over which the element goes from round the body to the limb.
 const CHANNEL := Vector2(0.3, 0.85)
+## Water: its wisps' width and colours (air's strip in water: a pale blue body, a deeper blue edge, a navy line).
+const WISP_W := 0.08
+const WISP_MAIN := Color(0.62, 0.86, 1.0, 0.9)
+const WISP_EDGE := Color(0.18, 0.52, 0.98, 0.78)
+const WISP_INK := Color(0.05, 0.18, 0.42)
 ## Fire: each fist's flame (and the kicking foot's) is the fireball's own body (BendLooks.bolt_body: its orb, glow and
 ## tongues), its +Z (where the tongues lick) turned up so it burns upward, sized by the lock (FIST_SCALE: start, full).
 const FIST_R := 0.1
@@ -80,6 +88,9 @@ var _emit: Array = []
 ## Fire's flames: the left fist's, the right fist's, the kicking foot's.
 var _flames: Array = []
 var _light: OmniLight3D
+## Water: its mist, and whether it gathers on the deck at his feet now (the Geyser's).
+var _mist: GPUParticles3D
+var _deck := false
 var _shown := 0.0
 ## Earth: the raised stone being made from the rocks (its look, its own scale), the level when it rose, done.
 var _stone: Node3D
@@ -162,7 +173,7 @@ func flash() -> void:
 	var tip := _tip(limb())
 	match element:
 		"water":
-			BendLooks.burst(tip, "water", 8, Vector3.UP, 120.0, 2.5, 0.16, false)
+			BendLooks.burst(_water_tip(), "water", 8, Vector3.UP, 120.0, 2.5, 0.16, false)
 		"fire":
 			# (the limb's flame flares up: a lick of flame and sparks, no blast)
 			if pool != null:
@@ -205,7 +216,7 @@ func end(kind: String) -> void:
 	if _visual and ending == "cast":
 		match element:
 			"water":
-				BendLooks.burst(_tip(limb()), "water", 10, out, 70.0, 3.5, 0.16, false)
+				BendLooks.burst(_water_tip(), "water", 10, out, 70.0, 3.5, 0.16, false)
 			"earth":
 				_dust_puff(_center(), 8, 2.0, 0.45)
 			"air":
@@ -397,14 +408,74 @@ func _dust_puff(at: Vector3, n: int, speed: float, size: float, key := "puff_dus
 
 # ---------------------------------------------------------------- water
 func _build_water() -> void:
-	for i in 3:
-		var run := _run("water_strip", 0.15, 0.45, 0.5, 0, TAU * float(i) / 3.0)
-		var drops := BendLooks.emitter(run.head, "water", Vector3(0.05, 0.05, 0.05), 8, 0.5, 0.5, 0.04)
+	# (air's wisps in water: thin, coiling, the wind shader's strip tinted as the water)
+	var wm := ToonFx.mat("wind_strip").duplicate() as ShaderMaterial
+	wm.set_shader_parameter(&"c_main", WISP_MAIN)
+	wm.set_shader_parameter(&"c_edge", WISP_EDGE)
+	wm.set_shader_parameter(&"c_ink", WISP_INK)
+	for i in 4:
+		var run := _water_run(wm, TAU * float(i) / 4.0)
+		var drops := BendLooks.emitter(run.head, "water", Vector3(0.04, 0.04, 0.04), 6, 0.45, 0.4, 0.035)
 		if drops != null:
 			drops.local_coords = false
 			drops.amount_ratio = 0.05
 			_emit.append(drops)
 			run.drops = drops
+	# (the mist: blue puffs swirling with the wisps, as air's dust swirls; where the water gathers)
+	_mist = _emitter("frost", Vector3(0.45, 0.06, 0.45), 22, 0.75, 0.5, 0.32)
+	if _mist != null:
+		var pm := _mist.process_material as ParticleProcessMaterial
+		pm.tangential_accel_min = 4.0
+		pm.tangential_accel_max = 7.0
+
+
+## A wisp of `mat` (air's _run, its material a water-tinted copy of air's).
+func _water_run(mat: ShaderMaterial, phase: float) -> Dictionary:
+	var head := Node3D.new()
+	head.top_level = true
+	add_child(head)
+	head.global_position = _center() + Vector3.UP
+	var rb := ToonRibbon.new()
+	rb.main_mat = mat
+	rb.width = WISP_W
+	rb.tail_w = 0.2
+	rb.life = 0.34
+	rb.coils = 1
+	rb.coil_mat = mat
+	rb.coil_r = WISP_W * 1.4
+	rb.coil_w = WISP_W * 0.35
+	rb.coil_spin = 20.0
+	add_child(rb)
+	var run := {"head": head, "rb": rb, "phase": phase, "vel": Vector3.ZERO, "w": WISP_W, "stopped": false}
+	rb.follow(head)
+	_runs.append(run)
+	return run
+
+
+## Whether the move charging gathers its water on the deck at his feet (the Geyser: sent from there along the deck,
+## BendLooks.geyser_send): the player's lock (SwayCaster), a bot's (its brain's NpcBending).
+func _water_on_deck() -> bool:
+	if body == null or not is_instance_valid(body):
+		return false
+	var m := ""
+	var md := ""
+	var sc := SwayCaster.of(body)
+	if sc != null and sc.move != "":
+		m = sc.move
+		md = sc.mode_of(m)
+	elif body is NpcFighter and (body as NpcFighter).brain != null and (body as NpcFighter).brain.bending != null:
+		m = (body as NpcFighter).brain.bending.casting
+		md = (body as NpcFighter).brain.bending.mode
+	var b: Variant = SwayMoves.move(m).get("bend", {}) if m != "" else {}
+	var s: Variant = (b as Dictionary).get(md, {}) if b is Dictionary else {}
+	return s is Dictionary and String((s as Dictionary).get("do", "")) == "spout"
+
+
+## Where the water gathers now: on the deck before his feet (the Geyser's), else the limb's tip.
+func _water_tip() -> Vector3:
+	if _deck:
+		return _center() + _forward() * 0.35 + Vector3.UP * 0.08
+	return _tip(limb())
 
 
 func _water(dt: float) -> void:
@@ -412,22 +483,34 @@ func _water(dt: float) -> void:
 	var ch := _channel()
 	var l := limb()
 	var seg := _seg(l)
-	var w := lerpf(2.4, 6.2, minf(k, 1.0)) + 5.0 * _flash
+	_deck = _water_on_deck()
+	var w := lerpf(4.5, 9.5, minf(k, 1.0)) + 6.0 * _flash
 	var c := _center()
-	var wrap_r := 0.24 if l == "both" else (0.2 if l.ends_with("foot") else 0.17)
+	var wrap_r := 0.25 if l.ends_with("foot") else 0.22
 	for i in _runs.size():
 		var run: Dictionary = _runs[i]
 		var th := float(run.phase) + _t * w
-		var r := lerpf(0.95, 0.6, minf(k, 1.0))
-		# (up off the deck fast, round the waist by half)
-		var h := lerpf(0.3, 1.1, sqrt(minf(k, 1.0))) + 0.28 * sin(th * 0.6 + float(i) * 2.1)
-		var p := c + Vector3(cos(th) * r, maxf(h, 0.08), sin(th) * r)
-		# (channelled: the streams wind round the limb, each its own stretch of it, flowing on toward the tip)
-		var u := (float(i) + 0.5) / 3.0 if l == "both" else fposmod(_t * 0.9 + float(i) / 3.0, 1.0)
-		var wrap := _coil(seg, u if l == "both" else lerpf(0.15, 1.05, u), th * 2.0, wrap_r)
-		_move(run, p.lerp(wrap, ch * 0.9), dt)
+		var h := lerpf(0.3, 1.0, minf(k, 1.0)) + 0.65 * sin(th * 0.35 + float(i) * 1.6)
+		h = clampf(h, 0.05, 1.9)
+		# (air's vortex: wider at the top, closing in as it fills)
+		var r := lerpf(1.0, 0.6, minf(k, 1.0)) * lerpf(0.85, 1.15, clampf(h / 2.0, 0.0, 1.0))
+		var p := c + Vector3(cos(th) * r, h, sin(th) * r)
+		var to := Vector3.ZERO
+		if _deck:
+			# (the Geyser's: down to the deck before his feet, a low whirl closing in, where it is sent from)
+			var foot := _water_tip()
+			var rr := lerpf(0.85, 0.35, ch)
+			to = Vector3(foot.x + cos(th) * rr, foot.y + 0.05 + 0.1 * absf(sin(th * 1.3 + float(i))), foot.z + sin(th) * rr)
+		else:
+			var u := fposmod(_t * 1.3 + float(i) * 0.25, 1.0)
+			to = _coil(seg, lerpf(0.0, 1.1, u) if l != "both" else u, th * 1.5, wrap_r)
+		_move(run, p.lerp(to, ch * 0.9), dt)
 		if run.has("drops") and is_instance_valid(run.drops) and ending == "":
-			(run.drops as GPUParticles3D).amount_ratio = clampf(0.1 + 0.8 * k, 0.05, 1.0) * _shown
+			(run.drops as GPUParticles3D).amount_ratio = clampf(0.1 + 0.6 * k, 0.05, 1.0) * _shown
+	if _mist != null and is_instance_valid(_mist) and ending == "":
+		# (the mist round his feet at first, then where the water gathers)
+		_mist.global_position = (c + Vector3.UP * 0.1).lerp(_water_tip(), ch)
+		_mist.amount_ratio = clampf(0.15 + 0.7 * k + 0.5 * _flash, 0.05, 1.0) * _shown
 
 
 # ---------------------------------------------------------------- fire
