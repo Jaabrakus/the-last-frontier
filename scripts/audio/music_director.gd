@@ -20,6 +20,10 @@ extends Node
 ##   creator   the character creator open (user 2026-10-03: "make music for each race when on char creation"): the chosen
 ##             people's theme (people_<id>, tools/music/cues/peoples.py), looped, crossed to the next as the choice changes;
 ##             the creator closing fades it (found by its script among the root's children: no hook in its code)
+## (Since the 2026-10-06 cleanup, owner answers O1/O2, loc_fort, loc_wreck, story_wonder, giant_upper_hand and giant_lament
+## are not rendered (their cue sources stay in tools/music/cues): a place, a knee down or a death that would play one
+## falls through: the place's square, the battle going on, the fight fading out. Of the peoples' themes only the
+## Vietnamese, Thai and Malay ones are rendered.)
 ##   story     a mission's "music" effect (StoryEffects; MusicDirector.story(tree, cue)): story_wonder, story_sorrow,
 ##             story_home; once, over anything but a giant's fight
 ##   fight     a giant (group "giants": StandInGiant) within ENGAGE_R turns on the player (its MammothTemper threatening,
@@ -30,6 +34,21 @@ extends Node
 ##   calm      no giant minding the player for calm_s: the fight fades out over FADE_OUT_S
 ## The main menu plays the main theme (play_menu()), again MENU_GAP_S after it ends. Its own bus, "Music" (-> Master),
 ## the Settings' Music slider (GameSettings); the players keep going through the pause menu.
+## RING MODE (round 4 SHOW; the owner's FEEL list: "Tidebreak's own music"; data/ring/music.json): the ring's own score,
+## tools/music/cues/ring_fight.py, three stems of one length and loop (base, drive, peak) in one AudioStreamSynchronized:
+##   play_story("ring_fight")   (RingMode._music at each game's go) starts it: the go (ring_fight, the score's own first
+##                              downbeat) struck once, the stems from their top, the base heard, drive and peak silent;
+##                              mode STORY, cue "ring_fight", so RingMode._music(false) -> play_story("") ends it as before
+##   set_ring_level(0..2)       the layers: 0 the base, 1 + drive, 2 + peak. A change lands on the next bar line; it never
+##                              steps down more than once in down_every_bars bars
+##   ring_sting(id)             a stinger (music.json stings) over the score, the loop ducked duck_db and brought back over
+##                              a beat after it; never two within sting_gap_s (a bigger rank wins a collision)
+##   start_ring(practice)       also Practice's own start (RingMode asks for no music there): the base at practice_base_db,
+##                              its level held at practice_level, no stingers
+##   RingMusic                  made here (a child) while a RingMode stands: it reads RingRules.current() and RingMode's
+##                              signals and sets the level and the stingers (scripts/ring/ring_music.gd)
+## giant_battle (music.json "never") never plays while a ring match stands: the ring's fight is its own
+## (tests/ring/test_ring_music.gd pins it).
 
 const M := preload("res://scripts/audio/music_manifest.gd")
 const BUS := &"Music"
@@ -70,6 +89,9 @@ const HUSH_S := 30.0                ## after a fight or the lament: no place's p
 
 enum Mode { QUIET, EXPLORE, FIGHT, UPPER, LAMENT, MENU, STORY, CREATOR }
 
+const RING_DATA := "res://data/ring/music.json"
+const RING_CUE := "ring_fight"
+
 var player: Node3D
 ## The level's AmbienceBed (its band() picks the explore piece); found by name when not set.
 var ambience: Node
@@ -101,6 +123,30 @@ var _started_usec := 0              ## when `cue` started (its own clock, for a 
 var _from := 0.0                    ## where in the file it started
 var _menu_wait := -1.0
 var _hooked := {}                   ## giants whose `died` is connected (instance id -> true)
+## The ring's score (RING MODE): the level heard, Practice's, its RingMusic; its player (the stems in one
+## AudioStreamSynchronized), the level asked for, the bars it has played (its loops counted), its last step down, the duck.
+var ring_level := 0
+var ring_practice := false
+var ring_music: RingMusic
+## The stingers played and every cue started, in order (the tests read them).
+var ring_stings: Array[String] = []
+var started: Array[String] = []
+var _ring: AudioStreamPlayer                ## the ring's player while its score plays (null when stopped)
+var _ring_sync: AudioStreamSynchronized
+var _ring_player: AudioStreamPlayer         ## the ring's player, kept for the ring's stay
+var _ring_fade: Tween
+var _ring_want := 0
+var _ring_bar := -1
+var _ring_loops := 0
+var _ring_last_pos := 0.0
+var _ring_down_bar := -1000000
+var _ring_tw: Array[Tween] = [null, null, null]
+var _duck: Tween
+var _sting_at := -1e9
+var _sting_rank := -1
+var _sting_player: AudioStreamPlayer
+var _ring_held := {}                ## path -> the stream read on a worker thread (null until then)
+static var _ring_data := {}
 
 
 ## The Music bus (idempotent): -> Master.
@@ -140,6 +186,9 @@ func play_story(id: String) -> void:
 		mode = Mode.QUIET
 		_explore_in = randf_range(GAP_S.x, GAP_S.y)
 		return
+	if id == RING_CUE and has_ring_score():
+		start_ring(false)
+		return
 	mode = Mode.STORY
 	play(StringName(id), 0.0, 2.0, 3.0)
 
@@ -159,6 +208,10 @@ func _process(dt: float) -> void:
 	if _creator_scan <= 0.0:
 		_creator_scan = SCAN_S
 		_creator_music()
+		_ring_watch()
+		_ring_hold()
+	if _ring != null:
+		_ring_bars()
 	if mode == Mode.CREATOR:
 		return
 	_scan -= dt
@@ -218,7 +271,7 @@ func _think(dt: float) -> void:
 					_explore_in = randf_range(GAP_S.x, GAP_S.y)
 				return
 			_calm = 0.0
-			if want == "upper" and mode == Mode.FIGHT:
+			if want == "upper" and mode == Mode.FIGHT and M.CUES.has("giant_upper_hand"):
 				mode = Mode.UPPER
 				_cross(&"giant_upper_hand")
 			elif want == "fight" and mode == Mode.UPPER:
@@ -311,6 +364,8 @@ func locate(pos: Vector3) -> String:
 	for e: Array in PLACES:
 		if bool(e[3]) and not layered:
 			continue
+		if not M.CUES.has(String(e[2])):
+			continue               # (a place whose piece is not rendered: loc_fort, loc_wreck since 2026-10-06)
 		for nm: String in e[0]:
 			var p := StoryLayer.place(nm)
 			if p != Vector3.INF and _flat(pos, p) < float(e[1]):
@@ -366,7 +421,7 @@ func _giants() -> String:
 func _go_fight(upper: bool) -> void:
 	_calm = 0.0
 	_pending = ""
-	if upper:
+	if upper and M.CUES.has("giant_upper_hand"):
 		mode = Mode.UPPER
 		play(&"giant_upper_hand", 0.0, 1.0)
 	else:
@@ -380,6 +435,13 @@ func _on_giant_died(g: Node) -> void:
 	var near := _flat(player.global_position, g.call("where")) < LAMENT_R
 	if mode in [Mode.FIGHT, Mode.UPPER] or near:
 		_pending = ""
+		if not M.CUES.has("giant_lament"):
+			# (the lament not rendered since 2026-10-06: the fight fades out instead)
+			fade_out(FADE_OUT_S)
+			mode = Mode.QUIET
+			_hush_until = _clock + HUSH_S
+			_explore_in = randf_range(GAP_S.x, GAP_S.y)
+			return
 		mode = Mode.LAMENT
 		play(&"giant_lament", 0.0, 2.0, 2.5)
 
@@ -411,6 +473,9 @@ func play(id: StringName, from: float = 0.0, fade_in: float = 1.0, fade_old: flo
 	var c: Dictionary = M.CUES.get(String(id), {})
 	if c.is_empty():
 		return
+	if ring_on() and String(id) in (ring_data().get("never", []) as Array):
+		return                               # (the giants' fight never in the ring)
+	started.append(String(id))
 	var stream := load(String(c.path)) as AudioStream
 	if stream == null:
 		push_warning("MusicDirector: no %s" % c.path)
@@ -442,9 +507,16 @@ func fade_out(secs: float) -> void:
 	var p := _cur
 	_cur = null
 	cue = ""
+	var keep := p == _ring_player
+	if p == _ring:
+		_ring_stop()
 	var tw := create_tween()
 	tw.tween_property(p, "volume_db", SILENT_DB, maxf(secs, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.tween_callback(p.queue_free)
+	# (the ring's player is kept and stopped, not freed: freeing a synchronized stream's player as it mixed stalled the
+	# frame for seconds now and then, tests/perf/test_ring_hitches.gd)
+	tw.tween_callback(p.stop if keep else p.queue_free)
+	if keep:
+		_ring_fade = tw
 
 
 ## Where the current cue is (s into its file): the stream's own position once it is mixing, else our clock (folded
@@ -455,7 +527,7 @@ func position() -> float:
 	var pos := _cur.get_playback_position()
 	if pos > 0.0:
 		return pos + AudioServer.get_time_since_last_mix()
-	var c: Dictionary = M.CUES.get(cue, {})
+	var c: Dictionary = M.CUES.get(String(ring_data().stems[0]) if _ring != null and _cur == _ring else cue, {})
 	var t := _from + (Time.get_ticks_usec() - _started_usec) / 1e6
 	var ls := float(c.get("loop_start", -1.0))
 	var ln := float(c.get("length", 0.0))
@@ -467,6 +539,284 @@ func position() -> float:
 func _bar_s(id: String) -> float:
 	var c: Dictionary = M.CUES[id]
 	return 60.0 / float(c.bpm) * int(c.beats)
+
+
+# ---------------------------------------------------------------- the ring's score (RING MODE; see the header)
+static func ring_data() -> Dictionary:
+	if _ring_data.is_empty():
+		var f := FileAccess.open(RING_DATA, FileAccess.READ)
+		var d: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
+		_ring_data = d if d is Dictionary else {"stems": []}
+	return _ring_data
+
+
+static func ring_num(key: String, def := 0.0) -> float:
+	return float(ring_data().get(key, def))
+
+
+## The manifest has the ring's three stems and its go.
+static func has_ring_score() -> bool:
+	var stems: Array = ring_data().get("stems", [])
+	if stems.size() != 3 or not M.CUES.has(RING_CUE):
+		return false
+	for s: Variant in stems:
+		if not M.CUES.has(String(s)):
+			return false
+	return true
+
+
+## A ring match stands (its RingMusic made) or the ring's score plays.
+func ring_on() -> bool:
+	return _ring != null or (ring_music != null and is_instance_valid(ring_music))
+
+
+## The ring's score is playing now.
+func ring_playing() -> bool:
+	return _ring != null and is_instance_valid(_ring) and _ring == _cur
+
+
+## The ring's score from its top: the stems in step, the base heard (in Practice at practice_base_db, its level held at
+## practice_level), the go struck once (not in Practice).
+func start_ring(practice := false) -> void:
+	if not has_ring_score():
+		return
+	_pending = ""
+	if ring_playing():
+		_cur = null
+		_ring_stop()
+	fade_out(1.0)
+	# (one player and one synchronized stream for the ring's whole stay: made once, stopped and started again)
+	if _ring_player == null or not is_instance_valid(_ring_player):
+		var stems: Array = ring_data().stems
+		var sync := AudioStreamSynchronized.new()
+		sync.stream_count = 3
+		for i in 3:
+			var c: Dictionary = M.CUES[String(stems[i])]
+			var w := load(String(c.path)) as AudioStream
+			_loop(w, c)
+			sync.set_sync_stream(i, w)
+		_ring_player = AudioStreamPlayer.new()
+		_ring_player.name = "Cue_ring_fight"
+		_ring_player.bus = BUS
+		_ring_player.process_mode = Node.PROCESS_MODE_ALWAYS
+		_ring_player.stream = sync
+		add_child(_ring_player)
+	if _ring_fade != null and _ring_fade.is_valid():
+		_ring_fade.kill()
+	var p := _ring_player
+	var sync := p.stream as AudioStreamSynchronized
+	for i in 3:
+		sync.set_sync_stream_volume(i, 0.0 if i == 0 else SILENT_DB)
+	ring_practice = practice
+	ring_level = 0
+	_ring_want = int(ring_num("practice_level", 0.0)) if practice else 0
+	_ring_bar = -1
+	_ring_loops = 0
+	_ring_last_pos = 0.0
+	_ring_down_bar = -1000000
+	p.volume_db = _ring_db()
+	p.play(0.0)
+	_ring = p
+	_ring_sync = sync
+	_cur = p
+	cue = RING_CUE
+	mode = Mode.STORY
+	_from = 0.0
+	_started_usec = Time.get_ticks_usec()
+	_played[cue] = _clock
+	started.append(RING_CUE)
+	if not practice:
+		_one_shot(RING_CUE, ring_num("go_db", 0.0))
+	_apply_level(true)
+
+
+## The ring's player's level: LEVEL_DB, Practice's practice_base_db under it.
+func _ring_db() -> float:
+	return LEVEL_DB + (ring_num("practice_base_db", -6.0) if ring_practice else 0.0)
+
+
+## The layers to `n` (0..2) from the next bar line (Practice: held at practice_level).
+func set_ring_level(n: int) -> void:
+	if ring_practice:
+		n = int(ring_num("practice_level", 0.0))
+	_ring_want = clampi(n, 0, 2)
+
+
+## The level asked for (it lands on the next bar line).
+func ring_level_wanted() -> int:
+	return _ring_want
+
+
+## The bars the score has played (its loops counted), each frame: on a new bar line the level asked for lands (up at once;
+## down one step, at most once in down_every_bars bars).
+func _ring_bars() -> void:
+	if not ring_playing():
+		return
+	var c: Dictionary = M.CUES[String(ring_data().stems[0])]
+	var pos := position()
+	if pos + 1.0 < _ring_last_pos:
+		_ring_loops += 1                     # (round its loop)
+	_ring_last_pos = pos
+	var per_loop := int(round(float(c.length) / _bar_s(RING_CUE)))
+	var bar := _ring_loops * per_loop + int(floor(pos / _bar_s(RING_CUE)))
+	if bar == _ring_bar:
+		return
+	_ring_bar = bar
+	if _ring_want > ring_level:
+		ring_level = _ring_want
+		_apply_level(false)
+	elif _ring_want < ring_level and bar - _ring_down_bar >= int(ring_num("down_every_bars", 8.0)):
+		ring_level -= 1
+		_ring_down_bar = bar
+		_apply_level(false)
+
+
+## The bars played since the score began (-1 not playing).
+func ring_bar() -> int:
+	return _ring_bar if ring_playing() else -1
+
+
+## The beats since the score began (its loops counted; -1 not playing): the crowd's clap keeps to it.
+func ring_beat() -> float:
+	if not ring_playing():
+		return -1.0
+	var c: Dictionary = M.CUES[String(ring_data().stems[0])]
+	return (_ring_loops * float(c.length) + position()) * float(c.bpm) / 60.0
+
+
+## The tempo of the ring's score (BPM; its manifest row).
+static func ring_bpm() -> float:
+	return float((M.CUES.get(RING_CUE, {}) as Dictionary).get("bpm", 132.0))
+
+
+## The stems' volumes to the level: each one in quickly at the bar line (layer_in_s), out over layer_out_beats.
+func _apply_level(instant: bool) -> void:
+	if _ring_sync == null:
+		return
+	var beat := 60.0 / ring_bpm()
+	for i in 3:
+		var to := 0.0 if i <= ring_level else SILENT_DB
+		if _ring_tw[i] != null and _ring_tw[i].is_valid():
+			_ring_tw[i].kill()
+		var from := _ring_sync.get_sync_stream_volume(i)
+		if instant or is_equal_approx(from, to):
+			_ring_sync.set_sync_stream_volume(i, to)
+			continue
+		var secs := ring_num("layer_in_s", 0.06) if to > from else beat * ring_num("layer_out_beats", 1.0)
+		var sync := _ring_sync
+		var k := i
+		_ring_tw[i] = create_tween()
+		_ring_tw[i].tween_method(func(db: float) -> void: sync.set_sync_stream_volume(k, db), from, to, secs)
+
+
+## Each stem's volume now (dB; the tests read the layers).
+func ring_stem_db(i: int) -> float:
+	return _ring_sync.get_sync_stream_volume(i) if _ring_sync != null else SILENT_DB
+
+
+## A stinger (music.json stings `id`) over the ring's score: the loop ducked duck_db at once and brought back over a beat
+## once the stinger's hold_s is up. Never two within sting_gap_s: a bigger rank cuts the last one short, a smaller or equal
+## one is dropped. None in Practice (practice_stings). Returns whether it played.
+func ring_sting(id: String) -> bool:
+	var st: Dictionary = (ring_data().get("stings", {}) as Dictionary).get(id, {})
+	if st.is_empty() or not M.CUES.has(String(st.get("cue", ""))):
+		return false
+	if ring_practice and ring_playing() and not bool(ring_data().get("practice_stings", false)):
+		return false
+	var now := Time.get_ticks_msec() / 1000.0
+	var rank := int(st.get("rank", 0))
+	if now - _sting_at < ring_num("sting_gap_s", 1.5):
+		if rank <= _sting_rank:
+			return false
+		if _sting_player != null and is_instance_valid(_sting_player):
+			var old := _sting_player
+			var tw := old.create_tween()
+			tw.tween_property(old, "volume_db", SILENT_DB, 0.12)
+			tw.tween_callback(old.queue_free)
+	_sting_at = now
+	_sting_rank = rank
+	_sting_player = _one_shot(String(st.cue), float(st.get("db", 0.0)))
+	ring_stings.append(id)
+	if ring_playing():
+		var beat := 60.0 / ring_bpm()
+		if _duck != null and _duck.is_valid():
+			_duck.kill()
+		var base := _ring_db()
+		_duck = create_tween()
+		_duck.tween_property(_ring, "volume_db", base + ring_num("duck_db", -9.0), ring_num("duck_in_s", 0.05))
+		_duck.tween_interval(maxf(float(st.get("hold_s", 2.0)) - beat, 0.0))
+		_duck.tween_property(_ring, "volume_db", base, beat * ring_num("duck_back_beats", 1.0)).set_trans(Tween.TRANS_SINE)
+	return true
+
+
+## The loop's duck now (dB under its own level; 0 none).
+func ring_duck_db() -> float:
+	return _ring.volume_db - _ring_db() if ring_playing() else 0.0
+
+
+## A cue once over whatever plays (not the current cue): the go, the stingers. Frees itself when done.
+func _one_shot(id: String, db: float) -> AudioStreamPlayer:
+	var c: Dictionary = M.CUES.get(id, {})
+	var s := load(String(c.get("path", ""))) as AudioStream if not c.is_empty() else null
+	if s == null:
+		return null
+	var p := AudioStreamPlayer.new()
+	p.name = "Sting_%s" % id
+	p.bus = BUS
+	p.process_mode = Node.PROCESS_MODE_ALWAYS
+	p.stream = s
+	p.volume_db = LEVEL_DB + db
+	add_child(p)
+	p.play()
+	p.finished.connect(p.queue_free)
+	started.append(id)
+	return p
+
+
+## The ring's score let go (fade_out fades and frees its player).
+func _ring_stop() -> void:
+	_ring = null
+	_ring_sync = null
+	ring_level = 0
+	_ring_bar = -1
+	for i in 3:
+		if _ring_tw[i] != null and _ring_tw[i].is_valid():
+			_ring_tw[i].kill()
+	if _duck != null and _duck.is_valid():
+		_duck.kill()
+
+
+## A ring match standing (group ring_match: RingMode): its RingMusic made, as a child (it frees itself when the match goes).
+func _ring_watch() -> void:
+	if ring_music != null and not is_instance_valid(ring_music):
+		ring_music = null
+	if ring_music != null or not is_inside_tree() or not has_ring_score():
+		return
+	var m := get_tree().get_first_node_in_group(&"ring_match") as RingMode
+	if m == null or m.rules == null:
+		return
+	ring_music = RingMusic.new()
+	ring_music.name = "RingMusic"
+	ring_music.md = self
+	ring_music.mode = m
+	add_child(ring_music)
+	# (the stems, the go and the stingers read on worker threads now and held, so the go reads nothing from disk)
+	var ids: Array = (ring_data().stems as Array) + [RING_CUE]
+	for st: Variant in (ring_data().get("stings", {}) as Dictionary).values():
+		if st is Dictionary:
+			ids.append(String((st as Dictionary).get("cue", "")))
+	for id: Variant in ids:
+		var path := String((M.CUES.get(String(id), {}) as Dictionary).get("path", ""))
+		if path != "" and not _ring_held.has(path):
+			_ring_held[path] = null
+			ResourceLoader.load_threaded_request(path)
+
+
+## The ring's files asked for on the worker threads, held once read.
+func _ring_hold() -> void:
+	for path: String in _ring_held:
+		if _ring_held[path] == null and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_LOADED:
+			_ring_held[path] = ResourceLoader.load_threaded_get(path)
 
 
 func _loop_start(id: String) -> float:

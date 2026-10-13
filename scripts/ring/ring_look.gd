@@ -21,23 +21,25 @@ const NAME := "RingLook"
 ## The moods. hour < 0: found from sun_el (the default day's afternoon sun at that height); night: the clock's moon.
 const PRESETS := {
 	"noon": {
-		"fx_gain": 1.0, "hour": 12.25, "clouds": 0.16, "rays": 0.9, "sun_scale": 1.12, "exposure": 0.98, "sky_ambient": 0.42, "ambient": Color(0.0, 0.0, 0.0),
-		"fog_density": 0.0007, "fog_tint": Color(0.8, 0.88, 0.98), "fog_mix": 0.3, "sun_scatter": 0.08,
-		"saturation": 1.12, "contrast": 1.04,
-		"glow_threshold": 1.4, "glow_intensity": 0.35, "glow_bloom": 0.0,
-		"ssao_intensity": 1.5, "ssao_radius": 1.1,
+		# Planetes reference: cool reflected fill, warm material highlights and matte midtones.
+		"fx_gain": 1.0, "hour": 12.25, "clouds": 0.16, "rays": 0.25, "sun_scale": 1.0, "exposure": 0.9, "sky_ambient": 0.54, "ambient": Color(0.045, 0.055, 0.07),
+		"fog_density": 0.0007, "fog_tint": Color(0.76, 0.83, 0.88), "fog_mix": 0.3, "sun_scatter": 0.08,
+		"saturation": 1.02, "contrast": 1.0, "agx_contrast": 1.12,
+		# Reduce halos around clouds and pale cloth while retaining glow for bright effects.
+		"glow_threshold": 4.0, "glow_intensity": 0.22, "glow_bloom": 0.0,
+		"ssao_intensity": 1.3, "ssao_radius": 1.1,
 	},
 	"golden": {
 		"fx_gain": 0.92, "sun_el": 13.0, "clouds": 0.08, "rays": 0.6, "sun_scale": 1.35, "exposure": 0.9, "sky_ambient": 0.34, "ambient": Color(0.0, 0.0, 0.0),
 		"fog_density": 0.0011, "fog_tint": Color(1.0, 0.66, 0.4), "fog_mix": 0.45, "sun_scatter": 0.18,
-		"saturation": 1.22, "contrast": 1.08,
+		"saturation": 1.22, "contrast": 1.08, "agx_contrast": 1.45,
 		"glow_threshold": 1.25, "glow_intensity": 0.4, "glow_bloom": 0.0,
 		"ssao_intensity": 1.7, "ssao_radius": 1.2,
 	},
 	"night": {
 		"fx_gain": 0.5, "night": true, "clouds": 0.06, "rays": 1.5, "sun_scale": 1.6, "exposure": 0.62, "sky_ambient": 0.3, "ambient": Color(0.05, 0.07, 0.13),
 		"fog_density": 0.003, "fog_tint": Color(0.3, 0.36, 0.55), "fog_mix": 0.6, "sun_scatter": 0.1,
-		"saturation": 1.1, "contrast": 1.05,
+		"saturation": 1.1, "contrast": 1.05, "agx_contrast": 1.45,
 		"glow_threshold": 1.05, "glow_intensity": 0.6, "glow_bloom": 0.02,
 		"ssao_intensity": 1.4, "ssao_radius": 1.0,
 	},
@@ -76,6 +78,8 @@ func set_preset(name: String) -> void:
 	var dressing := RingDressing.find_in(level)
 	if dressing != null:
 		dressing.set_mood(preset)
+	# the Look setting's Soft: the study's light and colours over all this (the rig keeps running underneath, unseen)
+	SoftWorld.sync(level, preset)
 
 
 ## The mood's hour and date on the level's clock (stopped), the weather clear.
@@ -156,7 +160,7 @@ func _once() -> void:
 	var env := rig.get_environment()
 	if env == null or DisplayServer.get_name() == "headless":
 		return
-	env.glow_enabled = true
+	env.glow_enabled = rig.settings == null or rig.settings.glow
 	env.glow_hdr_threshold = float(cfg.glow_threshold)
 	env.glow_intensity = float(cfg.glow_intensity)
 	env.glow_bloom = float(cfg.glow_bloom)
@@ -169,6 +173,8 @@ func _once() -> void:
 	env.ambient_light_energy = 1.0
 	env.fog_sun_scatter = float(cfg.sun_scatter)
 	env.adjustment_contrast = float(cfg.contrast)
+	# Apply on every mood change so returning from noon restores the evening/night grade.
+	env.tonemap_agx_contrast = float(cfg.agx_contrast)
 	# the sun's shafts (GodRays) softer by day: a clean key light reads better beside cel shading than a glare
 	var rays: Variant = rig.get(&"_god_rays")
 	if rays != null:

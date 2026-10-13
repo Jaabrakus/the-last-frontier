@@ -152,7 +152,7 @@ func self_point(m := "pillar") -> Vector3:
 func _pick(m: String, q: Dictionary) -> Dictionary:
 	var d := SwayMoves.move(m)
 	var targets: Array = d.get("targets", [])
-	if (m == "pillar" and caster.mode_of(m) == "self") or m == "stone_form" or bool(d.get("self_lock", false)):
+	if caster.self_lock_of(m):
 		var sp := self_point(m)
 		mark.global_transform = Transform3D(Basis.IDENTITY, sp)
 		return {"node": mark, "point": sp, "normal": Vector3.UP, "ground": true, "self": true, "matter": FormMatter.of_ground(get_tree(), sp)}
@@ -395,7 +395,7 @@ func _on_started(m: String, t: Node3D) -> void:
 	crackle.name = "FormCrackle"
 	crackle.color = col.lerp(Color.WHITE, 0.2)
 	if m in MATTER_MOVES and lock_matter not in ["", "earth"] and caster.player.interactor != null and caster.player.is_local:
-		caster.player.interactor.notice("%s: %s" % [SwayCaster.label_with(m, caster.mode_of(m)), FormMatter.label(lock_matter)], 1.4)
+		caster.player.interactor.notice("%s: %s" % [SwayCaster.label_with(m, caster.mode_of(m), not caster.elem()), FormMatter.label(lock_matter)], 1.4)
 	crackle.center = circle.global_position
 	crackle.up = up
 	crackle.radius = radius

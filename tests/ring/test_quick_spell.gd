@@ -2,23 +2,25 @@ extends SceneTree
 ## The quick spell on LMB (SwayCaster's quick spell, MatchSetup.quick_of / set_quick, BendStrip's LMB chip; the owner,
 ## 2026-10-05: "the user needs to be able to put hot spells on left click somehow, like they can assign when it is on this,
 ## this action can be right after"), in Tidebreak's ring (scenes/ring.tscn, MatchSetup.incoming, element earth), the foe held:
-##   defaults   each element's quick spell before any is set (earth rock_jab/pebbles, water water_jet/splash, fire
-##              fire_jab/jab, air air_palm/palm); the strip's LMB chip says it, the help line says the set key
-##   bind       Q (the action bend_quick_bind) with Rock Jab readied at kick-up: the quick spell is rock_jab/kick_up, said on
-##              the screen; the wheel stepping the key on to stomp leaves it (frozen)
+##   defaults   each element's quick spell before any is set: its jab (round 2: Bending.jab, earth rock_jab/pebbles, water
+##              water_jet/splash, fire fire_jab/embers, air air_palm/palm); the strip's JAB chip says it ("Pebbles") and
+##              what the next Q does ("Q: put Spike on left click")
+##   bind       Q (the action bend_quick_bind) with Stone Form readied at Boulder (key 1 tapped twice: round 2's keys have
+##              no memory): the quick spell is stone_form/cannonball, said on the screen; the key's variation set back to
+##              Spike leaves it (frozen)
 ##   cast       LMB held ("fire"): a lock of the quick spell (lock_src quick, the same lock time as RMB's, the circle and the
-##              pose), let go: cast at kick-up; the readied key and its variation (stomp) never changed, the strip's pip too
-##   after      an RMB lock with LMB pressed meanwhile: the RMB lock goes on as it was (stomp); the moment it is cast, the held
-##              LMB starts its own lock; RMB pressed during it is ignored; let go: kick-up cast
-##   kept       per element: fire's own (its default, then set to Fire Blast punch), earth's still kick-up; read back from
+##              pose), let go: cast as the Boulder; the readied key and its variation (Spike) never changed
+##   after      an RMB lock with LMB pressed meanwhile: the RMB lock goes on as it was (Spike); the moment it is cast, the
+##              held LMB starts its own lock; RMB pressed during it is ignored; let go: the Boulder cast
+##   kept       per element: fire's own (its jab, Embers, then set to Punch), earth's still the Boulder; read back from
 ##              the settings file (a new caster's cache); the test keeps its own settings file (GameSettings.path)
 ##   guards     (the QA pass on tb/QUICK) the readied key's line (HUD, spell_label) keeps the key's variation while a quick
 ##              lock of the same move runs; a click while the mouse is free, or one that ran into a free mouse, starts no
 ##              lock until it is let go; nor the equip wheel's pick click; Q with nothing readied says to ready a move; the
-##              set key unbound or rebound: the strip's help line says so at once; no show words in any move's label or
+##              set key unbound or rebound: the JAB chip's Q line says so at once; no show words in any move's label or
 ##              variation (the LMB chip can show them all: Wind Run's whirl ride)
-##   mode=duel  the same in the duel (scenes/main.tscn, DuelMode.incoming): LMB casts the default; the world HUD's LMB row
-##              under the hotbar and F1's Q and LMB lines; Q binds, the wheel stays shut; the readied line during a quick
+##   mode=duel  the same in the duel (scenes/main.tscn, DuelMode.incoming): LMB casts the jab; the world HUD's LMB row
+##              under the hotbar and F1's Q, LMB and E lines; Q binds, the wheel stays shut; the readied line during a quick
 ##              lock; Q with hands free; the set key on F: Q opens the wheel again and its pick click starts no lock;
 ##              the element changed: its own quick spell
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_quick_spell.gd [-- mode=duel]
@@ -38,6 +40,7 @@ var p: FrontierPlayer
 var c: SwayCaster
 var hud: FrontierHUD
 var casts: Array = []
+var cast_modes: Array = []
 var _foe_at := Vector3.INF
 var duel_mode := false
 var duel: DuelMode
@@ -129,7 +132,9 @@ func _run() -> void:
 	physics_frame.connect(_hold_foe)
 	c = SwayCaster.of(p)
 	hud = p.hud
-	c.cast.connect(func(m: String, _t: Node3D) -> void: casts.append(m))
+	c.cast.connect(func(m: String, _t: Node3D) -> void:
+		casts.append(m)
+		cast_modes.append(c.mode_of(m)))           # (the variation it went at: a Stone Form cast is no BendEffects record)
 	var laid := await _until(func() -> bool: return p.arena_element == "earth" and p.hotbar.spell != "", 4.0)
 	_expect(laid < INF and c != null, "the arena player, earth laid, a move readied")
 	var rm := RingMode.find(self)
@@ -168,21 +173,23 @@ static func _q(id: String, mode: String) -> Dictionary:
 
 # ---------------------------------------------------------------- the defaults
 func _defaults() -> void:
-	var want := {"earth": _q("rock_jab", "pebbles"), "water": _q("water_jet", "splash"), "fire": _q("fire_jab", "jab"),
+	var want := {"earth": _q("rock_jab", "pebbles"), "water": _q("water_jet", "splash"), "fire": _q("fire_jab", "embers"),
 			"air": _q("air_palm", "palm")}
 	var ok := true
 	for el: String in want:
-		ok = ok and MatchSetup.quick_of(el) == want[el]
-	_expect(ok, "each element's default quick spell (%s)" % [Bending.ELEMENTS.map(func(e: String) -> Dictionary: return MatchSetup.quick_of(e))])
+		ok = ok and MatchSetup.quick_of(el) == want[el] and Bending.jab(el) == want[el]
+	_expect(ok, "each element's default quick spell, its jab (%s)" % [Bending.ELEMENTS.map(func(e: String) -> Dictionary: return MatchSetup.quick_of(e))])
 	_expect(c.quick_element() == "earth" and c.quick_spell() == want.earth and c.quick_ready(),
-			"the player's: earth, Rock Jab (pebbles), ready (%s)" % [c.quick_spell()])
+			"the player's: earth, Pebbles, ready (%s)" % [c.quick_spell()])
 	await _ticks(3)
+	p.hotbar.select(0)                           # (Stone Form readied at Spike: the next Q would put it on)
+	await _secs(0.4)
 	var strip := hud.bend_strip
-	_expect(strip != null and strip.quick_line() == "Rock Jab (pebbles)" and (strip._quick as Label).text == "Rock Jab (pebbles)"
-			and strip._quick_box.is_visible_in_tree() and (strip._chip as Label).text == "LMB",
-			"the strip's LMB chip: \"%s\"" % (strip.quick_line() if strip != null else "-"))
-	_expect(strip != null and strip.help_line().begins_with("Q: set left click") and (strip._help as Label).visible,
-			"the strip's help line: \"%s\"" % (strip.help_line() if strip != null else "-"))
+	_expect(strip != null and strip.quick_line() == "Pebbles" and (strip._quick as Label).text == "Pebbles"
+			and strip._quick_box.is_visible_in_tree() and (strip._chip as Label).text.begins_with("LMB"),
+			"the strip's JAB chip: \"%s\" (\"%s\")" % [strip.quick_line() if strip != null else "-", (strip._chip as Label).text if strip != null else "-"])
+	_expect(strip != null and strip.q_line() == "Q: put Spike on left click",
+			"the JAB chip's Q line: \"%s\"" % (strip.q_line() if strip != null else "-"))
 	_expect(InputMap.has_action(SwayCaster.QUICK_BIND) and SwayCaster.quick_bind_key() == "Q",
 			"the set key is an action of its own, Q by default (%s)" % SwayCaster.quick_bind_key())
 
@@ -190,97 +197,92 @@ func _defaults() -> void:
 # ---------------------------------------------------------------- Q binds the readied move as it is
 func _bind() -> void:
 	var bar := p.hotbar
-	bar.take(0)
+	await _secs(0.4)
+	bar.select(0)
 	await _ticks(2)
-	if c.readied_spell != "rock_jab":
-		bar.select(0)                            # (key 1 again: its other skill)
-		await _ticks(2)
-	c.set_mode("rock_jab", "kick_up")
+	bar.select(0)                                # (key 1 tapped twice: its other move, the Boulder)
 	await _ticks(2)
-	_expect(c.readied_spell == "rock_jab" and c.base_mode_of("rock_jab") == "kick_up", "Rock Jab readied at kick-up")
+	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "cannonball", "Stone Form readied at Boulder")
 	await _action(SwayCaster.QUICK_BIND)
-	_expect(c.quick_spell() == _q("rock_jab", "kick_up") and MatchSetup.quick_of("earth") == _q("rock_jab", "kick_up"),
-			"Q: the quick spell is Rock Jab (kick-up), kept (%s, %s)" % [c.quick_spell(), MatchSetup.quick_of("earth")])
+	_expect(c.quick_spell() == _q("stone_form", "cannonball") and MatchSetup.quick_of("earth") == _q("stone_form", "cannonball"),
+			"Q: the quick spell is the Boulder, kept (%s, %s)" % [c.quick_spell(), MatchSetup.quick_of("earth")])
 	var note := p.interactor._notice.text if p.interactor != null else ""
-	_expect(note == "Left click: Rock Jab (kick-up)", "said on the screen: \"%s\"" % note)
-	await _action(&"weapon_next")
-	await _ticks(3)
-	_expect(c.base_mode_of("rock_jab") == "stomp" and c.quick_spell() == _q("rock_jab", "kick_up")
-			and hud.bend_strip.quick_line() == "Rock Jab (kick-up)",
-			"the wheel steps the key on to stomp; the quick spell stays kick-up (%s; %s)" % [c.base_mode_of("rock_jab"),
+	_expect(note == "Left click: Stone Form (Boulder)", "said on the screen: \"%s\"" % note)
+	c.set_mode("stone_form", "spike")
+	await _secs(0.3)
+	_expect(c.base_mode_of("stone_form") == "spike" and c.quick_spell() == _q("stone_form", "cannonball")
+			and hud.bend_strip.quick_line() == "Boulder",
+			"the key's variation set back to Spike; the quick spell stays the Boulder (%s; %s)" % [c.base_mode_of("stone_form"),
 			hud.bend_strip.quick_line()])
+	_expect(hud.bend_strip.q_line().contains("hold Q: Pebbles back"), "and the JAB chip says how the jab comes back (\"%s\")"
+			% hud.bend_strip.q_line())
 
 
 # ---------------------------------------------------------------- LMB: lock, let go, cast
 func _cast() -> void:
 	casts.clear()
-	var pip0 := int(hud.bend_strip.column(0).mode_i)
+	cast_modes.clear()
 	Input.action_press(&"fire")
 	var t := await _until(func() -> bool: return c.state != SwayCaster.State.IDLE, 1.0)
-	var d := SwayMoves.move("rock_jab")
-	var want_s := maxf(float((d.get("mode_lock_s", {}) as Dictionary).get("kick_up", d.get("lock_s", 1.0))) * c.lock_mult
-			* c.tier_mult("rock_jab"), 0.05)
-	_expect(t < INF and c.lock_src == SwayCaster.SRC_QUICK and c.move == "rock_jab" and c.mode_of("rock_jab") == "kick_up",
-			"LMB held: a lock of the quick spell (%s, %s at %s)" % [c.lock_src, c.move, c.mode_of("rock_jab")])
+	var d := SwayMoves.move("stone_form")
+	var want_s := maxf(float((d.get("mode_lock_s", {}) as Dictionary).get("cannonball", d.get("lock_s", 1.0))) * c.lock_mult
+			* c.tier_mult("stone_form"), 0.05)
+	_expect(t < INF and c.lock_src == SwayCaster.SRC_QUICK and c.move == "stone_form" and c.mode_of("stone_form") == "cannonball",
+			"LMB held: a lock of the quick spell (%s, %s at %s)" % [c.lock_src, c.move, c.mode_of("stone_form")])
 	_expect(absf(c.lock_s - want_s) < 0.02, "the same lock time as RMB's (%.2f s, %.2f wanted)" % [c.lock_s, want_s])
 	await _ticks(4)
 	_expect(c.form.circle != null and is_instance_valid(c.form.circle) and c.pose.posing(), "the circle drawn, the pose on")
-	_expect(c.readied_spell == "rock_jab" and c.base_mode_of("rock_jab") == "stomp" and int(hud.bend_strip.column(0).mode_i) == pip0
-			and p.hotbar.spell == "rock_jab", "meanwhile the key is as it was: Rock Jab at stomp, the strip's pip unmoved")
-	var line := hud._spell_line("rock_jab")
-	_expect(c.spell_label("rock_jab") == "Rock Jab (stomp)" and line.begins_with("Rock Jab (stomp)") and "3/3" in line
-			and hud._spell_mode("rock_jab") == "stomp",
-			"meanwhile the readied key's line keeps stomp (\"%s\"; %s)" % [line, c.spell_label("rock_jab")])
+	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "spike" and String(hud.bend_strip.column(0).mode) == "spike"
+			and p.hotbar.spell == "stone_form", "meanwhile the key is as it was: Stone Form at Spike, the strip's column too")
+	_expect(c.spell_label("stone_form") == "Stone Form (Spike)" and hud._spell_mode("stone_form") == "spike",
+			"meanwhile the readied key's line keeps Spike (%s; %s)" % [c.spell_label("stone_form"), hud._spell_mode("stone_form")])
 	var full := await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
 	Input.action_release(&"fire")
 	var cast_t := await _until(func() -> bool: return not casts.is_empty(), 1.0)
 	await _secs(0.6)
-	var last := BendEffects.last_of(c)
-	_expect(full < INF and cast_t < INF and casts == ["rock_jab"] and String(last.get("do", "")) == "kick_up"
-			and String(last.get("mode", "")) == "kick_up",
-			"let go: Rock Jab cast at kick-up (full in %.2f s; %s; %s)" % [full, casts, last.get("do", "-")])
-	_expect(c.readied_spell == "rock_jab" and c.base_mode_of("rock_jab") == "stomp" and c.mode_of("rock_jab") == "stomp"
-			and p.hotbar.spell == "rock_jab", "after: the readied key and its variation untouched (%s at %s)" % [c.readied_spell,
-			c.mode_of("rock_jab")])
+	_expect(full < INF and cast_t < INF and casts == ["stone_form"] and cast_modes == ["cannonball"],
+			"let go: Stone Form cast as the Boulder (full in %.2f s; %s; %s)" % [full, casts, cast_modes])
+	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "spike" and c.mode_of("stone_form") == "spike"
+			and p.hotbar.spell == "stone_form", "after: the readied key and its variation untouched (%s at %s)" % [c.readied_spell,
+			c.mode_of("stone_form")])
 
 
 # ---------------------------------------------------------------- right after: one lock at a time
 func _after() -> void:
 	await _secs(0.4)
 	casts.clear()
+	cast_modes.clear()
 	Input.action_press(&"aim")
 	var t := await _until(func() -> bool: return c.state != SwayCaster.State.IDLE, 1.0)
-	_expect(t < INF and c.lock_src == SwayCaster.SRC_AIM and c.move == "rock_jab" and c.mode_of("rock_jab") == "stomp",
-			"RMB: a lock of the readied key (stomp)")
+	_expect(t < INF and c.lock_src == SwayCaster.SRC_AIM and c.move == "stone_form" and c.mode_of("stone_form") == "spike",
+			"RMB: a lock of the readied key (Spike)")
 	await _ticks(3)
 	Input.action_press(&"fire")
 	await _ticks(4)
-	_expect(c.lock_src == SwayCaster.SRC_AIM and c.state != SwayCaster.State.IDLE and c.mode_of("rock_jab") == "stomp",
-			"LMB pressed meanwhile: ignored, the RMB lock goes on at stomp")
+	_expect(c.lock_src == SwayCaster.SRC_AIM and c.state != SwayCaster.State.IDLE and c.mode_of("stone_form") == "spike",
+			"LMB pressed meanwhile: ignored, the RMB lock goes on at Spike")
 	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
 	Input.action_release(&"aim")
 	var cast_t := await _until(func() -> bool: return not casts.is_empty(), 1.0)
-	_expect(cast_t < INF and casts == ["rock_jab"], "RMB let go: cast (%s)" % [casts])
+	var rmb := String(cast_modes[0]) if not cast_modes.is_empty() else ""
+	_expect(cast_t < INF and casts == ["stone_form"] and rmb == "spike", "RMB let go: cast as the Spike (%s, %s)" % [casts, rmb])
 	var next := await _until(func() -> bool: return c.state != SwayCaster.State.IDLE and c.lock_src == SwayCaster.SRC_QUICK, 0.5)
-	_expect(next < 0.2 and c.move == "rock_jab" and c.mode_of("rock_jab") == "kick_up",
-			"LMB still held: its lock (kick-up) starts right after the cast (%.3f s)" % next)
-	# (the RMB cast's stomp lands on its strike, the LMB lock running by then: at its own variation, not the quick one's)
-	var landed := await _until(func() -> bool: return String(BendEffects.last_of(c).get("do", "")) == "ring", 1.0)
-	_expect(landed < INF and String(BendEffects.last_of(c).get("mode", "")) == "stomp",
-			"the RMB cast lands as stomp while the LMB lock runs (%s)" % [BendEffects.last_of(c).get("mode", "-")])
+	_expect(next < 0.2 and c.move == "stone_form" and c.mode_of("stone_form") == "cannonball",
+			"LMB still held: its lock (the Boulder) starts right after the cast (%.3f s)" % next)
 	await _ticks(4)
 	Input.action_press(&"aim")
 	await _ticks(4)
-	_expect(c.lock_src == SwayCaster.SRC_QUICK and c.state != SwayCaster.State.IDLE and c.mode_of("rock_jab") == "kick_up",
-			"RMB pressed during the LMB lock: ignored (%s, %s)" % [c.lock_src, c.mode_of("rock_jab")])
+	_expect(c.lock_src == SwayCaster.SRC_QUICK and c.state != SwayCaster.State.IDLE and c.mode_of("stone_form") == "cannonball",
+			"RMB pressed during the LMB lock: ignored (%s, %s)" % [c.lock_src, c.mode_of("stone_form")])
 	Input.action_release(&"aim")
 	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
 	casts.clear()
+	cast_modes.clear()
 	Input.action_release(&"fire")
 	var c2 := await _until(func() -> bool: return not casts.is_empty(), 1.0)
 	await _secs(0.6)
-	_expect(c2 < INF and String(BendEffects.last_of(c).get("mode", "")) == "kick_up" and c.base_mode_of("rock_jab") == "stomp",
-			"LMB let go: kick-up cast, the key still at stomp (%s)" % BendEffects.last_of(c).get("mode", "-"))
+	_expect(c2 < INF and cast_modes == ["cannonball"] and c.base_mode_of("stone_form") == "spike",
+			"LMB let go: the Boulder cast, the key still at Spike (%s)" % [cast_modes])
 	await _ticks(5)
 	_expect(c.state == SwayCaster.State.IDLE and c.lock_src == SwayCaster.SRC_AIM, "both let go: no lock, the aim's again")
 
@@ -289,19 +291,18 @@ func _after() -> void:
 func _kept() -> void:
 	MatchSetup.element = "fire"
 	var t := await _until(func() -> bool: return p.arena_element == "fire" and p.hotbar.spell == "fire_blast", 3.0)
-	_expect(t < INF and c.quick_spell() == _q("fire_jab", "jab"), "fire: its own default, Fire Jab (jab) (%s)" % [c.quick_spell()])
-	c.set_mode("fire_blast", "punch")
+	_expect(t < INF and c.quick_spell() == _q("fire_jab", "embers"), "fire: its own jab, Embers (%s)" % [c.quick_spell()])
 	await _action(SwayCaster.QUICK_BIND)
-	_expect(c.quick_spell() == _q("fire_blast", "punch"), "fire: Q sets Fire Blast (punch) (%s)" % [c.quick_spell()])
+	_expect(c.quick_spell() == _q("fire_blast", "punch"), "fire: Q sets the Punch (%s)" % [c.quick_spell()])
 	MatchSetup.element = "earth"
 	t = await _until(func() -> bool: return p.arena_element == "earth", 3.0)
-	_expect(t < INF and c.quick_spell() == _q("rock_jab", "kick_up"), "earth again: still Rock Jab (kick-up) (%s)" % [c.quick_spell()])
+	_expect(t < INF and c.quick_spell() == _q("stone_form", "cannonball"), "earth again: still the Boulder (%s)" % [c.quick_spell()])
 	c._quick.clear()
-	_expect(c.quick_spell() == _q("rock_jab", "kick_up") and MatchSetup.quick_of("fire") == _q("fire_blast", "punch")
-			and String(GameSettings.get_value(MatchSetup.QUICK_SECTION, "earth")) == "rock_jab/kick_up",
-			"read back from the settings file: earth kick-up, fire punch")
+	_expect(c.quick_spell() == _q("stone_form", "cannonball") and MatchSetup.quick_of("fire") == _q("fire_blast", "punch")
+			and String(GameSettings.get_value(MatchSetup.QUICK_SECTION, "earth")) == "stone_form/cannonball",
+			"read back from the settings file: earth the Boulder, fire the Punch")
 	_expect(GameSettings.file() == OWN_CFG, "kept in the test's own file (%s), never the player's" % GameSettings.file())
-	_expect(not MatchSetup.set_quick("earth", "fire_blast", "punch") and not MatchSetup.set_quick("earth", "rock_jab", "nope"),
+	_expect(not MatchSetup.set_quick("earth", "fire_blast", "punch") and not MatchSetup.set_quick("earth", "stone_form", "nope"),
 			"another element's move, or a variation it has not, cannot be earth's quick spell")
 
 
@@ -386,24 +387,24 @@ func _nothing_readied() -> void:
 	await _ticks(4)
 
 
-## The set key unbound, then rebound to F: the strip's help line (and F1) follow at once.
+## The set key unbound, then rebound to F: the JAB chip's Q line (and F1) follow at once.
 func _rebind() -> void:
 	var strip := hud.bend_strip
 	InputMap.action_erase_events(SwayCaster.QUICK_BIND)
 	await _secs(0.4)
-	_expect(SwayCaster.quick_bind_key() == "" and strip.help_line().begins_with("set left click: no key bound")
-			and (strip._help as Label).text == strip.help_line() and not hud.help_text().contains("Q: the readied move"),
-			"the set key unbound: \"%s\"" % (strip._help as Label).text)
+	_expect(SwayCaster.quick_bind_key() == "" and strip.q_line().contains("(no key)") and not strip.q_line().contains("Q:")
+			and not hud.help_text().contains("Q: the readied move"),
+			"the set key unbound: \"%s\"" % strip.q_line())
 	var k := InputEventKey.new()
 	k.physical_keycode = KEY_F
 	InputMap.action_add_event(SwayCaster.QUICK_BIND, k)
 	await _secs(0.4)
-	_expect(SwayCaster.quick_bind_key() == "F" and (strip._help as Label).text.begins_with("F: set left click")
+	_expect(SwayCaster.quick_bind_key() == "F" and strip.q_line().contains("F: put") and (strip._chips.jab.other as Label).text == strip.q_line()
 			and hud.help_text().contains("F: the readied move onto LMB"),
-			"rebound to F: \"%s\"" % (strip._help as Label).text)
+			"rebound to F: \"%s\"" % strip.q_line())
 	_restore_bind()
 	await _secs(0.4)
-	_expect((strip._help as Label).text.begins_with("Q: set left click"), "back on Q: \"%s\"" % (strip._help as Label).text)
+	_expect(strip.q_line().contains("Q: put"), "back on Q: \"%s\"" % strip.q_line())
 
 
 func _restore_bind() -> void:
@@ -487,16 +488,17 @@ func _run_duel() -> void:
 	await _until(func() -> bool: return not casts.is_empty(), 1.0)
 	await _secs(0.5)
 	_expect(casts == ["rock_jab"] and String(BendEffects.last_of(c).get("mode", "")) == "pebbles",
-			"the duel: LMB casts Rock Jab (pebbles) (%s)" % [casts])
+			"the duel: LMB casts Pebbles (%s)" % [casts])
 	# the screen: the world HUD's LMB row, F1's lines
 	await _ticks(3)
-	_expect(not hud.arena and hud.quick_row.is_visible_in_tree() and hud.quick_name.text == "Rock Jab (pebbles)"
-			and hud.quick_help.visible and hud.quick_help.text.begins_with("Q: set left click"),
+	_expect(not hud.arena and hud.quick_row.is_visible_in_tree() and hud.quick_name.text == "Pebbles"
+			and hud.quick_help.visible and hud.quick_help.text.begins_with("Q: put "),
 			"the duel shows the LMB row: \"%s\" / \"%s\"" % [hud.quick_name.text, hud.quick_help.text])
 	var help := hud.help_text()
 	_expect(not help.contains("hold Q: equip wheel") and not help.contains(FrontierHUD.WORLD_LMB)
-			and help.contains("Q: the readied move onto LMB") and help.contains("hold LMB"),
-			"the duel's F1: Q and LMB as the quick spell has them")
+			and help.contains("Q: the readied move onto LMB") and help.contains("hold LMB") and not help.contains(FrontierHUD.WORLD_E)
+			and help.contains("E guard"),
+			"the duel's F1: Q, LMB and E as the element has them")
 	await _key(KEY_F1)
 	_expect(hud._help_label.text == help and hud._help_box.visible, "F1 shows it")
 	await _key(KEY_F1)
@@ -516,7 +518,7 @@ func _run_duel() -> void:
 	_expect(c.quick_spell() == want and not wheel_open and _note().begins_with("Left click: "),
 			"the duel: Q binds %s, the wheel stays shut (%s, \"%s\")" % [want, c.quick_spell(), _note()])
 	await _ticks(3)
-	_expect(hud.quick_name.text == c.quick_label(), "the LMB row follows: \"%s\"" % hud.quick_name.text)
+	_expect(hud.quick_name.text == KitWords.move_name(String(want.id), String(want.mode)), "the LMB row follows: \"%s\"" % hud.quick_name.text)
 	# the readied line while a quick lock of the same move at another variation runs
 	if ms.size() > 1:
 		c.set_mode(id, String(ms[0]))
@@ -574,6 +576,6 @@ func _run_duel() -> void:
 	await _secs(Hotbar.KIT_S + 0.5)
 	await _until(func() -> bool: return duel.phase == DuelMode.Phase.FIGHT, 8.0)
 	await _ticks(3)
-	_expect(c.quick_element() == "fire" and c.quick_spell() == _q("fire_jab", "jab") and hud.quick_name.text == "Fire Jab (jab)",
-			"the duel's element fire: Fire Jab (jab) (%s; \"%s\")" % [c.quick_spell(), hud.quick_name.text])
+	_expect(c.quick_element() == "fire" and c.quick_spell() == _q("fire_jab", "embers") and hud.quick_name.text == "Embers",
+			"the duel's element fire: its jab, Embers (%s; \"%s\")" % [c.quick_spell(), hud.quick_name.text])
 	_end()

@@ -29,6 +29,9 @@ extends Node
 ## throw, a cone, a ring or a shove then: one mechanism, nothing else waits on it), strike_point() where it leaves from (the
 ## pose's limb, "hand": l_palm, r_palm, both, l_foot, r_foot; INF when no clip plays or it names none). A lock let go
 ## before its wind-up is drawn releases from where the clip is (not the hold's moment). current_clip() the clip on the body.
+## The next lock taking the body before the strike has come leaves it owed when its cast waits on it (_owe_strike; the
+## owner, 2026-10-12, one at a time: nothing is forced out early): told at its own moment all the same, the strike point where
+## the limb was as the next lock took the body.
 ##
 ## THE KNOCK (Tidebreak's knock reactions, the player's; the owner's own clips, animations_extra/Frontier_Bend.res): while
 ## his BendKnock says he is knocked (its reaction window with a carry of KNOCK_MIN_MPS or more) own-bend-knock-slide plays
@@ -43,6 +46,18 @@ extends Node
 ## moves (STILL_MPS: the legs and the root are his locomotion's again), crouches, climbs, rides, kneels or dies. No gait:
 ## a stance idle only (the owner rejected an authored gait library on 2026-10-01). stance_clip() / stance_weight() say
 ## what plays. The open world (no element) never plays one.
+## THE % RING (round 3, smash_r3 spec §13; only while the player has a RingMoves, a stock-rules ring): his body-state clip
+## (RingMoves.clip_state: the tumble, the flinch, the double jump, the falls, helpless, the air dodge, the edge's grab, hang,
+## climb, roll, jump, attack and scramble, the rolls and the duck, the landings, the four Rises, breaking the fall and the
+## getups, the teeter, the spout) plays over the cast's layers on its own layer (movement.json clips: its clip, else its
+## stand-in while CLIPS has not landed it; loops looped, one-shots held at their end), in place of the knock layer above; under
+## a cast released in the air (SwayCaster.air_cast) the air legs (own-bend-air-legs) play under the cast's upper body; the
+## steer's lean is RingMoves.LeanMod's (a bone tilt, not a clip). ring_clip() / ring_weight() say what plays.
+## ROUND 5 (CLIPWIRE): the hit-stop holds this pose too (_process's dt by BendImpact.pose_rate, as PlayerAnim's graph: a
+## held pose stands still, then catches up), and through the hold the struck contact pose shows over every layer
+## (own-bend-hit-impact-<front|back|left|right> by where the hit came from; _tick_struck), its recoil then easing into the
+## tumble or the flinch under it. Off the spout with no cast on the body the step-off plays once
+## (movement.json clips spout_step_off).
 ## THE COMBO: a pose with an "alt" (the next hand: a throw's or a punch's mirrored twin) takes its alt when the same move
 ## in the same variation locks again within BendPoses.combo_window_s() of its last cast, and its first clip the time after
 ## (left, right, left); combo_alt says which the pose now is.
@@ -64,8 +79,26 @@ const PUSH_TWO := &"own-sway-push-two"
 const PUSH_ONE := &"own-sway-push-one"
 const BLEND_IN_S := 0.12
 const BLEND_OUT_S := 0.22
+## Replacing an active cast or skipping to its recovery carries the displayed pose briefly. The clip and strike
+## clocks keep advancing normally; a release's strike is the latest this handoff may finish.
+const CAST_HANDOFF_S := 0.08
 ## Body speeds (m/s) over which the squat ("full") gives way to the upper body alone (the legs the player's).
 const STILL_MPS := Vector2(0.35, 1.2)
+## A held lock's moving hold (the owner, 2026-10-11: "do a animation for all the moves retouch or make it smoother"): an
+## element cast's wind-up no longer stops dead on its hold_s while the lock is held; its last HOLD_CREEP_S is drawn out
+## instead, the coil still deepening as it slows (an easing that never quite stops before the release), so a held cast
+## breathes instead of freezing. The release catches the creep's remainder up over its first CATCH_S, so the strike lands
+## on the same frame it always did. The floor and wall presses (their clap and press moments) are held as before.
+const HOLD_CREEP_S := 0.12
+const CATCH_S := 0.05
+## THE PISTOL'S AIM (the owner, 2026-10-11: "use our musket and pistol tech that we built in frontiers over", Lightning "not
+## like the pistol stand aim we have"; since 2026-10-12 the Ice Spear's): a pose whose pick says "aim": "pistol"
+## (frontier-pistol-ice, BendPoses' Frontier tech) is shown as the pistol's own aims are: standing still the whole clip (the twisted stance, the straight arm,
+## the other arm hanging), moving its right arm alone over the locomotion's body (PlayerAnim's jog aim: the torso and the
+## other arm the jog's), no spine lean; then BendAimArm (the pistol's JogAimArm on the two fingers) turns the arm onto the
+## crosshair and the head toward it, weighted by the cast's weight and the clip's aim (in over its aim_in_s, out from back_s
+## to the end), the clip's kick put back after the turn (its kick metas: BendAimArm.kick_deg).
+const BEND_AIM_ARM := preload("res://scripts/bending/bend_aim_arm.gd")
 
 var caster: SwayCaster
 ## The clip playing: "" none, "press" (the clap and press, or the wind-up: held), "release" (the push, or the push down and
@@ -90,7 +123,14 @@ var _lib: AnimationLibrary
 var _pose: ToolPose
 var _anim: Animation
 var _hold := 0.0
+## The release's catch-up (s): how far the moving hold's pose was short of hold_s as the lock let go, made up over _catch_s
+## (CATCH_S, or less: done by the strike).
+var _catch := 0.0
+var _catch_s := CATCH_S
 var _from_t := 0.0
+## Where the release goes on from once the catch-up is made: the held moment itself (_from_t with no catch-up), so the strike's
+## and the end's frames are exactly those of a hold that stood still (no rounding of the creep's shortfall added back).
+var _from_held := 0.0
 var _w0 := 0.0
 var _floor := false
 var _palm_ids := Vector2i(-2, -2)
@@ -101,8 +141,17 @@ var _struck := true
 var _hand := ""
 var _strike_at := Vector3.INF
 var _limb_ids := {}
+## The strike owed (see THE STRIKE): the last cast's move ("" none), the pose's time left to its strike, where its limb was
+## (strike_point answers it meanwhile); being told now.
+var _owed := ""
+var _owed_left := 0.0
+var _owed_at := Vector3.INF
+var _telling_owed := false
 ## The cast's layers this frame (the knock's go over them).
 var _cast_layers: Array = []
+var _cast_from: Array = []
+var _cast_mix_t := 0.0
+var _cast_mix_s := 0.0
 ## The knock playing: "" none, "slide" or "air"; its stage ("hold": in and held, "out": the recovery), clip time, weight.
 var knock := ""
 var _k_stage := ""
@@ -114,14 +163,56 @@ const STANCE_IN_S := 0.35
 const STANCE_OUT_S := 0.18
 var _st_anim: Animation
 var _st_el := ""
+var _st_style := ""
 var _st_t := 0.0
 var _st_w := 0.0
+## The % ring's state layer: its state key, clip, time, weight, mask, loop; the air legs' clip, time, weight.
+const RING_IN_S := 0.08
+const RING_OUT_S := 0.15
+const AIR_LEGS_S := 0.6
+## Landing plants the lower body immediately; its upper body recovers from the airborne pose over this interval.
+const LAND_UPPER_S := 0.08
+## Ordinary airborne movement supports a cast; reactions/recoveries still take the body away from it.
+const RING_UNDER_CAST := ["fall", "fall_fast", "double_jump", "spout_step_off"]
+## These clips establish contact in their first frame or two; the spout is a respawn. Keep contact on time and clear
+## the outgoing pose when the fighter is placed on the spout. Flinch takes only the upper body, so it must also release
+## the outgoing state's legs immediately instead of holding them underneath an upper-only handoff.
+const RING_CONTACT := ["edge_grab", "edge_hang", "edge_scramble", "tech", "tech_wall", "land_light", "land_heavy",
+		"knock_bounce", "spout_ride", "flinch"]
+var ring_state := ""
+var _r_anim: Animation
+var _r_name := ""
+var _r_t := 0.0
+var _r_w := 0.0
+var _r_mask := "full"
+var _r_loop := false
+var _r_over_cast := true
+## Sampled outgoing layers survive a state change while the incoming clip blends in.
+var _r_from: Array = []
+var _r_from_w := 1.0
+var _r_mix := 1.0
+var _land_from: Array = []
+var _land_t := 0.0
+var _land_s := 0.0
+var _al_anim: Animation
+var _al_t := 0.0
+var _al_w := 0.0
+var _ring_lean := false
+## Round 5: the spout's step-off plays until this (this node's clock; -INF none).
+var _off_until := -INF
 ## The combo: this pose took its alt; the last cast's move/mode, whether it was the alt, and when (this node's clock, s).
 var combo_alt := false
+## The lock's pose for its grown cast (its pick's `grow`, the hand the lock began with; {} none): the Air Lance's overhand
+## spear throw, the Fireball's own clip. The lock winds up into it when it grows (_on_grew).
+var _grow_pick := {}
 var _clock := 0.0
 var _last_key := ""
 var _last_alt := false
 var _last_at := -INF
+## The pistol's aim (see THE PISTOL'S AIM): its modifier (null until a pistol-aim pose first shows), its weight and kick now.
+var _aim_arm: Node
+var _aim_w := 0.0
+var _aim_kick := 0.0
 
 
 func _ready() -> void:
@@ -131,6 +222,7 @@ func _ready() -> void:
 		return
 	caster.lock_started.connect(_on_started)
 	caster.cast.connect(_on_cast)
+	caster.grew.connect(_on_grew)
 	caster.lock_broken.connect(func(_m: String, _t: Node3D, _why: String) -> void: _on_end())
 	caster.fizzled.connect(func(_m: String, _t: Node3D) -> void: _on_end())
 	if caster.player != null and caster.player.skeleton != null:
@@ -164,16 +256,27 @@ func current_clip() -> StringName:
 	return StringName(anim_name)
 
 
-## The caster held still while this clip plays: the untrained floor cast, or a pose that says root.
+## The caster held still while this clip plays: the untrained floor cast, or a pose that says root. A pose whose root is
+## "strike" (fire's kicks: the owner, 2026-10-10, "after the spell is cast let the player move") holds him through the
+## wind-up and up to the strike, and lets him go once the move has left (the recovery walked out of).
 func rooting() -> bool:
 	if not posing():
 		return false
-	return bool(pick.get("root", false)) if not pick.is_empty() else tier == 0
+	if pick.is_empty():
+		return tier == 0
+	var r: Variant = pick.get("root", false)
+	if r is String:
+		return String(r) == "strike" and not (phase == "release" and _struck)
+	return bool(r)
 
 
 ## Where the move leaves from (world): the pose's limb as the clip has it after every modifier. INF when no clip plays or
-## it names none (the tier clips: the caster's chest is used).
+## it names none (the tier clips: the caster's chest is used). A strike owed (told, or its cast landed by the caster's
+## fallback first: a step jab's): where its limb was as the next lock took the body (one at a time: no other cast lands
+## meanwhile).
 func strike_point() -> Vector3:
+	if _owed != "" or _telling_owed:
+		return _owed_at
 	return _strike_at if phase != "" else Vector3.INF
 
 
@@ -184,7 +287,8 @@ func strike_wait() -> float:
 	var s := _release_strike()
 	if s < 0.0:
 		return -1.0
-	var from := clip_time() if _release_clip() == StringName(anim_name) else 0.0
+	# (from the wind-up's held time: the moving hold's release makes its creep up, so the strike is where it always was)
+	var from := _held_t() if _release_clip() == StringName(anim_name) else 0.0
 	return maxf(s - from, 0.0)
 
 
@@ -240,12 +344,13 @@ func _limb(sk: Skeleton3D, which: String) -> Vector3:
 func _on_started(m: String, _t: Node3D) -> void:
 	if not caster.is_spell(m):
 		return                              # (the first lock: the pointing arm)
-	_strike_now()                           # (the last cast's strike, not yet come: it leaves as the next lock begins)
+	_owe_strike()                           # (the last cast's strike, not yet come: told at its own moment, not as this one begins)
 	move = m
 	tier = caster.tier(m)
 	var el := BendPoses.element_of(caster.player)
-	pick = BendPoses.pick(m, caster.mode_of(m), el) if el != "" else {}
+	pick = BendPoses.pick(m, caster.mode_of(m), el, caster.player) if el != "" else {}
 	combo_alt = false
+	_grow_pick = BendPoses._as_pose(pick.get("grow", "")) if not pick.is_empty() else {}
 	if not pick.is_empty() and pick.has("alt"):
 		# (the same move again within the combo window: the other hand, then back)
 		var again := _last_key == m + "/" + caster.mode_of(m) and _clock - _last_at <= BendPoses.combo_window_s()
@@ -255,6 +360,9 @@ func _on_started(m: String, _t: Node3D) -> void:
 				alt["from"] = pick.get("from", "mode")
 				pick = BendPoses._filled(alt, BendPoses.data())
 				combo_alt = true
+				var galt := BendPoses._as_pose(_grow_pick.get("alt", "")) if not _grow_pick.is_empty() else {}
+				if not galt.is_empty():
+					_grow_pick = galt              # (the grown clip on the same hand as the lock)
 	var clip: StringName
 	if not pick.is_empty() and _animation(StringName(String(pick.clip))) != null:
 		clip = StringName(String(pick.clip))
@@ -269,6 +377,24 @@ func _on_started(m: String, _t: Node3D) -> void:
 	_begin(clip, "press")
 
 
+## The lock grown (held past its second click: SwayCaster.grew). A pose with its own grown clip (`grow`: the Air Lance's
+## overhand spear throw (the owner, 2026-10-10: "we can use our spear animation for the lance right"), the Fireball's) winds
+## up into it while still held, from where the hands are (the cast's hand-off blend): the throw it grows into shows before
+## the release, and the release goes on from that clip's held moment. Its strike sits as far after its hold as the clip's
+## own (the sweep's and the overhand throw's alike, 4 frames), so the cast's timing is the move's.
+func _on_grew(m: String) -> void:
+	if phase != "press" or m != move or _grow_pick.is_empty():
+		return
+	var g := _grow_pick
+	_grow_pick = {}
+	if not BendPoses.usable(String(g.clip)) or _animation(StringName(String(g.clip))) == null:
+		return
+	g["from"] = pick.get("from", "mode")
+	pick = BendPoses._filled(g, BendPoses.data())
+	_hand = String(pick.get("hand", ""))
+	_begin(StringName(String(pick.clip)), "press")
+
+
 func _on_cast(m: String, _t: Node3D) -> void:
 	if phase == "" or not caster.is_spell(m):
 		return
@@ -281,8 +407,15 @@ func _on_cast(m: String, _t: Node3D) -> void:
 	if nxt != StringName(anim_name):
 		_begin(nxt, "release", 0.0)                    # (the floor cast: the palms push down and the body stands)
 	else:
+		# (the moving hold's pose short of hold_s: the release goes on from it and makes it up over CATCH_S, or by the strike
+		# when that comes sooner: a strike less than CATCH_S after the hold still lands on its own frame)
+		var held := _held_t() if phase == "press" else clip_time()
+		var short := maxf(held - clip_time(), 0.0) if phase == "press" else 0.0
 		_begin(nxt, "release", clip_time())            # (the wall's shove, the push: on from the held moment, or from
 		                                               # where the wind-up is when the lock let go before it was drawn)
+		_catch = short
+		_catch_s = clampf(_strike - held - 0.002, 0.001, CATCH_S) if _strike >= 0.0 else CATCH_S   # (made up a little before)
+		_from_held = held if short > 0.0 else _from_t
 	if phase != "release" or _strike < 0.0:
 		_strike_now()                                  # (no clip, or no strike time: the strike is now)
 
@@ -293,6 +426,43 @@ func _strike_now() -> void:
 		return
 	_struck = true
 	struck.emit(move)
+
+
+## The release cut by the next lock before its strike: when its cast waits on it (SwayCaster.waits_on_strike) the strike is
+## owed, told at its own moment (_tick_owed: the time its clip had left to it, on this pose's clock), from where its limb is
+## now; else (nothing waits on it: a zone, a dash, the Kick's wave, a puppet's) told now, as ever. (One at a time: a cast is
+## never let go while another waits on its strike, so no older one is owed by then: told, or spent by strike_spent.)
+func _owe_strike() -> void:
+	if _struck:
+		return
+	if not caster.waits_on_strike(move):
+		_strike_now()
+		return
+	_struck = true
+	_owed = move
+	_owed_left = maxf(minf(_strike, _end()) - _from_held - clip_t, 0.0) if phase == "release" else 0.0
+	_owed_at = _strike_at
+
+
+## Each frame before the clip's own: the owed strike's moment come, it is told.
+func _tick_owed(dt: float) -> void:
+	if _owed == "":
+		return
+	_owed_left -= dt
+	if _owed_left > 0.0:
+		return
+	var m := _owed
+	_owed = ""
+	_telling_owed = true
+	struck.emit(m)
+	_telling_owed = false
+
+
+## The caster landed this cast's effect (SwayCaster._land_pending; by its fallback too: a step jab's, the clip held up by the
+## hit-stop): the strike is spent, never told after (it would be read as the next cast's of the same move).
+func strike_spent() -> void:
+	_struck = true
+	_owed = ""
 
 
 func _on_end() -> void:
@@ -325,12 +495,25 @@ func _begin(clip: StringName, p_phase: String, from_t := 0.0) -> void:
 	var a := _animation(clip)
 	if a == null:
 		phase = ""
+		_cast_from = []
 		return
+	var continuing := a == _anim and is_equal_approx(from_t, clip_time()) and p_phase != "press"
+	if not continuing:
+		_cast_from = ToolPose.collapse_layers(_cast_layers) if weight > 0.0 else []
+		_cast_mix_t = 0.0
+		_cast_mix_s = CAST_HANDOFF_S
+	if p_phase == "release" and _strike >= 0.0:
+		_cast_mix_s = minf(_cast_mix_s, _cast_mix_t + maxf(_strike - from_t, 0.0))
+	if _cast_mix_s <= _cast_mix_t:
+		_cast_from = []
 	_anim = a
 	anim_name = String(clip)
 	phase = p_phase
 	clip_t = 0.0
 	_from_t = from_t
+	_from_held = from_t
+	_catch = 0.0
+	_catch_s = CATCH_S
 	_w0 = weight
 	if p_phase == "press":
 		_hold = float(pick.get("hold_s", _anim.get_meta(&"hold_s", _anim.length)))
@@ -373,35 +556,153 @@ func clip_time() -> float:
 		return 0.0
 	match phase:
 		"press":
-			return minf(clip_t, _hold)
+			return _creep(clip_t) if _creeps() else minf(clip_t, _hold)
 		"release", "up":
-			return minf(_from_t + clip_t, _anim.length)
+			return minf(_run(), _end())
 	return 0.0
+
+
+## The release's (or the stand's) own time on its clip, not yet capped at its end: on from where it began, the moving hold's
+## shortfall made up over _catch_s, then exactly the held moment plus the time since (_from_held).
+func _run() -> float:
+	if _catch > 0.0 and clip_t < _catch_s:
+		return _from_t + clip_t + _catch * smoothstep(0.0, _catch_s, clip_t)
+	return _from_held + clip_t
+
+
+## The wind-up's time held at hold_s, as the lock has it (the strike's wait counts from here, as it always did).
+func _held_t() -> float:
+	return minf(clip_t, _hold)
+
+
+## Whether this press creeps (the moving hold): an element cast's pose, not the floor's or the wall's press.
+func _creeps() -> bool:
+	return not pick.is_empty() and not _floor and anim_name != String(PRESS_WALL) and _hold > 0.0
+
+
+## The moving hold's time for the wind-up's own time `t`: as it is until the last HOLD_CREEP_S before hold_s, then that last
+## stretch drawn out, its pace falling away from the clip's own (no corner) and nearing hold_s without stopping on it.
+func _creep(t: float) -> float:
+	var c := minf(HOLD_CREEP_S, _hold)
+	var start := _hold - c
+	if t <= start:
+		return t
+	return start + c * (1.0 - exp(-(t - start) / c))
 
 
 func _process(dt: float) -> void:
 	if caster == null or caster.player == null or not is_instance_valid(caster.player):
 		return
+	dt *= BendImpact.pose_rate(caster.player, dt)        # (round 4, IMPACT: the hit-stop holds his visible pose too)
 	_clock += dt
+	_tick_owed(dt)
 	_cast_layers = []
+	_aim_w = 0.0
+	_aim_kick = 0.0
 	_tick(dt)
-	_tick_knock(dt)
+	var rm := caster.player.ring_moves
+	if rm != null:
+		_tick_ring(dt, rm)
+	else:
+		_tick_knock(dt)
 	_tick_stance(dt)
+	_tick_struck(dt)
 	_apply()
+	_tick_aim()
+	_aim_follow(dt)
+
+
+## Round 2 (skills_r2 spec §2.3: "the upper body, hips and hands turn with the aim during the hold, so you and he both see it
+## steer"): with an element, while a lock is held its spine bends toward the crosshair's height (ToolPose.lean, AIM_LEAN of
+## the aim's pitch, at most AIM_LEAN_MAX), eased in and back out after (the body's yaw already follows the camera).
+const AIM_LEAN := 0.6
+const AIM_LEAN_MAX := 0.45
+var aim_lean := 0.0
+func _aim_follow(dt: float) -> void:
+	var want := 0.0
+	var cam: Camera3D = caster.player.camera if caster.player != null else null
+	if phase == "press" and caster.elem() and caster.state in [SwayCaster.State.LOCKING, SwayCaster.State.FULL] \
+			and cam != null and cam.is_inside_tree() and not _pistol_aim():      # (the pistol's aim: the arm and head aim it)
+		var pitch := asin(clampf(-cam.global_basis.z.y, -1.0, 1.0))
+		want = clampf(-pitch * AIM_LEAN, -AIM_LEAN_MAX, AIM_LEAN_MAX)
+	aim_lean = move_toward(aim_lean, want, dt * 2.5)
+	if _pose != null and is_instance_valid(_pose):
+		_pose.lean = aim_lean
+
+
+## The pose on the body is shown as the pistol's aim (its pick's "aim": "pistol"; see THE PISTOL'S AIM).
+func _pistol_aim() -> bool:
+	return _anim != null and phase != "" and not pick.is_empty() and String(pick.get("aim", "")) == "pistol"
+
+
+## How far the clip's arm is on the aim at its time `t` (0..1): raised over its aim_in_s, lowered from back_s to its end.
+func _aim_in(t: float) -> float:
+	var a_in := maxf(float(_anim.get_meta(&"aim_in_s", 0.2)), 0.01)
+	var back := float(pick.get("back_s", _anim.get_meta(&"back_s", _anim.length)))
+	return smoothstep(0.0, a_in, t) * (1.0 - smoothstep(back, maxf(_anim.length, back + 0.01), t))
+
+
+## The pistol's aim after the cast's pose (BendAimArm): right after the cast's ToolPose (before the body's helpers), its
+## weight and kick this frame's, its target the crosshair's point (the camera's ray, FrontierPlayer.get_aim_point; with no
+## camera 10 m ahead of the chest); off (weight 0) with no pistol-aim pose showing.
+func _tick_aim() -> void:
+	if _aim_w <= 0.0:
+		if _aim_arm != null and is_instance_valid(_aim_arm):
+			_aim_arm.set(&"weight", 0.0)
+			_aim_arm.set(&"kick_deg", 0.0)
+		return
+	var p := caster.player
+	var sk := p.skeleton
+	if sk == null or _pose == null or not is_instance_valid(_pose) or _pose.get_parent() != sk:
+		return
+	if _aim_arm == null or not is_instance_valid(_aim_arm):
+		_aim_arm = BEND_AIM_ARM.new()
+		_aim_arm.name = "BendAimArm"
+	if _aim_arm.get_parent() != sk:
+		if _aim_arm.get_parent() != null:
+			_aim_arm.get_parent().remove_child(_aim_arm)
+		sk.add_child(_aim_arm)
+	var at := _pose.get_index()
+	var now := _aim_arm.get_index()
+	if now != at + 1:
+		sk.move_child(_aim_arm, at if now < at else at + 1)
+	var cam: Camera3D = p.camera
+	var aim := p.get_aim_point() if cam != null and cam.is_inside_tree() \
+			else p.global_position + Vector3.UP * 1.4 - p.global_basis.z * 10.0
+	_aim_arm.set(&"weight", _aim_w)
+	_aim_arm.set(&"kick_deg", _aim_kick)
+	_aim_arm.set(&"target", sk.global_transform.affine_inverse() * aim)
 
 
 ## The stance's layer, the cast's over it, then the knock's over them, onto the ToolPose (off when there are none).
 func _apply() -> void:
 	var stance := _st_anim != null and _st_w > 0.0
+	var ring := _r_anim != null and _r_w > 0.0
+	var legs := _al_anim != null and _al_w > 0.0
+	var hit := _s_anim != null and _s_w > 0.0
 	if _pose == null or not is_instance_valid(_pose):
-		if (knock == "" and not stance) or not _ensure_pose():
+		if (knock == "" and not stance and not ring and not legs and not hit) or not _ensure_pose():
 			return
 	var ls: Array = []
 	if stance:
 		ls.append({"anim": _st_anim, "time": _st_t, "weight": _st_w, "mask": "full"})
+	var ring_layers := _ring_layers() if ring else []
+	for layer: Dictionary in ring_layers:
+		if not bool(layer.get("over_cast", true)):
+			ls.append(layer)
+	if legs:
+		# (the air legs over ordinary falling, under the cast: the arms remain the upper-body cast's)
+		ls.append({"anim": _al_anim, "time": _al_t, "weight": _al_w, "mask": "full"})
 	ls.append_array(_cast_layers)
 	if knock != "" and _k_anim != null and _k_w > 0.0:
 		ls.append({"anim": _k_anim, "time": _k_t, "weight": _k_w, "mask": "full"})
+	for layer: Dictionary in ring_layers:
+		if bool(layer.get("over_cast", true)):
+			ls.append(layer)
+	if not _land_from.is_empty():
+		ls.append({"blend_from": _land_from, "blend_to": [], "blend_weight": _land_t / _land_s, "blend_mask": "upper"})
+	if hit:
+		ls.append({"anim": _s_anim, "time": _s_t, "weight": _s_w, "mask": "full"})
 	_pose.layers = ls
 	if ls.is_empty() and phase == "":
 		_pose.active = false
@@ -426,24 +727,67 @@ func _tick(dt: float) -> void:
 				if not pressed and t >= press_at:
 					pressed = true
 					FormEffects.sfx("press", caster.hand_point(), -4.0, 0.9)
-			elif not pressed and t >= _hold:
+			elif not pressed and _held_t() >= _hold:
 				pressed = true                                          # (the wind-up drawn: the palms ready)
 		"release", "up":
-			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((_anim.length - t) / BLEND_OUT_S, 0.0, 1.0))
-			if phase == "release" and not _struck and (t >= _strike or t >= _anim.length):
+			var end := _end()
+			var run := _run()
+			w = minf(lerpf(_w0, 1.0, clampf(clip_t / 0.06, 0.0, 1.0)), clampf((end - run) / BLEND_OUT_S, 0.0, 1.0))
+			if phase == "release" and not _struck and (t >= _strike or run >= end):
 				_strike_now()                                       # (the strike's moment: the move leaves the hand)
-			if t >= _anim.length:
+			if run >= end:
 				_stop()
 				return
 	weight = w
 	if _pose == null or not is_instance_valid(_pose):
 		return
 	var mask := _mask()
-	if mask != "upper":
-		_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": mask}]
-		return
-	var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
-	_cast_layers = [{"anim": _anim, "time": t, "weight": w, "mask": "upper"}, {"anim": _anim, "time": t, "weight": w * still, "mask": "full"}]
+	if mask == "full" and _freed():
+		mask = "upper"                  # (a kick freed at its strike: its legs give way to the walk's as he moves off, below)
+	var st := _sample_t(t)                                          # (a fighting style's clip is shown on the element's timeline)
+	if _pistol_aim():
+		# (the pistol's aim: the whole clip standing, its right arm alone over the locomotion's body moving; BendAimArm after it)
+		var still_a := 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": "arm_r"},
+				{"anim": _anim, "time": st, "weight": w * still_a, "mask": "full"}]
+		_aim_w = w * _aim_in(st)
+		_aim_kick = BEND_AIM_ARM.kick_curve(st, float(_anim.get_meta(&"strike_s", -1.0)), float(_anim.get_meta(&"kick_deg", 0.0)),
+				float(_anim.get_meta(&"kick_in_s", 0.04)), float(_anim.get_meta(&"kick_back_s", 0.2))) * _aim_w
+	elif mask != "upper":
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": mask}]
+	else:
+		var still := 1.0 if _legs_always() else 1.0 - smoothstep(STILL_MPS.x, STILL_MPS.y, caster.player.horizontal_speed())
+		_cast_layers = [{"anim": _anim, "time": st, "weight": w, "mask": "upper"}, {"anim": _anim, "time": st, "weight": w * still, "mask": "full"}]
+	if not _cast_from.is_empty():
+		_cast_mix_t += dt
+		if _cast_mix_t >= _cast_mix_s:
+			_cast_from = []
+		else:
+			_cast_layers = [{"blend_from": _cast_from, "blend_to": _cast_layers, "blend_weight": _cast_mix_t / _cast_mix_s}]
+
+
+## Where the pose ends on its own timeline (s): the pick's end_s (a fighting style's cast ends when the element's own would, so
+## the caster stays rooted as long), else the clip's length.
+func _end() -> float:
+	return float(pick.get("end_s", _anim.length)) if _anim != null else 0.0
+
+
+## The clip's own time for the pose's time `t`: the pick's warp ([[pose s, clip s], ...] by pose time: a fighting style's clip
+## put on the element's hold, strike and back, BendPoses._timed_as), linear between them and at the clip's own pace after the
+## last; `t` itself without one (every element clip).
+func _sample_t(t: float) -> float:
+	var w: Variant = pick.get("warp") if not pick.is_empty() else null
+	if not (w is Array) or (w as Array).size() < 2:
+		return t
+	var pts := w as Array
+	for i in range(1, pts.size()):
+		var a: Array = pts[i - 1]
+		var b: Array = pts[i]
+		if t <= float(b[0]):
+			var span := maxf(float(b[0]) - float(a[0]), 0.0001)
+			return minf(lerpf(float(a[1]), float(b[1]), clampf((t - float(a[0])) / span, 0.0, 1.0)), _anim.length)
+	var last: Array = pts[pts.size() - 1]
+	return minf(float(last[1]) + (t - float(last[0])), _anim.length)
 
 
 ## The clip's mask: the pose's, the clip's meta, else the rule (the one-handed push "reach_l"; else "upper", with "full" as
@@ -456,8 +800,18 @@ func _mask() -> String:
 	return "reach_l" if anim_name == String(PUSH_ONE) else "upper"
 
 
-## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always).
+## A pose rooted up to its strike (root "strike": fire's kicks) that has struck: the caster is free to walk off.
+func _freed() -> bool:
+	var r: Variant = pick.get("root", false)
+	return r is String and String(r) == "strike" and phase == "release" and _struck
+
+
+## The legs' clip kept while moving (a kick, a stomp: the pose's or the clip's legs_always). Not once a pose rooted up to its
+## strike has struck (_freed): the caster walks out of the recovery on the walk's own legs, the clip's legs fading with his
+## speed (no kick's legs sliding along the deck). A full-body kick is split so for that: its upper body kept, its legs so.
 func _legs_always() -> bool:
+	if _freed():
+		return false
 	return bool(pick.get("legs_always", _anim.get_meta(&"legs_always", false) if _anim != null else false))
 
 
@@ -472,6 +826,9 @@ func _stop() -> void:
 	_hand = ""
 	_strike_at = Vector3.INF
 	_cast_layers = []
+	_cast_from = []
+	_cast_mix_t = 0.0
+	_cast_mix_s = 0.0
 	if _pose != null and is_instance_valid(_pose) and knock == "":
 		_pose.layers = []
 		_pose.active = false
@@ -480,7 +837,7 @@ func _stop() -> void:
 # ---------------------------------------------------------------- the stance
 ## The element's stance clip playing (&"" none), and its weight now.
 func stance_clip() -> StringName:
-	return StringName(stance_name(_st_el)) if _st_anim != null and _st_w > 0.0 else &""
+	return StringName(stance_name(_st_el, caster.player)) if _st_anim != null and _st_w > 0.0 else &""
 
 
 func stance_weight() -> float:
@@ -488,10 +845,10 @@ func stance_weight() -> float:
 
 
 ## The stance clip poses.json names for `element` ("" none, or not one of our own usable clips).
-static func stance_name(element: String) -> String:
+static func stance_name(element: String, body: Node = null) -> String:
 	if element == "":
 		return ""
-	var v: Variant = (BendPoses.data().get("stance", {}) as Dictionary).get(element, "")
+	var v: Variant = BendPoses.stance_pose(element, body)          # (a fighting style's own stance, else the element's)
 	var nm := String(BendPoses._as_pose(v).get("clip", ""))
 	return nm if nm != "" and BendPoses.usable(nm) else ""
 
@@ -508,9 +865,11 @@ func stance_wanted() -> float:
 
 func _tick_stance(dt: float) -> void:
 	var el := BendPoses.element_of(caster.player)
-	if el != _st_el:
+	var sty := BendPoses.style_of(caster.player, el)
+	if el != _st_el or sty != _st_style:
 		_st_el = el
-		var nm := stance_name(el)
+		_st_style = sty
+		var nm := stance_name(el, caster.player)
 		var a := BendPoses.animation(nm) if nm != "" else null
 		if a != _st_anim:
 			_st_anim = a
@@ -529,7 +888,211 @@ func _tick_stance(dt: float) -> void:
 
 func _exit_tree() -> void:
 	knock = ""
+	_owed = ""                      # (an owed strike goes untold with it too: SwayCaster's fallback lands its cast)
 	_stop()
+	if _aim_arm != null and is_instance_valid(_aim_arm):
+		_aim_arm.queue_free()
+	_aim_arm = null
+
+
+# ---------------------------------------------------------------- the % ring's body state (round 3)
+## The ring's state clip playing (&"" none), and its weight now.
+func ring_clip() -> StringName:
+	return StringName(_r_name) if _r_anim != null and _r_w > 0.0 else &""
+
+
+func ring_weight() -> float:
+	return _r_w if _r_anim != null else 0.0
+
+
+## The sampled ring pose, including an interrupted handoff. ToolPose blends rotations and root/pelvis positions together.
+func _ring_layers() -> Array:
+	var layers: Array = []
+	if _r_anim == null or _r_w <= 0.0:
+		return layers
+	if _r_mix < 1.0:
+		# ToolPose composes layers in order: retain the outgoing pose, then lerp the incoming one over it.
+		var fade := _r_w / maxf(_r_from_w, 0.001)
+		for from: Dictionary in _r_from:
+			var layer := from.duplicate()
+			layer["weight"] = float(layer.weight) * fade
+			if float(layer.weight) > 0.0:
+				layers.append(layer)
+	layers.append({"anim": _r_anim, "time": _r_t, "weight": _r_w * _r_mix, "mask": _r_mask,
+			"over_cast": _r_over_cast})
+	return layers
+
+
+func _clear_ring() -> void:
+	ring_state = ""
+	_r_anim = null
+	_r_name = ""
+	_r_t = 0.0
+	_r_w = 0.0
+	_r_from.clear()
+	_r_mix = 1.0
+	_land_from = []
+	_land_t = 0.0
+	_land_s = 0.0
+	_off_until = -INF
+
+
+## The ring's state layer from RingMoves.clip_state (its clip or stand-in, eased in and out; a loop looped, a one-shot held at
+## its end), the air legs under an airborne cast, the steer's lean put on the skeleton once.
+func _tick_ring(dt: float, rm: RingMoves) -> void:
+	knock = ""
+	var p := caster.player
+	if not _ring_lean and p.skeleton != null:
+		_ring_lean = true
+		RingMoves.lean_on(p.skeleton, rm)
+	if p.is_dead:
+		_clear_ring()
+		_al_w = 0.0
+		return
+	var st := rm.clip_state()
+	var nm := ""
+	if st != "":
+		nm = String(RingMoves.clip_for(st)[0])
+	elif caster.guard_held():
+		# (AIR's held guard: its own loop per element while E keeps it up, SwayCaster.guard_hold_clip, else its stand-in)
+		st = "guard_hold"
+		nm = caster.guard_hold_clip()
+	elif phase == "":
+		# (round 5: off the spout, no cast on the body: the step off, once through, until another state takes over)
+		if ring_state == "spout_ride":
+			var so := BendPoses.animation(String(RingMoves.clip_for("spout_step_off")[0]))
+			_off_until = _clock + so.length if so != null else -INF
+		if _clock < _off_until:
+			st = "spout_step_off"
+			nm = String(RingMoves.clip_for(st)[0])
+	if st != "spout_step_off":
+		_off_until = -INF
+	# Once recovery travel ends, its fading pose goes under the first follow-up attack. Active recoveries still own the body.
+	if ring_state.begins_with("rise_") and rm.can_cast():
+		_r_over_cast = false
+		for layer: Dictionary in _r_from:
+			layer["over_cast"] = false
+	if nm != "" and (nm != _r_name or st != ring_state):
+		var a := BendPoses.animation(nm)
+		if a != null:
+			_land_from = []
+			if st in ["land_light", "land_heavy"] and _pose != null and is_instance_valid(_pose):
+				_land_from = ToolPose.collapse_layers(_pose.layers)
+				_land_t = 0.0
+				_land_s = LAND_UPPER_S
+				if phase == "release" and not _struck and _strike >= 0.0:
+					_land_s = minf(_land_s, maxf(_strike - clip_time(), 0.0))
+				if _land_s <= 0.0:
+					_land_from = []
+			var switching := _r_anim != null and _r_w > 0.0 and nm != _r_name
+			if switching and not st in RING_CONTACT:
+				_r_from = _ring_layers()
+				_r_from_w = _r_w
+				_r_mix = 0.0
+			elif not switching or st in RING_CONTACT:
+				_r_from.clear()
+				_r_mix = 1.0
+			if _r_anim == null or _r_w <= 0.0 or nm != _r_name:
+				_r_t = 0.0
+			_r_anim = a
+			_r_name = nm
+			var spec := RingMoves.clip_spec(st) if st != "guard_hold" else {"mask": "full", "loop": true}
+			_r_mask = String(spec.get("mask", "full"))
+			_r_loop = bool(spec.get("loop", false))
+			_r_over_cast = not st in RING_UNDER_CAST
+			if st in RING_CONTACT:
+				_r_w = 1.0
+	ring_state = st if nm != "" else ""
+	_r_mix = minf(_r_mix + dt / RING_IN_S, 1.0)
+	if _r_mix >= 1.0:
+		_r_from.clear()
+	if not _land_from.is_empty():
+		_land_t += dt
+		if _land_t >= _land_s:
+			_land_from = []
+	if ring_state != "" and _r_anim != null:
+		_r_t += dt
+		if _r_loop and _r_anim.length > 0.0:
+			_r_t = fposmod(_r_t, _r_anim.length)
+		else:
+			_r_t = minf(_r_t, _r_anim.length)
+		_r_w = minf(_r_w + dt / RING_IN_S, 1.0)
+	else:
+		_r_w = maxf(_r_w - dt / RING_OUT_S, 0.0)
+		if _r_w <= 0.0:
+			_clear_ring()
+	# the air legs: under a cast let go in the air, while he is still in the air
+	var legs_on := rm.looks != null and rm.airborne() and rm.looks.air_legs_at > -INF \
+			and rm.mode_t >= 0.0 and _clock_ok(rm)
+	if legs_on and _al_anim == null:
+		var ln := String(RingMoves.clip_for("air_legs")[0])
+		_al_anim = BendPoses.animation(ln) if ln != "" else null
+		_al_t = 0.0
+	if legs_on and _al_anim != null:
+		_al_t = minf(_al_t + dt, _al_anim.length)
+		_al_w = minf(_al_w + dt / RING_IN_S, 1.0)
+	else:
+		_al_w = maxf(_al_w - dt / RING_OUT_S, 0.0)
+		if _al_w <= 0.0:
+			_al_anim = null
+
+
+## The struck contact pose (round 5, CLIPWIRE; BendImpact's STRUCK_META, recorded at a held hit): a new one goes on over
+## every layer at once, at its clip's hold_s (the contact), and stays there while the hit-stop holds the pose (dt is nothing
+## then); after the hold its recoil plays on (at the hold's catch-up rate) and fades out by the clip's end into what is under
+## it (the ring's tumble or flinch, eased in meanwhile). struck_clip() / struck_weight() say what shows.
+var _s_anim: Animation
+var _s_name := ""
+var _s_t := 0.0
+var _s_w := 0.0
+var _s_from := 0.0
+var _s_at := -INF
+
+
+func struck_clip() -> StringName:
+	return StringName(_s_name) if _s_anim != null and _s_w > 0.0 else &""
+
+
+func struck_weight() -> float:
+	return _s_w if _s_anim != null else 0.0
+
+
+func _tick_struck(dt: float) -> void:
+	var p := caster.player
+	var s := BendImpact.struck_of(p)
+	if s.is_empty():
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+		_s_at = -INF
+		return
+	if not s.is_empty() and float(s.get("at", -INF)) != _s_at:
+		_s_at = float(s.get("at", -INF))
+		var a := BendPoses.animation(String(s.get("clip", "")))
+		if a != null:
+			_s_anim = a
+			_s_name = String(s.clip)
+			_s_from = clampf(float(a.get_meta(&"hold_s", a.length * 0.5)), 0.0, a.length)
+			_s_t = _s_from
+			_s_w = 1.0
+	if _s_anim == null:
+		return
+	if p.is_dead:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+		return
+	_s_t = minf(_s_t + dt, _s_anim.length)
+	_s_w = clampf((_s_anim.length - _s_t) / maxf(_s_anim.length - _s_from, 0.01), 0.0, 1.0)
+	if _s_t >= _s_anim.length:
+		_s_anim = null
+		_s_name = ""
+		_s_w = 0.0
+
+
+## The airborne cast was let go within AIR_LEGS_S (on RingMoves' clock).
+func _clock_ok(rm: RingMoves) -> bool:
+	return rm._t - rm.looks.air_legs_at <= AIR_LEGS_S
 
 
 # ---------------------------------------------------------------- the knock
@@ -552,6 +1115,9 @@ func knock_wanted() -> String:
 	var p := caster.player
 	if p.is_dead or p.kneeling != null or p.riding != null or p.climbing != null:
 		return ""
+	var prm := RingMoves.of(p)
+	if prm != null and prm.puppet:
+		return prm.puppet_knock()               # (a remote body online: its owner's knock)
 	var kn := BendKnock.peek(p)
 	if kn == null:
 		return ""

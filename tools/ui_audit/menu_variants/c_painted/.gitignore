@@ -1,0 +1,3 @@
+# regenerable renders of scenes/ring.tscn (a_clean/c_painted `render`, `cands`); the scripts read the caches in place
+raw_*.png
+cand_*.png

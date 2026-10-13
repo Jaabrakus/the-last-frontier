@@ -1,5 +1,5 @@
 extends SceneTree
-## Making your gear (user 2026-09-28: "making your gear": the rod and spear, trapping gear, bullets cast from bar lead),
+## Making your gear (user 2026-09-28: "making your gear": the rod and spear, trapping gear),
 ## on the level with the real player and the survival bridge, headless:
 ##
 ##   Godot --headless --path . -s tests/survival_game/test_gear.gd -- survival=on survival_seed=7
@@ -9,8 +9,7 @@ extends SceneTree
 ##   workbench  cordage twisted from sinew; a fishing rod from a pole and the hooks and line (or cordage, with none);
 ##              a fish spear from a pole and antler (or flint); deadfall stakes from branches; stopping gives them back
 ##   rod        the rod from the bench comes out on the gear key (FishingGear)
-##   casting    at a lit campfire the mould and a bar of lead: 16 balls cast and rolled into cartridges with the kit's
-##              powder, into the musket (ShotMaking); not at a cold fire
+##   fire       a lit campfire offers no ball casting (ShotMaking was retired in the 2026-10-06 cleanup)
 ## Ends with "GEAR TEST OK (<n> checks)" or "GEAR TEST FAILED <failures>/<n>".
 
 var checks := 0
@@ -109,7 +108,7 @@ func _run() -> void:
 		check(built[String(e[0])] != null, "built: %s" % e[0])
 	await _workbench()
 	await _rod()
-	await _casting()
+	await _fire()
 	_end()
 
 
@@ -122,7 +121,7 @@ func _end() -> void:
 
 
 func _kit() -> void:
-	var powder := SurvivalInventory.count(b.core, ShotMaking.POWDER)
+	var powder := SurvivalInventory.count(b.core, "item.ammo.powder")
 	check(count("steel_trap") == 2 and count("bar_lead") == 3 and count("bullet_mould") == 1 and count("hooks_line") == 1
 			and count("sinew") >= 2 and SurvivalInventory.count(b.core, "item.trap.steel") == 0.0 and powder >= 1.9,
 			"kit: 2 steel traps, 3 bar lead, the mould, hooks and line, %d sinew in the pack; %.1f lb powder with the kit" % [count("sinew"), powder])
@@ -182,34 +181,19 @@ func _rod() -> void:
 	await frames(4)
 
 
-func _casting() -> void:
+func _fire() -> void:
 	var fp: BuiltPiece = built.get("campfire")
 	var fire := fp.get_node_or_null("Campfire") as Campfire if fp else null
 	if fire == null:
 		check(false, "the campfire has its Campfire")
 		return
 	await stand(fire.global_position + Vector3(0, 0, 1.5))
-	check(ShotMaking.why_not(fire, player) == "needs the fire lit", "a cold fire: '%s'" % ShotMaking.why_not(fire, player))
 	set_count("firewood", 3)
 	for i in 3:
 		fire.interact(player)
 	await frames(6)
 	check(fire.is_lit(), "the fire laid and lit")
-	var rows: Array = fire.interact_actions(player)
-	var row := ""
-	for r: Dictionary in rows:
-		if String(r.id) == "cast":
-			row = String(r.text)
-	check(row.begins_with("Cast 16 balls"), "hold E at the fire: '%s'" % row)
-	var musket: Firearm = player.weapons.get("musket")
-	var r0 := musket.reserve
-	var lead0 := count("bar_lead")
-	var powder0 := SurvivalInventory.count(b.core, ShotMaking.POWDER)
-	fire.interact_action(player, "cast")
-	await frames(10)
-	check(b.work.working, "casting at the fire")
-	await wait_work()
-	var powder1 := SurvivalInventory.count(b.core, ShotMaking.POWDER)
-	check(musket.reserve == r0 + 16 and count("bar_lead") == lead0 - 1 and absf(powder0 - powder1 - 0.4) < 0.01,
-			"16 balls cast and rolled: the musket's cartridges %d -> %d, bar lead %d -> %d, powder %.2f -> %.2f lb" % [r0,
-			musket.reserve, lead0, count("bar_lead"), powder0, powder1])
+	var ids := []
+	for r: Dictionary in fire.interact_actions(player):
+		ids.append(String(r.id))
+	check(not ids.has("cast"), "no ball casting at the lit fire (%s)" % [ids])

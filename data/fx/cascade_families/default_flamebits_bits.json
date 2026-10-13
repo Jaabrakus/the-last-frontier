@@ -1,0 +1,26 @@
+{
+ "roots": [
+  "/Game/VFX/Character/Fire/Flamebits_FXM"
+ ],
+ "shader": "fam_default_flamebits_bits",
+ "template": false,
+ "u": {
+  "flame_tex": [
+   "t_fixed",
+   [
+    "Flamebits4x4Erode_FXT"
+   ]
+  ],
+  "noise_normal": [
+   "t_fixed",
+   [
+    "NoiseFlame_FXTN"
+   ]
+  ],
+  "alpha_clip": [
+   "c",
+   0.3333
+  ]
+ },
+ "notes": "Spellbreak (Proletariat) Flamebits_FXM: a Material without instances (no parameters at all), BLEND_Masked / MSM_Unlit / one-sided, 38 enabled sprite emitters (4x4 SubUV random, ParameterDynamic slot 0 'EmissiveScale', HDR ColorOverLife, AlphaOverLife 1 -> 0 at end of life). SOURCE: fixed textures Flamebits4x4Erode_FXT (sRGB DXT5; alpha = stepped erosion bands 0.77/0.87/1.0, RGB = grey shading 0.65-1.0) and NoiseFlame_FXTN (normal map, SRGB=false) via Luos_Mask_Distorter ('Distorts/Refracts the Texture'); Luos_alphaErosion ('Erodes alpha mask instead of fade out.'); DynamicParameter EmissiveScale (default 2); UE default OpacityMaskClipValue 0.3333; TextureStreamingData NoiseFlame SamplingScale 1.5 -> noise tiling 1.5. AUTHORED: emissive = RGB * particle colour * dyn slot 0; opacity mask = saturate((alpha - (1 - particle alpha)) * 10) clipped at 0.3333, i.e. erosion threshold 1 - particle alpha (evidence: the shared AlphaOverLife tail 0.27/0.12/0.03/0 lands one sample past each alpha band edge 0.23/0.13/0; sharpness 10 is a guess, sharpness 1 was rendered as a variant in captures/fam/default_flamebits_k1 and made embers die at alpha 0.33 and look sparser); distortion = atlas UV + (normal.rg*2-1) * 0.0125 (sibling NormalMapStrength 0.05 applied per 4x4 sub-image; a literal 0.05 in atlas UV shreds the bits) with the normal tiled 1.5 and panned at (0.1, 1.0) UV/s (pan copied from sibling LandingDust_FXM / WindScroll_FXM, which feed the same NoiseFlame_FXTN into the same function; Flamebits exposes no distortion parameter). Changes vs uber: uber cut at about alpha 0.03 with a 0.1 smoothstep and no distortion; this family keeps the RGB toon shading, the masked clip, band erosion and a flame-normal wobble. Silhouettes and density are close to uber at this sweep scale, so the visible change is mostly the wobble and the crisp band erosion."
+}

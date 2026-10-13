@@ -1,0 +1,125 @@
+// Generic Spellbreak particle material (AUTHORED). Built from a material's resolved
+// parameters by fx_materials.gd when no hand-written family exists for its root material.
+// Feature switches mirror the shared building blocks in the source materials:
+// packed RGB toon bands (Core/Edge colours), mask textures, MF_TransluscentToonErosion /
+// Luos_alphaErosion (alpha-driven erosion), MF_PannerRotatorFPS (FPS-stepped pan/rotate),
+// noise UV distortion, rim fresnel, CameraDepthFade, DepthFade.
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform int main_mode = 0;               // 0 none, 1 rgba colour, 2 grey mask (R), 3 packed toon RGB, 4 alpha only, 5 procedural
+uniform bool shape_from_rgb = false;     // colour texture without alpha: shape = max(r,g,b)
+uniform int proc_shape = 0;              // 0 soft radial, 1 ring, 2 diamond, 3 vertical gradient
+uniform sampler2D main_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D mask_tex : repeat_enable, filter_linear_mipmap;
+uniform bool has_mask = false;
+uniform sampler2D erosion_tex : repeat_enable, filter_linear_mipmap;
+uniform bool has_erosion_tex = false;
+uniform sampler2D noise_tex : repeat_enable, filter_linear_mipmap;
+uniform bool has_noise = false;
+uniform bool noise_is_normal = false;
+uniform sampler2D emissive_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform bool has_emissive_tex = false;
+uniform vec3 core_color = vec3(1.0);
+uniform vec3 edge_color = vec3(1.0);
+uniform float outer_band = 0.25;
+uniform float emissive = 1.0;
+uniform float opacity_mult = 1.0;
+uniform float fps = 0.0;                 // 0 = continuous
+uniform vec2 main_pan = vec2(0.0);
+uniform vec2 main_tile = vec2(1.0);
+uniform float main_rotation = 0.0;       // turns
+uniform float rotator_speed = 0.0;       // turns / s
+uniform vec2 noise_pan = vec2(0.0);
+uniform vec2 noise_tile = vec2(1.0);
+uniform float distortion = 0.0;
+uniform bool erosion = false;
+uniform float edge_softness = 0.1;
+uniform float mask_contrast = 0.0;
+uniform bool invert_erosion = false;
+uniform int fresnel_mode = 0;            // 0 none, 1 rim, 2 centre
+uniform float fresnel_power = 2.0;
+uniform float camera_fade_offset = 0.0;  // m
+uniform float camera_fade_length = 0.0;  // m (0 = off)
+uniform float depth_fade_m = 0.0;        // m (0 = off)
+uniform int dyn_emissive = -1;           // dynamic parameter index feeding emissive
+uniform int dyn_opacity = -1;
+uniform int dyn_erosion = -1;
+uniform int dyn_distortion = -1;
+uniform float alpha_clip = 0.333;
+
+float dyn(int i) { return i == 0 ? v_dyn.x : i == 1 ? v_dyn.y : i == 2 ? v_dyn.z : v_dyn.w; }
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	float t = fps > 0.0 ? stepped(TIME, fps) : TIME;
+	vec2 base_uv = v_quv;
+	vec2 uv = rotate_uv(base_uv * main_tile, main_rotation + rotator_speed * t, vec2(0.5) * main_tile) + main_pan * t;
+	if (has_noise && distortion != 0.0) {
+		vec4 n = texture(noise_tex, base_uv * noise_tile + noise_pan * t);
+		vec2 off = noise_is_normal ? (n.xy * 2.0 - 1.0) : vec2(n.r - 0.5, n.g - 0.5);
+		float k = distortion * (dyn_distortion >= 0 ? dyn(dyn_distortion) : 1.0);
+		uv += off * k;
+	}
+	bool tiled = main_pan != vec2(0.0) || main_tile != vec2(1.0) || rotator_speed != 0.0;
+	vec2 suv = tiled ? uv : particle_atlas(clamp(uv, 0.001, 0.999));
+	vec3 col = core_color;
+	float shape = 1.0;
+	if (main_mode == 1) {
+		vec4 m = texture(main_tex, suv);
+		col = m.rgb * core_color;
+		shape = shape_from_rgb ? max(m.r, max(m.g, m.b)) : m.a;
+	} else if (main_mode == 2) {
+		float m = texture(main_tex, suv).r;
+		col = core_color * m;
+		shape = m;
+	} else if (main_mode == 3) {
+		vec4 m = texture(mask_tex, suv);
+		col = core_color * m.r + edge_color * (m.g + m.b * outer_band);
+		shape = clamp(m.r + m.g + m.b * outer_band, 0.0, 1.0) * m.a;
+	} else if (main_mode == 4) {
+		shape = texture(main_tex, suv).a;
+	} else if (main_mode == 5) {
+		vec2 d = v_quv * 2.0 - 1.0;
+		float r = length(d);
+		if (proc_shape == 1) { shape = smoothstep(0.55, 0.8, r) * (1.0 - smoothstep(0.8, 1.0, r)); }
+		else if (proc_shape == 2) { shape = clamp(1.0 - (abs(d.x) + abs(d.y)), 0.0, 1.0); }
+		else if (proc_shape == 3) { shape = 1.0 - v_quv.y; }
+		else { shape = pow(clamp(1.0 - r, 0.0, 1.0), 1.5); }
+	}
+	if (has_mask && main_mode != 3) {
+		shape *= texture(mask_tex, suv).r;
+	}
+	if (has_emissive_tex) {
+		col *= texture(emissive_tex, uv).rgb;
+	}
+	float a = v_color.a;
+	if (erosion) {
+		float e = has_erosion_tex ? texture(erosion_tex, base_uv * noise_tile + noise_pan * t * 0.5).r : shape;
+		if (invert_erosion) { e = 1.0 - e; }
+		e = cheap_contrast(e, mask_contrast);
+		float thr = 1.0 - a;
+		if (dyn_erosion >= 0) { thr = clamp(thr + (1.0 - dyn(dyn_erosion)), 0.0, 1.0); }
+		float er = smoothstep(thr, thr + max(edge_softness, 0.002), e);
+		shape = has_erosion_tex ? shape * er : er * step(0.002, shape);
+		a = 1.0;
+	}
+	if (fresnel_mode != 0) {
+		float f = clamp(1.0 - abs(dot(normalize(NORMAL), normalize(VIEW))), 0.0, 1.0);
+		float r = pow(f, max(fresnel_power, 0.01));
+		shape *= fresnel_mode == 1 ? r : (1.0 - r);
+	}
+	float em = emissive * (dyn_emissive >= 0 ? dyn(dyn_emissive) : 1.0);
+	float op = shape * a * opacity_mult * (dyn_opacity >= 0 ? dyn(dyn_opacity) : 1.0);
+	if (camera_fade_length > 0.0) { op *= camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length); }
+	if (depth_fade_m > 0.0) { op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, depth_fade_m); }
+	ALBEDO = col * v_color.rgb * em;
+	/*ALPHA_OUT*/
+}

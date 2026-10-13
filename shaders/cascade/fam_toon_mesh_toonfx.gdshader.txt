@@ -1,0 +1,181 @@
+// Family: ToonFX_Mesh01_FxM (Spellbreak, Proletariat; UE4.22 Cascade, converted for this lab).
+// 13 instances, all BLEND_Masked (OpacityMaskClipValue 0.3333) with Spellbreak's custom MSM_ToonFX
+// shading model; one-sided and two-sided (Candy_02*) -> template. Lit mesh particles: SweetRush
+// candies (Ms_Candy_01/02/3), TrickOrTreat lollipops/candies, TeaSip saucer + shards.
+// It is the FX copy of the character toon material (MF_Character_Toon_Core / _Rimlight share the
+// same parameter names): albedo + packed Masks texture + rim light + toon erosion.
+//
+// SOURCE (cooked root graph, stripped to parameter nodes + function shells):
+//   textures Albedo, Masks (packed: occlusion/indirect/rim-mask R, roughness G, ramp/metallic/
+//   toon-blend B, emissive A - StaticComponentMask defaults), NormalMap, LerpMask, Erosion Mask,
+//   texture object "Rim Light Ramp" (T_BluishWhiteGradient: V = white top -> black bottom,
+//   U = neutral left -> bluish right); vectors EmissiveColor, EmissiveTint, ToonLerp, Rim Light
+//   Tint (MF_RimLight); 28 scalars, 14 static switches; functions MF_RimLight ("Rim light with
+//   gradient over horizontal normal direction", uses SmoothStep + MakeFloat2 to address the ramp),
+//   MF_TransluscentToonErosion ("Erodes alpha mask instead of fade out."), one CheapContrast call
+//   (LerpMaskContrast), CameraDepthFade, DitherTemporalAA, MakeFloat4 (shading-model custom data).
+//
+// AUTHORED (graph wiring and the MSM_ToonFX shading model are not in the data):
+//  * albedo = lerp(ToonLerp, Albedo * AlbedoScale, saturate(CheapContrast(LerpMask, LerpMaskContrast)
+//    * ToonLerpScale)) when HasToonLerp (evidence for this order: MI_Candy_01_Body sets AlbedoScale
+//    6.359 with ToonLerpScale 0.2 -> 0.2 * 6.359 = 1.27 reaches white only in this order; the other
+//    order saturates to plain white and hides its stripes); LerpMask UV = UV * LerpMask Scale,
+//    rotated by a UE Rotator (default speed 0.25 -> angle = Rotate LerpMask Texture * 0.25 rad) when
+//    "Has Rotate LerpMask texture". Particle colour multiplies albedo.
+//  * toon lighting (light()): hard terminator smoothstep(0, 0.04, N.L) blended with Lambert by
+//    ToonBlendScale (x Masks.B with HasToonBlendChannel); hard Blinn highlight from Roughness /
+//    SpecularIntensity / SpecularFalloff. ToonRamp / RampChannelMinY/MaxY / HasRampChannel select a
+//    row of Spellbreak's global toon-ramp atlas, which is not in the extraction -> one ramp for all.
+//    IndirectShadingScale shapes the directional part of indirect light; the lab ambient is a flat
+//    colour, so it has no visible effect here (left unused).
+//  * rim (MF_RimLight): r = SmoothStep(Cutoff, Cutoff + 1/Sharpness, pow(1 - N.V, Exponent) * Scale);
+//    Use Rim Light Ramp -> colour = Ramp(u = view-space normal.x * 0.5 + 0.5, v = 1 - r) * Tint,
+//    else r * Tint; x Masks.R with HasRimLightMaskChannel; added to albedo (lit) and
+//    x Rim Light Emissive Amount to emission.
+//  * emission = EmissiveColor * EmissiveTint * EmissiveScale (x Masks.A with HasEmissiveChannel).
+//  * toon erosion: mask = HasErosionMask ? ErosionMask(UV * Erosion Mask Scale) : pow(N.V, Erosion
+//    Edge Fresnel); opacity = saturate((mask - (1 - alpha)) / max(Erosion Mask Softness, 0.002)),
+//    x dithered CameraDepthFade(Camera Fade Offset, Camera Fade Length) (DitherTemporalAA).
+//  * Masks channel overrides (StaticComponentMask per instance, e.g. TeaCup MetallicChannel = R) are
+//    not exported to materials.json -> the root defaults are used for every instance.
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D albedo_tex : source_color, repeat_enable, filter_linear_mipmap;   // "Albedo"
+uniform sampler2D masks_tex : repeat_enable, filter_linear_mipmap;                 // "Masks"
+uniform sampler2D normal_tex : repeat_enable, filter_linear_mipmap;                // "NormalMap" (UE/DirectX green)
+uniform sampler2D lerp_mask_tex : repeat_enable, filter_linear_mipmap;             // "LerpMask"
+uniform sampler2D erosion_tex : repeat_enable, filter_linear_mipmap;               // "Erosion Mask"
+uniform sampler2D rim_ramp_tex : source_color, filter_linear, repeat_disable;       // "Rim Light Ramp"
+uniform bool has_albedo = false;
+uniform bool has_masks = false;
+uniform bool has_normal = false;
+uniform bool has_lerp_mask = false;
+uniform bool has_rim_ramp = false;
+
+uniform float albedo_scale = 1.0;
+uniform bool has_toon_lerp = false;            // switch HasToonLerp
+uniform vec3 toon_lerp = vec3(1.0);            // ToonLerp
+uniform float toon_lerp_scale = 0.0;
+uniform float lerp_mask_scale = 1.0;
+uniform float lerp_mask_contrast = 0.0;
+uniform bool rotate_lerp_mask = false;         // switch "Has Rotate LerpMask texture" (root default False)
+uniform float lerp_mask_rotation = 0.0;        // "Rotate LerpMask Texture" (Rotator time input)
+
+uniform vec3 emissive_color = vec3(0.0);
+uniform vec3 emissive_tint = vec3(1.0);
+uniform float emissive_scale = 1.0;
+uniform bool has_emissive_channel = false;     // Masks.A
+
+uniform float toon_blend_scale = 1.0;
+uniform bool has_toon_blend_channel = false;   // Masks.B
+uniform float roughness = 1.0;
+uniform bool has_roughness_channel = false;    // Masks.G
+uniform bool invert_roughness = false;
+uniform float specular_intensity = 0.5;
+uniform float specular_falloff = 0.5;
+uniform float metallic_scale = 1.0;
+uniform bool has_metallic_channel = false;     // Masks.B
+uniform float ao_scale = 1.0;
+uniform bool has_occlusion_channel = false;    // Masks.R
+uniform float normal_scale = 1.0;
+
+uniform bool has_rim_light = true;
+uniform bool use_rim_ramp = true;
+uniform vec3 rim_tint = vec3(1.0);
+uniform float rim_exponent = 1.0;
+uniform float rim_scale = 1.0;
+uniform float rim_cutoff = 0.6;
+uniform float rim_sharpness = 1.0;
+uniform float rim_emissive = 0.0;
+uniform bool has_rim_mask_channel = false;     // Masks.R
+
+uniform bool has_erosion_mask = false;
+uniform float erosion_mask_scale = 1.0;
+uniform float erosion_mask_softness = 0.0;
+uniform float erosion_edge_fresnel = 1.0;
+uniform float camera_fade_offset = 1.0;        // m
+uniform float camera_fade_length = 1.0;        // m (<= 0: hard cut at the offset)
+uniform float alpha_clip = 0.3333;             // OpacityMaskClipValue (every instance)
+
+varying float v_toon_blend;
+varying float v_spec;
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	vec2 uv = v_quv;
+	vec4 masks = has_masks ? texture(masks_tex, uv) : vec4(1.0);
+	// albedo + ToonLerp stripes
+	vec3 base = (has_albedo ? texture(albedo_tex, uv).rgb : vec3(1.0)) * albedo_scale;
+	if (has_toon_lerp) {
+		vec2 luv = uv * lerp_mask_scale;
+		if (rotate_lerp_mask) { luv = rotate_uv(luv, lerp_mask_rotation * 0.25 / TAU, vec2(0.5)); }
+		float lm = has_lerp_mask ? texture(lerp_mask_tex, luv).r : 1.0;
+		lm = cheap_contrast(lm, lerp_mask_contrast);
+		base = mix(toon_lerp, base, clamp(lm * toon_lerp_scale, 0.0, 1.0));
+	}
+	base = clamp(base, 0.0, 1.0) * v_color.rgb;
+	// normal map (UE DirectX convention -> flip green)
+	if (has_normal) {
+		vec3 n = texture(normal_tex, uv).rgb;
+		NORMAL_MAP = vec3(n.r, 1.0 - n.g, n.b);
+		NORMAL_MAP_DEPTH = normal_scale;
+	}
+	vec3 nrm = normalize(NORMAL);
+	float ndv = clamp(dot(nrm, normalize(VIEW)), 0.0, 1.0);
+	// MF_RimLight
+	vec3 rim_col = vec3(0.0);
+	if (has_rim_light) {
+		float r = pow(1.0 - ndv, max(rim_exponent, 0.01)) * rim_scale;
+		r = smoothstep(rim_cutoff, rim_cutoff + 1.0 / max(rim_sharpness, 0.01), r);
+		if (has_rim_mask_channel) { r *= masks.r; }
+		vec3 ramp = (use_rim_ramp && has_rim_ramp)
+			? texture(rim_ramp_tex, vec2(clamp(nrm.x * 0.5 + 0.5, 0.01, 0.99), clamp(1.0 - r, 0.01, 0.99))).rgb
+			: vec3(r);
+		rim_col = ramp * rim_tint;
+	}
+	ALBEDO = clamp(base + rim_col, 0.0, 1.0);
+	float rough = roughness;
+	if (has_roughness_channel) { rough *= invert_roughness ? 1.0 - masks.g : masks.g; }
+	ROUGHNESS = clamp(rough, 0.02, 1.0);
+	METALLIC = has_metallic_channel ? clamp(masks.b * metallic_scale, 0.0, 1.0) : 0.0;
+	AO = has_occlusion_channel ? mix(1.0, masks.r, clamp(ao_scale, 0.0, 1.0)) : 1.0;
+	v_toon_blend = clamp(toon_blend_scale * (has_toon_blend_channel ? masks.b : 1.0), 0.0, 1.0);
+	v_spec = specular_intensity;
+	EMISSION = emissive_color * emissive_tint * emissive_scale * (has_emissive_channel ? masks.a : 1.0)
+		+ rim_col * rim_emissive;
+	// MF_TransluscentToonErosion on the opacity mask
+	float mask = has_erosion_mask ? texture(erosion_tex, uv * erosion_mask_scale).r
+		: pow(ndv, max(erosion_edge_fresnel, 0.01));
+	float a = clamp(v_color.a, 0.0, 1.0);
+	float op = clamp((mask - (1.0 - a)) / max(erosion_mask_softness, 0.002), 0.0, 1.0);
+	// CameraDepthFade through DitherTemporalAA (screen-space dither of the masked opacity)
+	float depth = -VERTEX.z;
+	float cf = camera_fade_length > 0.0 ? camera_depth_fade(depth, camera_fade_offset, camera_fade_length)
+		: step(camera_fade_offset, depth);
+	float dith = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));
+	op *= (cf >= 1.0 || dith < cf) ? 1.0 : 0.0;
+	op = clamp(op, 0.0, 1.0);
+	/*ALPHA_OUT*/
+}
+
+void light() {
+	float ndl = dot(NORMAL, LIGHT);
+	float lambert = clamp(ndl, 0.0, 1.0);
+	float toon = smoothstep(0.0, 0.04, ndl);            // AUTHORED hard terminator (ramp atlas unavailable)
+	float d = mix(lambert, toon, v_toon_blend);
+	DIFFUSE_LIGHT += d * ATTENUATION * LIGHT_COLOR / PI;
+	vec3 h = normalize(LIGHT + VIEW);
+	float ndh = clamp(dot(NORMAL, h), 0.0, 1.0);
+	float shin = exp2(1.0 + 10.0 * (1.0 - ROUGHNESS));
+	float edge = 0.5 * clamp(specular_falloff, 0.01, 1.0);
+	float s = smoothstep(0.5 - edge * 0.2, 0.5 + edge * 0.2, pow(ndh, shin));   // hard toon highlight
+	SPECULAR_LIGHT += s * v_spec * toon * ATTENUATION * LIGHT_COLOR / PI;
+}

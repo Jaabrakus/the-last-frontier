@@ -13,20 +13,27 @@ extends SceneTree
 ##   zsh <scratchpad>/blender_run.sh -b --factory-startup --python tools/anim_author/blender/bend_clips.py -- --out <bend.json>
 ##       --blend <bend.blend>
 ##   Godot --headless --path . -s tools/anim_author/install_bend.gd -- <bend.json>      (or in=<bend.json>)
+##       [out=res://artifacts/x/Frontier_Bend_try.res]   another library to install into (a bake to look at side by side with
+##       the game's, tools/anim_author/bend_preview.gd lib=; it starts empty when it does not exist yet)
 
 const OUT_LIB := "res://animations_extra/Frontier_Bend.res"
 ## Our own library whose tracks are named as the game's skeleton has them (the node path before the bone).
 const PREFIX_LIB := "res://animations_extra/Frontier_Form.res"
 const PREFIX_CLIP := "own-form-release"
 const AUTHORED := "Frontier: our own ring-sport clip (%s), key poses keyed and IK-solved in Blender (tools/anim_author/blender/bend_clips.py) from the rig's rest pose"
-## Metas that are words, not seconds.
-const WORD_METAS := ["hand", "mask", "root", "loop"]
+## Metas that are words, not seconds (travel: the way a side roll rolls, "right" or "left"; stone_hand: the hand the Pop's
+## stone ends in, "r"; from: the side a struck contact pose's hit comes from, "front", "back", "left" or "right").
+const WORD_METAS := ["hand", "mask", "root", "loop", "travel", "stone_hand", "from"]
 
 
 func _initialize() -> void:
 	var path := ""
+	var out_lib := OUT_LIB
 	for a in OS.get_cmdline_user_args():
-		path = a.trim_prefix("in=")
+		if a.begins_with("out="):
+			out_lib = a.substr(4)
+		else:
+			path = a.trim_prefix("in=")
 	if path == "" or not FileAccess.file_exists(path):
 		push_error("install_bend: no json (%s)" % path)
 		quit(1)
@@ -37,15 +44,17 @@ func _initialize() -> void:
 	var fps := float(baked.fps)
 	var names: Dictionary = baked.get("names", {})
 	var lib: AnimationLibrary = null
-	if ResourceLoader.exists(OUT_LIB):
-		lib = (load(OUT_LIB) as AnimationLibrary).duplicate(true) as AnimationLibrary
+	if ResourceLoader.exists(out_lib):
+		lib = (load(out_lib) as AnimationLibrary).duplicate(true) as AnimationLibrary
 	if lib == null:
 		lib = AnimationLibrary.new()
 	for key: String in baked.clips:
 		var clip: Dictionary = baked.clips[key]
 		var frames: Array = clip.frames
 		var a := Animation.new()
-		a.length = (frames.size() - 1) / fps
+		# (a clip baked several times a frame carries its own rate: bend_clips.py's substeps)
+		var cfps := float(clip.get("fps", fps))
+		a.length = (frames.size() - 1) / cfps
 		a.loop_mode = Animation.LOOP_NONE
 		a.set_meta(&"authored", AUTHORED % key)
 		var meta: Dictionary = clip.get("meta", {})
@@ -72,20 +81,21 @@ func _initialize() -> void:
 				if prev.has(bone) and (prev[bone] as Quaternion).dot(qq) < 0.0:
 					qq = -qq
 				prev[bone] = qq
-				a.rotation_track_insert_key(tracks[bone], fi / fps, qq)
+				a.rotation_track_insert_key(tracks[bone], fi / cfps, qq)
 		var roots: Array = clip.get("root", [])
 		if not roots.is_empty():
 			var tp := a.add_track(Animation.TYPE_POSITION_3D)
 			a.track_set_path(tp, NodePath(prefix + ":root"))
 			for fi in roots.size():
 				var p: Array = roots[fi]
-				a.position_track_insert_key(tp, fi / fps, Vector3(p[0], p[1], p[2]))
+				a.position_track_insert_key(tp, fi / cfps, Vector3(p[0], p[1], p[2]))
 		var name := String(names.get(key, "own-bend-" + key.replace("_", "-")))
 		if lib.has_animation(StringName(name)):
 			lib.remove_animation(StringName(name))
 		lib.add_animation(StringName(name), a)
 		print("  %s %.2f s, %d bones, metas %s" % [name, a.length, tracks.size(), str(meta)])
 	print("BEND library: ", lib.get_animation_list())
-	var err := ResourceSaver.save(lib, OUT_LIB, ResourceSaver.FLAG_COMPRESS)
-	print("BEND saved ", err, " -> ", OUT_LIB)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_lib.get_base_dir()))
+	var err := ResourceSaver.save(lib, out_lib, ResourceSaver.FLAG_COMPRESS)
+	print("BEND saved ", err, " -> ", out_lib)
 	quit(0 if err == OK else 1)

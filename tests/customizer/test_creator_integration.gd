@@ -21,7 +21,9 @@ extends SceneTree
 ##              the pattern row on a patternable garment), and every garment of the build is offered to both body types
 ##   clothing   the Clothing view has the Harness / bandolier row (the shoulder slot) for a man and a woman, in
 ##              PlayerOutfit.SLOTS order; choosing the harness there dresses the stage figure; the Arms row comes once the
-##              catalog has an arm piece (a test entry over the glim's glb)
+##              catalog has an arm piece (a test entry over the sash's glb). The 2026-10-06 cleanup retired the period sets
+##              with the rigging harness and the check shirt: the harness is a test entry (HARNESS_ID, the sash's glb in the
+##              shoulder slot), the check shirt the tucked shirt with its check pattern, the man's plaid on his breeches
 ##   old looks  a look saved before the jewellery rows, the shoulder slot and the tattoos (a single jewellery id, the
 ##              harness as a wrap, a check shirt by its colour alone, the ears_nose slot, no tattoos; and broken values)
 ##              loads: its pieces in the rows, the harness in the shoulder slot, the check kept, the unknown slot dropped,
@@ -34,6 +36,8 @@ extends SceneTree
 ##              Fine-tune preset keep the jewellery too (the dice choose it again)
 
 const ARM_ID := "test_integration_arm_band"
+## A shoulder piece for the test (the build has none since the 2026-10-06 cleanup): the sash's glb in the shoulder slot.
+const HARNESS_ID := "test_integration_harness"
 const OLD_MAN := "user://appearance_test/integration_old_man.json"
 const OLD_WOMAN := "user://appearance_test/integration_old_woman.json"
 const FULL := "user://appearance_test/integration_full.json"
@@ -61,6 +65,13 @@ func _initialize() -> void:
 func _run() -> void:
 	var t0 := Time.get_ticks_msec()
 	root.size = Vector2i(1280, 720)
+	var he: Dictionary = PlayerOutfit.entry("sash_worsted").duplicate(true)
+	he["id"] = HARNESS_ID
+	he["name"] = "Harness (test)"
+	he["slot"] = "accessories.shoulder"
+	he["alt_slots"] = []
+	he["tags"] = []
+	PlayerOutfit.catalog()[HARNESS_ID] = he
 	await _frames(2)
 	_test_row_order()
 	_test_everyone()
@@ -72,6 +83,7 @@ func _run() -> void:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 	PlayerOutfit.catalog().erase(ARM_ID)
+	PlayerOutfit.catalog().erase(HARNESS_ID)
 	print("(%.1f s)" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	if _fails.is_empty():
 		print("CREATOR INTEGRATION TEST OK (%d checks)" % _checks)
@@ -235,7 +247,7 @@ func _test_everyone() -> void:
 	_check(unoffered.is_empty(), "every garment of the build is offered in its slot to both body types (%s)" % [unoffered])
 	var differ := PlayerOutfit.SLOTS.filter(func(slot: String) -> bool: return PlayerOutfit.offered(slot, 1.0) != PlayerOutfit.offered(slot, 0.0))
 	_check(differ.is_empty(), "a man and a woman are offered the same garments in every slot (%s)" % [differ])
-	for id: String in ["breeches", "frock_coat", "waistcoat_sb", "petticoat", "stays_laced", "cap_linen"]:
+	for id: String in ["breeches", "petticoat", "shirt_tucked", "shift_linen"]:
 		var slot := String(PlayerOutfit.entry(id).get("slot", ""))
 		if PlayerOutfit.usable(id):
 			_check(id in PlayerOutfit.offered(slot, 0.0) and id in PlayerOutfit.offered(slot, 1.0), "%s: offered to a woman and a man" % id)
@@ -320,9 +332,9 @@ func _test_clothing_view() -> void:
 		_check(bad.is_empty(), "body type %d: the Clothing view offers every people the same garments (%s)" % [bt, bad])
 		_check(bool(ref[1]), "body type %d: the shirt row has the pattern row (Plaid ...)" % bt)
 		var rows: Dictionary = ref[0]
-		_check((rows.get("accessories.shoulder", []) as Array).has("rigging_harness"),
+		_check((rows.get("accessories.shoulder", []) as Array).has(HARNESS_ID),
 				"body type %d: the Clothing view's Harness / bandolier row offers the rigging harness" % bt)
-		_check(not (rows.get("accessories.wrap", []) as Array).has("rigging_harness"), "body type %d: and the wrap row no longer" % bt)
+		_check(not (rows.get("accessories.wrap", []) as Array).has(HARNESS_ID), "body type %d: and the wrap row no longer" % bt)
 		var order := rows.keys()
 		var in_slots := PlayerOutfit.SLOTS.filter(func(s: String) -> bool: return s in order)
 		_check(order == in_slots, "body type %d: the slot rows in PlayerOutfit.SLOTS order (%s)" % [bt, order])
@@ -355,20 +367,20 @@ func _test_clothing_view() -> void:
 		var opt: OptionButton = row.opt
 		var at := -1
 		for i in opt.item_count:
-			if opt.get_item_metadata(i) is String and String(opt.get_item_metadata(i)) == "rigging_harness":
+			if opt.get_item_metadata(i) is String and String(opt.get_item_metadata(i)) == HARNESS_ID:
 				at = i
 		_check(at >= 0, "the row lists the harness")
 		if at >= 0:
 			opt.select(at)
 			opt.item_selected.emit(at)
 			await _frames(3)
-			_check(String(((c.look.outfit as Dictionary).get("accessories.shoulder", {}) as Dictionary).get("id", "")) == "rigging_harness",
+			_check(String(((c.look.outfit as Dictionary).get("accessories.shoulder", {}) as Dictionary).get("id", "")) == HARNESS_ID,
 					"choosing it puts the harness in the look's shoulder slot")
-			_check(_worn(c.stage.body, "accessories.shoulder") == "rigging_harness", "and the stage figure wears it")
+			_check(_worn(c.stage.body, "accessories.shoulder") == HARNESS_ID, "and the stage figure wears it")
 	c.close(false)
 	await _frames(3)
-	# the Arms row: there once the catalog has an arm piece (a test entry borrowing the glim's glb)
-	var e: Dictionary = PlayerOutfit.entry("glim").duplicate(true)
+	# the Arms row: there once the catalog has an arm piece (a test entry borrowing the sash's glb)
+	var e: Dictionary = PlayerOutfit.entry("sash_worsted").duplicate(true)
 	e["id"] = ARM_ID
 	e["name"] = "Arm band (test)"
 	e["slot"] = "accessories.arms"
@@ -395,27 +407,27 @@ func _test_old_looks() -> void:
 	_write(OLD_MAN, {"people": "scots_irish", "sex": 1.0, "name": "Old Rab", "melanin": 0.14, "undertone": "neutral",
 			"jewellery": "studs_nose_stud", "facial_hair": "stubble_light", "markings": "none",
 			"hair": {"style": "hair_queue_ribbon", "color": "dark_brown"},
-			"outfit": {"shirt": {"id": "shirt_check", "colors": {"0": "check_blue"}}, "vest": {"id": "waistcoat_sb", "colors": {}},
-				"accessories.wrap": {"id": "rigging_harness", "colors": {"preset": "aboard"}}}})
+			"outfit": {"shirt": {"id": "shirt_tucked", "colors": {"0": "check_blue", "pattern": "check"}},
+				"accessories.wrap": {"id": HARNESS_ID, "colors": {"preset": "plain_red"}}}})
 	var m := AppearanceStore.load_file(OLD_MAN)
 	_check(m.get("name", "") == "Old Rab" and m.get("people", "") == "scots_irish", "the old man's file loads (%s)" % m.get("name", ""))
 	_check(not m.has("jewellery") and m.get("jewel_ears") == "gold_studs" and m.get("jewel_nose") == "nose_stud_gold"
 			and m.get("jewel_neck") == "none" and m.get("jewel_hands") == "none",
 			"his single jewellery set is in the rows (%s, %s, %s, %s)" % [m.get("jewel_ears"), m.get("jewel_nose"), m.get("jewel_neck"), m.get("jewel_hands")])
 	var o: Dictionary = m.get("outfit", {})
-	_check(String((o.get("accessories.shoulder", {}) as Dictionary).get("id", "")) == "rigging_harness" and not o.has("accessories.wrap")
-			and String(o["accessories.shoulder"].colors.get("preset", "")) == "aboard",
+	_check(String((o.get("accessories.shoulder", {}) as Dictionary).get("id", "")) == HARNESS_ID and not o.has("accessories.wrap")
+			and String(o["accessories.shoulder"].colors.get("preset", "")) == "plain_red",
 			"his harness, saved as a wrap, is in the shoulder slot with its colours (%s)" % [o.keys()])
 	_check(m.get("tattoos") is Array and (m.tattoos as Array).is_empty(), "he has no tattoos")
-	var shirt := PlayerOutfit.entry("shirt_check")
-	var cols := PlayerOutfit.resolve_colors("shirt_check", o.get("shirt", {}).get("colors", {}))
+	var shirt := PlayerOutfit.entry("shirt_tucked")
+	var cols := PlayerOutfit.resolve_colors("shirt_tucked", o.get("shirt", {}).get("colors", {}))
 	var pz := ClothMaterials.pattern_zone(shirt, cols)
 	var zd := {}
 	for z: Dictionary in shirt.get("zones", []):
 		if int(z.get("zone", -1)) == pz:
 			zd = z
 	_check(String(ClothMaterials.pattern_spec(zd, String(cols.get(str(pz), zd.get("default", ""))), cols, pz, pz).get("name", "")) == "check",
-			"his check shirt, saved by its colour alone, is still a check")
+			"his check shirt, saved with its pattern, is still a check")
 	# a woman saved with the old slot names and broken values
 	_write(OLD_WOMAN, {"people": "bengali" if not CharacterPeoples.people("bengali").is_empty() else "english", "sex": 0.0,
 			"jewellery": "pearl_drops", "jewel_neck": "gold_studs", "jewel_hands": 7, "tattoos": "lots",
@@ -451,16 +463,16 @@ func _test_old_looks() -> void:
 			"and no tattoos")
 	var body: CharacterBodyMesh = c.stage.body
 	_check(not body.part_meshes(FaceExtras.PART_JEWELLERY).is_empty(), "the stage figure wears his studs")
-	_check(_worn(body, "accessories.shoulder") == "rigging_harness" and _worn(body, "shirt") == "shirt_check"
+	_check(_worn(body, "accessories.shoulder") == HARNESS_ID and _worn(body, "shirt") == "shirt_tucked"
 			and _worn(body, "accessories.wrap") == "", "and his harness over the check shirt (no wrap)")
-	_check(_pattern_kind(body, "shirt", "shirt_check", o.get("shirt", {}).get("colors", {})) == int(ClothMaterials.PATTERN_KIND.check),
+	_check(_pattern_kind(body, "shirt", "shirt_tucked", o.get("shirt", {}).get("colors", {})) == int(ClothMaterials.PATTERN_KIND.check),
 			"the shirt's cloth draws the check")
 	c._show_clothing(true)
 	await _frames(3)
 	var tab := c._outfit_ui as OutfitTab
 	if tab != null and tab._rows.has("accessories.shoulder"):
 		var opt: OptionButton = tab._rows["accessories.shoulder"].opt
-		_check(opt.selected >= 0 and String(opt.get_item_metadata(opt.selected)) == "rigging_harness",
+		_check(opt.selected >= 0 and String(opt.get_item_metadata(opt.selected)) == HARNESS_ID,
 				"the Clothing view shows his harness in the shoulder row")
 	else:
 		_check(false, "the Clothing view has the shoulder row")
@@ -471,7 +483,7 @@ func _test_old_looks() -> void:
 # --- everything together ----------------------------------------------------------------------------------------------------
 
 ## A man or a woman with earrings, a nose ring, a necklace, two tattoos (one on the back of a hand, one under a sleeve), a
-## check shirt, a plaid (the man's waistcoat, the woman's petticoat) and the harness.
+## check shirt, a plaid (the man's breeches, the woman's petticoat) and the harness.
 static func full_look(bt: int) -> Dictionary:
 	var man := bt == 1
 	var lk := CreatorOptions.with_body_type(CreatorOptions.with_people({"sex": 1.0 if man else 0.0},
@@ -488,16 +500,12 @@ static func full_look(bt: int) -> Dictionary:
 	else:
 		Tattoos.add(lk, "wind_spiral", "hand_l")
 		Tattoos.add(lk, "heart", "forearm_r")
-	var outfit := {"shirt": {"id": "shirt_check", "colors": {}},
-			"accessories.shoulder": {"id": "rigging_harness", "colors": {"preset": "aboard"}}}
+	var outfit := {"shirt": {"id": "shirt_tucked", "colors": {"pattern": "check"}},
+			"accessories.shoulder": {"id": HARNESS_ID, "colors": {"preset": "plain_red"}}}
 	if man:
-		outfit["legs.lower"] = {"id": "breeches", "colors": {"0": "buckskin_pale", "1": "buckskin_pale"}}
-		outfit["vest"] = {"id": "waistcoat_sb", "colors": {"pattern": "plaid", "sett": "madder_red"}}
-		outfit["legs.over"] = {"id": "stockings", "colors": {}}
-		outfit["feet"] = {"id": "shoes_buckled", "colors": {}}
+		outfit["legs.lower"] = {"id": "breeches", "colors": {"pattern": "plaid", "sett": "madder_red"}}
 	else:
 		outfit["legs.lower"] = {"id": "petticoat", "colors": {"pattern": "plaid", "sett": "hill_green"}}
-		outfit["feet"] = {"id": "shoes_buckled", "colors": {}}
 	lk["outfit"] = outfit
 	return lk
 
@@ -517,8 +525,8 @@ func _test_full_looks() -> void:
 		_check(JSON.stringify(back.get("tattoos")) == JSON.stringify(Tattoos.validate(lk.tattoos)) and (back.tattoos as Array).size() == 2,
 				"%s: both tattoos load unchanged" % who)
 		var bo: Dictionary = back.get("outfit", {})
-		var plaid_slot := "vest" if bt == 1 else "legs.lower"
-		_check(String((bo.get("accessories.shoulder", {}) as Dictionary).get("id", "")) == "rigging_harness"
+		var plaid_slot := "legs.lower"
+		_check(String((bo.get("accessories.shoulder", {}) as Dictionary).get("id", "")) == HARNESS_ID
 				and String(bo.get(plaid_slot, {}).get("colors", {}).get("sett", "")) == String(lk.outfit[plaid_slot].colors.sett),
 				"%s: the harness and the plaid's sett load unchanged" % who)
 		c.look = back
@@ -528,14 +536,14 @@ func _test_full_looks() -> void:
 		var body: CharacterBodyMesh = c.stage.body
 		_check(not body.part_meshes(FaceExtras.PART_JEWELLERY).is_empty() and CreatorOptions.jewellery_items(c.look).size() >= 4,
 				"%s: the stage figure wears the earrings, the nose ring, the necklace and the ring" % who)
-		_check(_worn(body, "shirt") == "shirt_check"
-				and _pattern_kind(body, "shirt", "shirt_check", {}) == int(ClothMaterials.PATTERN_KIND.check),
+		_check(_worn(body, "shirt") == "shirt_tucked"
+				and _pattern_kind(body, "shirt", "shirt_tucked", lk.outfit.shirt.colors) == int(ClothMaterials.PATTERN_KIND.check),
 				"%s: the check shirt, drawn as a check" % who)
 		var pid := String(lk.outfit[plaid_slot].id)
 		_check(_worn(body, plaid_slot) == pid
 				and _pattern_kind(body, plaid_slot, pid, lk.outfit[plaid_slot].colors) == int(ClothMaterials.PATTERN_KIND.plaid),
 				"%s: the %s, drawn as a plaid" % [who, pid])
-		_check(_worn(body, "accessories.shoulder") == "rigging_harness", "%s: the harness" % who)
+		_check(_worn(body, "accessories.shoulder") == HARNESS_ID, "%s: the harness" % who)
 		# in the clothes: what their regions leave showing (the back of the hand; of the forearm, what the sleeve leaves)
 		var hide := []
 		var eff := PlayerOutfit.effective(back.outfit, float(back.sex))
@@ -558,7 +566,7 @@ func _test_full_looks() -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7 + bt
 		var r := CreatorOptions.randomized(c.look, rng)
-		_check((r.tattoos as Array).size() == 2 and String(r.outfit.get("accessories.shoulder", {}).get("id", "")) == "rigging_harness",
+		_check((r.tattoos as Array).size() == 2 and String(r.outfit.get("accessories.shoulder", {}).get("id", "")) == HARNESS_ID,
 				"%s: the dice keep the tattoos and the clothes" % who)
 		var q := CreatorOptions.with_people(c.look, "malay" if not CharacterPeoples.people("malay").is_empty() else "french")
 		_check((q.tattoos as Array).size() == 2 and String(q.outfit.get(plaid_slot, {}).get("colors", {}).get("sett", "")) != "",
@@ -597,7 +605,7 @@ func _test_full_looks() -> void:
 			ov.close(true)
 		await _frames(4)
 		_check(picked and (c.look.get("tattoos", []) as Array).size() == 2 and String(c.look.get("name", "")) == String(lk.name)
-				and String(c.look.outfit.get("accessories.shoulder", {}).get("id", "")) == "rigging_harness",
+				and String(c.look.outfit.get("accessories.shoulder", {}).get("id", "")) == HARNESS_ID,
 				"%s: a Fine-tune preset keeps the name, the tattoos and the clothes (%s, %d tattoos)" % [who, c.look.get("name", ""),
 				(c.look.get("tattoos", []) as Array).size()])
 		_check(jw.call(c.look) == want_j, "%s: and the jewellery (%s)" % [who, jw.call(c.look)])

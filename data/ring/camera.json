@@ -1,0 +1,59 @@
+{
+  "format": "ring_camera",
+  "version": 1,
+  "_about": "Round 4 (READ): the % ring's camera variants (RingCamera), applied on top of MOVE's framing (movement.json cam: the deck's arm and pivot, the off-deck and hanging framing, the recovery turn) by RingMoves.cam_bias. Each variant adds arm_add m to the deck's arm and pivot_add m to the pivot's lift, sets the camera shoulder_m to the right (the spring arm's x), tilts the camera down tilt_deg about its own right axis (a built-in look down; the crosshair stays the screen's centre, get_aim_point) and widens the view's field by fov_add degrees (MOVE's off-deck field still eases over it). C's numbers as measured: its tilt 0 and its field +4.5 (the owner's default asked for a slight tilt so the deck shows behind your feet; measured, every degree of tilt lowers the camera as you aim at a man and hides more of his shot, 0.1-0.2 m a degree, while the wider field shows the deck behind your feet and hides nothing). None of it ever changes with a hit, the opponent or the aim help: the variant is the player's choice in the Esc menu (row: GameSettings section ring, key camera), kept. The open world never reads it. Why (backlog item 8): under round 3's centred camera a chest-high shot coming straight at you was hidden behind your own head and back for its last metre or two, just when the guard's timing is decided. The default is measured in the engine (tests/ring/test_ring_camera.gd: METRIC hidden_m, the bolt's path hidden behind your own body from 8, 15 and 22 m, straight on and 20 degrees off, idle and casting; deck_behind_m at the default pitch).",
+  "default": "high",
+  "menu_order": ["high", "close", "shoulder", "high_shoulder"],
+  "words": {
+    "row": "Camera: %s",
+    "row_line": "where the camera sits behind you: at once, kept",
+    "changed": "Camera: %s",
+    "jolt_row": "Screen jolt: %s",
+    "jolt_on": "On",
+    "jolt_off": "Off",
+    "jolt_line": "the view jolts when a hit lands; the aim never moves",
+    "jolt_changed": "Screen jolt: %s"
+  },
+  "variants": {
+    "close": {
+      "letter": "A",
+      "label": "Close",
+      "line": "round 3's view: close behind you, centred",
+      "arm_add": 0.0,
+      "pivot_add": 0.0,
+      "shoulder_m": 0.0,
+      "tilt_deg": 0.0,
+      "fov_add": 0.0
+    },
+    "shoulder": {
+      "letter": "B",
+      "label": "Shoulder",
+      "line": "over your right shoulder",
+      "arm_add": 0.0,
+      "pivot_add": 0.0,
+      "shoulder_m": 0.5,
+      "tilt_deg": 0.0,
+      "fov_add": 0.0
+    },
+    "high": {
+      "letter": "C",
+      "label": "High",
+      "line": "higher and centred: a shot coming at you stays in view",
+      "arm_add": 0.75,
+      "pivot_add": 0.8,
+      "shoulder_m": 0.0,
+      "tilt_deg": 0.0,
+      "fov_add": 4.5
+    },
+    "high_shoulder": {
+      "letter": "D",
+      "label": "High shoulder",
+      "line": "higher, a little over your right shoulder",
+      "arm_add": 0.75,
+      "pivot_add": 0.8,
+      "shoulder_m": 0.25,
+      "tilt_deg": 0.0,
+      "fov_add": 4.5
+    }
+  }
+}

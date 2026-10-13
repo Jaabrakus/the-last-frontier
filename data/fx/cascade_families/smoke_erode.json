@@ -1,0 +1,26 @@
+{
+  "roots": ["/Game/VFX/Materials/Smoke/SmokeErodeBase01_FxM"],
+  "shader": "fam_smoke_erode",
+  "template": false,
+  "u": {
+    "mask_tex": ["t", ["Opacity Mask"]],
+    "noise_tex": ["t", ["NoiseTexture"]],
+    "inner_color": ["v", "InnerColor"],
+    "outer_color": ["v", "OuterColor"],
+    "two_color_mask": ["sw", "2 Color Mask", true],
+    "has_noise_rotator": ["sw", "Has NoiseRotatorSpeed", true],
+    "noise_pan": ["v2", "NoisePanSpeedU", "NoisePanSpeedV"],
+    "noise_scale": ["v2", "NoiseTextureScaleU", "NoiseTextureScaleV"],
+    "noise_rotator_speed": ["s", "NoiseRotatorSpeed", 1.0, 0.01],
+    "fps": ["s", "FPS", 1.0, 15.0],
+    "edge_softness": ["s", "EdgeSoftness", 1.0, 0.015],
+    "mask_contrast": ["s", "MaskContrast", 1.0, 0.01],
+    "depth_min": ["s", "DepthMin", 1.0, 0.0],
+    "depth_max": ["s", "DepthMax", 1.0, 1.0],
+    "pixel_depth_fade": ["s", "PixelDepthFade", 0.01, 50.0],
+    "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 100.0],
+    "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+    "dyn_opacity": ["dyn", ["opacity"]]
+  },
+  "notes": "Spellbreak (Proletariat) SmokeErodeBase01_FxM: unlit translucent toon smoke sprites. SOURCE: every parameter value, both textures, both static switches, blend/shading, dynamic param name 'Opacity'. TEXTURE EVIDENCE: Opacity Mask R = hard silhouette, G = hard inner region, B = soft lit relief (DarkStormcloud 2-tone texture has R/G only); NoiseTexture = SmokeErosionTile01 erosion pattern; all sRGB so sampled linearised. Noise uv = atlas TexCoord0 * NoiseTextureScale (instances pair scale 1x0.5 with the 4x2 atlas and 0.25x0.25 with 1x1, both 0.25 tile per quad). AUTHORED: erosion of the R silhouette by the FPS-stepped panned/rotated noise with particle alpha as threshold and EdgeSoftness as edge width (MF_TransluscentToonErosion graph stripped); '2 Color Mask' on = lerp(Outer, Inner, G), off = lerp(Outer, Inner, B); dyn 'Opacity' multiplies opacity; SmoothStep(DepthMin, DepthMax) on the depth-fade term; NoiseRotatorSpeed as rad/s. KNOWN LIBRARY ISSUE: materials.json stores vectors as {ParameterValue|DefaultValue: [r,g,b,a]} but fx_materials.gd _vec() only accepts arrays, so InnerColor/OuterColor overrides do not arrive yet (shader keeps root defaults 1.0 / 0.5)."
+}

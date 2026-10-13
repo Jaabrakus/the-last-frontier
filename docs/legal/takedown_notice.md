@@ -1,6 +1,6 @@
 # Takedown notice template
 
-A template for asking a store, host or platform to remove a copy of Frontier, or content ripped from it. It follows
+A template for asking a store, host or platform to remove a copy of Tidebreak, or content ripped from it. It follows
 the notice-and-takedown requirements of the US DMCA (17 U.S.C. § 512(c)(3)). Most platforms outside the US accept a
 notice in the same form, and many have their own web forms: use the platform's form when it has one.
 
@@ -12,9 +12,9 @@ extracted animation data and CC-BY models listed in CREDITS.md: those belong to 
 
 **To:** [PLATFORM'S DESIGNATED COPYRIGHT AGENT / ABUSE CONTACT]
 
-**Subject:** Copyright infringement notice: [SHORT DESCRIPTION, e.g. "unauthorised copy of the game Frontier"]
+**Subject:** Copyright infringement notice: [SHORT DESCRIPTION, e.g. "unauthorised copy of the game Tidebreak"]
 
-1. **The copyrighted work.** Frontier, a video game by [STUDIO OR OWNER LEGAL NAME], including its [code / 3D models
+1. **The copyrighted work.** Tidebreak, a video game by [STUDIO OR OWNER LEGAL NAME], including its [code / 3D models
    / textures / audio / artwork / text]. [Where the original can be seen: store page, website or trailer URL.]
 
 2. **The infringing material and where it is.**

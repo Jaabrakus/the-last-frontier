@@ -1,0 +1,22 @@
+{
+  "roots": ["/Game/VFX/Materials/Shared/Erode_DisortTexture01_FxM"],
+  "shader": "fam_texture_erode_distort",
+  "template": true,
+  "u": {
+    "mask_tex": ["t", ["MaskTexture"]],
+    "distortion_normal": ["t", ["DistortionNormalMap"]],
+    "mask_scale": ["v2", "MaskScaleU", "MaskScaleV"],
+    "mask_brightness": ["s", "MaskBrightness", 1.0, 1.0],
+    "mask_contrast": ["s", "MaskContrast", 1.0, 0.0],
+    "mask_edge_softness": ["s", "MaskEdgeSoftness", 1.0, 1.0],
+    "normal_scale": ["v2", "NormalMapScaleU", "NormalMapScaleV"],
+    "normal_pan": ["v2", "NormalMapPanU", "NormalMapPanV"],
+    "fps": ["s", "FPS", 1.0, 12.0],
+    "has_camera_depth_fade": ["sw", "HasCameraDepthFade", false],
+    "has_depth_fade": ["sw", "HasDepthFade", false],
+    "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 100.0],
+    "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+    "pixel_depth_fade": ["s", "PixelDepthFade", 0.01, 50.0]
+  },
+  "notes": "Spellbreak (Proletariat) Erode_DisortTexture01_FxM: 6 instances, all BLEND_Translucent/MSM_Unlit/one-sided; 30 emitters (sprites: Villainous dark-magic Core Dark/Core Hot/Bits, AegisWarden Core Hot, MysticOrbs + UnderworldTitan spirit cores, ShrineB_Earth Earthpulse; meshes: capture-zone Cylinder Lines). SOURCE: MaskTexture (Coordinates connected), DistortionNormalMap (TextureObject), MaskScaleU/V, MaskBrightness, MaskContrast (root default 0, not serialised), MaskEdgeSoftness, NormalMapScaleU/V, NormalMapPanU/V, FPS, PixelDepthFade, CameraFadeOffset/Length (cm -> m), switches HasCameraDepthFade/HasDepthFade, DynamicParameter [Opacity, Distortion Strength, Param3, Param4] (every emitter uses slot 0 Opacity, slot 1 Distortion Strength 0.025-0.1), functions Luos_Mask_Distorter_FPS ('Distorts/Refracts the Texture'; body keeps TextureSample + Add + FPS), CheapContrast, MF_TransluscentToonErosion ('Erodes alpha mask instead of fade out.'), MF_DepthFadeAndCameraDepthFade. TEXTURES (viewed): grey masks (LumpyGlow01/02 blobs, EarthShake1 crescents, ControlRing_Lines01 streaks), BC5 normal maps (T-f_Puddle_N, tilingcrystal). AUTHORED: normal-map UV offset (rg*2-1)*dyn1 added to TexCoord0*MaskScale, normal sampled at TexCoord0*NormalMapScale + Pan*floor(t*FPS)/FPS; mask*MaskBrightness -> CheapContrast -> smoothstep(1-a, 1-a+MaskEdgeSoftness) toon erosion (alpha clamped); opacity *= dyn0 Opacity and the switch-gated fades; emissive = particle colour * mask. vs generic shader: it skipped the distortion entirely (no scalar 'Distortion Strength'), used a fixed 0.1 edge instead of MaskEdgeSoftness, unstepped pan and ungated fades. KNOWN LIMIT: LumpyGlow01_FxT is SRGB=false (TC_Masks) but the family decodes all masks as sRGB (per-texture flag unavailable to families). LinearGradient (MaterialFunctionInfos only, no call shell) and RefractionDepthBias not reproduced. Capture-ring lines use CameraFadeOffset 15 m + Length 5 m with HasCameraDepthFade on, so they are invisible closer than 15 m (correct UE behaviour, also why the lab camera shows nothing)."
+}

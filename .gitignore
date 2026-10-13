@@ -7,3 +7,20 @@ __pycache__/
 *.import-*
 # Raw AGLS extraction (licensed for Unreal Engine use; its raw files must not be shared)
 AGLS_extracted/
+# Local balance logs, source snapshots and reproducibility manifests
+/artifacts/tidebreak_balance/
+
+# Local gameplay recordings and generated review evidence
+/artifacts/
+*.mp4
+*.gif
+
+# Temporary local animation diagnostics
+/tests/anim/_tmp_*
+
+# Local reference extraction and verified full-client backup
+/Spellbreak_Reference_Extracts/
+
+# Third-party Unreal Marketplace pack files found inside the Spellbreak client: not covered by the Spellbreak licence note,
+# kept out of the shared repository (assets/fx/spellbreak/SOURCE.md). One dormant water effect (P_Frozen_Explosion) uses them.
+/assets/fx/spellbreak/assets/MarketplaceAssets/

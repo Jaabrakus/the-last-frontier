@@ -6,6 +6,9 @@ shader_type spatial;
 //   mode 1  lit: a ball under a cel sun, lit side, mid and shade (dust, smoke, steam, frost)
 //   mode 2  drop: a droplet, lit, with a hard highlight (water spray)
 // The ramp's colour tints it.
+// Round 4 (LOOKS): thinned near the camera (fx_common near_cut); `occl` (instance: a struck body's middle and radius, w 0
+// none) draws the puffs between the camera and that body at `half` (a screen-door), so a hit's burst never hides who was
+// struck.
 render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled, skip_vertex_transform;
 
 #include "res://shaders/bend_fx/fx_common.gdshaderinc"
@@ -22,8 +25,11 @@ uniform float glow = 1.0;
 uniform float wobble = 0.45;
 uniform float nfreq = 0.55;
 uniform float stretch = 1.0;
+uniform float half_k = 0.5;
+instance uniform vec4 occl = vec4(0.0);
 
 varying float v_seed;
+varying float v_half;
 
 void vertex() {
 	v_seed = float(INSTANCE_ID) * 0.754877 + INSTANCE_CUSTOM.x * 0.1;
@@ -33,11 +39,26 @@ void vertex() {
 	vec2 q = VERTEX.xy * vec2(1.0, stretch) * s;
 	q = vec2(q.x * cos(an) - q.y * sin(an), q.x * sin(an) + q.y * cos(an));
 	VERTEX = c + vec3(q, 0.0);
+	v_half = 0.0;
+	if (occl.w > 0.0) {
+		// (this puff between the camera and the struck body: along the camera's line to it, nearer, and within its width)
+		vec3 cam = CAMERA_POSITION_WORLD;
+		vec3 pc = MODEL_MATRIX[3].xyz;
+		vec3 cb = occl.xyz - cam;
+		float lb = max(length(cb), 1e-3);
+		vec3 dir = cb / lb;
+		float al = dot(pc - cam, dir);
+		float perp = length((pc - cam) - dir * al);
+		v_half = (al < lb - occl.w * 0.3 && perp < occl.w + s * 0.5) ? 1.0 : 0.0;
+	}
 	POSITION = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
 	NORMAL = vec3(0.0, 0.0, 1.0);
 }
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy) || (v_half > 0.5 && dither_cut(half_k, FRAGCOORD.xy))) {
+		discard;
+	}
 	vec2 p = UV * 2.0 - 1.0;
 	float r = length(p);
 	float n = texture(noise, UV * nfreq + vec2(v_seed, v_seed * 1.73)).r;

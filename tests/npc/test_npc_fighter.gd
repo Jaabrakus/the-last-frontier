@@ -25,12 +25,16 @@ extends SceneTree
 ##   cover    a crate's cover is on its far side from the threat, never in it
 ##   lost     a marine in a fight whose foe gets 200 m away out of his sight loses him and, CALM_S on, calms down
 ##   level    a level's hostility changes and kill counts go with it
+##   ring     the % ring's gate (round 3, smash_r3 spec §4.9): a militiaman with a RingMoves moves only through it (his go()
+##            order on his pad: the ring's 5 m/s run; jump() the pad's Space: the ring's 2.0 m jump at its gravity 20; his
+##            _move never runs); the RingMoves taken away, he walks and jumps as before (GRAVITY 18)
 ## Ends with "NPC FIGHTER TEST PASSED (<n> checks)" or "NPC FIGHTER TEST FAILED (<f> of <n>)".
 const LANE_X := -1.25
 var checks := 0
 var fails: Array[String] = []
 ## The sections in order; each marks itself done at its end (one stopped by a script error is a failure, not a skip).
-const SECTIONS := ["notice", "hit", "axe", "attack", "melee", "chase", "heard", "E", "dead", "fight", "cover", "lost", "level"]
+const SECTIONS := ["notice", "hit", "axe", "attack", "melee", "chase", "heard", "E", "dead", "fight", "cover", "lost", "level",
+		"ring"]
 var done: Array[String] = []
 var player: FrontierPlayer
 
@@ -133,6 +137,8 @@ func _run() -> void:
 	await _lose_contact()
 	await _clear_all()
 	await _level_statics()
+	await _clear_all()
+	await _ring_gate()
 	_end()
 
 
@@ -716,6 +722,58 @@ func _level_statics() -> void:
 	_expect(not before and on and gone and back,
 			"a story's hostility turn and the kills counted go with the level (and a save's restore() gives the turn back)")
 	done.append("level")
+
+
+# ---------------------------------------------------------------- ring (the % ring's gate on the fighter's _move)
+func _ring_gate() -> void:
+	var at := _ground(LANE_X + 4.0, -20.0)
+	var sq := NpcSquad.spawn(current_scene, "militia", 1, at, {"seed": 81, "face": at + Vector3(0.0, 0.0, -5.0)})
+	await _until(func() -> bool: return not sq.spawning(), 1.0)
+	var f: NpcFighter = sq.members[0] if not sq.members.is_empty() else null
+	_expect(f != null and f.ring_moves == null, "a militiaman, no RingMoves")
+	if f == null:
+		return
+	f._think_t = 1e9
+	f.held = false
+	await _secs(0.5)
+	var rm := RingMoves.install(f)
+	await _ticks(2)
+	_expect(f.ring_moves == rm and rm != null, "RingMoves installed sets his ring_moves (the gate)")
+	var a := f.global_position
+	f.go(a + Vector3(0.0, 0.0, -30.0), NpcFighter.RUN_SPEED, 0.5, true)
+	await _secs(1.0)
+	var hs := Vector2(f.velocity.x, f.velocity.z).length()
+	var pad_ok := f.pad.move.length() > 0.9
+	f.halt()
+	await _secs(0.5)
+	_expect(pad_ok and absf(hs - RingMoves.num("physics", "run", 5.0)) < 0.2 and f.pad.move == Vector3.ZERO,
+			"go() writes his pad and RingMoves runs him at the ring's run (%.2f m/s); halt() clears it" % hs)
+	await _until(func() -> bool: return f.is_on_floor(), 2.0)
+	var y0 := f.global_position.y
+	var jumped := f.jump(5.0)
+	var top := y0
+	for i in 240:
+		await physics_frame
+		top = maxf(top, f.global_position.y)
+		if i > 10 and f.is_on_floor():
+			break
+	_expect(jumped and f._jump_v == 0.0 and absf(top - y0 - 2.0) < 0.06,
+			"jump() is his pad's Space: the ring's full jump, %.3f m (2.0 at gravity 20), not his own" % (top - y0))
+	rm.queue_free()
+	await _ticks(3)
+	_expect(f.ring_moves == null, "RingMoves taken away: his ring_moves null again")
+	await _until(func() -> bool: return f.is_on_floor(), 2.0)
+	await _secs(0.3)
+	y0 = f.global_position.y
+	jumped = f.jump(5.0)
+	top = y0
+	for i in 240:
+		await physics_frame
+		top = maxf(top, f.global_position.y)
+		if i > 10 and f.is_on_floor():
+			break
+	_expect(jumped and absf(top - y0 - 25.0 / 36.0) < 0.06, "without it, his own jump on GRAVITY 18 again (%.3f m)" % (top - y0))
+	done.append("ring")
 
 
 func _end() -> void:

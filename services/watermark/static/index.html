@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tidebreak Mark — local video watermarking</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header class="top"><a class="brand" href="/" aria-label="Tidebreak Mark home"><span class="brand-icon" aria-hidden="true">≋</span> Tidebreak <strong>Mark</strong></a><span class="local"><i aria-hidden="true"></i> Runs on your computer</span></header>
+<main>
+<section class="intro"><p class="eyebrow">YOUR VIDEO. YOUR INSTRUCTIONS.</p><h1>Put your rules<br>in the pixels.</h1><p class="lead">Add hidden instructions against copying, redistribution and AI use. A compatible reader can recover them from the video. No account. No subscription. No external upload.</p></section>
+<div class="workspace">
+<section class="card composer" aria-labelledby="tool-title">
+<div class="tabs" role="tablist" aria-label="Choose a tool"><button role="tab" id="mark-tab" aria-controls="mark-panel" aria-selected="true" tabindex="0">Mark a video</button><button role="tab" id="check-tab" aria-controls="check-panel" aria-selected="false" tabindex="-1">Check a video</button></div>
+<div id="engine-status" class="engine" role="status">Checking the local processor…</div>
+<div id="mark-panel" role="tabpanel" aria-labelledby="mark-tab">
+<h2 id="tool-title">Add a hidden “do not use”</h2><p class="muted">Your image stays free of visible text or logos. This app refuses to re-mark a video with an existing do-not-copy instruction.</p>
+<form id="mark-form">
+<label class="dropzone" for="mark-file"><span class="upload-icon" aria-hidden="true">↑</span><strong>Choose a video</strong><span id="mark-file-name">or drop it here</span><span class="file-help">MP4, MOV or WebM · up to 100 MiB · 60 seconds</span><input type="file" id="mark-file" name="video" accept="video/mp4,video/quicktime,video/webm,.mkv" required></label>
+<p class="callout"><strong>Embedded automatically: do not copy or use with AI.</strong><br>No copying, redistribution, AI training or AI use. These instructions stay the same when you edit the notice below.</p>
+<label for="notice">Additional notice <span class="required">Required</span></label><input id="notice" name="notice" maxlength="160" required value="Do not copy, redistribute, train AI on, or use this content with AI." aria-describedby="notice-help"><small id="notice-help">This editable text is saved in metadata and the manifest. The four instructions above are also encoded in the pixels.</small>
+<label for="creator">Creator or studio <span class="optional">Optional</span></label><input id="creator" name="creator" maxlength="80" placeholder="The name you want credited" autocomplete="organization"><small>Names and notices are supplied by you; this tool does not verify ownership.</small>
+<button class="primary" type="submit" id="mark-submit" disabled>Mark my video <span aria-hidden="true">↗</span></button>
+</form></div>
+<div id="check-panel" role="tabpanel" aria-labelledby="check-tab" hidden>
+<h2>Read the hidden instructions</h2><p class="muted">Recover supported restrictions from a video, with or without its saved ID. No recovered instructions means permission is unknown.</p>
+<form id="check-form">
+<label class="dropzone" for="check-file"><span class="upload-icon" aria-hidden="true">⌕</span><strong>Choose a video to check</strong><span id="check-file-name">or drop it here</span><span class="file-help">Same video limits apply</span><input type="file" id="check-file" name="video" accept="video/mp4,video/quicktime,video/webm,.mkv" required></label>
+<label for="asset-id">Asset ID <span class="optional">Optional</span></label><input id="asset-id" name="asset_id" placeholder="Paste the UUID from your saved manifest" spellcheck="false" autocomplete="off" aria-describedby="id-help"><small id="id-help">Leave this blank to look for any supported pixel identifier.</small>
+<button class="primary" type="submit" id="check-submit" disabled>Check this video <span aria-hidden="true">↗</span></button>
+</form></div>
+</section>
+<aside class="side">
+<section class="card result" id="result" aria-labelledby="result-title" aria-busy="false">
+<p class="eyebrow">YOUR WORKSPACE</p><h2 id="result-title">Your finished video lands here</h2><p id="result-description" class="muted">Choose a video and add your notice. We'll handle one job at a time, right on this computer.</p>
+<div id="progress-area" hidden><progress id="progress" aria-label="Video upload and processing"></progress><p id="phase" role="status" aria-live="polite"></p><p class="muted small">Processing can take a few minutes. You can keep this page open while it works.</p></div>
+<p id="error" class="error" role="alert" hidden></p>
+<div id="finished" hidden><video id="preview" controls playsinline preload="metadata" hidden aria-label="Preview your marked video"></video><section id="policy-result" class="callout" aria-labelledby="policy-title"><strong id="policy-title"></strong><p id="policy-instruction"></p><p id="policy-context" class="small"></p></section><p id="verdict" class="verdict" hidden></p><label for="result-id">Asset ID</label><div class="copy-row"><input id="result-id" readonly><button id="copy-id" class="secondary" type="button">Copy</button></div><div class="downloads" id="downloads"></div><p id="manifest-reminder" class="callout" hidden><strong>Keep the manifest with your video.</strong> The restrictions are in the pixels; this record adds your editable notice, creator name and file hashes. There is no permanent lookup registry.</p><details><summary>View the processing report</summary><pre id="report"></pre></details><button id="delete-job" class="text-button" type="button">Remove these local files now</button><p id="expiry" class="small muted"></p></div>
+<div class="empty-art" id="empty-art" aria-hidden="true"><div class="frame"><span>▶</span><i></i><i></i><i></i><i></i></div><span class="seal">ID</span></div>
+</section>
+<section class="note"><span class="note-number" aria-hidden="true">01 / 02</span><h3>A readable instruction.</h3><p>The pixels carry four restrictions and an asset ID. A connected app can check them and refuse copying or AI processing.</p><p>Other apps must integrate a compatible reader to act on this signal. It cannot force every AI to comply, prevent copying or prove ownership. A damaged or missing mark is never permission.</p></section>
+</aside>
+</div>
+<footer><span>Free local prototype · Video today, more asset types later.</span><span>Sources are removed after processing. Job files expire after 24 hours.</span></footer>
+</main>
+</body></html>

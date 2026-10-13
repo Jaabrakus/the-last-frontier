@@ -74,12 +74,9 @@ static func body_info() -> Dictionary:
 	return load_json(BODY_JSON)
 
 
-## Eye colours by name: the body's (body.json "eyes") and the world's own (the world peoples' silver, ice, keel gold ...:
-## CharacterPeoples.world_eye_colors).
+## Eye colours by name: the body's (body.json "eyes").
 static func eye_colors() -> Dictionary:
-	var out: Dictionary = (body_info().get("eyes", {}) as Dictionary).duplicate()
-	out.merge(CharacterPeoples.world_eye_colors())
-	return out
+	return (body_info().get("eyes", {}) as Dictionary).duplicate()
 
 
 static func hair_info(style: String) -> Dictionary:

@@ -10,7 +10,8 @@ extends SceneTree
 ##   its bolts    a bolt from the bot's chest does not strike the bot's own hit parts
 ##   return       Air Redirect's "redirect" (a return zone) on the player sends the bot's fire bolt back at the bot
 ##   catch        Catch's catch zone on the player takes the bot's stone disc and pebbles (stone bolts) and holds a stone; the
-##                player's Earth Shove (push) then sends it back at the bot
+##                player's 2 (earth_shove push: the Fissure since 2026-10-10, which throws a held stone) then sends it back at
+##                the bot
 ##   tornado      a tornado over a raised deck (a StaticBody3D 2 m up) goes along the deck, not the terrain under it
 ##   near         whom a bend reaches finds the player through his group "player" (not by the scene's "Player" name)
 ##   spray        Water Jet's spray (put_out) puts out a fire wall it is cast over
@@ -70,8 +71,8 @@ func _stage(d := 9.0) -> void:
 	n.health = n.health_max
 	n.action = ""
 	n.rotation.y = PI / 2.0                     # (facing -x: the player)
-	Bending.of(n).water = 100.0
-	Bending.of(p).water = 100.0
+	Bending.of(n)                         # (its Bending node made; the water meter retired 2026-10-06)
+	Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
 
 
 func _clear() -> void:
@@ -182,6 +183,14 @@ func _every_move() -> void:
 			for id: String in pair:
 				if not ids.has(id):
 					ids.append(id)
+		for extra: Dictionary in [Bending.jab(el), Bending.guard(el)]:   # (round 2: the jab on LMB, the guard on E)
+			if not ids.has(String(extra.get("id", ""))):
+				ids.append(String(extra.get("id", "")))
+	var want := 0
+	for id in ids:
+		for mode: String in SwayCaster.modes_of(id):
+			if not ((SwayMoves.move(id).get("bend", {}) as Dictionary).get(mode, {}) as Dictionary).is_empty():
+				want += 1
 	for id in ids:
 		for mode: String in SwayCaster.modes_of(id):
 			var spec: Dictionary = (SwayMoves.move(id).get("bend", {}) as Dictionary).get(mode, {})
@@ -197,7 +206,7 @@ func _every_move() -> void:
 				await _secs(0.35)
 			bc.modes[id] = mode
 			var why := await _bot_cast(id, mode, spec)
-			if String(spec.do) == "dash" and id == "fire_jets" and mode == "dash":
+			if String(spec.do) == "dash" and id == "fire_jets" and mode == SwayCaster.modes_of("fire_jets")[0]:
 				dash_m = float(BendEffects.last_of(bc).get("moved", 0.0))
 			count += 1
 			if why != "":
@@ -208,7 +217,8 @@ func _every_move() -> void:
 	p.remove_meta(&"bend_anchor")
 	print("  (the old modes, with T1b: %s)" % ", ".join(skipped))
 	var patched := String(BendEffects.last_of(bc).get("move", "")) == "patch" or ids.has("patch")
-	_expect(count >= 85 and skipped.size() <= 8 and patched and bad.is_empty(), "the bot cast every bend (move, mode) of the four elements and Patch (%d)%s" % [count,
+	_expect(count == want and count >= 25 and skipped.size() <= 8 and patched and bad.is_empty(),
+			"the bot cast every bend (move, mode) of the four kits, their jabs and guards, and Patch (%d of %d)%s" % [count, want,
 			"" if bad.is_empty() else ": " + ", ".join(bad)])
 	_expect(dash_m >= 2.0, "a bot's Fire Jets dash carries it %.1f m (at least 2)" % dash_m)
 
@@ -222,7 +232,8 @@ func _bot_cast(id: String, mode: String, spec: Dictionary) -> String:
 	var rec := BendEffects.last_of(bc)
 	if String(rec.get("do", "")) != dn:
 		return "not cast (%s)" % rec.get("do", "-")
-	var shoved := rec.get("target") != null                  # (now: a shoved stone is gone after, a bolt)
+	# (now: a shoved stone is gone after, a bolt; round 2's empty case kicks one up and pushes it: its stone)
+	var shoved := rec.get("target") != null or rec.get("stone") != null
 	var whys: Array[String] = []
 	for b in get_nodes_in_group(BendBolt.GROUP):
 		if (b as BendBolt).caster == n:

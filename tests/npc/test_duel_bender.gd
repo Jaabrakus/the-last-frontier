@@ -3,8 +3,8 @@ extends SceneTree
 ## sport's bots casting the player's own moves): no gun and no axe, of the ring's other side (DuelMode.RING_FACTION), called by
 ## its element's competitor name (MatchSetup.competitor: no show word on the screen), of DuelMode.foe_element (earth unless
 ## foe= says), in its element's dress and with no words over its head; at the player in the open it casts its element's moves
-## (several of them) and they strike him; struck, it loses the lock it was filling (any hurt, as the player's); the old
-## forcing (_next["spike"]) still has it throw a stone spike first.
+## (several of them) and they strike him; struck, the lock it was filling is pushed back and kept (any hurt, as the
+## player's: round 2, spec 2.3); the old forcing (_next["spike"]) still has it throw a stone spike first.
 ##   Godot --headless --fixed-fps 60 --path . -s tests/npc/test_duel_bender.gd -- mode=duel [foe=water]
 ## Last line "DUEL BENDER PASSED" or "DUEL BENDER FAILED"; exit 0 only on a pass; the watchdog (LIMIT_S) fails it first.
 
@@ -96,15 +96,20 @@ func _go() -> void:
 	_expect(t < 25.0, "it casts its element's moves at him, several of them, and they strike him (%d distinct, %d hits, %.1f s)" % [b.distinct(), b.hits, t])
 	var labels := n.find_children("*", "Label3D", true, false)
 	_expect(labels.is_empty() and n.last_bark == "", "no words over its head (%d Label3D, '%s')" % [labels.size(), n.last_bark])
-	# struck in a lock: lost
+	# struck in a lock: pushed back, kept (round 2, spec 2.3: a hit sets a lock back by what it cost, never wipes it)
 	await _until(func() -> bool: return b.casting == "", 3.0, keep_alive)
 	var l0 := b.lost
-	b.begin("earth_wall", "column")
-	await _secs(0.1)
+	var s0b := b.setbacks
+	b.begin("earth_wall", "wall")
+	await _secs(0.4)
 	var locking := b.casting == "earth_wall"
+	var before := b.lock_t
 	n.apply_hit(2.0, NpcSenses.chest_of(n), -way, p, "body")
+	var after := b.lock_t
 	await _secs(0.05)
-	_expect(locking and b.lost == l0 + 1 and b.casting == "" and b.lost_why == "hit", "struck in its lock, it loses the lock (%s, lost %d)" % [b.lost_why, b.lost])
+	_expect(locking and b.lost == l0 and b.casting == "earth_wall" and b.setbacks == s0b + 1
+			and before - after >= minf(NpcBending.rule("hit_setback_min_s"), before) - 0.01,
+			"struck in its lock, the lock is pushed back %.2f s and kept (%s, lost %d)" % [before - after, b.casting, b.lost])
 	# the old forcing (an earth bot): a stone spike thrown first
 	if el == "earth":
 		var s0 := b.spikes

@@ -3,19 +3,21 @@ extends SceneTree
 ## _switch_lock, Hotbar's ready_skill / step_skill, RadialWheel, BendStrip, the menus, F1 and HowTo; the owner, 2026-10-05:
 ## "still difficult for a human to switch spells, there's a lot of things going on" -> all three as options), in Tidebreak's
 ## ring (scenes/ring.tscn, earth against earth, the foe held), the test's own settings file (GameSettings.path):
-##   keys       the default with nothing kept: the strip's five key columns as ever; F1 as ever
-##   direction  forward / back / side (SwayCaster.dir_override, and the real keys once) cast each element's attack,
-##              defence and dodge at their own variation (earth spike, catch, burrow-step; water whip, bubble, water skate;
-##              fire punch, parry, hop; air ball, shield, sidestep); none held: the readied key's move at its own
-##              variation; the key's variation never touched; a direction taken while a lock runs moves the lock to its
-##              move (lock_switched) and that is what is cast; the strip's four columns (W, S, A D, the key) and its line;
-##              F1's line
-##   radial     Tab (the action bend_wheel) opens the wheel of ten moves; no lock while it is open; pointing at Earth Grip and
-##              scrolling steps its form; letting go readies it on key 2 at that form; RMB casts it; a left click picks too
-##   simple     the bar's four moves: key 1 again and key 5 do nothing, the wheel steps the four; a key left on its other
-##              skill is turned back as the scheme comes in; the distance band picks the form at the release (near: boulder,
-##              far: spike), the real foe's distance too; the strip's four columns with their two forms
-##   switching  the ring's Esc menu steps the scheme mid-match (its row says so), the match goes on under it; the main
+##   keys       the default with nothing kept: the strip's five key columns ("1 · STRIKE" ...), each its key's first move;
+##              F1 as ever (round 2: the strip's and F1's words are KitWords', screens.json "kit", one help line a scheme)
+##   direction  (round 2: spec 6) forward / side (SwayCaster.dir_override, and the real keys once) cast key 1's first move
+##              and key 3's (earth Spike, Burrow; water Lash, Skate; fire Punch, Step; air Slice, Slip), back picks the
+##              wall (the pick; its cast is the walls' own); none held: the readied key's move at its own variation; the
+##              key's variation never touched; the direction is sampled at the press: one taken while the lock runs changes
+##              nothing (no lock_switched); the strip's line and F1's buttons line are the scheme's (KitWords.help_line,
+##              FrontierHUD.ARENA_KEYS)
+##   radial     Tab (the action bend_wheel) opens the wheel of the element's moves; no lock while it is open; pointing at
+##              Shove and letting go readies it on key 2; RMB casts it; a left click picks too; the strip keeps its columns
+##              (1-5 still ready their moves) and says how the wheel works
+##   first_moves (replaces simple) the bar's first moves only: key 3 again does not ready its other move (Lift), key 1
+##              again leaves Spike; no distance band: the cast is the first variation near or far
+##   switching  the ring's Esc menu steps the scheme mid-match (its "Other ways to pick moves" row says so), the match goes
+##              on under it; the main
 ##              menu's row is the one tests/ring/test_match_setup.gd and test_main_menu cover (here: its words)
 ##   kept       set_scheme writes GameSettings' match section of the test's own file; read back after reload_scheme
 ##   words      no show word in schemes.json, the how-to topics, the strip or the menus' lines
@@ -30,13 +32,17 @@ const LIMIT_S := 300.0
 const OWN_CFG := "user://schemes_test.cfg"
 const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
 		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?"]
-## Each element's direction moves as the owner asked them ([move, variation]).
+## Each element's direction moves (round 2's skills, spec 6: W key 1's first move, S its wall, A/D key 3's first: [move,
+## variation]).
 const DIR_WANT := {
-	"earth": {"forward": ["stone_form", "spike"], "back": ["stone_catch", "catch"], "side": ["earth_skate", "burrow"]},
-	"water": {"forward": ["water_whip", "whip"], "back": ["water_shield", "bubble"], "side": ["flow", "water_skate"]},
-	"fire": {"forward": ["fire_blast", "punch"], "back": ["fire_parry", "parry"], "side": ["footwork", "hop"]},
-	"air": {"forward": ["air_blast", "ball"], "back": ["air_shield", "shield"], "side": ["evade", "sidestep"]},
+	"earth": {"forward": ["stone_form", "spike"], "back": ["earth_wall", "wall"], "side": ["earth_skate", "burrow"]},
+	"water": {"forward": ["water_whip", "whip"], "back": ["water_shield", "ice_wall"], "side": ["flow", "skate"]},
+	"fire": {"forward": ["fire_blast", "punch"], "back": ["fire_wall", "wall"], "side": ["footwork", "step"]},
+	"air": {"forward": ["air_blast", "slice"], "back": ["air_wall", "wall"], "side": ["evade", "slip"]},
 }
+## The directions whose move is cast through by the player here (a wall's lock needs the deck at its place: the walls are the
+## data's own check, _words).
+const DIR_CAST := ["forward", "side"]
 
 var checks := 0
 var fails: Array[String] = []
@@ -83,6 +89,8 @@ func _initialize() -> void:
 	MatchSetup.incoming = true
 	MatchSetup.element = "earth"
 	MatchSetup.foes = ["earth"]
+	# (the merge: the % ring is the default, where key 3 acts at once; the schemes' readying is the classic ring's, pinned)
+	RingRules.rule_set_override = "classic"
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -212,6 +220,7 @@ func _end() -> void:
 	Input.action_release(&"aim")
 	Input.action_release(RadialWheel.ACTION)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
+	RingRules.rule_set_override = ""
 	GameSettings.path = GameSettings.PATH
 	MatchSetup.reload_scheme()
 	if fails.is_empty() and checks > 0:
@@ -233,8 +242,9 @@ func _keys() -> void:
 	var ok := true
 	for i in 5:
 		var col := strip.column(i)
-		ok = ok and not bool(col.hidden) and String(col.head) == str(i + 1) and String(col.id) == String(Bending.keys("earth")[i][0])
-	_expect(ok and (strip._cols[0].key as Label).text == "1", "the strip's five key columns as ever")
+		ok = ok and not bool(col.hidden) and String(col.head).begins_with(str(i + 1) + BendStrip.SEP) and String(col.id) == String(Bending.keys("earth")[i][0])
+	_expect(ok and (strip._cols[0].key as Label).text.begins_with("1" + BendStrip.SEP), "the strip's five key columns as ever (%s)"
+			% (strip._cols[0].key as Label).text)
 	_expect(not hud.help_text().contains(MatchSetup.scheme_text("f1", "direction")), "F1 as ever")
 
 
@@ -247,25 +257,18 @@ func _direction() -> void:
 	if c.readied_spell != "stone_form":
 		bar.select(0)
 		await _ticks(2)
-	c.set_mode("stone_form", "disc")
+	c.set_mode("stone_form", "cannonball")
 	await _ticks(4)
-	# the strip
+	# the strip's and F1's lines: schemes.json's
 	var strip := hud.bend_strip
-	var cols := [strip.column(0), strip.column(1), strip.column(2), strip.column(3), strip.column(4)]
-	_expect(String(cols[0].head) == "W" and String(cols[0].id) == "stone_form" and String(cols[0].sub) == "spike"
-			and String(cols[1].head) == "S" and String(cols[1].id) == "stone_catch" and String(cols[2].head) == "A D"
-			and String(cols[2].id) == "earth_skate" and String(cols[2].sub) == "burrow-step" and String(cols[3].id) == "stone_form"
-			and bool(cols[3].readied) and bool(cols[4].hidden) and not (strip._cols[4].box as Control).visible,
-			"the strip: W Stone Form (spike), S Catch, A D Earth Skate (burrow-step), the key's move lit (%s)" % [cols.map(
-			func(cl: Dictionary) -> String: return "%s:%s" % [cl.head, cl.id])])
-	_expect(strip.help_line().contains("W attack") and (strip._help as Label).text.contains("W attack"),
-			"the strip's line says how (%s)" % strip.help_line())
-	_expect(hud.help_text().contains("Let go of RMB holding W: attack"), "F1 says it")
+	var line := KitWords.strip_help("direction")      # (round 4, HUD: the strip's own one-line help)
+	_expect(line != "" and strip.help_line() == line and line.contains("W, A, S or D"), "the strip's line says how (%s)" % strip.help_line())
+	_expect(hud.help_text().contains(KitWords.keyed(String(FrontierHUD.ARENA_KEYS.direction))), "F1 says it")
 	# none: the key's move at its own variation
 	c.dir_override = ""
 	await _home_player()
 	var got := await _rmb_cast()
-	_expect(got == ["stone_form", "disc"], "no direction: the key's Stone Form (disc) (%s)" % [got])
+	_expect(got == ["stone_form", "cannonball"], "no direction: the key's Boulder (%s)" % [got])
 	# each element's three
 	for el: String in ["earth", "water", "fire", "air"]:
 		if el != p.arena_element:
@@ -278,6 +281,8 @@ func _direction() -> void:
 			await _home_player()
 			var want: Array = DIR_WANT[el][dir]
 			_expect(c.scheme_pick() == {"id": want[0], "mode": want[1]}, "%s %s: the pick is %s (%s)" % [el, dir, want, c.scheme_pick()])
+			if not dir in DIR_CAST:
+				continue
 			got = await _rmb_cast()
 			_expect(got == want, "%s %s: cast %s (%s)" % [el, dir, want, got])
 			await _secs(0.4)
@@ -290,34 +295,34 @@ func _direction() -> void:
 	if c.readied_spell != "stone_form":
 		bar.select(0)
 		await _ticks(2)
-	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "disc",
+	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "cannonball",
 			"the key's own variation untouched by the direction casts (%s)" % c.base_mode_of("stone_form"))
-	# the real keys: S held at the release
+	# the real keys: A held at the press
 	await _home_player()
-	Input.action_press(&"move_back")
+	Input.action_press(&"move_left")
 	await _ticks(3)
-	_expect(c.held_dir() == "back" and bool(hud.bend_strip.column(1).readied), "S held: back, its column lit")
+	_expect(c.held_dir() == "side", "A held: side")
 	got = await _rmb_cast()
-	Input.action_release(&"move_back")
-	_expect(got == ["stone_catch", "catch"], "S held (the key itself): Catch cast (%s)" % [got])
+	Input.action_release(&"move_left")
+	_expect(got == ["earth_skate", "burrow"], "A held (the key itself): Burrow cast (%s)" % [got])
 	await _secs(0.4)
-	# a direction taken while the lock runs: the lock moves to its move
+	# a direction taken while the lock runs changes nothing: sampled at the press (spec 6)
 	await _home_player()
 	c.dir_override = ""
 	casts.clear()
 	switched.clear()
 	Input.action_press(&"aim")
 	var on := await _until(func() -> bool: return c.state == SwayCaster.State.LOCKING, 1.0)
-	_expect(on < INF and c.move == "stone_form" and c.mode_of("stone_form") == "disc", "the lock begins on the key's move (disc)")
+	_expect(on < INF and c.move == "stone_form" and c.mode_of("stone_form") == "cannonball", "the lock begins on the key's move (Boulder)")
 	await _ticks(6)
-	c.dir_override = "back"
-	var sw := await _until(func() -> bool: return c.move == "stone_catch", 0.5)
-	_expect(sw < INF and switched.has("stone_catch") and c.state != SwayCaster.State.IDLE,
-			"S taken mid-lock: the lock moved to Catch (%s)" % [switched])
-	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 2.0)
+	c.dir_override = "forward"
+	await _ticks(12)
+	_expect(c.move == "stone_form" and switched.is_empty() and c.state != SwayCaster.State.IDLE,
+			"W taken mid-lock: the lock stays the Boulder's (%s, switched %s)" % [c.move, switched])
+	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
 	Input.action_release(&"aim")
 	await _until(func() -> bool: return not casts.is_empty(), 1.0)
-	_expect(not casts.is_empty() and casts[0] == ["stone_catch", "catch"], "let go: Catch is what is cast (%s)" % [casts])
+	_expect(not casts.is_empty() and casts[0] == ["stone_form", "cannonball"], "let go: the Boulder is what is cast (%s)" % [casts])
 	c.dir_override = null
 	await _secs(0.5)
 
@@ -330,32 +335,32 @@ func _radial() -> void:
 	_expect(w != null and w.can_open() and InputMap.has_action(RadialWheel.ACTION)
 			and SwayCaster.key_name(RadialWheel.ACTION) == "Tab", "the radial scheme: the wheel on Tab")
 	var strip := hud.bend_strip
-	_expect(bool(strip.column(0).hidden) and not (strip._cols[0].box as Control).visible and strip.ready_line() != ""
-			and strip.help_line().contains("hold Tab: the wheel"), "the strip: no key columns, the ready line and the wheel's line")
+	_expect(not bool(strip.column(0).hidden) and strip.ready_line() != "" and strip.help_line() == KitWords.strip_help("radial")
+			and strip.help_line().contains("Hold Tab"), "the strip: its key columns, the ready line and the wheel's line (%s)" % strip.help_line())
 	Input.action_press(RadialWheel.ACTION)
 	var t := await _until(func() -> bool: return w.is_open, 0.5)
-	_expect(t < INF and w.items.size() == 10 and String(w.items[3].id) == "earth_grip" and String(w.items[9].id) == "patch",
-			"Tab held: the wheel of ten (%d)" % w.items.size())
+	var ids: Array = w.items.map(func(it: Dictionary) -> String: return String(it.id))
+	var shove := ids.find("earth_shove")
+	_expect(t < INF and shove >= 0 and "patch" in ids and not "earth_grip" in ids and not "rock_jab" in ids,
+			"Tab held: the wheel of earth's moves, none cut (%s)" % [ids])
 	Input.action_press(&"aim")
 	await _ticks(6)
 	_expect(c.state == SwayCaster.State.IDLE, "no lock while it is open")
 	Input.action_release(&"aim")
-	# the mouse toward Earth Grip (a motion event), the wheel steps its form
+	# the mouse toward Shove (a motion event)
 	var mm := InputEventMouseMotion.new()
-	mm.relative = w.dir_of(3) * 120.0
+	mm.relative = w.dir_of(maxi(shove, 0)) * 120.0
 	Input.parse_input_event(mm)
 	await _ticks(2)
-	_expect(w.sel == 3, "the mouse moved toward Earth Grip picks it (%d)" % w.sel)
-	var was := c.base_mode_of("earth_grip")
-	var nxt := w.step_form(1)
-	_expect(nxt != "" and nxt != was and c.base_mode_of("earth_grip") == nxt, "the wheel steps its form (%s -> %s)" % [was, nxt])
+	_expect(w.sel == shove, "the mouse moved toward Shove picks it (%d)" % w.sel)
+	var md := c.base_mode_of("earth_shove")
 	Input.action_release(RadialWheel.ACTION)
 	await _ticks(3)
-	_expect(not w.is_open and c.readied_spell == "earth_grip" and p.hotbar.slot_of(Hotbar.SPELL, "earth_grip") == 1
-			and p.hotbar.spell == "earth_grip", "let go: Earth Grip readied on key 2 (%s)" % c.readied_spell)
+	_expect(not w.is_open and c.readied_spell == "earth_shove" and p.hotbar.slot_of(Hotbar.SPELL, "earth_shove") == 1
+			and p.hotbar.spell == "earth_shove", "let go: Shove readied on key 2 (%s)" % c.readied_spell)
 	await _home_player()
 	var got := await _rmb_cast()
-	_expect(got == ["earth_grip", nxt], "RMB casts it at that form (%s)" % [got])
+	_expect(got == ["earth_shove", md], "RMB casts it (%s)" % [got])
 	# a left click picks too (and starts no quick lock)
 	w.open()
 	w.pick_toward(w.dir_of(0) * 120.0)
@@ -374,54 +379,42 @@ func _radial() -> void:
 	await _ticks(4)
 
 
-# ---------------------------------------------------------------- simple
+# ---------------------------------------------------------------- first moves only (it replaces simple)
 func _simple() -> void:
 	MatchSetup.set_scheme("keys")
 	await _ticks(2)
 	var bar := p.hotbar
-	bar.take(0)
+	bar.select(2)
 	await _ticks(2)
-	if c.readied_spell != "rock_jab":
-		bar.select(0)                            # (the keys scheme: key 1 again, its other skill)
-		await _ticks(2)
-	_expect(c.readied_spell == "rock_jab", "keys: key 1 again readies Rock Jab")
-	MatchSetup.set_scheme("simple")
+	bar.select(2)                                # (the keys scheme: key 3 tapped twice, its other move)
+	await _ticks(2)
+	_expect(c.readied_spell == "pillar", "keys: key 3 tapped twice readies Lift (%s)" % c.readied_spell)
+	await _ticks(30)
+	MatchSetup.set_scheme("first_moves")
 	await _ticks(3)
-	_expect(c.scheme() == "simple" and bar.entry(0).get("id", "") == "stone_form" and c.readied_spell == "stone_form",
-			"simple: key 1 turned back to Stone Form, readied (%s)" % c.readied_spell)
+	_expect(c.scheme() == "first_moves" and MatchSetup.scheme_label() == "First moves only", "the first-moves scheme set (%s)" % c.scheme())
+	bar.select(2)
+	await _ticks(2)
+	bar.select(2)
+	await _ticks(2)
+	_expect(c.readied_spell == "earth_skate" and bar.entry(2).get("id", "") == "earth_skate",
+			"first moves: key 3 tapped twice stays on Burrow (%s)" % c.readied_spell)
+	await _ticks(30)
 	bar.select(0)
 	await _ticks(2)
-	_expect(c.readied_spell == "stone_form" and bar.entry(0).get("id", "") == "stone_form", "key 1 again: nothing")
-	bar.select(4)
+	bar.select(0)
 	await _ticks(2)
-	_expect(c.readied_spell == "stone_form", "key 5: nothing (four moves)")
-	await _action(&"weapon_next")
-	_expect(c.readied_spell == "earth_wall", "the wheel: the next move, Earth Wall (%s)" % c.readied_spell)
-	await _action(&"weapon_prev")
-	await _action(&"weapon_prev")
-	_expect(c.readied_spell == "earth_shove", "and back round: Earth Shove (%s)" % c.readied_spell)
-	await _action(&"weapon_next")
-	_expect(c.readied_spell == "stone_form", "and on to Stone Form")
-	var strip := hud.bend_strip
-	await _ticks(3)
-	_expect(String(strip.column(0).sub) == "boulder / spike" and bool(strip.column(4).hidden)
-			and (strip.column(0).modes as Array).is_empty() and strip.ready_line().begins_with("1 · Stone Form · near boulder · far spike"),
-			"the strip: four columns, their two forms, no pips (%s; %s)" % [strip.column(0).sub, strip.ready_line()])
-	_expect(hud.help_text().contains("how near the opponent is picks the form"), "F1 says it")
-	# the band picks the form at the release
-	for pair: Array in [[3.0, "cannonball"], [20.0, "spike"]]:
-		c.dist_override = pair[0]
+	_expect(c.readied_spell == "stone_form" and c.base_mode_of("stone_form") == "spike",
+			"first moves: key 1, tapped once or twice, is Spike (%s)" % c.base_mode_of("stone_form"))
+	_expect(hud.help_text().contains(KitWords.keyed(String(FrontierHUD.ARENA_KEYS.first_moves))), "F1 says it")
+	# no distance band: near or far, the first variation
+	for d: float in [3.0, 20.0]:
+		c.dist_override = d
 		await _home_player()
 		var got := await _rmb_cast()
-		_expect(got == ["stone_form", pair[1]], "the opponent %.0f m away: Stone Form (%s) (%s)" % [pair[0], pair[1], got])
+		_expect(got == ["stone_form", "spike"], "the opponent %.0f m away: Spike (%s)" % [d, got])
 		await _secs(0.3)
 	c.dist_override = null
-	var d := c.foe_distance()
-	var want := MatchSetup.simple_mode("earth", "stone_form", d)
-	await _home_player()
-	var got2 := await _rmb_cast()
-	_expect(d < INF and got2 == ["stone_form", want], "the real foe %.1f m away: %s (%s)" % [d, want, got2])
-	_expect(c.base_mode_of("stone_form") == "disc", "the key's variation untouched (%s)" % c.base_mode_of("stone_form"))
 
 
 # ---------------------------------------------------------------- switching mid-match, kept, words
@@ -437,7 +430,7 @@ func _switching(rm: RingMode) -> void:
 	var before := MatchSetup.scheme()
 	m.cycle_scheme()
 	var row := m._scheme.find_child("Text", true, false) as Label
-	_expect(MatchSetup.scheme() == MatchSetup.next_scheme(before) and MatchSetup.scheme() != before and row.text == MatchSetup.scheme_row() and m._note.text.contains(MatchSetup.scheme_label()),
+	_expect(MatchSetup.scheme() == MatchSetup.next_scheme(before) and MatchSetup.scheme() != before and row.text == KitWords.other_ways_row() and m._note.text.contains(MatchSetup.scheme_label()),
 			"the Esc menu steps the scheme: %s -> %s (\"%s\")" % [before, MatchSetup.scheme(), row.text])
 	m._controls()
 	var texts: Array = []
@@ -449,10 +442,10 @@ func _switching(rm: RingMode) -> void:
 	_expect(c.scheme() == MatchSetup.scheme() and rm.phase == phase, "the match goes on under it (%s, %s)" % [phase, rm.phase])
 	# direction mid-match from the menu: casts at once
 	MatchSetup.set_scheme("direction")
-	c.dir_override = "back"
+	c.dir_override = "forward"
 	await _home_player()
 	var got := await _rmb_cast()
-	_expect(got == ["stone_catch", "catch"], "switched mid-match to direction: back casts Catch (%s)" % [got])
+	_expect(got == ["stone_form", "spike"], "switched mid-match to direction: forward casts Spike (%s)" % [got])
 	c.dir_override = null
 
 
@@ -490,13 +483,12 @@ func _words() -> void:
 	for el: String in Bending.ELEMENTS:
 		for dir: String in MatchSetup.DIRS:
 			ok = ok and MatchSetup.direction_move(el, dir) == {"id": DIR_WANT[el][dir][0], "mode": DIR_WANT[el][dir][1]}
-		var four := MatchSetup.simple_skills(el)
+		var four := MatchSetup.first_moves(el)
 		ok = ok and four.size() == 4
 		for i in four.size():
 			var e: Dictionary = four[i]
-			ok = ok and String(e.id) == String(Bending.keys(el)[i][0]) and String(e.near) in SwayCaster.modes_of(String(e.id)) \
-					and String(e.far) in SwayCaster.modes_of(String(e.id)) and String(e.near) != String(e.far)
-	_expect(ok, "the data: every element's directions as asked, its simple four the first skills of 1-4, two real forms each")
+			ok = ok and String(e.id) == String(Bending.keys(el)[i][0]) and String(e.mode) == String(SwayCaster.modes_of(String(e.id))[0])
+	_expect(ok, "the data: every element's directions as asked, its four first moves the first of keys 1-4 at their first variation")
 
 
 # ---------------------------------------------------------------- the duel
@@ -523,8 +515,8 @@ func _run_duel() -> void:
 	var got := await _rmb_cast()
 	_expect(got == ["stone_form", "spike"], "the duel, direction: forward casts Stone Form (spike) (%s)" % [got])
 	c.dir_override = null
-	_expect(hud.help_text().contains("Let go of RMB holding W: attack") and hud.quick_help.text.contains("W attack"),
-			"the duel's F1 and its LMB row's line say the scheme")
+	_expect(hud.help_text().contains(KitWords.help_line("direction")),
+			"the duel's F1 says the scheme (%s)" % KitWords.help_line("direction"))
 	# radial: Tab is the wheel's, not the character screen's
 	MatchSetup.set_scheme("radial")
 	await _ticks(2)
@@ -555,7 +547,7 @@ func _run_duel() -> void:
 		await process_frame
 		m.cycle_scheme()
 		var row := m._scheme.find_child("Text", true, false) as Label
-		_expect(MatchSetup.scheme() == "direction" and row.text == MatchSetup.scheme_row(),
+		_expect(MatchSetup.scheme() == "direction" and row.text == KitWords.other_ways_row(),
 				"the duel's Esc menu steps the scheme: keys -> direction (\"%s\")" % row.text)
 		m.close()
 	_end()

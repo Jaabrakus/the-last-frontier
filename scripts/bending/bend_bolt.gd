@@ -17,6 +17,39 @@ extends Node3D
 ## faces), "spinning" (a disc: its body turned about its own right axis at spin_rate rad/s, a wheel or a tomahawk end over
 ## end, tilted tilt_deg about its flight for a side-arm throw), "flick" (pebbles: each tumbling on its own axis). The
 ## water and fire that meet leave a short steam cloud (BendZone "steam": it hides whoever stands behind it from a bot).
+## ROUND 2 (skills_r2 spec §2.4, §2.8-2.10, §8.2):
+##   floor_wave   the Kick (spec do "floor_wave"): it runs along the deck under it (its origin on the ground), its width
+##                growing from FLOOR_W0 at the foot to width_m at its range, height_m tall; a body is struck when it stands in
+##                its width and its feet are no more than miss_above_m over the deck (a jump clears it); any wall stops it
+##                (worn as fire: half a hit on earth); its look a row of low flame tongues (BendLooks.floor_wave_body)
+##   weight       light < medium < heavy (spec weight; pebbles light, a boulder heavy, else medium): stone meets stone, the
+##                heavier goes on and equal ones both break; a GustLift's flying stone too (its stone's weight: weight_of)
+##   steer        a water bolt of a water fighter (Flowing: Bending.passive("water")) bends toward its caster's aim (no aim
+##                help) at steer_dps for steer_s after it leaves, steer_max_deg in all
+##   swing        a Turn on the beat (BendZone): it swings once round the guard's waist and leaves along his aim, his now
+##                (x the Turn's perfect_mult): it glides from where it was caught onto the swing's circle (SWING_IN of the
+##                swing), never a jump. The Air Lance turned (become "ice"): ice from the catch, its body drawn short on the
+##                circle (WRAP_Z, it wraps round him) and grown back to its length as it leaves with a burst and a cast's voice
+##   become       a kind made anew in flight (become: a Turn's catch of the Air Lance leaves as an ice lance): its body, trail
+##                and voice of the new kind, a fire it carried put out; its numbers kept (a Turn sends back what it took)
+##   under        a burrower (meta bend_under_until) is passed over by stone
+##   near miss    a bolt passing within near_m of an air fighter in a Slip (meta bend_slip_until) charges his Carried wind
+##   pull         a Pull wave: whom it strikes is knocked toward its caster
+##   the cost     lock_s: its move's lock time (BendEffects), what a hit costs the struck one's lock (BendStatus.hurt)
+##   guarded_by   the guards that halved it already (a late guard; a wind wall's push), never twice
+## A caster freed in flight (a bot gone between rounds): its strikes are no one's (_by), never an error.
+## ROUND 3 (smash_r3 spec §14.3; AIR): `info`, the hit info it carries (its spec's `_info`), its strike through
+## BendR3.deliver; a guard sending it back makes it a return (BendZone.return_info). In the % ring the floor wave runs on
+## floor_wave_lip_over_m past the deck's lip at the deck's height (a hanger's hands), and a caster's own held stone is not in
+## his bolts' way.
+## ROUND 4 (READ): in a ring or a duel it sounds in flight (BendSounds.flight from its launch, its kind's loop following it;
+## the floor wave's floor_run), let go at its end (its hit, the world, its range, a guard's catch: BendSounds.flight_end).
+## ONLINE (NetSpells, docs/tidebreak/ring_netcode.md "Ghost mode"): named by its cast's run (NetSpells.tag). On the host it
+## does all of the above and tells the others: an end that is not its own (its range, the lip, the world) as an "end" word,
+## any change a meeting made to it (a turn, a swing, a new kind, a fire it took, its numbers halved) as a "bolt" word with its
+## state (_net_check, each frame). On any other machine it is a GHOST: it flies and steers as ever, ends on the world and on a
+## raised wall as the host's will (seen at once), and passes bodies, stones, other bolts and zones untouched until the host's
+## word turns it (net_state) or ends it where the host's did (net_end: its ending's look there).
 
 signal struck(who: Node, dmg: float)
 signal ended(why: String)
@@ -61,9 +94,93 @@ var spin_a := 0.0
 ## The steam left where water and fire meet (BendZone "steam"): its radius and how long it hangs (s).
 const STEAM_R := 2.2
 const STEAM_S := 1.5
+## The skill tree's water talents here (BendLoadout.wears: the wearer's own; Classic never reaches them): Splashdown's puddle
+## where a Lash stops (on a body, a wall or the deck), Steamcraft's steam (its life the node's new:steam.life_s, drifting
+## STEAM_DRIFT_M toward the water's caster's aim over it), Mud Lash's smother (fire met is put out with no steam).
+const SPLASHDOWN := "water.lash.splashdown"
+const SPLASHDOWN_PUDDLE := {"radius_m": 1.2, "life_s": 6.0}
+## Stopped by a wall of a zone (BendZone.on_bolt: a Fire Wall or burning ground it put out, a Water Wall that drank it), not by
+## meeting another bolt in the air: Splashdown's "a wall" as a raised one is.
+var zone_wall := false
+const STEAMCRAFT := "water.lash.steamcraft"
+const STEAM_DRIFT_M := 3.0
+const MUD_LASH := "water.mud.lash"
+## Round 2 (see the header). A floor wave's width at the foot (m).
+const FLOOR_W0 := 1.2
+const WEIGHTS := {"light": 0, "medium": 1, "heavy": 2}
+var weight := "medium"
+var lock_s := -1.0
+var guarded_by: Array[int] = []
+## A caught stone's own numbers (a returned stone carries them: BendZone.return_stone), its rally so far.
+var stone_d := {}
+var rally := 0.0
+## The floor wave's: on, its width at range, its height, how high over the deck a body's feet may be and still be struck.
+var floor_wave := false
+var width_m := 2.2
+var height_m := 0.9
+var miss_above_m := 0.6
+## A Turn's swing (begin_swing): the part of it (0..1) over which a caught bolt glides onto the circle, and the circle's height
+## over the guard's feet (m).
+const SWING_IN := 0.25
+const SWING_WAIST_M := 1.0
+## A bolt turned in a Turn's swing (become): its body drawn this long on the circle (of its length) while it wraps round the
+## guard, coming in over WRAP_IN_S and grown back over WRAP_OUT_S as it leaves.
+const WRAP_Z := 0.4
+const WRAP_IN_S := 0.06
+const WRAP_OUT_S := 0.12
+var deck_y := 0.0
+var _wave_look: Node3D
+## The pull (a Pull wave): whom it strikes is knocked toward its caster.
+var pull := false
+## Where it ends it bursts (spec "splash": {radius_m, damage, knock_mps, up_mps, puddle {radius_m, life_s}}; the Ice
+## Tomahawk, the owner 2026-10-12 "is a Aoe spell? that puts water on the ground"): everyone else within radius_m pushed out
+## (its hit info's tag + ".splash"), and a puddle of its caster's on the deck there (a Geyser's source). _splash.
+var splash := {}
+## Round 3: the hit info it carries (BendR3.info_for: tag, from, air, a volley's id and size; slide_only once a late guard
+## halved it; returned, ret_mult, origin_tag once a guard sent it back). Read only by the % rules.
+var info := {}
+## Flowing's steer: per second, in all (deg), for how long (s); how far it has turned, how long it has flown.
+var steer_dps := 0.0
+var steer_max_deg := 0.0
+var steer_s := 0.0
+var _steered := 0.0
+var age := 0.0
+## A Turn's swing: the guard it swings round, for how long, its radius, the factor it leaves with; 0..1 of it done.
+var _swing_by: Node3D
+var _swing_s := 0.0
+var _swing_r := 1.0
+var _swing_k := 1.0
+var _swing_t := -1.0
+var _swing_a0 := 0.0
+## Whirl Turn's longest swing held on (in swings; 0 none) and how long its last swing lasted (s; the tests).
+var _swing_hold := 0.0
+var swing_held_s := 0.0
+## Where it was caught, from the guard: its flat distance and its height (the swing glides from there onto its circle).
+var _swing_r0 := 1.0
+var _swing_h0 := 1.0
+## Its own look (BendLooks.bolt_body; not a floor wave's, not the Spellbreak effects'): the size it was drawn at and the parts
+## it is drawn with, which become() makes again for a new kind (only those: nothing else hung on it is touched).
+var look_r := 0.0
+var _body_parts: Array[Node] = []
+## A body made anew by become() (under this node, so it is drawn shorter as a whole on a Turn's circle).
+var _look: Node3D
+## The swing turned it (become): it is drawn wrapped round the guard and leaves with a burst and a cast's voice.
+var _swing_became := false
+## The body its blow struck (_hit; null none): a worn talent's burst spares him (FireTalents.bolt_ended).
+var struck_who: Node = null
+## While valid, the swing goes on only as long as it says true (Eye of the Gale: the guarder's E held; AirTalents.eye_catch): let
+## go, it leaves along his aim from where it is. Invalid (every Turn): the swing runs its time.
+var swing_hold := Callable()
+## Carrying Wind's Beat Gust (AirTalents.on_wind_wave): the loose stones it crosses are thrown on (AirTalents.carry_stones).
+var carries := false
+## Frostwind's Gust or Wind Ball (AirTalents.frosts): the puddles, grates and steam it crosses freeze (AirTalents.frost_step).
+var frosts := false
+## Hail Ball's Wind Ball (AirTalents.hails): hail falls where it ends (AirTalents.hail_burst).
+var hails := false
 
 var _trail: GPUParticles3D
 var _fire_trail: GPUParticles3D
+var _mud_trail: GPUParticles3D
 var _q: PhysicsShapeQueryParameters3D
 
 
@@ -91,9 +208,31 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 	b.tilt = deg_to_rad(float(spec.get("tilt_deg", 0.0)))
 	if spec.get("spin_axis") is Vector3:
 		b.spin_axis = (spec.spin_axis as Vector3).normalized()
+	b.weight = String(spec.get("weight", weight_by_size(b.kind, b.radius, String(spec.get("flight", "")))))
+	b.lock_s = float(spec.get("_lock_s", -1.0))
+	b.pull = bool(spec.get("pull", false))
+	b.splash = (spec.splash as Dictionary).duplicate() if spec.get("splash") is Dictionary else {}
+	var inf: Variant = spec.get("_info", {})
+	b.info = (inf as Dictionary).duplicate() if inf is Dictionary else {}
+	b.frosts = AirTalents.frosts(by, b.info)        # (Frostwind worn: its wind freezes water it crosses; Classic false)
+	b.hails = AirTalents.hails(by, b.info)          # (Hail Ball worn: hail where it ends; Classic false)
+	b.floor_wave = String(spec.get("do", "")) == "floor_wave"
+	if b.floor_wave:
+		b.width_m = float(spec.get("width_m", 2.2))
+		b.height_m = float(spec.get("height_m", 0.9))
+		b.miss_above_m = float(spec.get("miss_above_m", 0.6))
+		b.radius = minf(b.radius, 0.25)
+	if spec.has("steer_dps"):
+		b.steer_dps = float(spec.steer_dps)
+		b.steer_max_deg = float(spec.get("steer_max_deg", 15.0))
+		b.steer_s = float(spec.get("steer_s", 0.25))
 	b.add_to_group(GROUP)
+	NetSpells.tag(b)                             # (online: its name in its cast's run)
 	by.get_tree().current_scene.add_child(b)
 	b.global_position = from
+	if b.floor_wave:
+		b.deck_y = FormEffects.ground_at(b, from).y
+		b.global_position.y = b.deck_y
 	b._face()
 	var holder: Node3D = b
 	if b.flight in ["spinning", "flick"] or absf(b.tilt) > 1e-4:
@@ -102,9 +241,184 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		b.add_child(b.spin)
 		b._turn(0.0)
 		holder = b.spin
-	BendLooks.bolt_body(holder, b.kind, b.radius, b.long, b.shape)
-	b._trail = BendLooks.trail(b, b.kind, b.radius)
+	# (the Spellbreak effects, SbFx: visual only; when the move's flight replaces today's body and trail they are not made)
+	var sbk := SbFx.key_of(b.info)
+	var sbo := {"node": b, "dir": b.velocity, "info": b.info, "width": b.width_m}
+	var sb := SbFx.fire(by, sbk, "wave" if b.floor_wave or String(spec.get("do", "")) == "wind_wave" else "flight", sbo)
+	SbFx.fire(by, sbk, "trail", sbo)
+	if b.steer_dps > 0.0:
+		SbFx.fire(by, "flowing", "curve", sbo.merged({"el": "water", "life": b.steer_s + 0.1}, true))
+	if b.floor_wave:
+		if not sb:
+			# (earth's Fissure, a stone floor wave: spikes of stone, FissureFx; fire's Kick its flame tongues)
+			if b.kind == "stone":
+				b._wave_look = BendLooks.fissure_body(b, b.width_m, b.height_m)
+			else:
+				b._wave_look = BendLooks.floor_wave_body(b, FLOOR_W0, b.height_m)
+	elif not sb:
+		b.look_r = float(spec.get("look_r", b.radius))
+		var before := holder.get_children()
+		BendLooks.bolt_body(holder, b.kind, b.look_r, b.long, b.shape)
+		for c in holder.get_children():
+			if not c in before:
+				b._body_parts.append(c)              # (its own look: what become() makes anew)
+		# (a wind wave's trail the size of its look, not of the 2 m it hits: sized by its radius, its puffs swelled to 1.3 m and
+		# its ribbons coiled 1.35 m round, a white cloud hiding the wave; the owner 2026-10-11: "i hate how that air blast has
+		# such a big wave to it")
+		var trail_r := b.look_r if String(spec.get("do", "")) == "wind_wave" else b.radius
+		b._trail = BendLooks.trail(b, b.kind, trail_r)
+		if b.is_lash() and BendLoadout.wears(by, MUD_LASH):
+			b._mud_trail = BendLooks.trail(b, "stone", b.radius * 0.7)     # (Mud Lash: clods flung off a brown lash)
+	elif b.kind == "air":
+		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
+	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
+	BendSounds.flight(BendSounds.flight_kind(b), b)
 	return b
+
+
+## A bolt's weight by what it is when its spec gives none: a stone flicked or small (a pebble) "light", a big one (0.35 m
+## and more across its middle: a boulder) "heavy", else "medium"; anything not stone "light".
+static func weight_by_size(k: String, r: float, flight := "") -> String:
+	if k != "stone":
+		return "light"
+	if flight == "flick" or r < 0.15:
+		return "light"
+	return "heavy" if r >= 0.35 else "medium"
+
+
+## The weight of a flying GustLift's stone (its meta bend_weight; a spike medium, a cannonball of 0.25 m or more heavy).
+static func weight_of(l: GustLift) -> String:
+	if l == null or l.stone == null or not is_instance_valid(l.stone):
+		return "medium"
+	if l.stone.has_meta(&"bend_weight"):
+		return String(l.stone.get_meta(&"bend_weight"))
+	if l.kind == "cannonball" and l.stone is FormStone and (l.stone as FormStone).radius >= 0.25:
+		return "heavy"
+	return "medium"
+
+
+## Its caster, or null when that is gone (a bot freed between rounds): what its strikes are credited to.
+func _by() -> Node3D:
+	return caster if caster != null and is_instance_valid(caster) else null
+
+
+## In a Turn's swing now (BendZone: no guard, no wall, no one meets it until it leaves).
+func swinging() -> bool:
+	return _swing_t >= 0.0
+
+
+## A Turn on the beat (BendZone): once round `by`'s waist over `s` s at `r` m, then away along his aim at `k` times its
+## speed, damage and knock, his; a water fighter's Flowing steers it as it leaves. `to_kind`: it turns into that kind as it
+## is caught (become: the Air Lance turned to ice), drawn short on the circle (WRAP_Z) while it wraps round him.
+func begin_swing(by: Node3D, s: float, r: float, k: float, to_kind := "", hold_s := 0.0) -> void:
+	_swing_by = by
+	_swing_s = maxf(s, 0.05)
+	_swing_r = r
+	_swing_k = k
+	_swing_t = 0.0
+	# (Whirl Turn, a skill tree twist: held on past the swing it keeps circling him, up to hold_s, and leaves when let go)
+	_swing_hold = hold_s / _swing_s if hold_s > _swing_s else 0.0
+	var off := global_position - by.global_position
+	_swing_a0 = atan2(off.x, off.z)
+	_swing_r0 = clampf(Vector2(off.x, off.z).length(), 0.2, 3.0)
+	_swing_h0 = off.y
+	info = BendZone.return_info(info, by, global_position, k)
+	caster = by
+	if to_kind != "" and to_kind != kind:
+		become(to_kind)
+		_swing_became = true
+		if _look != null:
+			create_tween().tween_property(_look, ^"scale", Vector3(1.0, 1.0, WRAP_Z), WRAP_IN_S)
+		# (our own freeze: a big burst of the new kind where it was caught, ice's freezing voice)
+		BendLooks.burst(global_position, to_kind, 24, Vector3.UP, 180.0, 4.0, 0.25, false)
+		BendSounds.event("ice_rise" if to_kind == "ice" else "", global_position, -3.0)
+	elif not SbFx.fire(by, "water_redirect/redirect", "swing", {"at": global_position, "dir": velocity, "el": "water"}):
+		BendLooks.burst(global_position, kind, 10)
+
+
+## It is made a bolt of kind `k` now, in flight (a water Turn's catch of the Air Lance leaves as ice: begin_swing): its kind,
+## and its own look and voice of that kind made anew (its body under a "Look" node, its trail, its flight's voice); a fire
+## it carried (an air bolt through fire: burning) put out. Its numbers stay as they are: speed, damage, knock, up, size,
+## gravity, range, weight and the lock a hit costs (a Turn sends back what it took, x its own mult). A look that is not its
+## own (the Spellbreak effects' flight) is left as it is.
+func become(k: String) -> void:
+	if spent or k == "" or k == kind:
+		return
+	kind = k
+	burning = false
+	if _fire_trail != null:
+		BendLooks.stop_trail(_fire_trail)
+		_fire_trail = null
+	if not _body_parts.is_empty():
+		var holder: Node3D = spin if spin != null else self
+		for c: Node in _body_parts:
+			if is_instance_valid(c):
+				if c.get_parent() != null:
+					c.get_parent().remove_child(c)   # (out of the tree at once: a replay copying its look sees the new body only)
+				c.queue_free()
+		_body_parts.clear()
+		_look = Node3D.new()
+		_look.name = "Look"
+		holder.add_child(_look)
+		BendLooks.bolt_body(_look, kind, look_r, long, shape)
+		_body_parts.append(_look)
+		BendLooks.stop_trail(_trail)
+		_trail = BendLooks.trail(self, kind, radius)
+	BendSounds.flight_end(self)
+	BendSounds.flight(BendSounds.flight_kind(self), self)
+
+
+func _swing(dt: float) -> void:
+	if _swing_by == null or not is_instance_valid(_swing_by):
+		_swing_t = -1.0
+		end("swing")
+		return
+	if not (swing_hold.is_valid() and not bool(swing_hold.call())):
+		# (Eye of the Gale: while its hold says so it circles on; let go, it leaves at once. Every other Turn: its time)
+		_swing_t += dt / _swing_s
+		var u := minf(_swing_t, 1.0)
+		var a := _swing_a0 - TAU * (_swing_t if _swing_hold > 0.0 else u)
+		# (from where it was caught onto the circle at the waist over the first SWING_IN of the swing: no jump onto it)
+		var e := smoothstep(0.0, SWING_IN, u)
+		var rr := lerpf(_swing_r0, _swing_r, e)
+		var hh := lerpf(_swing_h0, SWING_WAIST_M, e)
+		var at := _swing_by.global_position + Vector3.UP * hh + Vector3(sin(a), 0.0, cos(a)) * rr
+		var was := global_position
+		global_position = at
+		if (at - was).length_squared() > 1e-6:
+			velocity = (at - was).normalized() * velocity.length()
+		_face()
+		if _swing_t < 1.0:
+			return
+		if _swing_hold > 0.0 and _swing_t < _swing_hold and BendZone.whirl_held(_swing_by):
+			return                                    # (Whirl Turn: held on, it goes on circling)
+	_swing_hold = 0.0
+	swing_held_s = _swing_t * _swing_s
+	_swing_t = -1.0
+	swing_hold = Callable()
+	var to := BendZone.guard_aim(_swing_by, global_position)
+	var sp := velocity.length() * _swing_k
+	velocity = (to - global_position).normalized() * sp
+	damage *= _swing_k
+	knock_mps *= _swing_k
+	up_mps *= _swing_k
+	travelled = 0.0
+	if BendPoses.element_of(_swing_by) == "water":
+		var pv := Bending.passive("water")
+		steer_dps = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_dps", float(pv.get("steer_dps", 45.0)))
+		steer_max_deg = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_max_deg", float(pv.get("steer_max_deg", 15.0)))
+		steer_s = BendLoadout.tune_f(_swing_by, "rules:passives.water.steer_s", float(pv.get("steer_s", 0.25)))
+		age = 0.0
+		_steered = 0.0
+	_face()
+	if _swing_became:
+		_swing_became = false
+		if _look != null and is_instance_valid(_look):
+			create_tween().tween_property(_look, ^"scale", Vector3.ONE, WRAP_OUT_S)
+		# (it leaves as what it became: a burst along its way and the cast's voice of its kind)
+		BendLooks.burst(global_position, kind, 16, velocity.normalized(), 50.0)
+		if kind == "ice":
+			BendSounds.play(&"ice_cast", global_position)
 
 
 func _face() -> void:
@@ -123,20 +437,61 @@ func _turn(dt: float) -> void:
 func _physics_process(dt: float) -> void:
 	if spent:
 		return
+	_net_check()
+	if _swing_t >= 0.0:
+		_swing(dt)
+		return
+	var ghost := not NetSpells.decides()
+	age += dt
+	_steer(dt)
 	velocity.y -= gravity * dt
 	var from := global_position
 	var step := velocity * dt
 	if low:
 		var nxt := from + step
 		step.y = FormEffects.ground_at(self, nxt).y + LOW_M - from.y
-	# the others met on the way (bolts, zones)
-	_meet_bolts()
-	if spent:
+	var lip_end := false
+	if floor_wave:
+		var nxt2 := from + Vector3(step.x, 0.0, step.z)
+		var over := BendR3.past_lip(get_tree(), nxt2) if BendR3.stock() else -INF
+		if over > 0.0:
+			# (round 3: past the lip it runs on at the deck's height for floor_wave_lip_over_m, over the hands of a man hanging
+			# there, then it is spent)
+			deck_y = from.y
+			var lim := BendR3.num("floor_wave_lip_over_m", 0.3)
+			if over > lim:
+				var fl := Vector2(step.x, step.z).length()
+				var keep := clampf(1.0 - (over - lim) / maxf(fl, 1e-4), 0.0, 1.0)
+				step = Vector3(step.x * keep, 0.0, step.z * keep)
+				lip_end = true
+		else:
+			deck_y = FormEffects.ground_at(self, nxt2).y
+		step = Vector3(step.x, deck_y - from.y, step.z)
+	if not ghost:
+		# a teammate held in a bind or a float on its way is freed (BendStatus.rescue: it passes through him, as through allies)
+		_rescue_on(from, from + step)
+		# the others met on the way (bolts, zones)
+		_meet_bolts()
+		if spent:
+			return
+		for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+			if (z as BendZone).kind == FireTalents.GAS_KIND and FireTalents.gas_bolt(z as BendZone, self):
+				continue                          # (fire lit the gas before the cloud's own rules: gone, it flies on; FireTalents)
+			if (z as BendZone).on_bolt(self) or spent:
+				if spent:
+					return
+		if _swing_t >= 0.0:
+			return                            # (a Turn took it: it swings from the next frame)
+		_near_miss()
+		if carries:
+			AirTalents.carry_stones(self, from, step)
+		if frosts:
+			AirTalents.frost_step(self, from, step)
+	if floor_wave:
+		_wave_step(from, step)
+		if lip_end and not spent:
+			end("lip")
 		return
-	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
-		if (z as BendZone).on_bolt(self) or spent:
-			if spent:
-				return
 	# the world and whom it meets
 	if _q == null:
 		_q = PhysicsShapeQueryParameters3D.new()
@@ -154,9 +509,28 @@ func _physics_process(dt: float) -> void:
 		_q.motion = Vector3.ZERO
 		var info := space.get_rest_info(_q)
 		var col := instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
-		global_position = from + step * frac[0]
-		_hit(col, at, Vector3(info.get("normal", -velocity.normalized())))
-		return
+		for _i in 4:
+			if not _deck_brushed(col, at):
+				break
+			# (a wide spell over the deck, its middle well above it and not coming down: the deck brushing its underside never
+			# stops it; that piece passed for the rest of its flight. Which pieces it brushed hung on where the deck's seams fell:
+			# the 2v2 deck drawn in, 2026-10-12, ended a Gust 0.6 m out)
+			_ghost_ex.append(info.rid)
+			_q.exclude = _exclude()
+			_q.transform = Transform3D(Basis.IDENTITY, from)
+			_q.motion = step
+			frac = space.cast_motion(_q)
+			col = null
+			if frac.size() == 2 and frac[1] < 1.0:
+				at = from + step * frac[1]
+				_q.transform = Transform3D(Basis.IDENTITY, at)
+				_q.motion = Vector3.ZERO
+				info = space.get_rest_info(_q)
+				col = instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
+		if col != null and not (ghost and _ghost_through(col, info)):
+			global_position = from + step * frac[0]
+			_hit(col, at, Vector3(info.get("normal", -velocity.normalized())))
+			return
 	global_position = from + step
 	travelled += step.length()
 	_face()
@@ -165,10 +539,156 @@ func _physics_process(dt: float) -> void:
 		end("range")
 
 
+## Flowing (see the header): for steer_s after it leaves it turns toward its caster's aim now (the crosshair's point, no aim
+## help: a bot's its target), at most steer_dps a second and steer_max_deg in all.
+func _steer(dt: float) -> void:
+	if steer_dps <= 0.0 or age > steer_s or _steered >= steer_max_deg or _by() == null:
+		return
+	var bc := BendCaster.of(_by())
+	if bc == null or not bc.valid():
+		return
+	var aim: Vector3 = bc.flight_point([], Vector3.INF)
+	if not aim.is_finite():
+		return
+	var want := aim - global_position
+	var v := velocity
+	if want.length_squared() < 1.0 or v.length_squared() < 1e-4:
+		return
+	var ang := rad_to_deg(v.angle_to(want))
+	var turn := minf(minf(steer_dps * dt, steer_max_deg - _steered), ang)
+	if turn <= 1e-3:
+		return
+	var axis := v.cross(want)
+	if axis.length_squared() < 1e-8:
+		return
+	velocity = v.rotated(axis.normalized(), deg_to_rad(turn))
+	_steered += turn
+	_face()
+
+
+## How far (deg) it has turned on Flowing's steer so far (the tests).
+func steered_deg() -> float:
+	return _steered
+
+
+## Earth's Fissure and the deck's loose stones (2026-10-10: the Shove took them; the Fissure's skill tree keeps them earth's
+## ammo): a stone lying free in this step's width on this deck (a loose one, a kicked-up rock, a standing spike: whoever's,
+## stones on the deck are fair for both sides; never one held or raised, in flight or sinking, as the Shove's pick) is
+## heaved up where it lies and thrown on at the caster's aim (BendEffects.crack_heave: the Shove's throw of a loose stone,
+## this wave's hit info). Once each: thrown, it is in flight.
+func _heave_loose(from: Vector3, flat: Vector3, fwd: Vector3, across: Vector3, w: float) -> void:
+	var by := _by()
+	if by == null:
+		return
+	for s: Node in get_tree().get_nodes_in_group(FormStone.GROUP):
+		var st := s as FormStone
+		if st == null or st.state == FormStone.State.SINKING or GustLift.busy(st) or st.has_meta(&"bend_held_by") \
+				or st.has_meta(&"bend_raised_by"):
+			continue
+		var l := st.global_position - from
+		var along := l.dot(fwd)
+		if along < -0.3 or along > flat.length() + 0.35 or absf(l.dot(across)) > w * 0.5 + st.radius:
+			continue
+		if absf(st.global_position.y - deck_y) > 1.2:
+			continue                                  # (not lying on this deck: under the lip, up on a wall)
+		BendEffects.crack_heave(by, st, info)
+		NetSpells.word(["heave", by, st, info])     # (online: the host's; the others throw it too)
+
+
+## The floor wave's step (see the header): any wall across its foot stops it (a box at its height swept along); a body in
+## its width whose feet are within miss_above_m of the deck is struck; earth's Fissure heaves the loose stones in its width
+## (_heave_loose); else on, its width growing.
+func _wave_step(from: Vector3, step: Vector3) -> void:
+	var flat := Vector3(step.x, 0.0, step.z)
+	var w := lerpf(FLOOR_W0, width_m, clampf(travelled / maxf(range_m, 0.1), 0.0, 1.0))
+	if flat.length_squared() > 1e-8:
+		var fwd := flat.normalized()
+		var across := Vector3.UP.cross(fwd).normalized()
+		var space := get_world_3d().direct_space_state
+		var q := PhysicsShapeQueryParameters3D.new()
+		var box := BoxShape3D.new()
+		var low_h := maxf(height_m - 0.35, 0.25)
+		box.size = Vector3(w, low_h, 0.3)
+		q.shape = box
+		q.transform = Transform3D(Basis(across, Vector3.UP, fwd), from + Vector3.UP * (0.3 + low_h * 0.5))
+		q.motion = flat
+		var ex := _exclude()
+		for i in 6:
+			q.exclude = ex
+			var frac := space.cast_motion(q)
+			if frac.size() != 2 or frac[1] >= 1.0:
+				break
+			var at := from + flat * frac[1] + Vector3.UP * 0.6
+			q.transform = Transform3D(q.transform.basis, q.transform.origin + flat * frac[1])
+			var mv := q.motion
+			q.motion = Vector3.ZERO
+			var info := space.get_rest_info(q)
+			q.motion = mv
+			q.transform = Transform3D(Basis(across, Vector3.UP, fwd), from + Vector3.UP * (0.3 + low_h * 0.5))
+			var col := instance_from_id(int(info.get("collider_id", 0))) as Node if not info.is_empty() else null
+			var who := _taker(col)
+			if who is CharacterBody3D or who is NpcFighter or col is CharacterBody3D or (col != null and col.get_parent() is CharacterBody3D):
+				if info.has("rid"):
+					ex.append(info.rid)      # (a body is the width's own test below, by its feet)
+				continue
+			if col != null and (who is FormRaised or col is StaticBody3D or col is AnimatableBody3D or col is CSGShape3D):
+				global_position = from + flat * frac[0]
+				_hit(col, at, -fwd)
+				return
+			if info.has("rid"):
+				ex.append(info.rid)
+			else:
+				break
+		if kind == "stone" and NetSpells.decides():
+			_heave_loose(from, flat, fwd, across, w)   # (earth's Fissure: the loose stones it runs under thrown on)
+		# whom it runs into: in its width, the feet low enough (online the host's to decide)
+		for e in (BendCaster.near(_by() if _by() != null else self, from, w * 0.5 + 1.5) if NetSpells.decides() else []):
+			var n: Node3D = e[0]
+			if n == _by() or not BendStatus.can_take(n, _by()):
+				continue
+			var l := n.global_position - from
+			var along := l.dot(fwd)
+			if along < -0.3 or along > flat.length() + 0.35:
+				continue
+			if absf(l.dot(across)) > w * 0.5 + 0.3:
+				continue
+			if n.global_position.y - deck_y > miss_above_m:
+				continue                          # (jumped: its feet over the wave)
+			global_position = from + fwd * maxf(along, 0.0)
+			_hit(n, n.global_position + Vector3.UP * 0.4, -fwd)
+			return
+	global_position = from + step
+	travelled += flat.length()
+	_face()
+	if _wave_look != null and is_instance_valid(_wave_look):
+		if _wave_look.has_method(&"set_width"):
+			_wave_look.call(&"set_width", w)        # (a look that lays itself out across the width: FissureFx)
+		else:
+			_wave_look.scale = Vector3(w / FLOOR_W0, 1.0, 1.0)
+	if travelled > range_m:
+		end("range")
+
+
+## A near miss (see the header): an air fighter in a Slip within near_m of it charges his Carried wind, once a bolt.
+var _missed: Array[int] = []
+func _near_miss() -> void:
+	if _by() == null:
+		return
+	var base := float(Bending.passive("air").get("near_m", 1.2))
+	for e in BendCaster.near(_by(), global_position, base * AirTalents.NEAR_QUERY_K):
+		var n: Node3D = e[0]
+		var near_m: float = AirTalents.near_m(n, base)        # (his own: Near Miss worn; Classic the passive's)
+		if float(e[1]) > near_m or BendStatus.until(n, &"bend_slip_until") <= 0.0 or _missed.has(n.get_instance_id()):
+			continue
+		if (NpcSenses.chest_of(n) - global_position).length() > near_m + 0.6:
+			continue
+		_missed.append(n.get_instance_id())
+		BendZone.carry_wind(n)
+
 ## Its caster's own bodies, left out of its flight: a fighter's hit parts too (NpcFighter.ray_exclude), so a bolt from a bot's
 ## chest does not strike the bot that sent it. Its caster's allies too (BendCaster.ally_rids: the ring's sides): it passes them.
 func _exclude() -> Array[RID]:
-	var ex: Array[RID] = []
+	var ex: Array[RID] = _ghost_ex.duplicate()
 	if caster == null or not is_instance_valid(caster):
 		return ex
 	if caster.has_method(&"ray_exclude"):
@@ -176,28 +696,141 @@ func _exclude() -> Array[RID]:
 	elif caster is CollisionObject3D:
 		ex.append((caster as CollisionObject3D).get_rid())
 	ex.append_array(BendCaster.ally_rids(caster))
+	if BendR3.stock():
+		var held := BendZone.held_stone(caster)
+		if held is CollisionObject3D:
+			ex.append((held as CollisionObject3D).get_rid())      # (round 3: past the stone in its own hand)
+	if kind == "stone" and is_inside_tree():
+		# (a burrower under the deck: stone passes over him; round 2's Burrow, under_s)
+		for n in BendCaster.near(caster, global_position, 6.0):
+			var b: Node = n[0]
+			if BendStatus.until(b, &"bend_under_until") > 0.0:
+				if b.has_method(&"ray_exclude"):
+					ex.append_array(b.call(&"ray_exclude"))
+				elif b is CollisionObject3D:
+					ex.append((b as CollisionObject3D).get_rid())
 	return ex
+
+
+# ---------------------------------------------------------------- the walls' boosts (the owner, 2026-10-12)
+## A spell of its caster's (or his side's) through his own wall of its matter, once (the new ring; rules.json stock.wall_boost):
+## "fire" through a Fire Wall (BendZone.on_bolt) or "ice", water through an Ice Wall turned to ice (_through_ice_wall): faster,
+## bigger, its hit harder (info wall_boost: RingRules.on_hit's d and growth).
+var wall_boosted := false
+
+
+func wall_boost(el: String) -> void:
+	if wall_boosted or spent:
+		return
+	wall_boosted = true
+	var wb := RingRules.stock_block("wall_boost")
+	velocity *= float(wb.get("speed", 1.25))
+	var k := float(wb.get("size", 1.4))
+	radius *= k
+	damage *= float(wb.get("d", 1.25))
+	knock_mps *= float(wb.get("knock", 1.2))
+	range_m += 6.0
+	info["wall_boost"] = el
+	var holder: Node3D = spin if spin != null else _look
+	if holder != null and is_instance_valid(holder):
+		holder.scale *= k
+	BendLooks.stop_trail(_trail)
+	_trail = BendLooks.trail(self, kind, radius)
+	BendLooks.burst(global_position, kind, 18, velocity.normalized(), 40.0, 5.0, 0.2, false)
+	BendLooks.sound(kind, "cast", global_position, 0.0)
+
+
+## Water of his through his own (or his side's) Ice Wall (the new ring): frozen to ice on the way through, the wall passed, the
+## boost; true when it went through.
+func _through_ice_wall(w: FormRaised) -> bool:
+	if kind != "water" or wall_boosted or not BendR3.stock() or not bool(w.get_meta(&"bend_ice", false)):
+		return false
+	var by := _by()
+	var wb := int(w.get_meta(&"bend_by", 0))
+	var whose: Variant = instance_from_id(wb) if wb != 0 else null
+	if by == null or not (wb == by.get_instance_id() or (whose is Node and BendCaster.same_team(by, whose as Node))):
+		return false
+	_ghost_ex.append(w.get_rid())                # (its own wall passed)
+	become("ice")
+	wall_boost("ice")
+	# (frozen, it sets off again at what its caster aims at, as an ice spear leaves the wall: a Lash's water bends in flight, the
+	# ice it became does not; within 25 deg of its line)
+	var bc := BendCaster.of(by)
+	var aim := Vector3.INF
+	if bc != null and bc.valid():
+		var tg := bc.aim_target()
+		# (a fighter by the crosshair: his chest; else where the crosshair is, through the wall it just passed, which the
+		# crosshair's own ray meets first when the wall stands before him)
+		aim = bc.target_point(tg, velocity.length()) if tg != null else bc.flight_point([w.get_rid()], Vector3.INF)
+	if aim.is_finite():
+		var want := aim - global_position
+		if want.length_squared() > 1.0 and rad_to_deg(velocity.angle_to(want)) < 25.0:
+			velocity = want.normalized() * velocity.length()
+			_face()
+	BendLooks.burst(global_position, "ice", 22, velocity.normalized(), 70.0, 4.0, 0.3, false)
+	BendSounds.play(&"ice_freeze", global_position, -2.0)
+	return true
+
+
+## A frozen one's end on the deck: a frost patch of its caster's where it stopped (the ring's ice_patch: slows who walks it).
+func _frost_where_ended() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var g := FormEffects.ground_at(self, global_position)
+	if global_position.y - g.y > 3.0 or global_position.y < g.y - 0.6:
+		return
+	var wb := RingRules.stock_block("wall_boost")
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	BendZone.make(by, "ice_patch", g, {"radius_m": float(wb.get("frost_r", 1.5)), "life_s": float(wb.get("frost_s", 4.0))},
+			flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
 
 
 func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 	var who := _taker(col)
+	var by := _by()
+	var sbk := SbFx.key_of(info)
+	var sbo := {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}
+	if not NetSpells.decides():
+		# (a ghost: the world or a raised wall ends it here as on the host, its look at once; the wall's wear is the host's word)
+		_end_look("wall" if who is FormRaised else "world", at, n)
+		_finish("wall" if who is FormRaised else "world")
+		return
+	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
+		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)
+		return
+	if who is FormRaised and _through_ice_wall(who as FormRaised):
+		return                                     # (his water through his own Ice Wall: frozen, faster, flying on)
+	if who is FormRaised and kind == "fire" and AirTalents.melt_crust(who as FormRaised):
+		BendLooks.burst(at, "steam", 14, n, 70.0, 2.0, 0.5)
+		end("melted")                             # (Frostwind's crust melted back by fire)
+		return
 	if who is FormRaised:
 		wear(who as FormRaised, at)
-		BendLooks.burst(at, kind, 14, n, 70.0, 3.0)
+		if not SbFx.fire(by, sbk, "impact", sbo):
+			BendLooks.burst(at, kind, 14, n, 70.0, 3.0)
 		BendLooks.sound(kind, "hit", at, -4.0)
+		if kind == "stone" and weight != "light" and not floor_wave and is_inside_tree():
+			_drop_loose(at + n * (radius + 0.05))    # (a stone off a wall lies loose: earth's ammo)
 		end("wall")
 		return
-	if who != null and BendStatus.can_take(who, caster):
+	if who != null and BendStatus.can_take(who, by):
 		var dir := velocity.normalized()
 		var flat := Vector3(dir.x, 0.0, dir.z).normalized()
-		BendStatus.hurt(who, damage + (6.0 if burning else 0.0), at, dir, caster)
-		BendStatus.knock(who, flat * knock_mps + Vector3.UP * up_mps, caster)
+		if pull and by != null:
+			var to := by.global_position - (who as Node3D).global_position
+			to.y = 0.0
+			flat = to.normalized() if to.length_squared() > 1e-4 else -flat
+		struck_who = who
+		BendR3.deliver(who, damage + (6.0 if burning else 0.0), at, dir, by, lock_s, flat * knock_mps + Vector3.UP * up_mps, info)
 		if root_s > 0.0:
 			BendStatus.root(who, root_s)
 		if slow_s > 0.0:
 			BendStatus.slow(who, slow_s)
 		struck.emit(who, damage)
-	BendLooks.burst(at, kind, 16, n, 80.0, 3.5)
+		SbFx.fire(by, sbk, "body_extra", sbo)
+	if not SbFx.fire(by, sbk, "impact", sbo):
+		BendLooks.burst(at, kind, 16, n, 80.0, 3.5)
 	BendLooks.sound(kind, "hit", at, -3.0)
 	end("hit" if who != null else "world")
 
@@ -213,11 +846,119 @@ static func _taker(col: Node) -> Node:
 	return null
 
 
+## A stone bolt stopped by a wall: a stone of its size lies at `at`, its caster's loose one (FormStone.make_loose).
+func _drop_loose(at: Vector3) -> void:
+	var rad := clampf(radius, 0.12, 0.45)
+	var s := FormStone.ball(get_tree().current_scene, FormEffects.ground_at(self, at), {"radius_m": rad, "mass_kg": 20.0,
+			"rise_s": 0.01, "life_s": 30.0, "sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.state = FormStone.State.RESTING
+	s.freeze = false
+	s.set_meta(&"bend_weight", weight)
+	FormStone.make_loose(s, _by())
+
+
+## Earth's Kick-Up (data/sway/skill_tree.json earth.pebbles.kick_up; the owner, 2026-10-11: "make sure all the talents work"):
+## its wearer's Pebbles volley that hits nobody (no pebble struck a body nor was taken by a guard) leaves one loose stone,
+## KICK_UP_R round, where its last pebble lands (the deck under where it ended; none off the deck), his own (FormStone.make_loose:
+## still loose_max at most). A Fissure that runs under it throws it on (_heave_loose), whoever's it is. Its spread is the node's.
+const KICK_UP := "earth.pebbles.kick_up"
+const KICK_UP_R := 0.16
+## A pebble that ended so met someone (a body, a guard).
+const MET_ENDS := ["hit", "caught", "cushioned", "dropped", "blocked", "absorbed", "drunk", "steam", "melted", "doused"]
+## The wearer's volleys in flight: volley id -> {n: pebbles ended, met: any met someone}.
+static var _kick := {}
+
+
+func _kick_up_end(why: String) -> void:
+	var vid := int(info.volley_id)
+	var e: Dictionary = _kick.get(vid, {"n": 0, "met": false})
+	e["n"] = int(e.n) + 1
+	if why in MET_ENDS or not guarded_by.is_empty():
+		e["met"] = true
+	_kick[vid] = e
+	if int(e.n) < int(info.get("volley_n", 1)):
+		if _kick.size() > 64:
+			_kick.clear()
+		return
+	_kick.erase(vid)
+	if bool(e.met):
+		return
+	var at := FormEffects.ground_at(self, global_position)
+	var ar := RingArena.find(get_tree())
+	if ar != null and not ar.on_deck(at):
+		return                                    # (its last pebble fell past the deck: into the water, no stone)
+	var s := FormStone.ball(get_tree().current_scene, at, {"radius_m": KICK_UP_R, "mass_kg": 15.0, "rise_s": 0.15, "life_s": 30.0,
+			"sink_s": 1.0}, absi(hash(Vector3i(at * 10.0))) % 97, "stone")
+	s.set_meta(&"bend_weight", "medium")
+	FormStone.make_loose(s, _by())
+	BendLooks.burst(at + Vector3.UP * 0.1, "stone", 10, Vector3.UP, 90.0, 2.0, 0.2)
+	GatherFx.fall_dust(get_tree().current_scene, at, 0.4)
+
+
+## Earth's Quarry (data/sway/skill_tree.json earth.wall.quarry; the owner, 2026-10-11: "make sure all the talents work"): its
+## wearer's Fissure let go on the Beat (its info says beat: SwayCaster, NpcBending) that runs into his own wall (meta bend_by)
+## tears a chunk off it and throws the chunk on along the crack (FormEffects.gust_chunk at the wall's far side, the Fissure's own
+## hit info), the wave ending there unworn on it; the first chunk each wall costs the wall no hit (a brace for it), later ones a
+## hit each (gust_chunk's). True when it did. Its walls rise in 0.8 s (the node's rise_s).
+const QUARRY := "earth.wall.quarry"
+
+
+func _quarry(w: FormRaised, at: Vector3) -> bool:
+	var by := _by()
+	if by == null or not BendLoadout.wears(by, QUARRY) or int(w.get_meta(&"bend_by", 0)) != by.get_instance_id() \
+			or not w.is_up() or not NetSpells.decides():
+		return false
+	var first := not w.has_meta(&"quarry_torn")
+	w.set_meta(&"quarry_torn", int(w.get_meta(&"quarry_torn", 0)) + 1)
+	var had: Variant = w.get_meta(&"bend_brace") if w.has_meta(&"bend_brace") else null
+	if first:
+		w.set_meta(&"bend_brace", true)            # (the first chunk free: gust_chunk's hit taken by it)
+	var fwd := Vector3(velocity.x, 0.0, velocity.z)
+	fwd = fwd.normalized() if fwd.length_squared() > 1e-6 else -w.global_basis.z
+	var keep := BendR3.cur
+	BendR3.cur = info
+	var to := w.global_position + fwd * 20.0 + Vector3.UP * 1.2
+	var ch := FormEffects.gust_chunk(by, w, Vector3(at.x, w.global_position.y + 1.0, at.z), fwd, to)
+	BendR3.cur = keep
+	if first and is_instance_valid(w):
+		if had != null:
+			w.set_meta(&"bend_brace", had)
+		elif w.has_meta(&"bend_brace"):
+			w.remove_meta(&"bend_brace")
+	if ch != null:
+		BendLooks.burst(ch.global_position, "stone", 14)
+	return ch != null
+
+
+## Kiln Stone (BendZone.KILN_STONE): heated by fire it crossed (its hits' info says so: the launch base x KILN_MULT for its
+## thrower, BendLoadout.hit_class), a fire trail behind it; douse() makes it a plain stone again (a Turn).
+var heated := false
+
+
+func heat() -> void:
+	if heated:
+		return
+	heated = true
+	info["heated"] = true
+	if _fire_trail == null:
+		_fire_trail = BendLooks.trail(self, "fire", maxf(radius, 0.12))
+	BendLooks.burst(global_position, "fire", 8, -velocity.normalized(), 60.0, 2.0, 0.15)
+
+
+func douse() -> void:
+	if not heated:
+		return
+	heated = false
+	info.erase("heated")
+	BendLooks.stop_trail(_fire_trail)
+	_fire_trail = null
+	BendLooks.burst(global_position, "steam", 12, Vector3.UP, 90.0, 1.5, 0.4)
+
+
 ## A raised wall worn by this bolt (WEAR by its kind and the wall's matter; the water jet's erode on an earth wall).
 func wear(w: FormRaised, at: Vector3) -> void:
-	if w.has_meta(&"bend_brace"):
-		w.remove_meta(&"bend_brace")             # (braced: this one is taken free; Catch's brace)
-		return
+	if FormRaised.take_brace(w):
+		return                                    # (braced: this one is taken free; Catch's brace, Mend's, Reinforce's two)
 	var ice := w.has_meta(&"bend_ice") or w.matter == "snow"
 	var k := float((WEAR.get(kind, [1.0, 1.0]) as Array)[1 if ice else 0])
 	if kind == "water" and not ice:
@@ -230,16 +971,64 @@ func wear(w: FormRaised, at: Vector3) -> void:
 		w.set_meta(&"bend_wear", acc)
 
 
+## A teammate of its caster held in a bind or a float within its reach of its path this step (`a` to `b`) is freed (the owner
+## 2026-10-11: allies "break binds to protect them"; BendStatus.rescue). Only a held one is looked at.
+func _rescue_on(a: Vector3, b: Vector3) -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var tree := get_tree()
+	for n in tree.get_nodes_in_group(NpcFighter.GROUP) + tree.get_nodes_in_group(&"player"):
+		if n == by or not (n is Node3D) or not (BendStatus.bound(n) or BendStatus.floating(n)):
+			continue
+		var c := (n as Node3D).global_position + Vector3.UP * 0.9
+		var ab := b - a
+		var u := clampf((c - a).dot(ab) / maxf(ab.length_squared(), 1e-6), 0.0, 1.0)
+		if c.distance_to(a + ab * u) <= radius + 0.7:
+			BendStatus.rescue(n, by)
+
+
 func _meet_bolts() -> void:
 	for o in get_tree().get_nodes_in_group(GROUP):
 		var b := o as BendBolt
-		if b == null or b == self or b.spent or b.get_instance_id() < get_instance_id():
+		if b == null or b == self or b.spent or b.get_instance_id() < get_instance_id() or b.swinging():
 			continue
 		if b.global_position.distance_to(global_position) > radius + b.radius + 0.25:
 			continue
+		if bool(info.get("avalanche", false)) and bool(b.info.get("avalanche", false)) and b.info.get("volley_id") == info.get("volley_id"):
+			continue                              # (an Avalanche's three stones roll out together: GustLift.AVALANCHE)
 		meet(self, b)
 		if spent:
 			return
+	# (a flying stone of a GustLift: stone meets stone by weight; anything else is gone, the stone goes on)
+	for o in get_tree().get_nodes_in_group(GustLift.GROUP):
+		var l := o as GustLift
+		if l == null or l.phase != GustLift.Phase.FLIGHT or l.stone == null or not is_instance_valid(l.stone):
+			continue
+		if l.by() == _by() or l.stone.global_position.distance_to(global_position) > radius + l.radius + 0.3:
+			continue
+		meet_lift(self, l)
+		if spent:
+			return
+
+
+## A bolt meets a flying stone (GustLift): not stone, the bolt is gone; stone, the heavier goes on (the lighter breaks: a
+## bolt ends, a lift's stone drops), equal ones both break.
+static func meet_lift(a: BendBolt, l: GustLift) -> void:
+	var at := (a.global_position + l.stone.global_position) * 0.5
+	if a.kind != "stone":
+		BendLooks.burst(at, a.kind, 14)
+		a.end("stone")
+		return
+	var wa := int(WEIGHTS.get(a.weight, 1))
+	var wb := int(WEIGHTS.get(weight_of(l), 1))
+	if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
+		BendLooks.burst(at, "stone", 20)
+	BendZone.BendGas.clash(a._by(), l.by(), at)             # (the Sulphur set: a cloud where his stones clash with a foe's)
+	if wa <= wb:
+		a.end("broken")
+	if wb <= wa:
+		l.drop()
 
 
 ## Two bolts meet (see the header).
@@ -253,17 +1042,36 @@ static func meet(a: BendBolt, b: BendBolt) -> void:
 			b.end("cancel")
 		return
 	if "water" in ks and "fire" in ks:
+		var wb := a if a.kind == "water" else b
+		if wb.is_lash() and BendLoadout.wears(wb._by(), MUD_LASH):
+			# (Mud Lash: the fire it meets is smothered under the mud, no steam)
+			BendLooks.burst(at, "stone", 18, Vector3.UP, 120.0, 2.5)
+			BendLooks.burst(at, "water", 12)
+			BendLooks.sound("water", "hit", at, -3.0)
+			a.end("smothered")
+			b.end("smothered")
+			return
 		BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
 		BendLooks.sound("steam", "hit", at)
-		steam(a.caster if a.caster != null and is_instance_valid(a.caster) else b.caster, at)
+		var sby: Node3D = a._by() if a._by() != null else (b._by() if b._by() != null else a)
+		if BendLoadout.wears(wb._by(), STEAMCRAFT):
+			sby = wb._by()                       # (Steamcraft: the steam his water made is his, his to steer)
+		steam(sby, at)
 		a.end("steam")
 		b.end("steam")
 		return
 	if "stone" in ks:
 		if a.kind == "stone" and b.kind == "stone":
-			BendLooks.burst(at, "stone", 24)
-			a.end("broken")
-			b.end("broken")
+			# (the bigger stone wins: light < medium < heavy; equal ones both break)
+			if not SbFx.fire(a._by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": a}):
+				BendLooks.burst(at, "stone", 24)
+			BendZone.BendGas.clash(a._by(), b._by(), at)         # (the Sulphur set: a cloud where his stones clash with a foe's)
+			var wa := int(WEIGHTS.get(a.weight, 1))
+			var wb := int(WEIGHTS.get(b.weight, 1))
+			if wa <= wb:
+				a.end("broken")
+			if wb <= wa:
+				b.end("broken")
 		else:
 			var other := b if a.kind == "stone" else a
 			BendLooks.burst(at, other.kind, 14)
@@ -298,12 +1106,25 @@ static func steam(by: Node3D, at: Vector3) -> BendZone:
 		return null
 	var g := FormEffects.ground_at(by, at)
 	var foot := g if at.y - g.y < 2.5 and at.y >= g.y - 0.5 else at - Vector3.UP * 1.0
+	if BendLoadout.wears(by, STEAMCRAFT):
+		# (Steamcraft: his steam hangs the node's longer life and drifts STEAM_DRIFT_M toward where he aims over it)
+		var life := BendLoadout.tune_f(by, "new:steam.life_s", STEAM_S)
+		var to := BendZone.guard_aim(by, foot) - foot
+		to.y = 0.0
+		var way := to.normalized() if to.length_squared() > 1e-4 else -by.global_basis.z
+		return BendZone.make(by, "steam", foot, {"radius_m": STEAM_R, "life_s": life, "mps": STEAM_DRIFT_M / maxf(life, 0.1)}, way)
 	return BendZone.make(by, "steam", foot, {"radius_m": STEAM_R, "life_s": STEAM_S})
 
 
-## Turned along `dir` (its speed kept), now `by`'s.
+## Turned along `dir` (its speed kept), now `by`'s. A floor wave keeps to the floor (the line's yaw only).
 func redirect(dir: Vector3, by: Node3D) -> void:
+	if floor_wave:
+		dir = Vector3(dir.x, 0.0, dir.z)
+		if dir.length_squared() < 1e-6:
+			dir = -velocity
 	velocity = dir.normalized() * velocity.length()
+	if by != caster:
+		info = BendZone.return_info(info, by, global_position, 1.0)      # (round 3: sent back, the sender's now: a return)
 	caster = by
 	travelled = 0.0
 	_face()
@@ -312,9 +1133,222 @@ func redirect(dir: Vector3, by: Node3D) -> void:
 func end(why: String) -> void:
 	if spent:
 		return
+	if not why in NetSpells.OWN_ENDS and not NetSpells.decide(self, "end", [why, global_position]):
+		return                                    # (a ghost's: the host's word ends it, net_end)
+	if why in ["hit", "wall", "world"] and String(info.get("wall_boost", "")) == "ice" and NetSpells.decides():
+		_frost_where_ended()
+	if (why in ["hit", "wall", "world"] or zone_wall) and NetSpells.decides() and is_lash() and BendLoadout.wears(_by(), SPLASHDOWN):
+		_splashdown()
+	if (why in ["hit", "wall", "world"] or zone_wall) and not splash.is_empty() and NetSpells.decides():
+		_splash()
+	_finish(why)
+
+
+## Its splash where it ended (`splash`, see the var): the ice bursting, everyone of another side within radius_m but the one it
+## struck pushed out from it (its hit info's tag + ".splash": the % ring's class), and a puddle of its caster's on the deck
+## under it (none when the deck is far under: off the ring).
+func _splash() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var at := global_position
+	var r := float(splash.get("radius_m", 2.0))
+	BendLooks.burst(at, "ice", 26, Vector3.UP, 150.0, 4.0, 0.3, false)
+	BendLooks.burst(at, "water", 22, Vector3.UP, 120.0, 3.0, 0.3, false)
+	BendSounds.play(&"ice_freeze", at, -2.0)
+	var inf := info.duplicate()
+	inf["tag"] = String(info.get("tag", "")) + ".splash"
+	for e in BendCaster.near(by, at, r):
+		var n: Node3D = e[0]
+		if n == struck_who:
+			continue                              # (the one it chopped took its own hit)
+		var out := n.global_position - at
+		out.y = 0.0
+		out = out.normalized() if out.length_squared() > 1e-4 else Vector3(velocity.x, 0.0, velocity.z).normalized()
+		BendR3.deliver(n, float(splash.get("damage", 0.0)), n.global_position + Vector3.UP, out, by, -1.0,
+				out * float(splash.get("knock_mps", 3.0)) + Vector3.UP * float(splash.get("up_mps", 1.0)), inf)
+	var pd: Variant = splash.get("puddle")
+	if pd is Dictionary:
+		var g := FormEffects.ground_at(self, at)
+		if at.y - g.y <= 3.0 and at.y >= g.y - 0.6:
+			if BendR3.stock():
+				g = BendR3.off_lip(get_tree(), g, float((pd as Dictionary).get("radius_m", 1.6)) * 0.5)   # (on the deck)
+			var flat := Vector3(velocity.x, 0.0, velocity.z)
+			BendZone.make(by, "puddle", g, {"radius_m": float((pd as Dictionary).get("radius_m", 1.6)),
+					"life_s": float((pd as Dictionary).get("life_s", 6.0))}, flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
+
+
+## A Lash of its caster's own (water_whip/whip, not sent back by a guard).
+func is_lash() -> bool:
+	return kind == "water" and not bool(info.get("returned", false)) and String(info.get("tag", "")).get_slice(".", 0) == "water_whip/whip"
+
+
+## Splashdown: where the Lash stopped (a body, a wall raised or of a zone: zone_wall, the deck) a puddle of its caster's on the
+## deck under it (SPLASHDOWN_PUDDLE): his water, a Geyser's source (BendZone puddle). None when the deck is far under (off the
+## ring). A Lash ended in the air by another bolt (steam where it met fire) leaves none: no body, wall or deck stopped it.
+func _splashdown() -> void:
+	var by := _by()
+	if by == null or not is_inside_tree():
+		return
+	var g := FormEffects.ground_at(self, global_position)
+	if global_position.y - g.y > 3.0 or global_position.y < g.y - 0.6:
+		return
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	BendLooks.burst(g + Vector3.UP * 0.1, "water", 20, Vector3.UP, 70.0, 2.5, 0.3)
+	BendZone.make(by, "puddle", g, SPLASHDOWN_PUDDLE, flat.normalized() if flat.length_squared() > 1e-4 else Vector3.FORWARD)
+
+
+func _finish(why: String) -> void:
+	if spent:
+		return
 	spent = true
+	if kind == "stone" and info.has("volley_id") and String(info.get("tag", "")) == "rock_jab/pebbles" and is_inside_tree() \
+			and BendLoadout.wears(_by(), KICK_UP) and NetSpells.decides():
+		_kick_up_end(why)
+	if FireTalents.any(caster) and NetSpells.decides():
+		FireTalents.bolt_ended(self, why)        # (a worn talent where it ends: a burst, a patch, a seam; Classic never)
+	if hails:
+		AirTalents.hail_burst(self, why)
 	remove_from_group(GROUP)
+	BendSounds.flight_end(self)
 	BendLooks.stop_trail(_trail)
 	BendLooks.stop_trail(_fire_trail)
+	if _mud_trail != null:
+		BendLooks.stop_trail(_mud_trail)
 	ended.emit(why)
 	queue_free()
+
+
+# ---------------------------------------------------------------- online (see the header's ONLINE)
+## The bodies, stones and props a ghost has passed (its flight's exclusions): the host's word decides what they did to it.
+var _ghost_ex: Array[RID] = []
+## Its state as last told (the host's): what a meeting changes, compared each frame.
+var _net_sig: Array = []
+
+
+## A ghost's flight meeting `col` (`info` the shape's rest info): true when it passes (a body, a stone, a prop: the host's
+## to decide), the thing's RID kept out of its flight from now; false: the world or a raised wall, it ends there.
+## Whether `col` is a piece of the ring's deck brushing a wide spell's underside (`at` where they touch): its radius 0.5 m or
+## more, its middle more than DECK_BRUSH_M over the deck there, level or rising.
+const DECK_BRUSH_M := 0.25
+func _deck_brushed(col: Node, at: Vector3) -> bool:
+	if col == null or radius < 0.5 or low or floor_wave or velocity.y < -0.5 or not (col is StaticBody3D):
+		return false
+	var ra := RingArena.find(get_tree()) if is_inside_tree() else null
+	if ra == null or not ra.decks.has(col):
+		return false
+	return at.y - ra.top() > DECK_BRUSH_M
+
+
+func _ghost_through(col: Node, info: Dictionary) -> bool:
+	var who := _taker(col)
+	if who is FormRaised:
+		return false
+	if who == null and not (col is RigidBody3D) and not (col is CharacterBody3D):
+		return false
+	if info.has("rid"):
+		_ghost_ex.append(info.rid)
+	return true
+
+
+## The host's: its state told when a meeting has changed it since it was last told (its caster, kind, fire, numbers, the
+## guards it met, a swing begun or over); its first frame only remembered (its cast told the others how it began).
+func _net_check() -> void:
+	if not NetSpells.online() or not NetSpells.decides() or NetSpells.id_of(self) == "":
+		return
+	var sig := [_by().get_instance_id() if _by() != null else 0, kind, burning, snappedf(damage, 0.01), snappedf(knock_mps, 0.01),
+			snappedf(up_mps, 0.01), guarded_by.size(), _swing_t >= 0.0, bool(info.get("returned", false))]
+	if _net_sig.is_empty():
+		_net_sig = sig
+		return
+	if sig == _net_sig:
+		return
+	_net_sig = sig
+	var sw: Array = []
+	if _swing_t >= 0.0:
+		sw = [_swing_by, _swing_s, _swing_r, _swing_k, kind]
+	NetSpells.word(["bolt", NetSpells.id_of(self), {"p": global_position, "v": velocity, "by": _by(), "kind": kind,
+			"burning": burning, "dmg": damage, "kn": knock_mps, "up": up_mps, "tr": travelled, "info": info, "sw": sw}])
+
+
+## The host's word on it (a ghost's): its state as the host's bolt has it now (_net_check's): a swing begun round its guard
+## (its look and its turn there, begin_swing), a swing over, a new kind, a fire taken, its place, way, numbers and caster.
+func net_state(d: Dictionary) -> void:
+	var sw: Array = d.get("sw", [])
+	if not sw.is_empty() and _swing_t < 0.0 and sw[0] is Node3D:
+		global_position = d.get("p", global_position)
+		begin_swing(sw[0] as Node3D, float(sw[1]), float(sw[2]), float(sw[3]), String(sw[4]))
+		return
+	if sw.is_empty() and _swing_t >= 0.0:
+		_swing_t = -1.0                           # (the host's swing is over: it leaves as his did)
+		_leave_look()
+	if String(d.get("kind", kind)) != kind:
+		become(String(d.kind))
+	if bool(d.get("burning", false)) and not burning:
+		burning = true
+		if _fire_trail == null:
+			_fire_trail = BendLooks.trail(self, "fire", radius)
+	var by: Variant = d.get("by")
+	if by is Node3D:
+		caster = by as Node3D
+	global_position = d.get("p", global_position)
+	velocity = d.get("v", velocity)
+	damage = float(d.get("dmg", damage))
+	knock_mps = float(d.get("kn", knock_mps))
+	up_mps = float(d.get("up", up_mps))
+	travelled = float(d.get("tr", travelled))
+	if d.get("info") is Dictionary:
+		info = d.info
+	_ghost_ex.clear()                             # (turned: whatever it passed it may meet again on its new way)
+	_face()
+
+
+## The host's word that it ended (a ghost's): put where the host's ended, its ending's look there, gone.
+func net_end(why: String, at: Vector3) -> void:
+	if spent:
+		return
+	global_position = at
+	_end_look(why, at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)
+	_finish(why)
+
+
+## The look of its ending `why` at `at` (`n` the face it met): a ghost's own ends and the host's words (the host played the
+## same where it decided).
+func _end_look(why: String, at: Vector3, n: Vector3) -> void:
+	match why:
+		"hit", "wall", "world":
+			if not SbFx.fire(_by(), SbFx.key_of(info), "impact", {"at": at, "normal": n, "dir": velocity, "info": info, "node": self}):
+				BendLooks.burst(at, kind, 16 if why != "wall" else 14, n, 80.0, 3.5)
+			BendLooks.sound(kind, "hit", at, -3.0)
+		"steam", "quenched":
+			BendLooks.burst(at, "steam", 34, Vector3.UP, 120.0, 3.0, 0.9)
+			BendLooks.sound("steam", "hit", at)
+		"broken":
+			if not SbFx.fire(_by(), "clash/stone", "clash", {"at": at, "el": "earth", "node": self}):
+				BendLooks.burst(at, "stone", 24)
+		"melted", "bubble":
+			BendLooks.burst(at, "water", 14)
+		"smothered":
+			BendLooks.burst(at, "stone", 18, Vector3.UP, 120.0, 2.5)
+		"scattered":
+			BendLooks.burst(at, "water", 18, Vector3.UP, 180.0, 2.5)
+		"cancel", "stone", "blocked", "dropped":
+			BendLooks.burst(at, kind, 14)
+
+
+## Flown on `s` seconds at once, a physics tick at a time (NetCasts.catch_up: a cast run here as old as the wire made it), its
+## meetings as they go (the host's: decided; a ghost's: passed).
+func catch_up(s: float) -> void:
+	var step := 1.0 / maxf(float(Engine.physics_ticks_per_second), 1.0)
+	while s > 1e-4 and not spent and is_inside_tree():
+		var d := minf(step, s)
+		_physics_process(d)
+		s -= d
+
+
+## A turned bolt's look as it leaves a swing (drawn back to its length: become's wrap).
+func _leave_look() -> void:
+	if _swing_became:
+		_swing_became = false
+		if _look != null and is_instance_valid(_look):
+			create_tween().tween_property(_look, ^"scale", Vector3.ONE, WRAP_OUT_S)

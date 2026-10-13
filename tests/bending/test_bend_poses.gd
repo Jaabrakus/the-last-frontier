@@ -6,14 +6,20 @@ extends SceneTree
 ##               excluded (nor own-axe-d, -w, -a: measured off reference swings), with a row in animations/SOURCE.md;
 ##               every pose's timing within its clip
 ##   the pick    a variation's own pose over the skill's over the element's default (a bend spec only); an excluded or a
-##               missing clip passed over; the Sway's old spells without a pose keep their tier clip
+##               missing clip passed over; the Sway's old spells without a pose keep their tier clip; the Kick (round 2) is
+##               own-bend-fire-kick-low from Frontier_Bend.res with its mirror, no stand-in, the High Kick own-bend-fire-kick
 ##   the poses   held_override in the duel: Earth Wall wall plays own-bend-earth-raise (the stomp-rise) and roots the
-##               caster, Stone boulder own-bend-earth-boulder (the owner's "left kick to stomp and then push") rooted, Fire Jab
-##               jab own-bend-fire-punch, Air Shield shield own-bend-air-shield (its first mapping, own-axe-block-high, is held back:
-##               poses.json exclude_why), Gust push (no bend spec, no pose) its mastery tier's clip
-##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: the bolt leaves 0.08 s or more after the
+##               caster, Stone boulder own-bend-earth-boulder (the owner's "left kick to stomp and then push") rooted, Punch
+##               own-bend-fire-punch, Wind Guard own-bend-air-guard (its own guard clip, round 2; its first mapping,
+##               own-axe-block-high, is held back: poses.json exclude_why), Gust push (no bend spec, no pose) its mastery
+##               tier's clip
+##   the strike  a synthetic clip (hold_s 0.2, strike_s 0.3) on Fire Blast punch: held full, the wind-up still creeps toward
+##               hold_s (the moving hold), never past it; the bolt leaves 0.08 s or more after the
 ##               release, as the pose says struck, from the pose's hand; a Catch on the same clip stands the very frame the
 ##               lock lets go; the pose taken away after a release, the fallback timer still lands the bolt within 0.25 s
+##   round 5     the round-3 forms (the air hits, the Slams, the air High Kick, the Pop) pick the animation lane's landed clips,
+##               no stand-in, in the game's limb words, never rooted, the air ones whole; their twins; the held guards' loops;
+##               nothing pending; a clip without a row has its own limb word put the game's, its root "place" not rooting
 ##   bots        NpcBody.play_cast: its library holds every pose clip; strike / rate == wind_s within 1 ms, in either
 ##               argument order; the plain push ("cast_push") for a move without a pose; a floor cast's strike its press
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_bend_poses.gd -- mode=duel
@@ -78,11 +84,16 @@ func _provenance() -> void:
 		var a := BendPoses.animation(nm)
 		var lib := BendPoses.library_of(nm)
 		var why := ""
+		# (the owner's one pick of Frontier tech, 2026-10-11, the Ice Spear's since 2026-10-12: built from the game's own pistol aim; not
+		# ours, so held to its own rule: its own library, named frontier-, listed by name in poses.json, its lineage in its metas)
+		var frontier := BendPoses.frontier_tech(nm)
 		if a == null:
 			why = "in no library"
-		elif not lib in BendPoses.LIBRARIES:
+		elif frontier and (lib != BendPoses.FRONTIER_LIBRARY or not String(a.get_meta(&"lineage", "")).contains("base library")):
+			why = "Frontier tech outside its own library or without its lineage (%s)" % lib
+		elif not frontier and not lib in BendPoses.LIBRARIES:
 			why = "not one of our own libraries (%s)" % lib
-		elif not nm.begins_with("own-"):
+		elif not frontier and not nm.begins_with("own-"):
 			why = "not named own-"
 		elif BendPoses.excluded(nm) or nm.begins_with("own-axe-d") or nm.begins_with("own-axe-w") or nm.begins_with("own-axe-a"):
 			why = "excluded"
@@ -96,8 +107,13 @@ func _provenance() -> void:
 			why = "no row in animations/SOURCE.md"
 		if why != "":
 			bad.append("%s: %s" % [nm, why])
-	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md%s"
+	_expect(bad.is_empty() and names.size() >= 8, "every pose clip (%d) is ours: an own library, own-, authored, no inherited ids, not excluded, in SOURCE.md (or the owner's listed Frontier tech, in its own library with its lineage)%s"
 			% [names.size(), "" if bad.is_empty() else " -- " + "; ".join(bad)])
+	var ft: Array = BendPoses.data().get("frontier_tech", [])
+	_expect(ft == ["frontier-pistol-ice"] and BendPoses.usable("frontier-pistol-ice") and not BendPoses.usable("frontier-pistol-lightning")
+			and not BendPoses.usable("frontier-unlisted")
+			and String(BendPoses.pick("fire_arc", "lightning", "fire").get("clip", "")) == "own-bend-fire-lightning",
+			"Frontier tech: only the listed clip may be a pose (%s), and Classic's Lightning is still the original" % [ft])
 	var ex: Array = BendPoses.data().get("exclude", [])
 	_expect("own-axe-d" in ex and "own-axe-w" in ex and "own-axe-a" in ex, "exclude names own-axe-d, -w and -a")
 	# the timing of each pose within its clip
@@ -142,6 +158,29 @@ func _picks() -> void:
 	_expect(String(j.get("clip", "")) == "own-bend-fire-punch" and is_equal_approx(float(j.get("strike_s", -1.0)), 8.0 / 30.0)
 			and String(j.get("hand", "")) == "r_palm" and j.has("hold_s") and String(j.get("alt", "")) == "own-bend-fire-punch-l",
 			"a pick filled from the clips table and the clip's metas, its alt the other hand (%s)" % str(j))
+	# the Kick's tell never lies (round 2, spec 7): the low kick, ours, in the own bending library; the High Kick the waist-high
+	var kk := BendPoses.pick("fire_kick", "kick", "fire")
+	var hk := BendPoses.pick("fire_kick", "high_kick", "fire")
+	_expect(String(kk.get("clip", "")) == "own-bend-fire-kick-low" and String(kk.get("from", "")) == "mode"
+			and BendPoses.library_of("own-bend-fire-kick-low") == "res://animations_extra/Frontier_Bend.res"
+			and String(kk.get("alt", "")) == "own-bend-fire-kick-low-l",
+			"the Kick: own-bend-fire-kick-low, in Frontier_Bend.res, no stand-in (%s from %s, %s)" % [kk.get("clip", "-"),
+			kk.get("from", "-"), BendPoses.library_of("own-bend-fire-kick-low")])
+	_expect(String(hk.get("clip", "")) == "own-bend-fire-kick" and String(hk.get("from", "")) == "mode",
+			"the High Kick: the waist-high kick (%s)" % hk.get("clip", "-"))
+	# every guard its own clip, a pose that reads at a glance (the owner's answers, 2026-10-05: the same care as earth's)
+	var gc := {"earth": ["stone_catch", "catch", "own-bend-earth-catch"],
+			"water": ["water_redirect", "redirect", "own-bend-water-turn"], "fire": ["fire_parry", "parry", "own-bend-fire-parry"],
+			"air": ["air_shield", "shield", "own-bend-air-guard"]}
+	for el: String in gc:
+		var ge: Array = gc[el]
+		var gk := BendPoses.pick(String(ge[0]), String(ge[1]), el)
+		_expect(String(gk.get("clip", "")) == String(ge[2]) and String(gk.get("from", "")) == "mode"
+				and BendPoses.library_of(String(ge[2])) == "res://animations_extra/Frontier_Bend.res",
+				"%s's guard plays its own clip, %s (%s)" % [el, ge[2], gk.get("clip", "-")])
+	var pg: Dictionary = BendPoses.pick("fire_blast", "punch", "fire").get("grow", {})
+	_expect(BendPoses.usable(String(pg.get("clip", ""))) and BendPoses.usable(String(pg.get("alt", ""))),
+			"the Punch held to grow names the Fireball's own clips (%s)" % [pg])
 	var ew := BendPoses.pick("earth_wall", "wall", "earth")
 	_expect(String(ew.get("clip", "")) == "own-bend-earth-raise" and bool(ew.get("root", false)) and String(ew.get("mask", "")) == "full",
 			"Earth Wall: the stomp-rise, whole and rooted (%s)" % str(ew))
@@ -171,6 +210,58 @@ func _picks() -> void:
 			if pk.is_empty() or not String(pk.clip).begins_with("own-"):
 				tiers.append("%s/%s" % [m, md])
 	_expect(tiers.size() <= 8, "nearly every bending move has an own pose (%d without: %s)" % [tiers.size(), ", ".join(tiers)])
+	_r5_forms()
+
+
+## Round 5 (CLIPWIRE): the animation lane's cast clips landed, each round-3 form picks its own clip (no stand-in), in the
+## game's limb words, never rooted, the air ones whole with their legs; the air hits and the Pop with their mirrored twins;
+## nothing left pending; a clip's own limb word (r, foot_l) put the game's by the pick.
+func _r5_forms() -> void:
+	var want := {
+		"rock_jab/air_hit": ["own-bend-air-hit-earth", "r_palm", "full", "own-bend-air-hit-earth-l"],
+		"water_jet/air_hit": ["own-bend-air-hit-water", "both", "full", "own-bend-air-hit-water-l"],
+		"fire_jab/air_hit": ["own-bend-air-hit-fire", "r_foot", "full", "own-bend-air-hit-fire-l"],
+		"air_palm/air_hit": ["own-bend-air-hit-air", "both", "full", "own-bend-air-hit-air-l"],
+		"earth_shove/slam": ["own-bend-earth-hammer", "both", "full", ""],
+		"wave/slam": ["own-bend-water-downpour", "both", "full", ""],
+		"fire_kick/slam": ["own-bend-fire-axe-kick", "r_foot", "full", "own-bend-fire-axe-kick-l"],
+		"air_gust/slam": ["own-bend-air-down-gust", "both", "full", ""],
+		"fire_kick/air_kick": ["own-bend-fire-flip-kick", "r_foot", "full", "own-bend-fire-flip-kick-l"],
+		"rock_jab/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"water_jet/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"fire_jab/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+		"air_palm/pop": ["own-bend-jab-rise", "r_palm", "upper", "own-bend-jab-rise-l"],
+	}
+	var bad: Array[String] = []
+	for k: String in want:
+		var w: Array = want[k]
+		var mv := k.get_slice("/", 0)
+		var pk := BendPoses.pick(mv, k.get_slice("/", 1), String(SwayMoves.move(mv).get("element", "")))
+		var alt := BendPoses._as_pose(pk.get("alt", ""))
+		var alt_pk := BendPoses._filled(alt, BendPoses.data()) if not alt.is_empty() else {}
+		var air := String(w[2]) == "full"
+		if String(pk.get("clip", "")) != String(w[0]) or String(pk.get("hand", "")) != String(w[1]) \
+				or String(pk.get("mask", "")) != String(w[2]) or bool(pk.get("root", true)) \
+				or (air and not bool(pk.get("legs_always", false))) \
+				or String(alt.get("clip", "")) != String(w[3]) \
+				or (not alt_pk.is_empty() and not String(alt_pk.get("hand", "")) in ["l_palm", "l_foot", "both"]) \
+				or BendPoses.library_of(String(w[0])) != "res://animations_extra/Frontier_Bend.res":
+			bad.append("%s: %s" % [k, pk])
+	_expect(bad.is_empty(), "round 5: every round-3 form plays its own landed clip, the game's limb, never rooted, the air ones whole%s"
+			% ("" if bad.is_empty() else " -- " + "; ".join(bad)))
+	var guards: Array[String] = []
+	for el: String in Bending.ELEMENTS:
+		var gp := BendPoses._as_pose((BendPoses.data().get("guard_hold", {}) as Dictionary).get(el, ""))
+		if String(gp.get("clip", "")) != "own-bend-guard-hold-" + el or not BendPoses.usable(String(gp.clip)):
+			guards.append(el)
+	_expect(guards.is_empty() and (BendPoses.data().get("pending_clips", []) as Array).is_empty(),
+			"round 5: each held guard's own loop is in (%s), nothing pending" % [guards])
+	BendPoses.override = {"moves": {"fire_blast": {"modes": {"punch": "own-bend-rise-fire"}}}}
+	var raw := BendPoses.pick("fire_blast", "punch", "fire")
+	BendPoses.override = {}
+	_expect(String(raw.get("hand", "")) == "r_palm" and not raw.has("root"),
+			"a clip with no row: its own limb word put the game's (r -> %s), its root \"place\" not taken for rooting (%s)"
+			% [raw.get("hand", "-"), raw.get("root", "none")])
 
 
 # ---------------------------------------------------------------- in the duel
@@ -191,6 +282,7 @@ func _go() -> void:
 	DuelMode.element = "earth"
 	_expect(BendPoses.element_of(p) == "earth", "the duel's player casts as his element (%s)" % BendPoses.element_of(p))
 	await _poses()
+	await _kick_free()
 	await _stance()
 	await _combo()
 	await _bots()
@@ -200,6 +292,63 @@ func _go() -> void:
 
 func _ground(v: Vector3) -> Vector3:
 	return Vector3(v.x, FrontierTerrain.height_at(v.x, v.z), v.z)
+
+
+## Fire's Kick and High Kick (root "strike"; the owner, 2026-10-10: "after the spell is cast let the player move not lock
+## them"): held still through the wind-up, free once the kick has struck while its clip still plays out.
+func _kick_free() -> void:
+	for mode: String in ["kick", "high_kick"]:
+		DuelMode.element = "fire"
+		_stage()
+		await _secs(0.2)
+		var ok := _ready_spell("fire_kick", mode)
+		var pt := NpcSenses.chest_of(n) if n != null else Vector3.INF
+		var began := await _hold_until(pt, func() -> bool: return c.state != SwayCaster.State.IDLE)
+		await _secs(0.1)
+		var held_winding := c.rooted
+		var full := await _hold_until(pt, func() -> bool: return c.state == SwayCaster.State.FULL, 3.0)
+		c.held_override = false
+		var struck := INF
+		for i in 120:
+			if c.pose.phase == "release" and c.pose._struck:
+				struck = i / float(Engine.physics_ticks_per_second)
+				break
+			await physics_frame
+		await _secs(0.05)
+		var free_after := not c.rooted and c.pose.phase == "release"
+		_expect(ok and began != INF and full != INF and held_winding and struck != INF and free_after,
+				"fire %s: held through the wind-up (%s), free once it has struck while its clip plays on (rooted %s, phase '%s')"
+				% [mode, held_winding, c.rooted, c.pose.phase])
+		# walking off after the strike: the kick's legs give way to the walk's (its upper body kept), so they never slide
+		var legs_gave := false
+		var seen := ""
+		var keys := p.controls
+		p.controls = PlayerControls.new(false)
+		p.controls.set_held(&"move_forward", true)
+		for i in 30:
+			await physics_frame
+			if c.pose.phase != "release":
+				break
+			var ws := _layer_weights(c.pose._cast_layers)
+			seen = "%s at %.1f m/s" % [ws, p.horizontal_speed()]
+			if float(ws.get("upper", 0.0)) > 0.05 and float(ws.get("full", 1.0)) < 0.5 * float(ws.get("upper", 0.0)):
+				legs_gave = true
+				break
+		p.controls.set_held(&"move_forward", false)
+		p.controls = keys
+		p.velocity = Vector3.ZERO
+		_expect(legs_gave, "fire %s: walking off after the strike, its legs give way to the walk's (%s)" % [mode, seen])
+		await _let_go_and_settle()
+
+
+## The cast layers' weight by mask ({mask: weight}; a hand-off blend's incoming side).
+func _layer_weights(layers: Array) -> Dictionary:
+	var out := {}
+	for l: Dictionary in layers:
+		if l.has("blend_to"):
+			return _layer_weights(l.blend_to)
+		out[String(l.get("mask", ""))] = float(l.get("weight", 0.0))
+	return out
 
 
 ## The player in the arena facing +x, the bender `d` m before him, held still and whole.
@@ -258,8 +407,8 @@ func _poses() -> void:
 	var cases := [
 		["earth", "earth_wall", "wall", "own-bend-earth-raise", true],
 		["earth", "stone_form", "cannonball", "own-bend-earth-boulder", true],
-		["fire", "fire_jab", "jab", "own-bend-fire-punch", false],
-		["air", "air_shield", "shield", "own-bend-air-shield", false],
+		["fire", "fire_blast", "punch", "own-bend-fire-punch", false],
+		["air", "air_shield", "shield", "own-bend-air-guard", false],
 		["air", "gust", "push", String(SwayPose.clip_for(2)), false],
 	]
 	for cs: Array in cases:
@@ -441,6 +590,13 @@ func _strike() -> void:
 	var wait := c.pose.strike_wait()
 	_expect(full != INF and String(c.pose.current_clip()) == "own-test-strike" and absf(wait - 0.1) < 0.02,
 			"Fire Blast punch locks on the synthetic clip (%s), its strike %.3f s past the hold" % [c.pose.current_clip(), wait])
+	# the moving hold (the owner, 2026-10-11: "make it smoother"): held, the wind-up still creeps toward hold_s, ever slower,
+	# never past it and never stopped dead on it; the strike's wait is the hold's as before (above)
+	var h1 := c.pose.clip_time()
+	await _secs(0.1)
+	var h2 := c.pose.clip_time()
+	_expect(h1 < h2 and h2 < 0.2 and h2 > 0.2 - SwayPose.HOLD_CREEP_S,
+			"a held lock's wind-up creeps toward its hold instead of freezing on it (%.5f -> %.5f s of 0.2)" % [h1, h2])
 	BendEffects.last = {"do": "sentinel"}
 	var rec := {"cast_f": -1, "at_cast": "", "struck_f": -1, "struck_do": "", "point": Vector3.INF}
 	var on_cast := func(_m: String, _t: Node3D) -> void:

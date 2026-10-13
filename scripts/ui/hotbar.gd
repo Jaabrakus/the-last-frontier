@@ -36,10 +36,21 @@ extends Node
 ##                wheel (the readied skill's variations) act; keys past them do nothing
 ##   schemes      with an element (the ring, the duel) the control scheme (MatchSetup.scheme(), data/bending/schemes.json)
 ##                shapes the keys: "keys" and "direction" as above; "radial" too, and its wheel readies any of the
-##                element's skills (ready_skill: the key holding its pair turned to it); "simple" four moves only (the
-##                first skill of keys 1-4, MatchSetup.simple_skills): the same key again and 5 do nothing, the wheel steps
-##                the four (step_skill), and a key left on its other skill is turned back as the scheme comes in
+##                element's skills (ready_skill: the key holding its pair turned to it); "first_moves" (a saved "simple"
+##                too) four moves only (the first move of keys 1-4): the same key again and 5 do nothing, the wheel steps
+##                the four (step_skill), and a key left on its other move is turned back as the scheme comes in
 ##                (_follow_scheme)
+##   round 2      an element's keys have no memory (skills_r2 spec §2.2): a tap readies its key's FIRST move (Bending.first_of),
+##                a second tap within double_tap_s its other (Bending.other_move: the mode flipped, or the partner), and
+##                so does a wheel step from the readied one; first_moves ignores the second tap. While a lock of the aim
+##                runs the key goes to the caster first (SwayCaster.key_tap: the same key switches the lock with its time
+##                kept, another key ends it), the wheel too (SwayCaster.step_other)
+##   round 3      in a stock-rules ring (RingRules.stock_on) key 3 acts at once and readies nothing, in every scheme
+##                (SwayCaster.key3_press: the dash on the deck, the air dodge in the air)
+##   F            the keys cycled, 1 -> 2 -> 3 -> 1 (SWAP_ACTION; the owner, 2026-10-11: "the F should toggle between 1 and 2";
+##                2026-10-12: "f should cycle between those 1 2 3"): an element's fighter's readied move goes to the next key, as
+##                that key's press would (swap_keys); 3 only where it is a move of its own (Bending.key3: water's Ice
+##                Tomahawk), never the movement spell (Shift's): there F goes 1 <-> 2
 
 ## Something on the bar changed (a slot filled, emptied, moved).
 signal changed
@@ -55,6 +66,8 @@ const SPELL := "spell"
 const KINDS := [WEAPON, TOOL, SPELL]
 ## Slot i's key action (i from 1): the old weapon keys.
 const ACTION := "weapon_%d"
+## F: the keys 1, 2 (and 3 where it is a move) cycled for an element's fighter (swap_keys; InputSetup).
+const SWAP_ACTION := &"bend_swap"
 ## The one-button cycles whose number keys the slots take ([action, key]); the actions stay, unbound, for remapping.
 const TAKEN_KEYS := [[&"tool_cycle", KEY_7], [&"fish_gear", KEY_8]]
 ## What is had is looked at every SYNC_EVERY physics frames (and at every key).
@@ -89,6 +102,8 @@ var _tick := 0
 var _was_sel := -2
 var _spell_free := false            ## the hands have been free since the spell was readied
 var _scheme_was := ""               ## the control scheme the keys were last shaped for (_follow_scheme)
+var _tap_key := -1                  ## an element's key tapped last (-1 none: a double tap's first) and when (BendStatus.now())
+var _tap_at := -INF
 
 
 ## The player's hotbar, made on first call.
@@ -216,6 +231,8 @@ func _ready() -> void:
 func _physics_process(dt: float) -> void:
 	_follow_caster()
 	_follow_scheme()
+	_shift_dir()
+	_key_dir()
 	if not kit_placed:
 		_kit_t += dt
 		if _kit_t >= KIT_S:
@@ -585,8 +602,6 @@ func selected() -> int:
 	var g := _gather()
 	if g != null and g.tool != "" and g.phase in [GatherTools.Phase.HOLSTER, GatherTools.Phase.DRAW_GRAB,
 			GatherTools.Phase.DRAW_OUT, GatherTools.Phase.READY, GatherTools.Phase.SWING]:
-		if g.tool == GatherTools.CLUB:
-			return slot_of(WEAPON, player.weapon_key)     # (the musket turned club is still the musket)
 		return slot_of(TOOL, g.tool)
 	var fg := FishingGear.find(player)
 	if fg != null and fg.gear != "":
@@ -602,9 +617,24 @@ func select(i: int) -> void:
 		return
 	_follow_caster()
 	sync()
+	if i == 2 and RingRules.stock_on():
+		# (an element with a key-3 move of its own, Bending.key3 (water's Ice Tomahawk, 2026-10-12): 3 readies it as the other
+		# keys ready theirs; Shift + a direction still casts the movement spell, _shift_dir)
+		var k3 := Bending.key3(_element())
+		if not k3.is_empty():
+			var w3 := Bending.first_of(k3)
+			ready_move(2, String(w3.get("id", "")), String(w3.get("mode", "")))
+			return
+		# (round 3, spec §0: in the % ring 3 acts at once, a dash or the air dodge, and never readies a move: every scheme)
+		var c3 := SwayCaster.of(player)
+		if c3 != null and c3.key3_press():
+			return
 	var e := slots[i]
-	if scheme() == "simple":
-		# (the simple scheme: four moves; a key that is not one of them, or the key again, does nothing)
+	if _element_keys():
+		_key_tap(i)
+		return
+	if _first_only():
+		# (the first-moves scheme: four moves; a key that is not one of them, or the key again, does nothing)
 		if not e.is_empty() and String(e.get("kind", "")) == SPELL and _simple_has(String(e.id)) and i != selected():
 			cursor = i
 			_take(e)
@@ -664,6 +694,57 @@ func hands_free() -> void:
 		player.toggle_hands_free()
 
 
+## The new ring (RingRules.stock_on: Lives or Zones; the owner, 2026-10-11: "those movement spells we keep it as shift and then
+## hit a direction button ... then we can use 3 for a different move"): Shift + a direction, in either order (the second press
+## makes the pair), is key 3 (select(2): the element's movement spell on the deck, the air dodge in the air) toward the held
+## keys (SwayCaster.held_world); the direction again within key3_min_s is key 3's second tap (its other move). Never with the
+## guard held (the guard's Roll is E + a direction) nor with Space (Shift + Space drops off a ledge: RingMoves._drop_off).
+func _shift_dir() -> void:
+	if player == null or not player.arena or player.is_dead or not RingRules.stock_on():
+		return
+	var c := player.controls
+	if c == null or not c.pressed(&"sprint") or c.pressed(InputSetup.GUARD_ACTION) or c.pressed(&"jump"):
+		return
+	var fresh := false
+	for a: StringName in [&"move_forward", &"move_back", &"move_left", &"move_right"]:
+		fresh = fresh or c.just_pressed(a)
+	if fresh or (c.just_pressed(&"sprint") and c.move_vector().length() > 0.3):
+		# (the movement spell, never key 3's own move: SwayCaster.key3_press as select(2) gives it an element without one)
+		_follow_caster()
+		sync()
+		var c3 := SwayCaster.of(player)
+		if c3 != null:
+			c3.key3_press()
+
+
+## A readied move's own variants (BendVariants: the Column's way, the Geyser's) picked with its key held and a direction
+## pressed (the owner, 2026-10-12: "maybe hold the key and then hit a direction keey?"; the wheel picks them too, wheel()): W up,
+## A left, D right, S from the side (the Column's wall, the Geyser's water: whichever the move has).
+const KEY_DIR := {&"move_forward": ["up"], &"move_left": ["left"], &"move_right": ["right"], &"move_back": ["wall", "water"]}
+func _key_dir() -> void:
+	if player == null or spell == "" or not player.arena or player.is_dead:
+		return
+	var vc := SwayCaster.of(player)
+	if vc == null:
+		return
+	var md := vc.mode_of(spell)
+	var l := BendVariants.list(spell, md)
+	if l.is_empty():
+		return
+	var k := Bending.key_of(_element(), spell)
+	var c := player.controls
+	if k < 0 or c == null or not c.pressed(StringName(ACTION % (k + 1))):
+		return
+	for a: StringName in KEY_DIR:
+		if not c.just_pressed(a):
+			continue
+		for v: String in KEY_DIR[a]:
+			if v in l:
+				BendVariants.set_to(player, spell, md, v)
+				_dirty_strip()
+				return
+
+
 ## The player's key event (FrontierPlayer._unhandled_input): true when it was a slot key or the wheel.
 func handle_input(event: InputEvent) -> bool:
 	for i in SLOTS:
@@ -671,19 +752,136 @@ func handle_input(event: InputEvent) -> bool:
 		if InputMap.has_action(a) and event.is_action_pressed(a):
 			select(i)
 			return true
+	if InputMap.has_action(SWAP_ACTION) and event.is_action_pressed(SWAP_ACTION) and swap_keys():
+		return true
 	if InputMap.has_action(&"weapon_next") and event.is_action_pressed(&"weapon_next"):
-		if scheme() == "simple":
-			step_skill(1)
-		elif not _step_mode(1) and not spells_only:
-			step(1)
+		wheel(1)
 		return true
 	if InputMap.has_action(&"weapon_prev") and event.is_action_pressed(&"weapon_prev"):
-		if scheme() == "simple":
-			step_skill(-1)
-		elif not _step_mode(-1) and not spells_only:
-			step(-1)
+		wheel(-1)
 		return true
 	return false
+
+
+## The keys cycled (F, SWAP_ACTION): an element's fighter's readied move goes to the next of keys 1, 2 and 3 (3 only where it is
+## a move of its own: cycle_keys), as a press of that key would ready it (its first move; a lock under way ended as another
+## key's press ends it); key 1 when none of them is readied. False when the bar is no element's (the open world's F is the
+## cook key).
+func swap_keys() -> bool:
+	if player == null or not (_element_keys() or _first_only()):
+		return false
+	var ks := cycle_keys()
+	var at := ks.find(readied_key())
+	select(int(ks[(at + 1) % ks.size()]) if at >= 0 else 0)
+	return true
+
+
+## The keys F cycles (0-based): 1 and 2, and 3 when the element has a key-3 move of its own (Bending.key3, the new ring only:
+## elsewhere 3 is the movement spell, which acts at once).
+func cycle_keys() -> Array:
+	return [0, 1, 2] if RingRules.stock_on() and not Bending.key3(_element()).is_empty() else [0, 1]
+
+
+## The key (0-based) of the readied move: its key in Bending.keys, 2 for a key-3 move of its own; -1 none.
+func readied_key() -> int:
+	if spell == "":
+		return -1
+	var el := _element()
+	if RingRules.stock_on() and spell in Bending.key3(el):
+		return 2
+	return Bending.key_of(el, spell)
+
+
+## The mouse wheel a step (`dir` 1 down, -1 up): first moves, the next of the four; an element's keys, the readied move's
+## other (step_other); else the readied spell's next mode, or the next slot.
+func wheel(dir: int) -> void:
+	# (a readied move with variants of its own, BendVariants (the Column's way): the wheel picks among them, idle or locking)
+	var vc := SwayCaster.of(player) if player != null else null
+	if vc != null and spell != "" and not BendVariants.list(spell, vc.mode_of(spell)).is_empty():
+		BendVariants.cycle(player, spell, vc.mode_of(spell), dir)
+		_dirty_strip()
+		return
+	if _first_only():
+		step_skill(dir)
+	elif _element_keys():
+		step_other()
+	elif not _step_mode(dir) and not spells_only:
+		step(dir)
+
+
+# --- an element's keys (round 2: no memory) ---------------------------------------------------------------------
+
+## Whether the keys are an element's (an element's fighter whose bar holds its keys: Bending.keys) and follow round 2's
+## taps (not the first-moves scheme: _first_only).
+func _element_keys() -> bool:
+	if player == null or not is_instance_valid(player) or _first_only():
+		return false
+	var el := _element()
+	return el != "" and not Bending.keys(el).is_empty() and (spells_only or BendPoses.element_of(player) != "")
+
+
+## The first-moves scheme (a saved "simple" too): four moves, no second tap.
+func _first_only() -> bool:
+	return scheme() in ["first_moves", "simple"]
+
+
+## Key i tapped (an element's: _element_keys). A lock of the aim running hears it first (SwayCaster.key_tap); else a tap
+## readies the key's first move and a second tap within double_tap_s its other (spec §2.2), whatever was readied before.
+func _key_tap(i: int) -> void:
+	var ks := Bending.keys(_element())
+	if i < 0 or i >= ks.size():
+		return
+	var key: Array = ks[i]
+	var now := BendStatus.now()
+	var c := SwayCaster.of(player)
+	if c != null:
+		var r := c.key_tap(i)
+		if r in ["switch", "ignored"]:
+			_tap_key = -1
+			return
+	var want := Bending.first_of(key)
+	if i == _tap_key and now - _tap_at <= Bending.rule("double_tap_s", 0.3):
+		var other := Bending.other_move(key, String(want.get("id", "")), String(want.get("mode", "")), player)
+		if not other.is_empty():
+			want = other
+		_tap_key = -1                       # (a third tap is a first tap again)
+	else:
+		_tap_key = i
+		_tap_at = now
+	ready_move(i, String(want.get("id", "")), String(want.get("mode", "")))
+
+
+## The readied move's key turned to its other move (a wheel step; spec §2.2): mid-lock the lock moves with it
+## (SwayCaster.step_other), else it is readied. False when there is none.
+func step_other() -> bool:
+	var c := SwayCaster.of(player)
+	if c != null and c.is_locking():
+		return c.step_other()
+	var el := _element()
+	var k := Bending.key_of(el, spell)
+	if k < 0 or c == null:
+		return false
+	var nxt := Bending.other_move(Bending.keys(el)[k] as Array, spell, c.base_mode_of(spell), player)
+	if nxt.is_empty():
+		return false
+	return ready_move(k, String(nxt.id), String(nxt.mode))
+
+
+## Key i turned to move `id` at `mode` and readied (its slot holds `id`; the caster's variation of it `mode`). True when it
+## is the readied move now.
+func ready_move(i: int, id: String, mode: String) -> bool:
+	if id == "" or i < 0 or i >= SLOTS:
+		return false
+	var e := make(SPELL, id)
+	if String(slots[i].get("id", "")) != id and not assign(i, e):
+		return false
+	var c := SwayCaster.of(player)
+	if c != null and mode != "" and c.base_mode_of(id) != mode:
+		c.set_mode(id, mode)
+	if spell != id or _caster_spell() != id:
+		cursor = i
+		_take(slots[i])
+	return spell == id
 
 
 # --- the control schemes (an element's fighter) -----------------------------------------------------------------
@@ -703,9 +901,13 @@ func _element() -> String:
 	return el
 
 
-## Whether `id` is one of the simple scheme's four moves for the player's element.
+## Whether `id` is one of the first-moves scheme's four for the player's element (the first move of keys 1-4).
 func _simple_has(id: String) -> bool:
-	return not MatchSetup.simple_entry(_element(), id).is_empty()
+	var ks := Bending.keys(_element())
+	for i in mini(ks.size(), 4):
+		if not (ks[i] as Array).is_empty() and String((ks[i] as Array)[0]) == id:
+			return true
+	return false
 
 
 ## Readies the element's skill `id` from its key (the move wheel's pick, RadialWheel): the key whose pair holds it turned to
@@ -748,7 +950,7 @@ func _follow_scheme() -> void:
 	if s == _scheme_was:
 		return
 	_scheme_was = s
-	if s != "simple":
+	if not _first_only():
 		return
 	var el := _element()
 	if el == "":
@@ -953,3 +1155,8 @@ func _in_pack(kind: String) -> bool:
 func _gather() -> GatherTools:
 	var g: GatherTools = player.gather if player != null else null
 	return g if g != null and is_instance_valid(g) else null
+
+
+## The strip told a variant changed (its words are read at its next look).
+func _dirty_strip() -> void:
+	changed.emit()

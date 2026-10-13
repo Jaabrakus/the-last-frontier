@@ -320,6 +320,21 @@ func told(foe: Node3D, at: Vector3) -> void:
 		_suspect(at)
 
 
+## A coach's pick (the ring's team coach, RingMode._coach): `foe` its target from now on, whatever it was doing (told() only
+## wakes a calm one); a foe it may fight only.
+func focus(foe: Node3D) -> void:
+	if foe == null or not _is_foe(foe) or _routed or _released or state in [State.DEAD, State.SURRENDER]:
+		return
+	target = foe
+	last_seen = foe.global_position
+	seen_t = _clock
+	aware[foe.get_instance_id()] = maxf(float(aware.get(foe.get_instance_id(), 0.0)), SPOT)
+	if state != State.COMBAT:
+		if skirmish != null:
+			skirmish.reset()
+		_to(State.COMBAT)
+
+
 func on_died() -> void:
 	_to(State.DEAD)
 

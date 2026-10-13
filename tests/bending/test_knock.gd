@@ -5,7 +5,8 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_knock.gd -- mode=duel
 ##
 ##   flat       an 8 m/s knock carries the player and the bot about 5.3 m (v^2 / 2 GROUND_DECEL, within 20%), within 15% of
-##              each other; last_knocker is who knocked; a listener in bend_knock_listeners told once a knock
+##              each other; last_knocker is who knocked; a listener in bend_knock_listeners told once a knock (both earth and
+##              standing still: round 2's Rooted takes its share of the knock first, BendStatus.rooted_mult)
 ##   launch     (0, 11, 0) lifts both more than 1.5 m; is_launched() in the air, not after landing; `landed` once
 ##   anchor     an anchored one is not moved by a knock
 ##   ragdoll    a knock under BendKnock.ragdoll_mps never throws the player down (PlayerRagdoll.is_down() stays false)
@@ -13,8 +14,14 @@ extends SceneTree
 ##              is bend_speed_cap)
 ##   root       a rooted bot: held stays false, feet_held, no horizontal speed for the root's time, its brain still thinks
 ##              (NpcFighter.thinks), free after
+##   (round 2: no root or slow lands on one who casts as an element, BendStatus.held_off; the hold and the root are the open
+##   world's, tried with the two's elements taken off for them and put back after)
 ##   winded     no_death: 999 of a blow (Hit.deliver), a bleed past the last of the health, a bot's wound pool: alive at 1
 ##              health, `winded` once each
+##   the gate   (round 3, smash_r3 spec v2 §14.1, §15: the duel has no % ring) RingRules.stock_on() false, no RingRules, no take
+##              filters, no RingMoves, gravity_override 0; two knocks ADD (the carry is their sum), the carry decays 0.8 m/s2
+##              in the air (AIR_DECEL), ragdoll_mps 9, knock_t 0.25 + |kv| / 20, no hitstun (stun_t 0), a bend's hurt lowers
+##              health (RingRules.on_hit has nothing to say)
 ## Last line "KNOCK TEST PASSED" or "KNOCK TEST FAILED"; exit 0 only on a pass.
 
 const LIMIT_S := 240.0
@@ -120,6 +127,7 @@ func _go() -> void:
 	await _no_ragdoll()
 	await _hold()
 	await _root()
+	await _gate_off()
 	await _winded()
 	_end()
 
@@ -135,6 +143,8 @@ func _flat_knock(l: Listener) -> void:
 	var p0 := p.global_position
 	var n0 := n.global_position
 	var heard0 := l.got.size()
+	var mp := BendStatus.rooted_mult(p)
+	var mn := BendStatus.rooted_mult(n)
 	BendStatus.knock(p, Vector3(-8.0, 0.0, 0.0), n)
 	BendStatus.knock(n, Vector3(8.0, 0.0, 0.0), p)
 	var kp := BendKnock.peek(p)
@@ -145,8 +155,10 @@ func _flat_knock(l: Listener) -> void:
 	var dp := _flat(p.global_position, p0)
 	var dn := _flat(n.global_position, n0)
 	var want := 64.0 / (2.0 * BendKnock.GROUND_DECEL)
-	_expect(absf(dp - want) <= want * 0.2 and absf(dn - want) <= want * 0.2,
-			"8 m/s on flat stone: the player %.2f m, the bot %.2f m (about %.2f)" % [dp, dn, want])
+	var wp := want * mp * mp
+	var wn := want * mn * mn
+	_expect(absf(dp - wp) <= wp * 0.2 and absf(dn - wn) <= wn * 0.2,
+			"8 m/s on flat stone: the player %.2f m, the bot %.2f m (about %.2f, %.2f: Rooted x%.2f, x%.2f)" % [dp, dn, wp, wn, mp, mn])
 	_expect(absf(dp - dn) <= maxf(dp, dn) * 0.15, "the same knock for both: within 15%% (%.2f against %.2f m)" % [dp, dn])
 	_expect(p.global_position.y > SLAB_Y - 0.2 and n.global_position.y > SLAB_Y - 0.2, "both still on the slab")
 	_expect(kp.last_knocker == n and kn.last_knocker == p, "last_knocker: the bot knocked the player and the player the bot")
@@ -154,6 +166,40 @@ func _flat_knock(l: Listener) -> void:
 			"a listener in bend_knock_listeners told once a knock (%d)" % (l.got.size() - heard0))
 	_expect(kp.kv == Vector3.ZERO and kn.kv == Vector3.ZERO and kp.knock_t == 0.0 and n.knock_t() == 0.0 and n.action == "",
 			"spent: no knock left, the bot's hands its own again ('%s')" % n.action)
+
+
+# ---------------------------------------------------------------- round 3: the gate off
+func _gate_off() -> void:
+	await _stage()
+	_expect(not RingRules.stock_on() and RingRules.current() == null and BendStatus.take_filters.is_empty() and RingMoves.of(p) == null
+			and RingMoves.of(n) == null and BendKnock.gravity_override == 0.0 and BendKnock.ragdoll_mps == 9.0,
+			"the gate off in the duel: no RingRules, no take filters, no RingMoves, gravity_override 0, ragdoll_mps 9")
+	var kn := BendKnock.of(n)
+	kn.reset()
+	BendStatus.knock(n, Vector3(4.0, 0.0, 0.0), p)
+	BendStatus.knock(n, Vector3(4.0, 0.0, 0.0), p)
+	var kv := kn.kv.length()
+	var stun := kn.stun_t
+	var kt := kn.knock_t
+	var mn := BendStatus.rooted_mult(n)
+	_expect(absf(kv - 8.0 * mn) < 0.05 and stun == 0.0 and absf(kt - (0.25 + kv / 20.0)) < 0.02,
+			"two knocks of 4 m/s ADD (carry %.2f, x%.2f Rooted), no hitstun (%.2f), knock_t today's (%.3f)" % [kv, mn, stun, kt])
+	await _secs(2.0)
+	# the carry in the air: 0.8 m/s2 (a launch up and out)
+	kn.reset()
+	BendStatus.knock(n, Vector3(6.0, 9.0, 0.0), p)
+	await _secs(0.1)
+	var k0 := kn.kv.length()
+	await _secs(0.5)
+	var k1 := kn.kv.length()
+	_expect(kn.is_launched() and absf((k0 - k1) / 0.5 - BendKnock.AIR_DECEL) < 0.1,
+			"in the air the carry decays at %.2f m/s2 (AIR_DECEL 0.8)" % ((k0 - k1) / 0.5))
+	await _secs(2.5)
+	var h0 := n.health
+	BendStatus.hurt(n, 10.0, n.global_position + Vector3.UP, Vector3.FORWARD, p, -1.0, {"tag": "stone_form/spike"})
+	_expect(n.health < h0 and n.health_max - n.health > 1.0, "a bend's hurt lowers health (%.0f -> %.0f): no %% outside the ring" % [h0, n.health])
+	n.health = n.health_max
+	await _secs(0.5)
 
 
 # ---------------------------------------------------------------- launch
@@ -216,6 +262,12 @@ func _no_ragdoll() -> void:
 # ---------------------------------------------------------------- the countdown's hold
 func _hold() -> void:
 	await _stage()
+	var off0 := BendStatus.held_off
+	BendStatus.root(p, 0.3)
+	BendStatus.slow(n, 0.3)
+	_expect(BendStatus.held_off == off0 + 2 and p.bend_speed_cap == INF and not n.feet_held and not p.has_meta(&"bend_root"),
+			"round 2: no root or slow on one who casts as an element (held off %d)" % (BendStatus.held_off - off0))
+	_elements(false)
 	p.drag_speed_cap = 0.0                   # (as DuelMode holds him through a countdown)
 	BendStatus.root(p, 0.3)
 	_expect(p.bend_speed_cap == 0.0 and p.drag_speed_cap == 0.0, "rooted: the bend's own cap at 0")
@@ -227,6 +279,23 @@ func _hold() -> void:
 	_expect(is_equal_approx(p.bend_speed_cap, BendStatus.SLOW_MPS) and p.drag_speed_cap == INF, "slowed: the bend's cap at the slow pace")
 	await _secs(0.6)
 	_expect(p.bend_speed_cap == INF, "the slow over: free")
+	_elements(true)
+
+
+var _els := {}
+## The player's and the bot's elements taken off (`on` false: the open world's roots and slows apply to them) or put back.
+func _elements(on: bool) -> void:
+	if not on:
+		_els = {"duel": DuelMode.element, "p": Bending.of(p).element, "n": n.element, "nb": Bending.of(n).element}
+		DuelMode.element = ""
+		Bending.of(p).element = ""
+		n.element = ""
+		Bending.of(n).element = ""
+		return
+	DuelMode.element = String(_els.get("duel", "earth"))
+	Bending.of(p).element = String(_els.get("p", ""))
+	n.element = String(_els.get("n", "earth"))
+	Bending.of(n).element = String(_els.get("nb", ""))
 
 
 # ---------------------------------------------------------------- root on the bot
@@ -235,6 +304,7 @@ func _root() -> void:
 	await _secs(0.5)
 	var th0 := n.thinks
 	var s := 1.5
+	_elements(false)
 	BendStatus.root(n, s)
 	var fast := 0.0
 	var held_ever := false
@@ -250,6 +320,7 @@ func _root() -> void:
 	_expect(thought >= 4, "rooted: the brain still thinks (%d thoughts in %.1f s)" % [thought, s - 0.1])
 	await _secs(0.4)
 	_expect(not n.feet_held and not n.held, "the root over: the feet free")
+	_elements(true)
 
 
 # ---------------------------------------------------------------- no death

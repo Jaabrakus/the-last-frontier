@@ -9,7 +9,13 @@ extends SceneTree
 ##     data/ring/*.json       every string value (not the "_..." doc keys, not the files' "summary" doc line)
 ##     the menu's code        the string literals of scripts/ui/menu/main_menu.gd and scripts/ring/match_setup.gd
 ##     the menu on screen     every line of the main menu: its rows, the Tidebreak panel with each element's keys shown in
-##                            turn, the Open world panel
+##                            turn, the Practice and Controls panels, the Open world panel
+##     round 2's words        every new label, tip, lesson card, key hint, wheel name, F1 and first-time line and the kit's
+##                            lines (KitWords.every_line), held to ROUND2_WORDS too (Water Whip, Air Ball, Air Shield,
+##                            Spout, redirect lightning, "bend" in any form); KitWords, BendStrip and RingLessons' strings
+##     round 3's values   screens.json, rules.json's words, hud.json, lessons.json, practice.json, movement.json's words and
+##                            moves.json's labels: no show words and no Smash names (stock, blast zone, DI, tech, edge-guard,
+##                            meteor, smash, Final Smash), values only (never keys or ids)
 ##   reported (NOTE lines, not failures: files other tasks of the build own, to clean in their own work)
 ##     data/sway/moves.json   each move's label and its variations' labels (the HUD's ready line shows them)
 ##     the HUD and the ring   the string literals of the HUD, the duel's and the ring's scripts, the first-time help, the
@@ -22,7 +28,11 @@ const LIMIT_S := 100.0
 const WORDS := ["avatar", "benders?", "bending", "pro-?bend\\w*", "korra", "aang", "airbend\\w*", "firebend\\w*",
 		"earthbend\\w*", "waterbend\\w*", "air scooters?", "fire nation", "water tribes?", "earth kingdom", "air nomads?",
 		"republic city", "ba sing se", "omashu"]
-const HELD_CODE := ["res://scripts/ui/menu/main_menu.gd", "res://scripts/ring/match_setup.gd"]
+## Round 2's too, held on every new label, tip and lesson card (skills_r2 spec §11 q16: the names the kits left behind).
+const ROUND2_WORDS := ["water whip", "air balls?", "air shields?", "spouts?", "redirect lightning", "bend\\w*"]
+const R2Layout := preload("res://tests/ring/r2_layout.gd")
+const HELD_CODE := ["res://scripts/ui/menu/main_menu.gd", "res://scripts/ring/match_setup.gd", "res://scripts/ui/kit_words.gd",
+		"res://scripts/ui/bend_strip.gd", "res://scripts/ring/ring_lessons.gd"]
 ## Reported only: owned by the build's other tasks (the HUD, the ring's rules and screens, the bots, the moves' data).
 const NOTED_CODE := ["res://scripts/ui/hud.gd", "res://scripts/ui/how_to.gd", "res://scripts/duel/duel_mode.gd",
 		"res://scripts/duel/duel_menu.gd", "res://scripts/ui/menu/menu_paintings.gd", "res://scripts/ui/menu/loading_screen.gd",
@@ -78,12 +88,194 @@ func _run() -> void:
 			"the patterns catch the words (%s)" % [hits("Bending the pro-bending rules, a Bender's airbending and Earthbenders")])
 	check(hits("a bend in the river; bend_pools; docs/bending_design.md; bendy; Tidebreak; the air scooters") == ["air scooters"],
 			"and not words that only hold them (%s)" % [hits("a bend in the river; bend_pools; docs/bending_design.md; bendy; Tidebreak; the air scooters")])
+	var laid := R2Layout.apply()
+	print("  info round 2's key layout %s" % ("put in for this run (the kits' data not merged here)" if laid else "from the data"))
 	_ring_data()
 	_held_code()
 	await _menu()
+	_round2()
 	_moves()
+	_values_r3()
+	_advancement()
+	_advancement_tips()
 	_noted_code()
 	_end()
+
+
+## Round 3 (smash_r3 spec v2 §15 PERCENT): every player-facing VALUE (words, labels, card and hint text; never keys or ids:
+## a value with no space that reads as an id, a path or a tag is left out) of screens.json, rules.json's words, hud.json,
+## lessons.json, practice.json, sides.json (round 4), movement.json's words and moves.json's labels, free of the show's words AND Smash's own
+## names (stock, blast zone, DI, tech, edge-guard, meteor, smash, Final Smash).
+func _values_r3() -> void:
+	var smash := RegEx.create_from_string("(?i)\\b(?:stocks?|blast ?zones?|tech(?:s|ed|ing)?|edge-?guard\\w*|meteor\\w*|smash\\w*|final smash)\\b")
+	var di := RegEx.create_from_string("\\bDI\\b")
+	var idlike := RegEx.create_from_string("^[A-Za-z0-9_./:%-]*$")
+	var sources := {}
+	var screens: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/screens.json"))
+	sources["screens.json"] = screens
+	var rules: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/rules.json"))
+	sources["rules.json words"] = (rules as Dictionary).get("words", {}) if rules is Dictionary else {}
+	for f: String in ["hud.json", "lessons.json", "practice.json", "sides.json"]:
+		var p := "res://data/ring/" + f
+		sources[f] = JSON.parse_string(FileAccess.get_file_as_string(p)) if FileAccess.file_exists(p) else {}
+	var mv: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/ring/movement.json"))
+	sources["movement.json words"] = (mv as Dictionary).get("words", {}) if mv is Dictionary else {}
+	var labels: Array = []
+	var moves: Dictionary = SwayMoves.data().get("moves", {})
+	for id: String in moves:
+		if moves[id] is Dictionary:
+			labels.append(String((moves[id] as Dictionary).get("label", "")))
+			var ml: Variant = (moves[id] as Dictionary).get("mode_labels", {})
+			if ml is Dictionary:
+				for k in ml:
+					labels.append(String(ml[k]))
+	sources["moves.json labels"] = labels
+	var all_ok := true
+	var count := 0
+	for name: String in sources:
+		var vals: Array = []
+		_values(sources[name], vals)
+		var found: Array = []
+		for v: String in vals:
+			if v.strip_edges() == "" or (not v.contains(" ") and idlike.search(v) != null and not v.contains("%")):
+				continue                                   # (an id, a tag, a path: not words on the screen)
+			count += 1
+			for w in hits(v):
+				found.append("'%s': %s" % [v.left(50), w])
+			for mt in smash.search_all(v):
+				found.append("'%s': %s" % [v.left(50), mt.get_string()])
+			for mt in di.search_all(v):
+				found.append("'%s': %s" % [v.left(50), mt.get_string()])
+		check(found.is_empty(), "%s: no show words and no Smash names in its player-facing values (%s)" % [name, found])
+		all_ok = all_ok and found.is_empty()
+	check(count > 200, "round 3's player-facing values read (%d)" % count)
+	check(smash.search("Lives and the water's edge: steer, break your fall") == null and smash.search("three stocks") != null
+			and di.search("hold DI") != null and smash.search("a technique") == null, "the Smash names' patterns catch them, not their neighbours")
+
+
+## The Character Advancement window (scripts/ui/advancement): every word of data/ui/advancement.json, every player-facing
+## string of data/bending/fighting_styles.json (labels, lines, levers), the string literals of the window's scripts, and
+## every line the window shows (tests/ui/test_advancement_window.gd reads the window itself): none of the show's words, no
+## "bend" in any form, no third-party game's names (Spellbreak, Azeroth, Warcraft, Blizzard, WoW, Ascension).
+func _advancement() -> void:
+	var re3 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS + ["spellbreak", "azeroth", "warcraft", "blizzard", "wow", "ascension"])))
+	var sources := {}
+	for p: String in ["res://data/ui/advancement.json", "res://data/bending/fighting_styles.json"]:
+		var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(p)) if FileAccess.file_exists(p) else null
+		check(v != null, "%s parses" % p)
+		var vals: Array = []
+		_values(v, vals)
+		sources[p] = vals
+	var idlike := RegEx.create_from_string("^[A-Za-z0-9_./:%-]*$")
+	var n := 0
+	for p: String in sources:
+		var found: Array = []
+		for t: String in sources[p]:
+			if not t.contains(" ") and idlike.search(t) != null and not t.contains("%"):
+				continue                                   # (an id, a tag, a path: not words on the screen)
+			n += 1
+			for m in re3.search_all(t):
+				found.append("'%s': %s" % [t.left(50), m.get_string()])
+		check(found.is_empty(), "%s: no show words, no 'bend', no third-party names (%s)" % [p, found])
+	check(n > 200, "the window's words read (%d)" % n)
+	var dir := DirAccess.open("res://scripts/ui/advancement")
+	if dir != null:
+		for f in dir.get_files():
+			if f.ends_with(".gd"):
+				var found: Array = []
+				var lines := FileAccess.get_file_as_string("res://scripts/ui/advancement/" + f).split("\n")
+				for i in lines.size():
+					for lit: String in literals(lines[i]):
+						if lit.begins_with("res://") or lit.begins_with("user://"):
+							continue                       # (a path, not a word on the screen)
+						for m in re3.search_all(lit):
+							found.append("line %d: %s" % [i + 1, m.get_string()])
+				check(found.is_empty(), "scripts/ui/advancement/%s: no show words in its strings (%s)" % [f, found])
+
+
+## What the window's node tips print (the draft text of data/sway/skill_tree.json comes through AdvancementData's player_text and
+## advancement.json's overrides): every node of every element, in the three states a tip can read, as the short tip and the full
+## one. No show word, no "bend", no third-party name, and nothing a designer wrote for themselves: no raw id (earth_shove),
+## no "question 4", no "round 2", no date, no "dormant", no "deg" for a degree, no "Held for ...", no "Yours to rule on".
+func _advancement_tips() -> void:
+	var re3 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS + ["spellbreak", "azeroth", "warcraft", "blizzard", "wow", "ascension"])))
+	var leak := RegEx.create_from_string("(?i)\\b[a-z]+(?:_[a-z]+)+\\b|\\bquestion \\d|\\bround \\d|\\d{4}-\\d{2}-\\d{2}|\\bdormant\\b|\\d ?deg\\b|\\bheld for\\b|yours to rule|bring (?:it|them) back|\\bheld:")
+	var lines_read := 0
+	var bad: Array = []
+	for el: String in AdvancementData.ELEMENTS:
+		var lo := AdvancementLoadout.new(el)
+		for id: String in AdvancementData.node_ids(el):
+			for st: String in ["available", "held", "worn"]:
+				for full: bool in [false, true]:
+					for l: Dictionary in AdvancementTip.node_lines(id, st, lo, full):
+						lines_read += 1
+						var t := String(l.text)
+						var m := leak.search(t)
+						if m != null:
+							bad.append("%s (%s): '%s' in '%s'" % [id, st, m.get_string(), t.left(70)])
+						var w := re3.search(t)
+						if w != null:
+							bad.append("%s (%s): word '%s' in '%s'" % [id, st, w.get_string(), t.left(70)])
+	check(bad.is_empty(), "no node tip reads a design note, a raw id or a banned word (%d of %d lines: %s)" % [bad.size(), lines_read, bad.slice(0, 6)])
+	check(lines_read > 2000, "the node tips were read (%d lines)" % lines_read)
+	check(leak.search("Draws on the dormant earth_shove split.") != null and leak.search("Held for the owner (question 4): x") != null
+			and leak.search("the Lash curves 12 deg at most") != null and leak.search("Rank 1/1 · 2 points · Catch") == null, "the leak patterns catch the notes, not their neighbours")
+
+
+## Every string value under `v` (the "_..." doc keys and "summary" skipped), into `out`.
+func _values(v: Variant, out: Array) -> void:
+	if v is Dictionary:
+		for k in v:
+			var ks := String(k)
+			if ks.begins_with("_") or ks == "summary":
+				continue
+			_values(v[k], out)
+	elif v is Array:
+		for x in v:
+			_values(x, out)
+	elif v is String:
+		out.append(v)
+
+
+## Round 2's words (skills_r2: every new label, tip and lesson card): none of WORDS nor ROUND2_WORDS (the show's names the
+## kit's moves left: Water Whip, Air Ball, Air Shield, Spout, redirect lightning, air scooter, and "bend" in any form; an
+## [action] token of a lesson line is its key, not a word, and is left out).
+func _round2() -> void:
+	var re2 := RegEx.create_from_string("(?i)\\b(?:%s)\\b" % "|".join(PackedStringArray(WORDS + ROUND2_WORDS)))
+	var tok := RegEx.create_from_string("\\[[a-z_0-9]+\\]")
+	var texts: Array = KitWords.every_line()
+	texts.append_array(MatchSetup.screens().get("tips", []))
+	texts.append(FrontierHUD.ARENA_HELP)
+	for k: String in FrontierHUD.ARENA_KEYS:
+		texts.append(String(FrontierHUD.ARENA_KEYS[k]))
+	for id: String in HowTo.ARENA_TOPICS:
+		texts.append(String(HowTo.TOPICS[id].title))
+		texts.append_array(HowTo.TOPICS[id].steps)
+	var ld: Dictionary = MatchSetup.screens().get("loading", {})
+	texts.append(String(ld.get("title", "")))
+	texts.append_array(ld.get("captions", []))
+	var cards := 0
+	for l: Dictionary in RingLessons.data().get("lessons", []):
+		texts.append(String(l.get("title", "")))
+		for s: String in (l.get("by", {}) as Dictionary):
+			texts.append(String((l.by[s] as Dictionary).get("line", "")))
+			cards += 1
+	for s: String in (RingLessons.data().get("hints", {}) as Dictionary):
+		if s.begins_with("_") or not RingLessons.data().hints[s] is Array:
+			continue
+		for h: Dictionary in RingLessons.data().hints[s]:
+			texts.append(String(h.get("line", "")))
+	for el: String in Bending.ELEMENTS:
+		for it: Dictionary in RadialWheel.items_for(el):
+			texts.append(String(it.label))
+	var found: Array = []
+	for t in texts:
+		var plain := tok.sub(String(t), "", true)
+		for mt in re2.search_all(plain):
+			found.append("'%s': %s" % [String(t).left(60), mt.get_string()])
+	check(found.is_empty() and texts.size() > 200 and cards >= 20,
+			"round 2's labels, tips, lesson cards (%d), hints, wheel names and help: no show words, no old names (%d lines%s)"
+			% [cards, texts.size(), "" if found.is_empty() else ": %s" % [found]])
 
 
 ## data/ring/*.json: every string value but the doc keys.
@@ -190,6 +382,12 @@ func _menu() -> void:
 		m._show_keys(el)
 		await frames(1)
 		seen.append_array(_labels(m._panel))
+	m._open_practice()
+	await frames(2)
+	seen.append_array(_labels(m._panel))
+	m._open_controls()
+	await frames(2)
+	seen.append_array(_labels(m._panel))
 	m._open_world()
 	await frames(2)
 	seen.append_array(_labels(m._panel))

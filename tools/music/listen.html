@@ -63,10 +63,15 @@ footer.player { position: fixed; left: 0; right: 0; bottom: 0; background: var(-
 	<h1>FRONTIER</h1>
 	<p class="sub">The soundtrack: 55 pieces, played on VSCO 2 Community Edition's orchestra (Versilian Studios, CC0), a
 		synthesized choir and music box. The giants and the land after Shadow of the Colossus, the night, home and
-		story after Fullmetal Alchemist. Our own themes throughout.</p>
+		story after Fullmetal Alchemist. Tidebreak's ring has its own score in three layers and its stingers. Our own themes
+		throughout.</p>
 	<div class="actions">
 		<button class="primary" id="playall">▶ Play all</button>
 		<button id="fight">⚔ Hear a fight (as the game plays it)</button>
+		<button id="ring0">Tidebreak level 0</button>
+		<button id="ring1">Level 1</button>
+		<button id="ring2">Level 2</button>
+		<button id="ringgame">▶ Hear a game (90 s, as the ring plays it)</button>
 		<label class="tog"><input type="checkbox" id="loopfight"> Loop the fight cues like the game</label>
 	</div>
 </header>
@@ -103,63 +108,43 @@ const GROUPS = [
 		["night_elegy", "Elegy", "The cellos' song over the piano, a violin's lift, the choir.", "Night"],
 	]],
 	["Places", "Coming into a place after a while away plays its piece.", [
-		["loc_fort", "The Fort", "The settlers' hymn, a fife-and-drum tune, the hymn as a church sings it.", "The Flatts' fort"],
 		["loc_farms", "The Farms", "A Palatine country dance (Ländler): fiddle, clarinet, plucked strings.", "The farms and the mill (story)"],
 		["loc_river", "The Ford", "The harp rippling, a flute in F Lydian, the clarinet answering.", "The ford, the lake shore"],
 		["loc_woods", "Deep Woods", "A low drone, a clarinet, a far horn and its echo.", "Deep woods, old woods, the ridge"],
 		["loc_cliffs", "The Cliffs", "Horn calls echoing on open fifths, a broad tune.", "The cliffs"],
 		["loc_marsh", "The Marsh", "A bassoon, odd plucks, trembling violas, cold drops.", "The marsh"],
-		["loc_wreck", "The Wreck", "The wonder's motif hushed on a solo violin.", "The wreck's pine grove (story)"],
 	]],
 	["The giants", "After Shadow of the Colossus. In the game these cross on bar lines; try “Hear a fight”.", [
 		["giant_battle", "The Giant", "D minor, 144 BPM: the ostinato, the horns, the giant's theme, the climb.", "A mammoth turns on you"],
-		["giant_upper_hand", "The Upper Hand", "The Frontier theme turned heroic.", "A knee buckles, or you're on it"],
-		["giant_lament", "Lament", "Not a victory: the cellos, then the violins and choir.", "The giant falls"],
 	]],
 	["The story", "", [
-		["story_wonder", "Broken Sky", "The sky galleons: the choir's rising motif, then everyone.", "Two Fires: “Look up at the broken sky”"],
 		["story_sorrow", "Ash", "The Frontier theme on a solo violin over the piano.", "Ash: the farms burned"],
 		["story_home", "A House and a Home", "The family theme for orchestra, ending in E major.", "The roof goes on"],
 	]],
+	["Tidebreak: the score in layers", "The ring's own score (ring_fight.py): D major, 132 BPM, 32 bars, the Tide motif (A D E F# A). Three stems of one length the game lays over each other as the match rises; try the level buttons and “Hear a game”.", [
+		["ring_fight_base", "Base", "Level 0: the big drums, the frame and log drums rowing, the low strings' ostinato, the sub.", "Always, from the go"],
+		["ring_fight_drive", "Drive", "Added at level 1: the brass on the off beats (horns at D4 or under), the motif low in the horns and trombones, spiccato strings.", "60 %, 2:00 left, or 2 falls"],
+		["ring_fight_peak", "Peak", "Added at level 2: the tune in the violins and trumpets, woodwind runs, the choir, timpani and cymbals.", "A last life at 80 %, 0:30 left, sudden death"],
+		["ring_fight", "The Go", "The score's own first downbeat, struck once at “Break!”.", "Each game's go"],
+	]],
+	["Tidebreak: the stingers", "Each quotes the motif. Over the score the loop ducks 9 dB and comes back over a beat; never two within 1.5 s (the bigger wins).", [
+		["ring_sting_countdown", "The Count", "The bed under 3, 2, 1: strings trembling on D, the rolls rising into the go.", "Each game's countdown"],
+		["ring_sting_ko_dealt", "Into the Water", "The motif bright and quick, a cymbal on it.", "A fall you dealt"],
+		["ring_sting_ko_taken", "Under", "The motif turned to D minor, falling to a low B-flat.", "A fall you took"],
+		["ring_sting_last_life", "Last One", "A low swell, the motif's head at its crest.", "A side's last life starts"],
+		["ring_sting_sudden_death", "Next One Wins", "The rolls rising, the motif stabbed low, a hit.", "Sudden death"],
+		["ring_sting_game_won", "Game", "The motif and its answer to a D major close.", "A game won"],
+		["ring_sting_game_lost", "Game Lost", "The motif slow in D minor, a plagal close.", "A game lost"],
+		["ring_sting_match_won", "The Match", "The motif broadened for everyone, the choir on the last chord.", "The match won"],
+		["ring_sting_match_lost", "Next Time", "The motif in minor in the cellos and choir.", "The match lost"],
+	]],
 	["Character creator: the peoples", "Each people's theme loops while it is chosen in the creator.", [
-		["people_english", "English", "A ballad in G: flute, then violins, over the harp.", "Europe"],
-		["people_scots_irish", "Scots-Irish", "A jig on the fiddle over a drone and the frame drum.", "Europe"],
-		["people_french", "French", "A minuet in A minor: oboe and strings, plucked continuo.", "Europe"],
-		["people_palatine", "Palatine German", "A chorale-like folk song on the clarinet.", "Europe"],
-		["people_dutch", "Dutch (Albany)", "A Dorian dance: recorder-like flute, plucked strings, tambourine.", "Europe"],
-		["people_spanish", "Spanish", "A fandango over the Andalusian cadence, a strummed guitar (the harp), castanets.", "Europe"],
-		["people_haudenosaunee", "Haudenosaunee", "A landscape in E minor pentatonic: flute, then horn; a steady soft drum and rattle.", "Eastern Woodlands"],
-		["people_lenape", "Lenape", "The river: clarinet over rippling harp.", "Eastern Woodlands"],
-		["people_shawnee", "Shawnee", "The forest: oboe, low strings, a soft pulse.", "Eastern Woodlands"],
-		["people_wabanaki", "Wabanaki", "The Dawnland: flute over swelling strings and the sea.", "Eastern Woodlands"],
-		["people_west_african", "West African", "Marimba (balafon) and kora-like harp over a 12-pulse bell and hand drums.", "Africa"],
-		["people_central_african", "Central African", "Interlocking plucked parts, hand drums, flute and xylophone.", "Africa"],
-		["people_african_american", "African American", "A spiritual's call and answer (cello and choir), a banjo's frail, patting juba.", "Africa"],
-		["people_ethiopian", "Ethiopian", "Tizita in 6/8: flute and krar-like harp, the kebero.", "Africa"],
-		["people_japanese", "Japanese", "The In scale: flute with bends over a drone, koto-like harp, sparse big drums.", "East Asia"],
-		["people_chinese", "Chinese", "Pentatonic: erhu-like violin, pipa tremolo, a gong.", "East Asia"],
-		["people_korean", "Korean", "A minor pentatonic in three: piri-like oboe, gayageum-like harp, janggu.", "East Asia"],
-		["people_south_asian", "South Asian", "A Yaman-like raga: violin over the tanpura's drone, tabla-like drums.", "South Asia"],
-		["people_filipino", "Filipino", "A kundiman in 3/4: violin over a rondalla.", "Southeast Asia"],
 		["people_vietnamese", "Vietnamese", "Pentatonic: dan bau-like violin glides, dan tranh, a wood block.", "Southeast Asia"],
 		["people_thai", "Thai (Siamese)", "Ranat (xylophone) and pi (oboe), the ching and taphon.", "Southeast Asia"],
 		["people_malay", "Malay", "A joget: violin, rebana and gong.", "Southeast Asia"],
-		["people_pacific_islander", "Pacific Islander", "Choir harmony over log drums.", "Southeast Asia"],
-		["people_levantine", "Levantine", "Maqam Bayati (with its quarter tone): violin, oud, maqsum.", "Middle East"],
-		["people_ottoman_turkish", "Ottoman Turkish", "A mehter march in makam Hicaz: zurna-like oboe and trumpet, davul and cymbals.", "Middle East"],
-		["people_persian", "Persian", "Dastgah Shur in 6/8: kamancheh-like violin, santur, tombak.", "Middle East"],
-		["people_arab", "Arab", "Maqam Hijaz: ney-like flute, qanun, wahda.", "Middle East"],
-		["people_armenian", "Armenian", "A duduk-like clarinet over its dam (the bassoon).", "Middle East"],
-		["people_kurdish", "Kurdish", "A dance in maqam Kurd: flute, tembur, the daf.", "Middle East"],
-		["people_north_african", "North African", "Amazigh call and answer over the bendir and a gimbri riff.", "North Africa"],
-		["people_moorish", "Moorish (Morocco)", "An Andalusi strain in 6/8: violins, oud, tar.", "North Africa"],
-		["people_egyptian", "Egyptian", "Maqam Rast (quarter tones): mizmar-like oboe, qanun, the Saidi rhythm.", "North Africa"],
-		["people_metis", "French and Native (Metis)", "A Red River jig: fiddle and the dancers' feet.", "Mixed ancestry"],
-		["people_afro_native", "African and Native", "Flute and cello over hand drums and a soft pulse.", "Mixed ancestry"],
-		["people_euro_african", "European and African", "A creole contradance on the tresillo: fiddle, clarinet, hand drums.", "Mixed ancestry"],
 	]],
 ];
-const LOOPS = {giant_battle: 3.3333, giant_upper_hand: 0.0};
+const LOOPS = {giant_battle: 3.3333, giant_upper_hand: 0.0, ring_fight_base: 0.0, ring_fight_drive: 0.0, ring_fight_peak: 0.0};
 const BAR = 60 / 144 * 4;
 
 const order = [];
@@ -317,6 +302,78 @@ async function fight() {
 	});
 }
 $("fight").onclick = fight;
+
+// --- Tidebreak's score as MusicDirector's ring mode plays it: the three stems in step, the layers by level on bar lines,
+// the stingers over a 9 dB duck (data/ring/music.json) ---------------------------------------------------------------
+const RING = {stems: ["ring_fight_base", "ring_fight_drive", "ring_fight_peak"], beat: 60 / 132, level: -4};
+function ringStems(when, gains) {
+	const c = ac(), bus = c.createGain();
+	bus.connect(c.destination);
+	const parts = RING.stems.map((id, i) => {
+		const src = c.createBufferSource(); src.buffer = buffers[id]; src.loop = true; src.loopStart = 0; src.loopEnd = buffers[id].duration;
+		const g = c.createGain(); g.gain.setValueAtTime(gains[i], when); src.connect(g).connect(bus); src.start(when, 0);
+		return {src, gain: g};
+	});
+	fightSources.push(...parts, {src: {stop() {}}, gain: bus});
+	return {bus, parts};
+}
+async function ringLevel(lv) {
+	cancelFight();
+	for (const id of RING.stems) await load(id);
+	if (cur && cur.s) stopSource(cur.s, 0.15);
+	const c = ac(), t0 = c.currentTime + 0.1;
+	fightTimers = [1];
+	const r = ringStems(t0, [1, lv >= 1 ? 1 : 0, lv >= 2 ? 1 : 0]);
+	cur = {i: order.findIndex(o => o.id === "ring_fight_base"), id: "ring_fight_base", s: {src: r.parts[0].src, gain: r.parts[0].gain, startedAt: t0, offset: 0}, playing: true, offset: 0};
+	mark("ring_fight_base", "Tidebreak · level " + lv, ["The base alone", "Base and drive", "All three"][lv]);
+}
+async function ringGame() {
+	cancelFight();
+	const stings = {countdown: [2.5, -2], ko_dealt: [2, 0], last_life: [1.5, 0], match_won: [6, 0]};
+	const files = RING.stems.concat(["ring_fight", "ring_sting_countdown", "ring_sting_ko_dealt", "ring_sting_last_life", "ring_sting_match_won"]);
+	for (const id of files) await load(id);
+	if (cur && cur.s) stopSource(cur.s, 0.15);
+	const c = ac(), t0 = c.currentTime + 0.15, go = t0 + 2.5, bar = RING.beat * 4;
+	fightTimers = [1];
+	const r = ringStems(go, [1, 0, 0]);
+	const onBar = t => go + Math.ceil((t - go) / bar) * bar;
+	const one = (id, when, db) => {
+		const src = c.createBufferSource(); src.buffer = buffers[id];
+		const g = c.createGain(); g.gain.value = Math.pow(10, db / 20); src.connect(g).connect(c.destination); src.start(when);
+		fightSources.push({src, gain: g});
+	};
+	const duck = (when, hold) => {
+		const g = r.bus.gain;
+		g.setValueAtTime(1, when); g.linearRampToValueAtTime(Math.pow(10, -9 / 20), when + 0.05);
+		g.setValueAtTime(Math.pow(10, -9 / 20), when + Math.max(hold - RING.beat, 0.05));
+		g.linearRampToValueAtTime(1, when + Math.max(hold - RING.beat, 0.05) + RING.beat);
+	};
+	one("ring_sting_countdown", t0, stings.countdown[1]);
+	one("ring_fight", go, -3);
+	const l1 = onBar(go + 21), l2 = onBar(go + 49);
+	r.parts[1].gain.gain.setValueAtTime(0, l1); r.parts[1].gain.gain.linearRampToValueAtTime(1, l1 + 0.06);
+	r.parts[2].gain.gain.setValueAtTime(0, l2); r.parts[2].gain.gain.linearRampToValueAtTime(1, l2 + 0.06);
+	const steps = [
+		[0, "The count: the bed under 3, 2, 1"], [2.5, "Break! The go, the base (level 0)"],
+		[l1 - t0, "Someone at 60 %: the drive comes in on the bar line (level 1)"],
+		[go + 31 - t0, "A fall you dealt: ko_dealt, the loop ducked"], [go + 46 - t0, "Their last life starts: last_life"],
+		[l2 - t0, "A last life at 80 %: the peak on the bar line (level 2)"], [go + 80 - t0, "The deciding fall: match_won, the score fades"],
+	];
+	for (const [id, at] of [["ring_sting_ko_dealt", go + 31], ["ring_sting_last_life", go + 46], ["ring_sting_match_won", go + 80]]) {
+		const key = id.replace("ring_sting_", "");
+		one(id, at, stings[key][1]); duck(at, stings[key][0]);
+	}
+	const end = go + 80;
+	r.bus.gain.setValueAtTime(r.bus.gain.value, end + 0.06);
+	r.bus.gain.linearRampToValueAtTime(0.0001, end + 3);
+	r.parts.forEach(p => p.src.stop(end + 3.1));
+	cur = {i: order.findIndex(o => o.id === "ring_fight_base"), id: "ring_fight_base", s: {src: r.parts[0].src, gain: r.parts[0].gain, startedAt: go, offset: 0}, playing: true, offset: 0};
+	for (const [at, cap] of steps) fightTimers.push(setTimeout(() => mark("ring_fight_base", "A Tidebreak game", cap), Math.max(0, (t0 + at - c.currentTime) * 1000)));
+}
+$("ring0").onclick = () => ringLevel(0);
+$("ring1").onclick = () => ringLevel(1);
+$("ring2").onclick = () => ringLevel(2);
+$("ringgame").onclick = ringGame;
 
 function tick() {
 	if (cur && buffers[cur.id]) {

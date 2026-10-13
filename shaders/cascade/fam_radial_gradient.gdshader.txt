@@ -1,0 +1,74 @@
+// Family: /Game/VFX/Materials/Shared/RadialGradient01_FxM (Spellbreak, Proletariat; converted from
+// the game's cooked data, reuse per animations/SOURCE.md). Covers its instances, including those
+// parented through the RadialDoubleGradient01_FxM instance (GlowDoubleGradient01/02, EyeOfDestiny...).
+//
+// SURVIVING EVIDENCE (cooked graph stripped): Translucent/Unlit root, one-sided; one Additive
+// instance (GlowGradient_Add01_FxMI) -> template. Parameter nodes GradientRadius, GradientDensity,
+// Gradient2Radius, Gradient2Density, CameraFadeOffset, CameraFadeLength, PixelDepthFade; static
+// switches UseCameraDepthFade (def true), UseDepthFade (def true), AddGradient2 (def false);
+// two RadialGradientExponential calls (gradient 1 and gradient 2) and one CameraDepthFade call;
+// MaterialExpressionDepthFade class referenced. No textures of any kind.
+// Engine function descriptions (decoded /Engine/Functions/Engine_MaterialFunctions01):
+//   RadialGradientExponential: "Creates a radial gradient using the input UV coordinates and
+//     applies exponential density with specified density." (calls ExponentialDensity)
+//   ExponentialDensity: "Uses the D3DFOG_EXP function ... inverted so that 0 is returned when
+//     depth = 0 and approaches 1 as depth increases."  -> 1 - exp(-depth * density)
+//   CameraDepthFade: "gradient of 0 near the camera to white at Fade Length" (offset + length).
+//
+// AUTHORED (graph wiring not recoverable):
+//   * linear depth fed to ExponentialDensity = saturate(1 - distance(UV, 0.5) / Radius)
+//     (CenterPosition default 0.5,0.5; Invert Density default off). The clamp outside the radius
+//     is assumed so quad corners never go negative.
+//   * AddGradient2 = gradient1 + gradient2 (unclamped sum; opacity is saturated on output).
+//   * Emissive = particle colour (HDR rgb); Opacity = gradient * particle alpha * DepthFade *
+//     CameraDepthFade (the standard UE glow wiring; the fades are opacity masks).
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform float gradient_radius = 0.5;     // GradientRadius (UV units)
+uniform float gradient_density = 1.0;    // GradientDensity
+uniform bool add_gradient2 = false;      // static switch AddGradient2
+uniform float gradient2_radius = 0.25;   // Gradient2Radius (UV units)
+uniform float gradient2_density = 1.0;   // Gradient2Density
+uniform bool use_camera_depth_fade = true;  // static switch UseCameraDepthFade
+uniform float camera_fade_offset = 2.0;  // CameraFadeOffset cm -> m
+uniform float camera_fade_length = 1.0;  // CameraFadeLength cm -> m
+uniform bool use_depth_fade = true;      // static switch UseDepthFade
+uniform float depth_fade_m = 0.5;        // PixelDepthFade cm -> m
+uniform float alpha_clip = 0.333;        // only referenced if an instance were Masked
+
+// UE ExponentialDensity (D3DFOG_EXP, inverted).
+float exponential_density(float depth, float density) {
+	return 1.0 - exp(-depth * density);
+}
+
+// UE RadialGradientExponential, CenterPosition (0.5, 0.5), Invert Density off.
+float radial_gradient_exponential(vec2 uv, float radius, float density) {
+	float lin = clamp(1.0 - distance(uv, vec2(0.5)) / max(radius, 1e-4), 0.0, 1.0);
+	return exponential_density(lin, density);
+}
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	vec2 uv = v_quv;
+	float g = radial_gradient_exponential(uv, gradient_radius, gradient_density);
+	if (add_gradient2) {
+		g += radial_gradient_exponential(uv, gradient2_radius, gradient2_density);
+	}
+	float op = g * v_color.a;
+	if (use_camera_depth_fade) {
+		op *= camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length);
+	}
+	if (use_depth_fade) {
+		op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, depth_fade_m);
+	}
+	ALBEDO = v_color.rgb;
+	/*ALPHA_OUT*/
+}

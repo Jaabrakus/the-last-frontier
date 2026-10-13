@@ -1,17 +1,18 @@
 class_name RadialWheel
 extends CanvasLayer
 ## The move wheel: the radial control scheme (MatchSetup.scheme() "radial", data/bending/schemes.json; the owner, 2026-10-05:
-## "still difficult for a human to switch spells, there's a lot of things going on" -> a wheel among the options). Hold the
-## wheel key (the action ACTION, Tab by default and rebindable: Tab does nothing else in the ring; in the duel it takes
-## Tab from the character screen while this scheme is on) and every move of the player's element sits round the screen's
-## centre: each key's two skills, then Mend and Patch (Bending.keys: ten). The mouse moved toward one picks it (the camera
-## does not turn meanwhile, as the equip wheel); the mouse wheel steps the picked move's form (SwayCaster.set_mode: the
-## key's own variation, the strip's pips follow); letting go of the key (or a left click) readies it (Hotbar.ready_skill:
-## its key turned to it). Moving the mouse less than pick_min_px picks nothing: letting go changes nothing. The game runs on
+## "still difficult for a human to switch spells, there's a lot of things going on" -> a wheel among the options; round 2 of
+## the skills, skills_r2 spec §6: no forms to scroll). Hold the wheel key (the action ACTION, Tab by default and rebindable:
+## Tab does nothing else in the ring; in the duel it takes Tab from the character screen while this scheme is on) and the
+## element's key moves sit round the screen's centre by their plain names: each key's first move and the one a second tap
+## readies, then Patch and Mend (KitWords.key_moves: earth and water 9, fire and air 8; fire 9 with Breath on its 4). The mouse
+## moved toward one picks it (the camera does not turn meanwhile, as the equip wheel); letting go of the key (or a left
+## click) readies it (Hotbar.ready_skill, its key turned to it, SwayCaster.set_mode at its mode). Moving the mouse less than
+## pick_min_px picks nothing: letting go changes nothing. The mouse wheel does nothing while it is open. The game runs on
 ## at full speed (the equip wheel's rule: the owner wants no slow motion on a wheel). Casting stays the right button,
 ## once the wheel is shut (SwayCaster: no lock is held while it is open, and its pick click starts none).
 ## One per local player's caster (SwayCaster.radial: install). Only with an element and the radial scheme.
-##   open() / close(take) / pick_toward(d) / step_form(dir) / items: [{id, label, key}] / sel / is_open
+##   open() / close(take) / pick_toward(d) / items: [{id, mode, label, key}] / sel / is_open
 
 const ACTION := &"bend_wheel"
 const KEY := KEY_TAB
@@ -23,7 +24,7 @@ const COL_TEXT := Color(0.96, 0.9, 0.78)
 const COL_DIM := Color(0.75, 0.7, 0.6)
 
 var caster: SwayCaster
-## The element's moves round the wheel, clockwise from the top: [{id, label, key (1-5)}].
+## The element's moves round the wheel, clockwise from the top: [{id, mode, label, key (1-5), role}].
 var items: Array = []
 var sel := -1
 var is_open := false
@@ -143,12 +144,6 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_was_down = false
 		close(true)                           # (let go: the pick readied at once, not a frame later)
-	elif event.is_action_pressed(&"weapon_next"):
-		step_form(1)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"weapon_prev"):
-		step_form(-1)
-		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and (event as InputEventMouseButton).pressed \
 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		get_viewport().set_input_as_handled()
@@ -156,7 +151,7 @@ func _input(event: InputEvent) -> void:
 			_hold_fire = true
 			close(true)
 	elif event.is_action(ACTION) or event.is_action(&"fire") or event.is_action(&"aim") or event.is_action(&"weapon_next") \
-			or event.is_action(&"weapon_prev"):
+			or event.is_action(&"weapon_prev"):          # (the mouse wheel does nothing while it is open: no forms)
 		get_viewport().set_input_as_handled()
 
 
@@ -169,13 +164,15 @@ func blocks_fire() -> bool:
 
 # --- open, pick, ready ------------------------------------------------------------------------------------------
 
-## The element's moves: each key's two skills in turn, then the last key's (Mend, Patch).
-static func items_for(el: String) -> Array:
+## The element's key moves: each key's first move and its second (a tap twice), key by key (Patch and Mend on 5 last). `body`
+## (the player's): a worn talent's mode on an empty double tap too (KitWords.key_moves: the Sulphur Vent, Mire); null, the
+## static kit.
+static func items_for(el: String, body: Object = null) -> Array:
 	var out: Array = []
-	var keys := Bending.keys(el)
-	for i in keys.size():
-		for id in keys[i] as Array:
-			out.append({"id": String(id), "label": Hotbar.spell_label(String(id)), "key": i + 1})
+	for i in Bending.keys(el).size():
+		for m: Dictionary in KitWords.key_moves(el, i, body):
+			out.append({"id": String(m.id), "mode": String(m.mode), "label": KitWords.move_name(String(m.id), String(m.mode)),
+					"key": i + 1, "role": KitWords.role(el, i)})
 	return out
 
 
@@ -183,7 +180,7 @@ func open() -> void:
 	var p := _player()
 	if p == null:
 		return
-	items = items_for(caster.quick_element())
+	items = items_for(caster.quick_element(), p)
 	if items.is_empty():
 		return
 	is_open = true
@@ -204,12 +201,23 @@ func close(take: bool) -> void:
 		ready_item(sel)
 
 
-## Item `i` readied (Hotbar.ready_skill): true when it is the readied move now.
+## Item `i` readied (Hotbar.ready_skill, then its mode): true when it is the readied move now.
 func ready_item(i: int) -> bool:
 	var p := _player()
 	if p == null or i < 0 or i >= items.size() or p.hotbar == null:
 		return false
-	return p.hotbar.ready_skill(String(items[i].id))
+	var id := String(items[i].id)
+	if not p.hotbar.ready_skill(id):
+		return false
+	var md := String(items[i].get("mode", ""))
+	if md != "" and md in SwayCaster.modes_of(id, p):
+		caster.set_mode(id, md)
+	return caster.readied_spell == id
+
+
+## No forms to step any more (round 2: each item is one move at its mode): "" always (kept for the callers of round 1).
+func step_form(_dir: int) -> String:
+	return ""
 
 
 ## Picks the item in the direction of `d` (screen space, y down; the mouse travel since it opened).
@@ -228,20 +236,6 @@ func pick_toward(d: Vector2) -> void:
 func dir_of(i: int) -> Vector2:
 	var a := i * TAU / maxi(items.size(), 1)
 	return Vector2(sin(a), -cos(a))
-
-
-## The picked move's next (`dir` 1) or earlier form; "" none picked or it has fewer than two.
-func step_form(dir: int) -> String:
-	if sel < 0 or sel >= items.size():
-		return ""
-	var id := String(items[sel].id)
-	var ms := SwayCaster.modes_of(id)
-	if ms.size() < 2:
-		return ""
-	var nxt := String(ms[posmod(ms.find(caster.base_mode_of(id)) + dir, ms.size())])
-	caster.set_mode(id, nxt)
-	_refresh()
-	return nxt
 
 
 # --- drawing -----------------------------------------------------------------------------------------------------
@@ -274,20 +268,18 @@ func _layout() -> void:
 
 
 func _refresh() -> void:
-	var readied := caster.readied_spell if caster != null else ""
+	var rd := caster.readied_spell if caster != null else ""
+	var rm := caster.base_mode_of(rd) if caster != null and rd != "" else ""
 	for i in _names.size():
 		var l := _names[i] as Label
 		var on := i == sel
-		l.add_theme_color_override("font_color", MenuUI.GOLD if on or String(items[i].id) == readied else COL_TEXT)
+		var mine := String(items[i].id) == rd and (String(items[i].mode) == rm or SwayCaster.modes_of(rd).size() < 2)
+		l.add_theme_color_override("font_color", MenuUI.GOLD if on or mine else COL_TEXT)
 		l.scale = Vector2.ONE * (1.12 if on else 1.0)
 		l.pivot_offset = l.size * 0.5
 	if sel >= 0 and sel < items.size():
-		var id := String(items[sel].id)
 		_title.text = String(items[sel].label)
-		var ms := SwayCaster.modes_of(id)
-		var m := caster.base_mode_of(id)
-		_note.text = ("%s (%d/%d)  ·  scroll: its form" % [SwayCaster.mode_label(id, m), ms.find(m) + 1, ms.size()]) \
-				if ms.size() > 1 else "key %d" % int(items[sel].key)
+		_note.text = "%d  ·  %s" % [int(items[sel].key), String(items[sel].get("role", ""))]
 	else:
 		_title.text = "Your moves"
 		_note.text = "point at one, let go to ready it"
@@ -317,20 +309,6 @@ func _draw_ring() -> void:
 		var a := i * step - step * 0.5 - PI * 0.5
 		var d := Vector2(cos(a), sin(a))
 		_ring.draw_line(c + d * inner, c + d * (radius + 4.0), COL_LINE, 2.0, true)
-	# the variation pips under each move's name (the one its key is on filled)
-	for i in items.size():
-		var id := String(items[i].id)
-		var ms := SwayCaster.modes_of(id)
-		if ms.size() < 2:
-			continue
-		var at := _item_pos(i) + Vector2(0, 26)
-		var mi := ms.find(caster.base_mode_of(id))
-		for j in ms.size():
-			var p := at + Vector2((j - (ms.size() - 1) * 0.5) * 11.0, 0)
-			if j == mi:
-				_ring.draw_circle(p, 3.2, tint)
-			else:
-				_ring.draw_arc(p, 2.8, 0.0, TAU, 12, Color(tint, 0.8), 1.2, true)
 	_ring.draw_arc(c, radius + 8.0, 0.0, TAU, 96, COL_LINE, 2.0, true)
 	if _dir.length() > 1.0:
 		_ring.draw_line(c, c + _dir.normalized() * (inner - 12.0), COL_SEL.lightened(0.3), 3.0, true)

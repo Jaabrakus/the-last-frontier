@@ -48,6 +48,14 @@ static func materials(body: CharacterBodyMesh) -> Array:
 
 
 static func apply(body: CharacterBodyMesh, smooth: float, flat := true) -> void:
+	# (the classic materials while they are changed: a soft look's copies are made again from them after; SoftLook)
+	var soft := SoftLook.lift(body)
+	_apply(body, smooth, flat)
+	if soft or SoftLook.on():
+		SoftLook.apply_body(body)
+
+
+static func _apply(body: CharacterBodyMesh, smooth: float, flat := true) -> void:
 	var c := cfg()
 	var s := clampf(smooth, 0.0, 1.0)
 	for m: ShaderMaterial in materials(body):

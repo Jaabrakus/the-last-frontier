@@ -12,13 +12,16 @@ extends SceneTree
 ##   ropes    a 10 m/s knock toward a long side leaves the player on the deck after 1.5 s, not rung out
 ##   out      a stone pushed off the open end is rung out within 0.5 s (is_ring_out), splashing (the water's splashed
 ##            signal); the player dropped into the tank is rung out and keeps full health (no fall hurts)
-##   sockets  each side's stones sit in their sockets; one taken away, another rises there refill_s later
+##   sockets  none since 2026-10-10 (ring.json sockets.at empty): no stone on the deck; with places given, each side's stones
+##            sit in their sockets and one taken away, another rises there refill_s later
 ##   clear    clear_dropped takes every listed group's nodes in the ring and the tank, not one far away, nor a seated stone
 ##   terrain  FrontierTerrain's baked data never loaded in 10 s or more in the scene (its static _data_ok read directly:
 ##            data_loaded() would load it); WorldRiver.off while the ring stands
 ##   time     the first frame's time logged (RING first_frame_ms); with baseline=<dir> written to
 ##            <dir>/ring_first_frame_ms.txt (informational: no limit is asserted on it)
 ## A watchdog ends it at LIMIT_S (under the runner's 300 s). The last line: "RING TEST PASSED" or "RING TEST FAILED".
+## Round 3: pinned to the classic rule set (RingRules.rule_set_override "classic": the zones' ring this test was written for);
+## the % ring's own checks are test_ring_stage, test_ring_pct, test_ring_hitstun and test_percent_hud.
 
 const LIMIT_S := 240.0
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
@@ -44,6 +47,7 @@ func _initialize() -> void:
 	create_timer(LIMIT_S, true, false, true).timeout.connect(func() -> void:
 		print("RING TEST FAILED (watchdog)")
 		quit(2))
+	RingRules.rule_set_override = "classic"
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	change_scene_to_file("res://scenes/ring.tscn")
@@ -280,6 +284,10 @@ func _out() -> void:
 
 func _sockets() -> void:
 	var n := ring.sockets.size()
+	if ((RingArena.data().get("sockets", {}) as Dictionary).get("at", []) as Array).is_empty():
+		# (the owner, 2026-10-10: "remove the boulders in the arenas now": ring.json sockets.at empty, no stone on the deck)
+		_expect(n == 0, "no stones sit on the deck (%d sockets)" % n)
+		return
 	var seated := 0
 	for sk: Dictionary in ring.sockets:
 		var st: Variant = sk.get("stone")

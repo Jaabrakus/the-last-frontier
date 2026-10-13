@@ -1,0 +1,32 @@
+{
+  "roots": ["/Game/VFX/Materials/m_f_lightingToonErosion"],
+  "shader": "fam_toon_mesh_lightning",
+  "template": false,
+  "u": {
+    "bolt_tex": ["t", ["Lightning Bolt"]],
+    "particle_mask_tex": ["t", ["Particle Mask"]],
+    "noise1_tex": ["t", ["Noise 1"]],
+    "noise2_tex": ["t", ["Noise 2", "Noise 1"]],
+    "displacement_tex": ["t", ["Displacement Texture"]],
+    "emissive_strength": ["s", "Emissive Strength", 1.0, 6.0],
+    "fps": ["s", "FPS", 1.0, 60.0],
+    "noise_strength": ["s", "noise strength", 1.0, 0.2],
+    "noise_size": ["s", "Noise Size Multiplier", 1.0, 1.0],
+    "noise1_pan": ["v2", "NOISE1_Hor_Panner Speed", "NOISE1_Vert_Panner Speed"],
+    "noise2_pan": ["v2", "NOISE2_Hor_Panner Speed", "NOISE2_Vert_Panner Speed"],
+    "lightning_panner": ["v2", "Lightning Horizontal Panner", "Lightning Vertical Panner"],
+    "lightning_pan_speed": ["vxy", "Lightning Pan Speed"],
+    "displacement_speed": ["vxy", "Displacement speed"],
+    "contrast": ["s", "Contrast", 1.0, 0.1],
+    "edge_softness": ["s", "Edge Softness", 1.0, 1.0],
+    "return_to_center": ["s", "Return to Center", 1.0, 0.0],
+    "max_center": ["s", "Max Center", 1.0, 1.0],
+    "add_camera_fade": ["sw", "Add Camera FAde", false],
+    "camera_fade_start": ["s", "Camera Fade Start", 0.01, 15.0],
+    "camera_fade_length": ["s", "Camera Fade Length", 0.01, 150.0],
+    "depth_fade_m": ["s", "DepthFade", 0.01, 0.0],
+    "dyn_displacement": ["dyn", ["displacement"]],
+    "dyn_opacity": ["dyn", ["opacity"]]
+  },
+  "notes": "Spellbreak (Proletariat) m_f_lightingToonErosion: 4 instances, all BLEND_Translucent / MSM_Unlit / two-sided; 37 enabled mesh emitters (folded-strip bolt meshes, UV.y along the bolt, 3 verts across with the fold at u~0.46-0.51). EVIDENCE: root parameter nodes (17 scalars, 2 vectors, 5 texture samples, switch 'Add Camera FAde', DynamicParameter [Param1, Param2, Displacement, Opacity], class default (1,1,1,1)); functions MF_TransluscentToonErosion ('Erodes alpha mask instead of fade out.'), CheapContrast, CameraDepthFade, LinearGradient, SmoothStep; root export keeps a WorldPositionOffset input (only its constant survives, the link is stripped). Root sampler types: Noise 1/Noise 2/Displacement Texture = SAMPLERTYPE_LinearGrayscale, Lightning Bolt/Particle Mask = SAMPLERTYPE_Alpha. Textures viewed: T_f_GenericLighting_F = single vertical strip u 0.44-0.56 with flat toon plateaus varying along V, zero outside, SRGB=false (TC_Alpha); T_f_MaskSquareSoft = soft-edged square (sRGB, decoded); T_f_CubeHeight(_uncompressed) = faceted cube height field (linear). NOISE: T_f_SmokeHeight_Greyscale_Uncompressed (MI_f_lightningBranchingBolt, 21/37 emitters, SRGB False) and T_f_SmokeHeightB (A_Lbolt_FXMI, A_Lbolt2_FXMI, _Thin; 16 emitters; sRGB default) hold the same image (raw mean 0.336, std 0.185); the family samples both LINEAR (root LinearGrayscale + the majority instance) -> remaining approximation: the 16 A_Lbolt/A_Lbolt2/_Thin emitters (LBottle*, A_TPort*, Bloodstorm, CB_Conduit_B, ElysianFall, Judgment B, BreakerTrap), whose sRGB noise UE hardware-decodes (in-game mean 0.127), get ~2.6x the mean UV offset here. OPEN: MI_f_lightningBranchingBolt's noise and displacement textures (T_f_SmokeHeight_Greyscale_Uncompressed, T_f_CubeHeight_uncompressed) are in TEXTUREGROUP_EffectsNotFiltered with no per-texture Filter override; that group's filter lives in the game's DeviceProfiles config, which is not in the extraction, so they are sampled with linear filtering here (if the group point-samples in game, those 21 emitters' noise offset and WPO would be blockier). DISPLACEMENT UNITS: dyn 'Displacement' is in the bolt mesh's own cm and scales with particle size (applied in model space; glTF local m = UE cm * 0.01). Evidence: peak Displacement is a constant 7-16 % of the local mesh length on every emitter (A_ZapTel* 8 cm / 0.6 m = 13.4 %, SM_ZapNado* 100-200 cm / 12.4-14 m, BuffBolt1/2 125 cm / 7.9-11.5 m, A_ZapDash 1 cm / 0.2 m), while relative to the bolt's WORLD length it ranges 2 %..1050 % (the same 125 cm is reused on SM_ZapNadoBolt shrunk by SizeScale 0.01 in A_Conduit2 #332, Barometer #821, Spine Lightning_LINE #599/#819, and on tiny StormSArc1 #439 / ChronlithA #824 / ShrineB #840 bolts) - a world-cm reading turned those into 1 m streaks/blobs; only BrkTrpL02 (8 cm on a 0.17 m mesh, size 3-7) is an outlier. Dynamic Opacity 1 -> 0; Param1/Param2 constant 1 everywhere (unused). Vectors are identical in all 4 instances (Lightning Pan Speed (0,1), Displacement speed (1,0)) so the shader defaults equal the source values while the library's vector loading is broken (fx_materials.gd _vec/'vxy' reject the {ParameterValue|DefaultValue: [...]} dicts). AUTHORED: WPO = normalize(local normal) * (CubeHeight(UV + Displacement speed * t) - 0.5) * dyn Displacement * 0.01 (model space), ends anchored by SmoothStep(0, Return to Center, min(V, 1-V)) * Max Center; bolt UV = UV + (Noise1(UV + pan1 t), Noise2(UV * Noise Size Multiplier + pan2 t)) * noise strength + Lightning Pan Speed.xy * (Horizontal, Vertical Panner) * t (component-wise product = (0, 1) UV/s; a sum reading would add a -0.152 u/s sideways drift); all time FPS-stepped; toon erosion saturate((CheapContrast(Bolt * Mask, Contrast) - (1 - alpha * dynOpacity)) / Edge Softness); emissive = particle colour * Emissive Strength * mask. Ignored: stale instance scalars 'Alpha Erosion' and 'Displacement' (no such nodes in the root), RefractionDepthBias (no refraction)."
+}

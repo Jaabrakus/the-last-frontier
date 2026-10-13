@@ -23,7 +23,8 @@ extends Node
 ##   never dies   0 health in the ring is winded (RingRules): pushed back a zone, health to 40%; no fall hurts
 ##   the screen   plain text only on its own layer (the round, the countdown, the result, the score); the full strip is
 ##                the HUD's (FrontierHUD.set_arena). Nothing is drawn on or over the opponent
-##   sound        a fight cue if MusicDirector has one (rules.json fight_cues), stings from the existing sounds
+##   sound        a fight cue if MusicDirector has one (rules.json fight_cues), stings in the ring's own sounds (BendSounds:
+##                the countdown's tick, the gong at the go, the bell at a round's end, the match's gong; rules.json stings)
 ## THE CONTRACT (group &"ring_match"; the HUD and the bots read it, through get() / has_method()):
 ##   round (int, from 1), score (Vector2i: x the player's side, y the other), phase ("COUNTDOWN" | "FIGHT" | "OVER" |
 ##   "DONE"), round_left_s(), side_of(body) -> 0 the player's side, 1 the other, -1 none; confined_of(body) -> 1..3 (0
@@ -41,12 +42,45 @@ extends Node
 ## PRACTICE (MatchSetup.kind "practice"; the user arg practice=stand|block|throw): a dummy of foes[0]'s element at the other
 ## end, held there (it never walks): "stand" never casts; "block" answers what comes at it with its element's guards (no
 ## dice: every time the lock fits the threat's time) and raises its cover when the player begins a lock (no more often than
-## block_every_s); "throw" casts its throw at him every throw_every_s (earth a stone spike: catch it, send it back). No timer
+## block_every_s); "throw" casts its throw at him every throw_every_s: its element's key 1 first move (MatchSetup.
+## practice_move: earth a Spike to catch and send back, water a Lash to Turn, fire a Punch to Parry, air a Slice). No timer
 ## (the clock counts up), no rounds, no score; the soft walls off (walk anywhere); a fall into the water puts both back at
 ## their ends after reset_after_out_s, R (ring_reset) at once (reset_positions), B (ring_dummy) steps the dummy's way
 ## (cycle_dummy); 0 health is whole again. A line at the top says so, with the player's casts, catches and knock-backs.
+## Round 3's SEAMS moved the practice into RingPractice (scripts/ring/ring_practice.gd, `practice_ctl`): this keeps one-line
+## calls into it (reset, arm, step, set_way, paint, on_out, on_winded, key) and the old names as forwarders (dummy,
+## slow_throws, throw_override, hint, tally_label, practice_line(), cycle_dummy(), reset_positions(), throw_every_s(), pword,
+## _pnum, _pmove, dummy_guard), so RingLessons and the tests read it where they always did.
 ## TEAMS (the 3 v 3 groundwork): in RingRules' team_mode a competitor rung out sits the round out (a bot held), and a whole
 ## side out in one round is a knockout: the round its, and the match over at once (why "knockout").
+## TEAM FORMATS (the owner, 2026-10-10: 2v2 and 4v4; docs/tidebreak/team_formats_and_arenas.md): team_n() fighters a side
+## (RingArena.format's; a practice 1v1's). MatchSetup.lineup draws the sides' elements at each restart (foe_elements[0] the
+## foe's, mate_elements the player's team-mates'); the other bots (extras) are made as the foe is (_make_bot), at their slots of
+## their side's end, kept across games when they can stand (_keep_bot, _ready_bot), held through every countdown and let go at
+## the go. THE TEAM COACH (_coach, FIGHT in team mode): every coach.every_s each bot is handed the nearest opponent still in
+## play, counted coach.spread_m farther for each of its side already on him (no side all piling on one), a better one by
+## coach.keep_m before it switches; a bot whose target is away (in the water, on the way back) is handed another at once.
+## ROUND 3, THE % MATCH (RingRules.stock_on(): rules.json rule_set "stock", the default; smash_r3 spec v2 §7; PERCENT's). A
+## "round" is a GAME: 3 lives each (team: 2), an 8:00 clock (stock.time_s; round_s= still sets it for a run), one game
+## (stock.games) or best of 3 (MatchSetup.games(): to_win 2, ends swapped, RoundScreen between games only):
+##   the set-up   every competitor gets MOVE's RingMoves (RingMoves.install), BendKnock.gravity_override is stock.gravity (20)
+##                while the stock ring stands (put back after), each caster's lock_started ends its spawn safety
+##                (RingRules.note_lock_started), key 1 readied at the countdown and after every respawn
+##                (SwayCaster.ready_default)
+##   a fall       RingRules.ko: a 1.4 s centre line ("Into the water: the Tide  ·  2 left", "Last one"), the body hidden and
+##                out of reach for respawn.out_wait_s (its collision layer off, kept at its spout so the camera stays
+##                valid), its locks and stones dropped (SwayCaster.drop_all); then the spout (RingSpout) on its end's s 12 m
+##                line at the grate farther from the nearest foe, respawn.spout_up_m up, MOVE's RingMoves.ride_spout holding
+##                him there (left_spout), safe until respawn.safe_after_s after he leaves it or a lock of his starts. No
+##                respawn after the last life: his side out -> the game to the other (why "falls"); the final fall's word
+##                "Over" over_s, then the screens
+##   the clock    at 0:00 more lives wins (why "time"); level: sudden death (everyone at sudden.pct with one life, "Next one
+##                in the water loses."), the next fall wins (why "sudden"), a draw after sudden.draw_s
+##   the look     on a launch of 18 m/s or more a bigger burst at the hit point (hud.json launch_wake, default false: a 0.5 s
+##                wake of the hitter's matter behind the body instead); hud.json respawn_drip (default false)
+##   the contract the HUD's PercentBar reads lives_of(b), pct_of(b), ko_line(), sudden_left_s(), event_line(), falls (a line
+##                per fall: {at_s, who, by, pct, tag, team, left})
+## Practice under stock: no lives and no clock: a fall puts both back (RingPractice.on_out), the % to 0.
 
 signal phase_changed(phase: String)
 signal knocked_back(who: Node3D, from_zone: int, to_zone: int)
@@ -60,6 +94,10 @@ const PHASES := ["COUNTDOWN", "FIGHT", "OVER", "DONE"]
 ## The sides' factions (data/npc/factions.json: mutually hostile, barks off), the player's first.
 const FACTIONS := ["ring_team_a", "ring_team_b"]
 const FALLBACK_FACTION := "french_marine"
+## The team formats' fighters' own names (data/ring/names.json).
+const NAMES_PATH := "res://data/ring/names.json"
+## The meta a team format's fighter carries its own name in (name_of).
+const NAME_META := &"ring_name"
 
 var level: Node3D
 var ring: RingArena
@@ -68,6 +106,18 @@ var menu: Node
 var player: FrontierPlayer
 var foe: NpcFighter
 var squad: NpcSquad
+## The team formats' other bots: [{bot: NpcFighter, squad: NpcSquad, team: 0 | 1, slot: the side's spawn slot (the player and
+## the foe hold slot 0), element}], kept across games as the foe is.
+var extras: Array[Dictionary] = []
+## This match's elements beyond the player's (MatchSetup.lineup at each restart): the other side's (foe_elements[0] the foe's)
+## and the player's team-mates'.
+var foe_elements: Array = []
+var mate_elements: Array = []
+var _coach_t := 0.0
+## This match's draw of names (team formats: slot k of team t is named _names[t * 4 + k]).
+var _names: Array = []
+## The % each fighter dealt this match (instance id -> %; RingRules.pct_dealt), for roster().
+var _pct_by := {}
 var phase := "COUNTDOWN"
 var phase_t := 0.0
 var round := 0
@@ -108,23 +158,60 @@ var _bar_laid := false
 var history: Array = []
 ## This round's (in practice: since the last reset) tally per team: {casts, catches, knock_backs, hits}.
 var round_tally: Array = [{}, {}]
-## A practice (no rounds, no timer) against a dummy, and its way ("stand" | "block" | "throw").
+## A practice (no rounds, no timer) against a dummy (RingPractice runs it), and its way ("stand" | "block" | "throw").
 var practice := false
-var dummy := "stand"
+## The practice: the dummy, its way and its lines (RingPractice; made with the mode).
+var practice_ctl: RingPractice
+## The match online (RingNet, docs/tidebreak/ring_netcode.md; null offline): a slot a remote human holds gets his puppet, not a
+## bot; this machine's side is its team 0 whichever side it is on the host's.
+var net: RingNet
+var dummy: String:
+	get:
+		return practice_ctl.dummy
+	set(v):
+		practice_ctl.dummy = v
+## The dummy's throws slowed (the lessons' guard drill and jump, RingLessons; the owner, 2026-10-05: a beginner beating a fast
+## throw): a throw every slow_every_s, its shots flying at slow_speed of their own speed on the same path (data/ring/lessons.json).
+var slow_throws: bool:
+	get:
+		return practice_ctl.slow_throws
+	set(v):
+		practice_ctl.slow_throws = v
+## The dummy's throw instead of its element's strike ("id/mode"; "": screens.json practice.throw; the lessons' jump: fire's Kick).
+var throw_override: String:
+	get:
+		return practice_ctl.throw_override
+	set(v):
+		practice_ctl.throw_override = v
 var round_screen: Node
 var match_screen: Node
-var hint: Label
-var tally_label: Label
-var hint_back: ColorRect
+## The practice's lines (RingPractice's).
+var hint: Label:
+	get:
+		return practice_ctl.hint
+var tally_label: Label:
+	get:
+		return practice_ctl.tally_label
+var hint_back: ColorRect:
+	get:
+		return practice_ctl.hint_back
 var _knockout := false
 var _guard_took := {}
-var _reset_in := -1.0
-var _live_in := 0.0
-## After a practice's reset the deck is judged again this much later (s).
-const RESET_GRACE_S := 0.12
-var _dummy_next := 0.0
-var _cover_next := 0.0
 var _caster_hooked: SwayCaster
+## Round 3 (stock): the falls of the match: {game, at_s (into the game), who, by, pct, tag, team, left}; the respawns
+## pending ([{body, t}]); the spouts standing; the KO line and its time left; sudden death's start (phase_t), the gravity put
+## back after; the bodies' collision layers while hidden.
+var falls: Array = []
+var _respawns: Array = []
+var _spouts := {}
+var _ko_line := ""
+var _ko_t := 0.0
+var _sudden_at := -1.0
+var _prev_gravity := 0.0
+var _gravity_set := false
+var _hidden := {}
+var _held_before := {}
+var _hooked_casters := {}
 ## Practice's lessons asked for (the main menu's Lessons row, RingLessons.ask; taken by RingLessons.install).
 static var lessons_asked := false
 
@@ -151,6 +238,10 @@ static func words(key: String) -> String:
 	return String((RingRules.data().get("words", {}) as Dictionary).get(key, key))
 
 
+func _init() -> void:
+	practice_ctl = RingPractice.new(self)
+
+
 func _ready() -> void:
 	add_to_group(GROUP)
 	process_physics_priority = 20            # (after the bodies and the rules: this frame's ring-out is this frame's)
@@ -166,13 +257,25 @@ func _ready() -> void:
 	rules.knocked_back.connect(_on_knocked_back)
 	rules.rang_out.connect(_on_rang_out)
 	rules.side_out.connect(_on_side_out)
+	if new_ring():
+		_prev_gravity = BendKnock.gravity_override
+		BendKnock.gravity_override = RingRules.stock_num("gravity", 20.0)
+		_gravity_set = true
+		rules.ko.connect(_on_ko)
+		rules.pct_dealt.connect(func(by: Node, _b: Node3D, d: float) -> void:
+			if by != null and is_instance_valid(by):
+				_pct_by[by.get_instance_id()] = float(_pct_by.get(by.get_instance_id(), 0.0)) + d)
+		rules.launched.connect(_on_launched)
+		rules.hit_safe.connect(_on_hit_safe)
 	_build_ui()
-	_ensure_keys()
+	RingPractice.ensure_keys()
 	rules.winded.connect(_on_winded)
 	menu = RingMenu.install(level if level != null else self, self)
 	var parent: Node = level if level != null else self
 	round_screen = RoundScreen.install(parent, self)
 	match_screen = MatchScreen.install(parent, self)
+	# (round 4 VIRAL: the Splash Cam, the highlights, the callouts, photo mode and the clashes; each runs only under stock rules)
+	RingReplay.install(self)
 	# (Practice's lessons and a first Quick match's key hints: each comes only when asked for, RingLessons / FirstHints)
 	if MatchSetup.practice() and (lessons_asked or "lessons=on" in OS.get_cmdline_user_args()):
 		RingLessons.install(self)
@@ -185,23 +288,50 @@ func _ready() -> void:
 	# (the element's bar: player.gd's own arena switch lays it when it has one; until then laid here, as the duel does)
 	if player != null and player.get(&"arena") == null:
 		get_tree().create_timer(Hotbar.KIT_S + 0.3, false).timeout.connect(lay_bar)
+	net = RingNet.attach(self)
 	restart.call_deferred()
+
+
+func _exit_tree() -> void:
+	if _gravity_set:
+		BendKnock.gravity_override = _prev_gravity
+		_gravity_set = false
+
+
+## The % match (the installed rules' rule set is "stock").
+func stock() -> bool:
+	return rules != null and rules.rule_set == "stock"
+
+
+## The new ring's moves, knocks and deck (Lives or Zones: RingRules.NEW_RING): every competitor with MOVE's RingMoves.
+## Zones (rule_set "zones") plays the zones' rounds on it (stock() false): _zones_round at each, a ring-out or the last winding
+## out of the round (hidden, _on_rang_out).
+func new_ring() -> bool:
+	return rules != null and rules.rule_set in RingRules.NEW_RING
 
 
 # ---------------------------------------------------------------- the match
 ## The match from its start with MatchSetup's choices: the score nil, round 1, the player's side at end 0.
 func restart() -> void:
 	element = MatchSetup.element if MatchSetup.element in Bending.ELEMENTS else "earth"
-	foe_element = String(MatchSetup.resolved([MatchSetup.foe()], _rng)[0])
+	var lu := MatchSetup.lineup(_rng, team_n())
+	foe_elements = lu["foes"]
+	mate_elements = lu["mates"]
+	foe_element = String(foe_elements[0])
+	_names = _draw_names()
 	difficulty = MatchSetup.difficulty
 	practice = MatchSetup.practice()
-	dummy = MatchSetup.dummy if MatchSetup.dummy in MatchSetup.DUMMIES else "stand"
+	practice_ctl.reset()
 	history = []
 	_knockout = false
-	_reset_in = -1.0
-	_live_in = 0.0
 	to_win = maxi(MatchSetup.rounds_to_win, 1)
 	round_s = MatchSetup.round_s if MatchSetup.round_s > 0.0 else RingRules.num("round_s", 180.0)
+	if stock():
+		# (a game: 3 lives on the 8:00 clock; one game, or best of 3 from the menu: to_win 2)
+		to_win = 2 if games() >= 3 else 1
+		round_s = _arg_num("round_s", RingRules.stock_num("time_s", 480.0))
+		falls = []
+		_pct_by = {}
 	score = Vector2i.ZERO
 	round = 0
 	winner = -1
@@ -217,6 +347,9 @@ func restart() -> void:
 	_hook_caster()
 	if player != null:
 		Bending.of(player).element = element
+		# (the loadout worn for this element, read from the Advancement save at every match start: its fighting style and its
+		# live node numbers on the player's body; Classic and every bot read the element's own: BendLoadout)
+		BendLoadout.wear_player(player, element)
 		if _bar_laid:
 			lay_bar()
 	next_round()
@@ -226,9 +359,12 @@ func restart() -> void:
 func next_round() -> void:
 	round += 1
 	player_end = (round - 1) % 2
+	if net != null and net.flipped():
+		player_end = 1 - player_end          # (online, this machine's side is the host's team 1: its end the host's other)
 	_skip = false
 	_count_said = -1
-	var keep := _keep_foe()
+	var human_foe := net != null and net.human_at(1, 0) != 0
+	var keep := not human_foe and _keep_foe()
 	if not keep:
 		_drop_foe()
 	if ring != null:
@@ -244,48 +380,205 @@ func next_round() -> void:
 		_hold_casts(true)                    # (and no lock through it: the arena player's contract, SwayCaster.enabled)
 		var bd := Bending.of(player)
 		bd.element = element
-		bd.water = bd.water_max
 		rules.add(player, 0)
 	if keep:
 		_ready_foe()
-	else:
+	elif not human_foe:
 		_spawn_foe()
 	if foe != null:
 		rules.add(foe, 1)
+	_team_bots()
+	if net != null:
+		net.place_humans()                   # (online: the remote humans' puppets at their slots, on the books)
 	rules.reset_round()
 	rules.soft_walls = not practice
+	if stock():
+		_stock_game()
+	elif new_ring():
+		_zones_round()
 	_new_tally()
 	_to("COUNTDOWN")
+	NetMatch.told(self, ["m_next", round])
 
 
 ## The foe of this round (team 1) at the other end: a bot of its element, no gun, held through the countdown.
 func _spawn_foe() -> void:
-	var xf := ring.spawn(1 - player_end, int(RingRules.num("bot_slot", 0.0)))
-	var faction: String = FACTIONS[1] if not NpcFactions.get_faction(FACTIONS[1]).is_empty() else FALLBACK_FACTION
-	var opts := {"face": xf.origin - xf.basis.z * 10.0, "tag": "ring", "tactics": "bend", "element": foe_element,
-			"weapon": "", "sidearm": "", "skill": difficulty, "seed": _seed + round * 17, "y": ring.deck_y()}
-	squad = NpcSquad.spawn(level if level != null else get_parent(), faction, 1, xf.origin, opts)
-	foe = squad.members[0] if squad != null and not squad.members.is_empty() else null
-	if foe == null:
-		return
-	foe.flees = false
-	foe.calm_s = INF
-	foe.held = true
-	foe.no_death = true
-	foe.label = MatchSetup.competitor(foe_element)
-	if &"element" in foe:
-		foe.set(&"element", foe_element)
-	Bending.of(foe).element = foe_element
-	_ring_aware()
+	var r := _make_bot(1, int(RingRules.num("bot_slot", 0.0)), foe_element, _seed + round * 17)
+	squad = r.get("squad") as NpcSquad
+	foe = r.get("bot") as NpcFighter
+
+
+## A bot of side `team` at spawn slot `slot` of its end, of element `el`, its dice from `dice_seed`: no gun, the match's
+## difficulty, never fleeing or dying, held through the countdown, ring aware. {bot, squad, team, slot, element}; {} none.
+func _make_bot(team: int, slot: int, el: String, dice_seed: int) -> Dictionary:
+	var xf := ring.spawn(_end(team), slot)
+	var faction: String = FACTIONS[team]
+	if NpcFactions.get_faction(faction).is_empty():
+		if team == 0:
+			return {}
+		faction = FALLBACK_FACTION
+	var opts := {"face": xf.origin - xf.basis.z * 10.0, "tag": "ring", "tactics": "bend", "element": el,
+			"weapon": "", "sidearm": "", "skill": difficulty, "seed": dice_seed, "y": ring.deck_y()}
+	var sq := NpcSquad.spawn(level if level != null else get_parent(), faction, 1, xf.origin, opts)
+	var b: NpcFighter = sq.members[0] if sq != null and not sq.members.is_empty() else null
+	if b == null:
+		return {"squad": sq}
+	b.flees = false
+	b.calm_s = INF
+	b.held = true
+	b.no_death = true
+	if &"element" in b:
+		b.set(&"element", el)
+	Bending.of(b).element = el
+	_name_bot(b, team, slot, el)
+	_ring_aware(b)
+	return {"bot": b, "squad": sq, "team": team, "slot": slot, "element": el}
+
+
+## Bot `b` at slot `slot` of side `team` named: a team format's own name from this match's draw (name_of), else its
+## element's competitor name (the Tide).
+func _name_bot(b: NpcFighter, team: int, slot: int, el: String) -> void:
+	var i := team * 4 + slot
+	if team_n() > 1 and i < _names.size():
+		b.label = String(_names[i])
+		b.set_meta(NAME_META, b.label)
+	else:
+		b.label = MatchSetup.competitor(el)
+		if b.has_meta(NAME_META):
+			b.remove_meta(NAME_META)
+
+
+## Every fighter of the match now, side by side (the match screen's roster in a team format): [{body, name ("You" the
+## player's), element, team, mine, falls_dealt (falls of the other side he is credited with), falls_taken, self_falls, pct_dealt,
+## mvp (his side's best: falls dealt, then % dealt; none without either)}], team 0 first, the player first on his side.
+func roster() -> Array:
+	var out: Array = []
+	if rules == null:
+		return out
+	for t in 2:
+		var side: Array = []
+		for b in rules.sides[t]:
+			if not (b is Node3D) or not is_instance_valid(b):
+				continue
+			var e := {"body": b, "name": "You" if b == player else (name_of(b) if name_of(b) != "" else MatchSetup.competitor(_element_of(b))),
+					"element": _element_of(b), "team": t, "mine": b == player, "falls_dealt": 0, "falls_taken": 0, "self_falls": 0,
+					"pct_dealt": roundi(float(_pct_by.get((b as Node).get_instance_id(), 0.0))), "mvp": false}
+			for f: Dictionary in falls:
+				if f.get("who") == b:
+					e.falls_taken = int(e.falls_taken) + 1
+					if bool(f.get("self", false)) or f.get("by") == b:
+						e.self_falls = int(e.self_falls) + 1
+				elif f.get("by") == b and int(f.get("team", -1)) != t:
+					e.falls_dealt = int(e.falls_dealt) + 1
+			if b == player:
+				side.push_front(e)
+			else:
+				side.append(e)
+		var best := -1
+		for i in side.size():
+			var k := int(side[i].falls_dealt) * 100000 + int(side[i].pct_dealt)
+			if k > 0 and (best < 0 or k > int(side[best].falls_dealt) * 100000 + int(side[best].pct_dealt)):
+				best = i
+		if best >= 0:
+			side[best].mvp = true
+		out.append_array(side)
+	return out
+
+
+## A team format's fighter's own name ("" none: a 1v1's fighters go by their element's competitor name, the player by "you").
+static func name_of(b: Variant) -> String:
+	return String((b as Node).get_meta(NAME_META, "")) if b is Node and is_instance_valid(b) else ""
+
+
+## The match's names: names.json's list shuffled by the match's seed (none twice).
+func _draw_names() -> Array:
+	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(NAMES_PATH)) if FileAccess.file_exists(NAMES_PATH) else null
+	var pool: Array = ((d as Dictionary).get("names", []) as Array).duplicate() if d is Dictionary else []
+	var r := RandomNumberGenerator.new()
+	r.seed = _seed * 31 + 5
+	for i in range(pool.size() - 1, 0, -1):
+		var j := r.randi_range(0, i)
+		var t: Variant = pool[i]
+		pool[i] = pool[j]
+		pool[j] = t
+	return pool
+
+
+## The deck end side `team` holds this game.
+func _end(team: int) -> int:
+	return player_end if team == 0 else 1 - player_end
+
+
+## The deck end side `team` holds this game (RingNet places the remote humans with it).
+func end_of_team(team: int) -> int:
+	return _end(team)
+
+
+## Online, the session's news on the banner for `s` (RingNet: "Hosting ...", "... joined.", "Could not reach the host.").
+func net_note(text: String, s := 3.0) -> void:
+	_note = text
+	_note_t = s
+
+
+## The fighters a side: the ring's format's (RingArena.format: 1, 2 or 4), a practice 1.
+func team_n() -> int:
+	return 1 if MatchSetup.practice() else MatchSetup.team_size(RingArena.format)
+
+
+## The team formats' other bots for this game (none in a 1v1 or a practice): each side's slots past the first (the player's and
+## the foe's), last game's bot kept when it can stand, else a new one; on the rules' books. Bots no slot wants are let go.
+func _team_bots() -> void:
+	var n := team_n()
+	var want: Array[Dictionary] = []
+	for t in 2:
+		for slot in range(1, n):
+			if net != null and net.human_at(t, slot) != 0:
+				continue                         # (online: a remote human holds this slot)
+			var el := String(mate_elements[slot - 1] if t == 0 else foe_elements[slot])
+			var dice := _seed + round * 17 + 101 * (t + 1) + 7 * slot
+			var rec := {}
+			for e: Dictionary in extras:
+				if int(e.get("team", -1)) == t and int(e.get("slot", -1)) == slot:
+					rec = e
+			if not rec.is_empty() and _keep_bot(rec.get("bot") as NpcFighter, rec.get("squad") as NpcSquad, el):
+				_ready_bot(rec.get("bot") as NpcFighter, rec.get("squad") as NpcSquad, t, slot, el, dice)
+			else:
+				if not rec.is_empty():
+					_drop_squad(rec.get("squad") as NpcSquad)
+				rec = _make_bot(t, slot, el, dice)
+			if rec.get("bot") == null:
+				_drop_squad(rec.get("squad") as NpcSquad)
+				continue
+			want.append(rec)
+			rules.add(rec["bot"] as NpcFighter, t)
+	for e: Dictionary in extras:
+		var kept := false
+		for w: Dictionary in want:
+			kept = kept or w.get("squad") == e.get("squad")
+		if not kept:
+			_drop_squad(e.get("squad") as NpcSquad)
+	extras = want
+
+
+## The bots of both sides (the foe first, then the team formats' others).
+func bots() -> Array[NpcFighter]:
+	var out: Array[NpcFighter] = []
+	if foe != null and is_instance_valid(foe):
+		out.append(foe)
+	for e: Dictionary in extras:
+		var b := e.get("bot") as NpcFighter
+		if b != null and is_instance_valid(b):
+			out.append(b)
+	return out
 
 
 ## The bot's ring awareness, its bending's own reading: where it may stand, how far an open end lies along a way.
-func _ring_aware() -> void:
-	var bend: Variant = foe.brain.bending if foe.brain != null else null
+func _ring_aware(b: NpcFighter) -> void:
+	var bend: Variant = b.brain.bending if b.brain != null else null
 	if bend is Object and bend != null:
 		var o := bend as Object
 		if &"bounds_fn" in o:
-			o.set(&"bounds_fn", rules.bounds_fn_for(foe))
+			o.set(&"bounds_fn", rules.bounds_fn_for(b))
 		if &"edge_fn" in o:
 			o.set(&"edge_fn", rules.edge_along)
 
@@ -294,15 +587,20 @@ func _ring_aware() -> void:
 ## bend's slow is not its own: make_whole ends it), of the element and difficulty the match asks for now (a rematch may ask
 ## for another), with its bending mind (tactics "bend").
 func _keep_foe() -> bool:
-	if foe == null or not is_instance_valid(foe) or not foe.is_inside_tree() or squad == null or not is_instance_valid(squad):
+	return _keep_bot(foe, squad, foe_element)
+
+
+## _keep_foe's test for bot `b` of squad `sq`, asked to play element `el`.
+func _keep_bot(b: NpcFighter, sq: NpcSquad, el: String) -> bool:
+	if b == null or not is_instance_valid(b) or not b.is_inside_tree() or sq == null or not is_instance_valid(sq):
 		return false
-	if foe.is_dead() or foe.down or foe.left_field or foe.arm_broken != "" or foe.pool > 0.0 or foe.mortal_left > 0.0:
+	if b.is_dead() or b.down or b.left_field or b.arm_broken != "" or b.pool > 0.0 or b.mortal_left > 0.0:
 		return false
-	var own_limp := float(foe.get_meta(&"bend_limp", foe.limp))
+	var own_limp := float(b.get_meta(&"bend_limp", b.limp))
 	if own_limp < 1.0:
 		return false
-	return foe.element == foe_element and foe.skill_preset == difficulty and foe.brain != null \
-			and foe.brain.bending != null
+	return b.element == el and b.skill_preset == difficulty and b.brain != null \
+			and b.brain.bending != null
 
 
 ## Last round's bot at this round's end as a new one would stand there (_spawn_foe): made whole (make_whole: no knock, root,
@@ -310,42 +608,51 @@ func _keep_foe() -> bool:
 ## its own dice seeded as a new bot's of this round would be; and a new mind (NpcBrain: the target, the lock, the bending's
 ## books, its catches answered and its cools, all as at a spawn; the old one's lock let go and its held zones ended first).
 func _ready_foe() -> void:
-	var xf := ring.spawn(1 - player_end, int(RingRules.num("bot_slot", 0.0)))
-	make_whole(foe)
-	if foe.has_meta(&"bend_limp"):
-		foe.limp = float(foe.get_meta(&"bend_limp"))
-		foe.remove_meta(&"bend_limp")
-	foe.feet_held = false
-	foe.health = foe.health_max
-	foe.held = true
-	foe.action = ""
-	foe.face_lock = Vector3.INF
-	foe.hits_taken = 0
-	foe.killed_by = null
+	_ready_bot(foe, squad, 1, int(RingRules.num("bot_slot", 0.0)), foe_element, _seed + round * 17)
+
+
+## _ready_foe's making ready of bot `b` (squad `sq`) at slot `slot` of side `team`'s end, element `el`, its dice from `dice_seed`.
+func _ready_bot(b: NpcFighter, sq: NpcSquad, team: int, slot: int, el: String, dice_seed: int) -> void:
+	var xf := ring.spawn(_end(team), slot)
+	make_whole(b)
+	if b.has_meta(&"bend_limp"):
+		b.limp = float(b.get_meta(&"bend_limp"))
+		b.remove_meta(&"bend_limp")
+	b.feet_held = false
+	b.health = b.health_max
+	b.held = true
+	b.action = ""
+	b.face_lock = Vector3.INF
+	b.hits_taken = 0
+	b.killed_by = null
 	var dice := RandomNumberGenerator.new()
-	dice.seed = _seed + round * 17           # (_spawn_foe's squad seed: its first draw is a new fighter's own seed)
-	foe.rng_seed = dice.randi() | 1
-	foe.rng.seed = foe.rng_seed
-	foe.home = Vector3(xf.origin.x, ring.deck_y(), xf.origin.z)
-	squad.origin = xf.origin
-	RingLevel.place(foe, xf)
-	foe.halt()
-	if foe.brain.bending != null:
-		foe.brain.bending.on_exit()
-	foe.brain = NpcBrain.new(foe)
-	var bd := Bending.of(foe)
-	bd.element = foe_element
-	bd.water = bd.water_max
-	_ring_aware()
+	dice.seed = dice_seed                    # (_make_bot's squad seed: its first draw is a new fighter's own seed)
+	b.rng_seed = dice.randi() | 1
+	b.rng.seed = b.rng_seed
+	b.home = Vector3(xf.origin.x, ring.deck_y(), xf.origin.z)
+	sq.origin = xf.origin
+	RingLevel.place(b, xf)
+	b.halt()
+	if b.brain.bending != null:
+		b.brain.bending.on_exit()
+	b.brain = NpcBrain.new(b)
+	var bd := Bending.of(b)
+	bd.element = el
+	_name_bot(b, team, slot, el)
+	_ring_aware(b)
 
 
 func _drop_foe() -> void:
-	if squad != null and is_instance_valid(squad):
-		if squad.get_parent() != null:
-			squad.get_parent().remove_child(squad)  # (out at once: the interactor and the senses forget him)
-		squad.queue_free()
+	_drop_squad(squad)
 	squad = null
 	foe = null
+
+
+func _drop_squad(sq: NpcSquad) -> void:
+	if sq != null and is_instance_valid(sq):
+		if sq.get_parent() != null:
+			sq.get_parent().remove_child(sq)    # (out at once: the interactor and the senses forget him)
+		sq.queue_free()
 
 
 ## `b` whole for a round: alive and full, back on its feet, no knock, no root, slow or anchor, no lock held.
@@ -406,6 +713,9 @@ func _physics_process(dt: float) -> void:
 	if phase == "COUNTDOWN" and LoadingScreen.covering():
 		phase_t = 0.0                        # (the countdown begins as the loading screen goes)
 	_note_t = maxf(_note_t - dt, 0.0)
+	_ko_t = maxf(_ko_t - dt, 0.0)
+	if stock():
+		_stock_respawns(dt)
 	match phase:
 		"COUNTDOWN":
 			var cd := countdown_s()
@@ -413,18 +723,27 @@ func _physics_process(dt: float) -> void:
 			if not practice and n != _count_said and phase_t >= RingRules.num("round_show_s", 0.8) and n > 0:
 				_count_said = n
 				_sting("count")
-			if phase_t >= cd:
-				_fight()
+			if phase_t >= cd and NetMatch.referee(self):
+				_fight()                         # (online the host's: the others go at its word, NetMatch)
 		"FIGHT":
 			_count_guards()
-			if practice:
-				_practice_step(dt)
+			if rules.team_mode() and not practice:
+				_coach(dt)
+			if not NetMatch.referee(self):
+				pass                             # (online a mirror: the clock and the round's end are the host's words)
+			elif practice:
+				practice_ctl.step(dt)
+			elif stock():
+				_stock_clock()
 			elif foe == null or not is_instance_valid(foe):
 				_end_round(0, "winded")
 			elif round_left_s() <= 0.0:
 				_time_out()
 		"OVER":
-			if phase_t >= RingRules.num("pause_s", 6.0) or _skip:
+			var wait := RingRules.num("pause_s", 6.0)
+			if stock() and decided():
+				wait = RingRules.stock_num("over_s", 2.2)
+			if (phase_t >= wait or _skip) and NetMatch.referee(self):
 				_skip = false
 				if decided():
 					_done()
@@ -438,16 +757,94 @@ func _fight() -> void:
 		player.drag_speed_cap = INF
 	_hold_casts(false)
 	if foe != null and is_instance_valid(foe):
-		foe.held = practice                  # (the dummy is held at its end; its casts are begun here: _practice_step)
+		foe.held = practice                  # (the dummy is held at its end; its casts are begun by RingPractice.step)
 		if foe.brain != null and player != null:
 			foe.brain.told(player, player.global_position)
+	for b in bots():
+		if b != foe:
+			b.held = false
+	_coach_t = 0.0
+	if rules.team_mode() and not practice:
+		_coach(0.0)
 	rules.live = true
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
+	practice_ctl.arm()
+	if new_ring():
+		for b in competitors():
+			_ready_key1(b)
 	_sting("go")
 	if not practice:
 		_music(true)
 	_to("FIGHT")
+	NetMatch.told(self, ["m_fight"])
+
+
+## THE TEAM COACH (team formats, FIGHT): each bot is handed the nearest opponent still in play, counted spread_m farther for
+## each of its side already on him (a side does not all pile on one); every every_s it looks again and switches only for one
+## better by keep_m; a bot whose target is out of play (in the water, on the way back, out of the round) is handed another at
+## once. rules.json coach.
+func _coach(dt: float) -> void:
+	_coach_t -= dt
+	var again := _coach_t <= 0.0
+	if again:
+		_coach_t = _coach_num("every_s", 1.5)
+	var spread := _coach_num("spread_m", 6.0)
+	var keep := _coach_num("keep_m", 3.0)
+	for t in 2:
+		var mine: Array[NpcFighter] = []
+		for b in rules.sides[t]:
+			if b is NpcFighter and is_instance_valid(b) and (b as NpcFighter).brain != null:
+				mine.append(b as NpcFighter)
+		var on := {}
+		for b in mine:
+			var cur := b.brain.target
+			if _fair_target(cur, t):
+				on[cur.get_instance_id()] = int(on.get(cur.get_instance_id(), 0)) + 1
+		for b in mine:
+			if b.held or not in_play(b):
+				continue
+			var cur := b.brain.target
+			var cur_ok := _fair_target(cur, t)
+			if cur_ok and not again:
+				continue
+			var best: Node3D = null
+			var best_d := INF
+			var cur_d := INF
+			for o in rules.sides[1 - t]:
+				if not _fair_target(o, t):
+					continue
+				var n := int(on.get((o as Node3D).get_instance_id(), 0)) - (1 if o == cur else 0)
+				var d := b.global_position.distance_to((o as Node3D).global_position) + spread * float(n)
+				if o == cur:
+					cur_d = d
+				if d < best_d:
+					best_d = d
+					best = o as Node3D
+			if best == null or best == cur or (cur_ok and best_d > cur_d - keep):
+				continue
+			if cur_ok:
+				on[cur.get_instance_id()] = int(on.get(cur.get_instance_id(), 1)) - 1
+			on[best.get_instance_id()] = int(on.get(best.get_instance_id(), 0)) + 1
+			b.brain.focus(best)
+
+
+## `b` can be fought now: a competitor able to fight, not out of the round (the zones) nor away (the % ring's water, a
+## respawn, no lives left).
+func in_play(b: Variant) -> bool:
+	# (a side's list can still hold a fighter freed since — a team format's bot made again: `is` on it is a script error;
+	# RingSpectate walks those lists after the player's last life)
+	if not is_instance_valid(b) or not (b is Node3D) or not NpcSenses.can_fight(b) or rules.team_of(b as Node) < 0:
+		return false
+	return not rules.is_out(b as Node) and not (stock() and rules.is_away(b as Node))
+
+
+## `o` a target for side `t`'s bots: in play, of the other side.
+func _fair_target(o: Variant, t: int) -> bool:
+	return o != null and is_instance_valid(o) and in_play(o) and rules.team_of(o as Node) == 1 - t
+
+
+static func _coach_num(key: String, def: float) -> float:
+	var c: Variant = RingRules.data().get("coach", {})
+	return float((c as Dictionary).get(key, def)) if c is Dictionary else def
 
 
 ## The time-out: more ground, then more health, else a draw.
@@ -464,10 +861,11 @@ func _time_out() -> void:
 		_end_round(-1, "time")
 
 
-## The round to `team` (-1: drawn) for `why`.
+## The round to `team` (-1: drawn) for `why`. Online the referee's (NetMatch: told the others, who end theirs at its word).
 func _end_round(team: int, why: String) -> void:
-	if phase != "FIGHT":
+	if phase != "FIGHT" or not (NetMatch.referee(self) or NetMatch.applying()):
 		return
+	NetMatch.told(self, ["m_end", team, why])
 	_left_at_end = round_left_s()
 	rules.live = false
 	last_winner = team
@@ -480,18 +878,21 @@ func _end_round(team: int, why: String) -> void:
 	if team >= 0:
 		stats[team]["rounds"] = int(stats[team].get("rounds", 0)) + 1
 	rounds_played += 1
-	if why in ["ringout", "winded", "knockout"]:
+	if why in ["ringout", "winded", "knockout", "falls", "sudden"]:
 		ringouts += 1
+	_respawns.clear()
 	_close_tally()
 	_count_catches()
 	history.append({"round": round, "winner": team, "result": last_result, "why": why,
-			"at_s": maxf(round_s - _left_at_end, 0.0), "tally": round_tally.duplicate(true)})
-	if foe != null and is_instance_valid(foe):
-		foe.held = true
+			"at_s": maxf(round_s - _left_at_end, 0.0), "tally": round_tally.duplicate(true),
+			"pct_tally": rules.tally.duplicate(true) if stock() else [{}, {}],
+			"lives": [rules.team_stocks(0), rules.team_stocks(1)] if stock() else [0, 0]})
+	for b in bots():
+		b.held = true
 	if player != null and is_instance_valid(player):
 		player.drag_speed_cap = INF
 	_music(false)
-	_sting("ringout" if why == "ringout" else "over")
+	_sting("ringout" if why in ["ringout", "falls", "sudden"] else "over")
 	_to("OVER")
 	round_over.emit(last_result, why)
 
@@ -504,6 +905,9 @@ func decided() -> bool:
 
 
 func _done() -> void:
+	if not (NetMatch.referee(self) or NetMatch.applying()):
+		return
+	NetMatch.told(self, ["m_done"])
 	winner = 0 if score.x > score.y else (1 if score.y > score.x else -1)
 	if player != null and is_instance_valid(player):
 		player.drag_speed_cap = 0.0          # (the match screen stands: he waits for a rematch or the menu)
@@ -528,16 +932,30 @@ func _on_rang_out(who: Node3D, by: Node) -> void:
 	last_by = by
 	if by == null or not is_instance_valid(by) or by == who:
 		self_outs += 1
-	if rules.team_mode() and who is NpcFighter and is_instance_valid(who):
+	if not stock() and rules.team_mode() and who is NpcFighter and is_instance_valid(who):
 		(who as NpcFighter).held = true      # (out: he sits the round out)
+	if new_ring() and not stock() and not practice and is_instance_valid(who):
+		# (zones on the new ring: out of the round, off the deck until the next: his locks and stones dropped, the splash told,
+		# hidden at his spout; your own in a team format: watch your team play on)
+		var sc := SwayCaster.of(who)
+		if sc != null:
+			sc.drop_all()
+		if ring != null and ring.water != null and ring.is_out(who.global_position) and not ring.water.holds(who):
+			ring.water.curtain_splash(who.global_position, (who as CharacterBody3D).velocity.length() if who is CharacterBody3D else 8.0)
+		_hide(who, true)
+		if who == player and team_n() > 1 and not rules.still_in(rules.team_of(player)).is_empty():
+			RingSpectate.start(self)
 	rang_out.emit(who, by)
 
 
 func _on_side_out(side: int) -> void:
 	if practice:
-		_note = pword("out")
-		_note_t = _pnum("reset_after_out_s", 1.6)
-		_reset_in = _pnum("reset_after_out_s", 1.6)
+		practice_ctl.on_out()
+		return
+	if not NetMatch.referee(self):
+		return                               # (online a mirror: the round's end is the host's word, NetMatch)
+	if stock():
+		_end_round(1 - side, "sudden" if rules.sudden else "falls")
 		return
 	var why := String(rules.last_out.get("why", "ringout"))
 	if rules.team_mode():
@@ -553,10 +971,7 @@ func _on_side_out(side: int) -> void:
 func _on_winded(who: Node3D, _by: Node, _to_zone: int) -> void:
 	if not practice or who == null or not is_instance_valid(who):
 		return
-	if who is FrontierPlayer:
-		(who as FrontierPlayer).health = (who as FrontierPlayer).max_health
-	elif who is NpcFighter:
-		(who as NpcFighter).health = (who as NpcFighter).health_max
+	practice_ctl.on_winded(who)
 
 
 func _count_catches() -> void:
@@ -616,11 +1031,7 @@ func _unhandled_input(e: InputEvent) -> void:
 	if not (e is InputEventKey) or not e.is_pressed() or e.is_echo():
 		return
 	if practice and phase == "FIGHT":
-		if e.is_action_pressed(RESET_ACTION):
-			reset_positions()
-			get_viewport().set_input_as_handled()
-		elif e.is_action_pressed(DUMMY_ACTION):
-			cycle_dummy()
+		if practice_ctl.key(e):
 			get_viewport().set_input_as_handled()
 		return
 	if phase != "OVER":
@@ -630,11 +1041,18 @@ func _unhandled_input(e: InputEvent) -> void:
 
 
 # ---------------------------------------------------------------- sound
+## The round's moment `key` (count, go, ringout, over, match): rules.json stings [id, gain dB, pitch], the ring's own sound
+## (BendSounds: the countdown's tick, the gong at the go, the bell at a round's end, the match's gong; improvement round 2,
+## the owner: no borrowed frontier sounds in the ring), else an existing Sfx id.
 func _sting(key: String) -> void:
 	var s: Variant = (RingRules.data().get("stings", {}) as Dictionary).get(key)
-	if not (s is Array) or (s as Array).size() < 3 or not Sfx.has(StringName(String(s[0]))):
+	if not (s is Array) or (s as Array).size() < 3:
 		return
-	Sfx.play_2d(StringName(String(s[0])), float(s[1]), float(s[2]))
+	var id := StringName(String(s[0]))
+	if BendSounds.has(id):
+		BendSounds.play(id, Vector3.INF, float(s[1]), float(s[2]))
+	elif Sfx.has(id):
+		Sfx.play_2d(id, float(s[1]), float(s[2]))
 
 
 func _music(on: bool) -> void:
@@ -652,50 +1070,42 @@ func _music(on: bool) -> void:
 
 
 # ---------------------------------------------------------------- the words on the screen
+## The centre words (round 4, HUD: hud.json centre): the banner (the countdown, the fall's line, "Over") centre_px at
+## banner_at of the height (44 px at 30%: clear of the plates, the clock and the event line at 1280x720, 1440x900 and
+## 1920x1080), the sub line under it, the top line under the plates. One ink outline, as the strip's.
 func _build_ui() -> void:
 	ui = CanvasLayer.new()
 	ui.name = "RingText"
 	ui.layer = 15
 	add_child(ui)
-	banner = _label(54, MenuUI.INK)
-	banner.anchor_top = 0.22
-	banner.anchor_bottom = 0.22
+	var cc: Variant = PercentBar.hud_cfg().get("centre", {})
+	var cfg: Dictionary = cc if cc is Dictionary else {}
+	var at := float(cfg.get("banner_at", 0.3))
+	var bh := float(cfg.get("banner_h", 56.0))
+	banner = _label(int(cfg.get("banner_px", 44)), MenuUI.INK)
+	banner.anchor_top = at
+	banner.anchor_bottom = at
+	banner.offset_top = -bh * 0.5
+	banner.offset_bottom = bh * 0.5
 	ui.add_child(banner)
-	sub = _label(22, MenuUI.DIM)
-	sub.anchor_top = 0.22
-	sub.anchor_bottom = 0.22
-	sub.offset_top = 70.0
-	sub.offset_bottom = 110.0
+	var sp := float(cfg.get("sub_px", 22.0))
+	sub = _label(int(sp), MenuUI.DIM)
+	sub.anchor_top = at
+	sub.anchor_bottom = at
+	sub.offset_top = bh * 0.5 + float(cfg.get("sub_gap", 2.0))
+	sub.offset_bottom = sub.offset_top + sp + 10.0
 	ui.add_child(sub)
-	top = _label(17, MenuUI.DIM)
+	var tp := float(cfg.get("top_px", 17.0))
+	top = _label(int(tp), MenuUI.DIM)
 	top.anchor_top = 0.0
 	top.anchor_bottom = 0.0
-	top.offset_top = 86.0
-	top.offset_bottom = 110.0
+	top.offset_top = float(cfg.get("top_y", 112.0))
+	top.offset_bottom = top.offset_top + tp + 8.0
 	ui.add_child(top)
-	# (practice: what the dummy does and the keys, under the HUD's match bar; the player's tally under it)
-	hint_back = ColorRect.new()
-	hint_back.name = "PracticeBack"
-	hint_back.color = Color(0.02, 0.015, 0.01, 0.5)
-	hint_back.anchor_left = 0.18
-	hint_back.anchor_right = 0.82
-	hint_back.offset_top = 110.0
-	hint_back.offset_bottom = 158.0
-	hint_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint_back.visible = false
-	ui.add_child(hint_back)
-	hint = _label(16, MenuUI.INK)
-	hint.name = "PracticeHint"
-	hint.offset_top = 112.0
-	hint.offset_bottom = 134.0
-	hint.visible = false
-	ui.add_child(hint)
-	tally_label = _label(16, MenuUI.GOLD)
-	tally_label.name = "PracticeTally"
-	tally_label.offset_top = 134.0
-	tally_label.offset_bottom = 156.0
-	tally_label.visible = false
-	ui.add_child(tally_label)
+	for l: Label in [banner, sub, top]:
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+		l.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
+	practice_ctl.build_ui(ui)             # (practice: what the dummy does and the keys, under the HUD's match bar; the tally)
 
 
 func _label(size: int, color: Color) -> Label:
@@ -733,16 +1143,24 @@ func _paint() -> void:
 			var cd := countdown_s()
 			if practice:
 				b = pword("banner")
+			elif stock():
+				var head := words("game") % round if to_win > 1 else ""
+				b = head if phase_t < RingRules.num("round_show_s", 0.8) and head != "" else str(maxi(ceili(cd - phase_t), 1))
+				s = score_text() if to_win > 1 else ""
 			else:
 				b = words("round") % round if phase_t < RingRules.num("round_show_s", 0.8) else str(maxi(ceili(cd - phase_t), 1))
 				s = words("sub_countdown") % [score_text(), MatchSetup.rounds_label(to_win), difficulty]
 		"FIGHT":
 			if practice:
 				b = pword("banner") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
+			elif stock() and ko_line() != "":
+				b = ko_line()
 			else:
 				b = words("go") if phase_t < RingRules.num("go_show_s", 1.2) else (_note if _note_t > 0.0 else "")
 		"OVER":
-			if round_screen == null or not is_instance_valid(round_screen):
+			if stock() and decided():
+				b = "" if RingMoment.busy() or RingReplay.holding() else words("over")      # (round 4 IMPACT: the word waits for the last fall's slow beat)
+			elif round_screen == null or not is_instance_valid(round_screen):
 				b = result_line()
 				s = score_text()
 				if not decided():
@@ -753,14 +1171,7 @@ func _paint() -> void:
 				s = score_text() + "  ·  " + words("done_hint")
 	banner.text = b
 	sub.text = s
-	if hint != null:
-		hint.visible = practice
-		tally_label.visible = practice
-		hint_back.visible = practice
-		if practice:
-			hint.text = practice_line()
-			var mine: Dictionary = round_tally[0]
-			tally_label.text = pword("tally") % [int(mine.get("casts", 0)), int(mine.get("catches", 0)), int(mine.get("knock_backs", 0))]
+	practice_ctl.paint()
 	# (the HUD's strip shows the round, the time and the score once it has one: set_arena)
 	var hud_has := player != null and is_instance_valid(player) and player.hud != null and player.hud.has_method(&"set_arena")
 	top.text = "" if hud_has or phase == "DONE" else words("top") % [MatchSetup.sport(), round, floori(round_left_s() / 60.0),
@@ -770,6 +1181,11 @@ func _paint() -> void:
 ## The round's result in words.
 func result_line() -> String:
 	var foe_n := foe_name()
+	if last_why in ["falls", "time", "sudden"] and last_result != "draw":
+		var key := ("win_" if last_result == "win" else "loss_") + last_why
+		return words(key) % foe_n if words(key).contains("%s") else words(key)
+	if last_why == "sudden_draw":
+		return words("sudden_draw")
 	match last_why:
 		"ringout", "winded", "territory", "health", "knockout":
 			if last_result == "win":
@@ -779,23 +1195,6 @@ func result_line() -> String:
 
 
 # ---------------------------------------------------------------- the tally (the screens')
-const RESET_ACTION := &"ring_reset"
-const DUMMY_ACTION := &"ring_dummy"
-const RESET_KEY := KEY_R
-const DUMMY_KEY := KEY_B
-
-
-## The practice keys (R: reset positions, B: the dummy's way), made when missing (the player may rebind them).
-static func _ensure_keys() -> void:
-	for pair: Array in [[RESET_ACTION, RESET_KEY], [DUMMY_ACTION, DUMMY_KEY]]:
-		if InputMap.has_action(pair[0]):
-			continue
-		InputMap.add_action(pair[0])
-		var k := InputEventKey.new()
-		k.physical_keycode = pair[1]
-		InputMap.action_add_event(pair[0], k)
-
-
 func _new_tally() -> void:
 	round_tally = [{"casts": 0, "catches": 0, "knock_backs": 0, "hits": 0}, {"casts": 0, "catches": 0, "knock_backs": 0, "hits": 0}]
 	_guard_took.clear()
@@ -869,15 +1268,15 @@ func _foe_bending() -> Object:
 	return b as Object if b is Object and b != null else null
 
 
-# ---------------------------------------------------------------- practice
+# ---------------------------------------------------------------- practice (RingPractice's; the old names forward)
 ## data/ring/screens.json practice's number `key`.
 static func _pnum(key: String, def: float) -> float:
-	return float((MatchSetup.screens().get("practice", {}) as Dictionary).get(key, def))
+	return RingPractice.pnum(key, def)
 
 
 ## A practice word (screens.json practice.words).
 static func pword(key: String) -> String:
-	return String((((MatchSetup.screens().get("practice", {}) as Dictionary).get("words", {})) as Dictionary).get(key, key))
+	return RingPractice.pword(key)
 
 
 ## The countdown's length: the rules' (3 s), a practice's short one.
@@ -885,143 +1284,359 @@ func countdown_s() -> float:
 	return _pnum("countdown_s", 1.0) if practice else RingRules.num("countdown_s", 3.0)
 
 
-## "Practice  ·  a Stone dummy that throws at you every few seconds  ·  R: reset positions ..."
 func practice_line() -> String:
-	return pword("hint") % [MatchSetup.competitor(foe_element), MatchSetup.dummy_line(dummy)]
+	return practice_ctl.practice_line()
 
 
-## The dummy's next way in turn (stand, block, throw), at once.
 func cycle_dummy() -> void:
-	var ds := MatchSetup.DUMMIES
-	dummy = String(ds[(ds.find(dummy) + 1) % ds.size()])
-	MatchSetup.dummy = dummy
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
-	_note = pword("way") % MatchSetup.dummy_line(dummy)
-	_note_t = 1.8
+	practice_ctl.cycle_dummy()
 
 
-## Both back at their ends, whole, the deck cleared (practice's R; after a fall into the water).
 func reset_positions() -> void:
-	_reset_in = -1.0
-	if ring != null:
-		ring.clear_dropped()
-	if player != null and is_instance_valid(player):
-		make_whole(player)
-		RingLevel.place(player, ring.spawn(player_end))
+	practice_ctl.reset_positions()
+
+
+func throw_every_s() -> float:
+	return practice_ctl.throw_every_s()
+
+
+func _pmove(what: String) -> String:
+	return practice_ctl.pmove(what)
+
+
+static func dummy_guard(bend: Object) -> Dictionary:
+	return RingPractice.dummy_guard(bend)
+
+
+# ---------------------------------------------------------------- round 3: the % match (stock)
+## The games in a match (1, or 3: best of 3): the user arg games=, else MatchSetup.games() (BOTS' Esc menu), else
+## rules.json stock.games.
+func games() -> int:
+	var g := int(_arg_num("games", 0.0))
+	if g <= 0:
+		g = maxi(MatchSetup.games(), int(RingRules.stock_num("games", 1.0)))
+	return 3 if g >= 3 else 1
+
+
+## A number user arg `key`= (def without one).
+static func _arg_num(key: String, def: float) -> float:
+	for a in OS.get_cmdline_user_args():
+		var kv := a.trim_prefix("--")
+		if kv.begins_with(key + "=") and kv.get_slice("=", 1).is_valid_float():
+			return float(kv.get_slice("=", 1))
+	return def
+
+
+## Every competitor the rules count (both sides).
+func competitors() -> Array:
+	var out: Array = []
+	if rules == null:
+		return out
+	for t in 2:
+		for b in rules.sides[t]:
+			if b is Node3D and is_instance_valid(b):
+				out.append(b)
+	return out
+
+
+## `b` a competitor of `team` mid-match (3v3's more bots, tests): on the rules' books, with its RingMoves and its caster's
+## hooks (stock).
+func join(b: Node3D, team: int) -> void:
+	rules.add(b, team)
+	if new_ring():
+		_equip(b)
+	if stock():
+		if rules.falls.is_empty():
+			rules.reset_lives()              # (a side grown before the first fall: every one at team.stocks)
+
+
+## A round's start (zones on the new ring): every competitor with its RingMoves and its hooks, shown and solid (one out last
+## round was hidden), the meter at 0 and health full, key 1 readied; your own camera again.
+func _zones_round() -> void:
+	rules.lives_on = false
+	var sp := get_node_or_null(RingSpectate.NODE_NAME) as RingSpectate
+	if sp != null:
+		sp.stop()
+	for b in competitors():
+		_equip(b)
+		_hide(b, false)
+	_held_before.clear()                     # (every bot was readied and held for the countdown: _ready_bot)
+	rules.reset_game()
+	for b in competitors():
+		_ready_key1(b)
+
+
+## A game's start (stock): every competitor with its RingMoves and its hooks, shown and solid, lives full, % 0, key 1 readied.
+func _stock_game() -> void:
+	rules.lives_on = not practice
+	var sp := get_node_or_null(RingSpectate.NODE_NAME) as RingSpectate
+	if sp != null:
+		sp.stop()                            # (a new game: your own camera again)
+	for b in competitors():
+		_equip(b)
+		_hide(b, false)
+	_held_before.clear()
+	_respawns.clear()
+	for s in _spouts.values():
+		if is_instance_valid(s):
+			(s as RingSpout).queue_free()
+	_spouts.clear()
+	_ko_line = ""
+	_ko_t = 0.0
+	_sudden_at = -1.0
+	rules.reset_game()
+	for b in competitors():
+		_ready_key1(b)
+
+
+## `b` made ready for the % ring: MOVE's RingMoves on it, its caster's lock starts ending its spawn safety.
+func _equip(b: Node3D) -> void:
+	RingMoves.install(b)
+	if b == player:
+		RingAssist.install(b)                # (round 4 SIMPLE: the Basic controls' helpers; idle under Full)
+	var sc := SwayCaster.of(b)
+	if sc != null and not _hooked_casters.has(sc.get_instance_id()):
+		_hooked_casters[sc.get_instance_id()] = true
+		sc.lock_started.connect(func(_m: String, _t: Node3D) -> void:
+			if rules != null and is_instance_valid(b):
+				rules.note_lock_started(b))
+
+
+## `b`'s key 1 readied (SwayCaster.ready_default: at the countdown, after a respawn).
+func _ready_key1(b: Node3D) -> void:
+	var sc := SwayCaster.of(b)
+	if sc != null:
+		sc.ready_default()
+
+
+## The clock (stock): at 0:00 more lives wins; level, sudden death; in sudden death a draw after sudden.draw_s.
+func _stock_clock() -> void:
+	if rules.sudden:
+		if phase_t - _sudden_at >= RingRules.sub_num("sudden", "draw_s", 60.0):
+			_end_round(-1, "sudden_draw")
+		return
+	if round_left_s() > 0.0:
+		return
+	var a := rules.team_stocks(0)
+	var b := rules.team_stocks(1)
+	if a != b:
+		_end_round(0 if a > b else 1, "time")
+		return
+	# (level at the bell: sudden death; everyone back on the deck first)
+	net_sudden()
+	NetMatch.told(self, ["m_sudden"])
+
+
+## Sudden death begun (the referee's level bell: _stock_clock; online another machine at the host's word, NetMatch): everyone
+## back on the deck first, one life each at sudden.pct.
+func net_sudden() -> void:
+	for p: Dictionary in _respawns:
+		_do_respawn(p.body as Node3D)
+	_respawns.clear()
+	rules.start_sudden()
+	_sudden_at = phase_t
+	_note = words("sudden")
+	_note_t = 2.5
+
+
+## Seconds of sudden death left (0 when not in it).
+func sudden_left_s() -> float:
+	if rules == null or not rules.sudden:
+		return 0.0
+	return maxf(RingRules.sub_num("sudden", "draw_s", 60.0) - (phase_t - _sudden_at), 0.0)
+
+
+## b's lives left (stock; 0 none).
+func lives_of(b: Node) -> int:
+	return rules.stocks_of(b) if rules != null and stock() else 0
+
+
+## b's % now (stock).
+func pct_of(b: Node) -> float:
+	return rules.pct_of(b) if rules != null and stock() else 0.0
+
+
+## The fall's centre line now ("" none).
+func ko_line() -> String:
+	return _ko_line if _ko_t > 0.0 else ""
+
+
+## The match's % tally for team `t` (stock; the match screen's, spec §10.6): the games' RingRules tallies summed (the longest
+## string and the highest % survived the best of them), the catches its guards took.
+func stock_tally(t: int) -> Dictionary:
+	var out := {}
+	for h: Dictionary in history:
+		var pt: Dictionary = (h.get("pct_tally", [{}, {}]) as Array)[t]
+		for k: String in pt:
+			if k in ["string_hits", "string_pct", "best_pct"]:
+				continue
+			out[k] = float(out.get(k, 0.0)) + float(pt[k])
+		if int(pt.get("string_hits", 0)) > int(out.get("string_hits", 0)) or (int(pt.get("string_hits", 0)) == int(out.get("string_hits", 0))
+				and float(pt.get("string_pct", 0.0)) > float(out.get("string_pct", 0.0))):
+			out["string_hits"] = int(pt.get("string_hits", 0))
+			out["string_pct"] = float(pt.get("string_pct", 0.0))
+		out["best_pct"] = maxf(float(out.get("best_pct", 0.0)), float(pt.get("best_pct", 0.0)))
+		out["catches"] = float(out.get("catches", 0.0)) + float(((h.tally as Array)[t] as Dictionary).get("catches", 0))
+	return out
+
+
+## RingRules.ko: a life gone (stock). The line, the fall's record, the body hidden and its respawn set (lives left), its
+## locks and stones dropped; Practice: both put back (RingPractice through side_out).
+func _on_ko(b: Node3D, by: Node, pct: float, tag: String, left: int) -> void:
+	var t := rules.team_of(b)
+	var at_s := maxf(round_s - round_left_s(), 0.0)
+	falls.append({"game": round, "at_s": at_s, "who": b, "by": by, "pct": pct, "tag": tag, "team": t, "left": left,
+			"self": by == null})
+	var sc := SwayCaster.of(b)
+	if sc != null:
+		sc.drop_all()
+	if ring != null and ring.water != null and ring.is_out(b.global_position) and not ring.water.holds(b):
+		ring.water.curtain_splash(b.global_position, (b as CharacterBody3D).velocity.length() if b is CharacterBody3D else 8.0)
+	if practice:
+		return
+	var who := words("ko_you") if b == player else (name_of(b) if name_of(b) != "" else words("ko_the") % MatchSetup.competitor(_element_of(b)))
+	_ko_line = words("ko_line") % [who, words("ko_last") if left == 1 else (words("ko_left") % left)] if left > 0 else ""
+	if b == player and left <= 0 and team_n() > 1:
+		RingSpectate.start(self)             # (your last life gone in a team format: watch your team play on)
+	_ko_t = RingRules.stock_num("ko_line_s", 1.4) if left > 0 else 0.0
+	if left <= 0:
+		_hide(b, true)
+		return
+	_hide(b, true)
+	_respawns.append({"body": b, "t": RingRules.sub_num("respawn", "out_wait_s", 1.6)})
+
+
+func _element_of(b: Node) -> String:
+	var el := BendPoses.element_of(b)
+	if el == "" and b is NpcFighter:
+		el = String((b as NpcFighter).get(&"element"))
+	return el if el in Bending.ELEMENTS else "earth"
+
+
+## The respawns pending: each at its time, in game time.
+func _stock_respawns(dt: float) -> void:
+	if _respawns.is_empty():
+		return
+	var due: Array = []
+	for p: Dictionary in _respawns:
+		p["t"] = float(p.t) - dt
+		if float(p.t) <= 0.0:
+			due.append(p)
+	for p: Dictionary in due:
+		_respawns.erase(p)
+		if phase == "FIGHT" and is_instance_valid(p.body):
+			_do_respawn(p.body as Node3D)
+
+
+## `b` hidden out of play (its collision layer off, still, held, kept at its end's spout so the camera stays valid) or
+## shown again.
+func _hide(b: Node3D, on: bool) -> void:
+	if b == null or not is_instance_valid(b):
+		return
+	var id := b.get_instance_id()
+	if on:
+		if not _hidden.has(id) and b is CollisionObject3D:
+			_hidden[id] = (b as CollisionObject3D).collision_layer
+			(b as CollisionObject3D).collision_layer = 0
+		b.visible = false
+		var e := rules.end_of(b)
+		if e >= 0 and ring != null:
+			var at := ring.spout_at(e, 0)
+			b.global_position = at + Vector3.UP * 0.1
+			if b is CharacterBody3D:
+				(b as CharacterBody3D).velocity = Vector3.ZERO
+		if b == player:
+			player.drag_speed_cap = 0.0
+			_hold_casts(true)
+		elif b is NpcFighter:
+			if not _held_before.has(id):
+				_held_before[id] = (b as NpcFighter).held       # (a held one, Practice's dummy, stays held after)
+			(b as NpcFighter).held = true
+		var kn := BendKnock.peek(b)
+		if kn != null:
+			kn.reset()
+		return
+	if _hidden.has(id) and b is CollisionObject3D:
+		(b as CollisionObject3D).collision_layer = int(_hidden[id])
+	_hidden.erase(id)
+	b.visible = true
+
+
+## `b` back on the spout (spec §7.2): the grate on his end's s 12 m line farther from the nearest foe, spout_up_m up, facing
+## the deck's middle; MOVE's ride_spout holds him there (left_spout ends it), else he stands on the grate; safe until
+## safe_after_s after he leaves it or any lock of his starts.
+func _do_respawn(b: Node3D) -> void:
+	if b == null or not is_instance_valid(b) or rules.is_gone(b):
+		return
+	var e := rules.end_of(b)
+	var slots := mini(ring.spout_count(), maxi(team_n(), 2)) if rules.team_mode() else 2
+	var best := ring.spout_at(e, 0)
+	var best_d := -INF
+	for k in slots:
+		var p := ring.spout_at(e, k)
+		var near := INF
+		for o in rules.sides[1 - rules.team_of(b)]:
+			if is_instance_valid(o) and not rules.is_away(o):
+				near = minf(near, (o as Node3D).global_position.distance_to(p))
+		if near > best_d + 0.01:
+			best_d = near
+			best = p
+	_hide(b, false)
+	var up := RingRules.sub_num("respawn", "spout_up_m", 3.0)
+	var face := ring.center() - best
+	face.y = 0.0
+	var xf := Transform3D(Basis.looking_at(face.normalized() if face.length() > 0.1 else -ring.axis(), Vector3.UP), best + Vector3.UP * up)
+	RingLevel.place(b, xf)
+	if b == player:
 		player.drag_speed_cap = INF
 		_hold_casts(false)
-	if foe == null or not is_instance_valid(foe) or foe.down or foe.is_dead():
-		# (gone, or down for good: a new dummy, the books made again)
-		_drop_foe()
-		rules.clear()
-		if player != null and is_instance_valid(player):
-			rules.add(player, 0)
-		_spawn_foe()
-		if foe != null:
-			rules.add(foe, 1)
-	if foe != null and is_instance_valid(foe):
-		make_whole(foe)
-		foe.health = foe.health_max
-		var bend := _foe_bending()
-		if bend != null and bend.has_method(&"reset"):
-			bend.call(&"reset")
-		var xf := ring.spawn(1 - player_end, int(RingRules.num("bot_slot", 0.0)))
-		RingLevel.place(foe, xf)
-		foe.held = true
-		if player != null and foe.brain != null:
-			foe.brain.told(player, player.global_position)
-	rules.reset_round()
-	# (the deck judged again a moment later: the tank's Area3D still counts a body just lifted out of it until the physics
-	# has stepped, so judging at once would put him straight back out)
-	rules.live = false
-	_live_in = RESET_GRACE_S
-	_dummy_next = BendStatus.now() + _pnum("throw_every_s", 3.0) * 0.5
-	_cover_next = 0.0
-	if _note_t <= 0.0:
-		_note = pword("reset")
-		_note_t = 1.2
+	elif b is NpcFighter:
+		(b as NpcFighter).held = bool(_held_before.get(b.get_instance_id(), false))
+	_held_before.erase(b.get_instance_id())
+	var rm := RingMoves.of(b)
+	var hold := RingRules.sub_num("respawn", "spout_s", 3.0)
+	if rm != null:
+		rm.ride_spout(b.global_position, hold)
+	var held := rm != null and rm.on_spout()
+	if not held:
+		RingLevel.place(b, Transform3D(xf.basis, best))         # (nothing holds him up: he stands on the grate)
+	var sp := RingSpout.raise(level if level != null else self, best, b, hold if held else 0.6)
+	_spouts[b.get_instance_id()] = sp
+	if held:
+		rm.left_spout.connect(func() -> void:
+			if rules != null and is_instance_valid(b):
+				rules.left_spout(b)
+			if is_instance_valid(sp):
+				sp.sink(), CONNECT_ONE_SHOT)
+	rules.respawn(b, held)
+	_ready_key1(b)
+	if bool(PercentBar.hud_cfg().get("respawn_drip", false)):
+		RingSpout.drip(b, float(PercentBar.hud_cfg().get("drip_s", 1.5)))
 
 
-## The dummy each frame of a practice: held at its end facing the player; its lock let run while it casts; its way's cast
-## begun (block: a guard against what comes, its cover when he locks; throw: its throw every throw_every_s).
-func _practice_step(dt: float) -> void:
-	if _live_in > 0.0:
-		_live_in -= dt
-		if _live_in <= 0.0:
-			rules.live = true
-	if _reset_in > 0.0:
-		_reset_in -= dt
-		if _reset_in <= 0.0:
-			reset_positions()
+## RingRules.launched (stock): a bigger burst at the hit point at launch_wake.mps or more (hud.json launch_wake false), or
+## the wake of the hitter's matter behind the body for wake_s (launch_wake true).
+func _on_launched(b: Node3D, v: Vector3, _hs: float, by: Node, _tag: String) -> void:
+	var cfg := PercentBar.hud_cfg()
+	if v.length() < float(cfg.get("wake_mps", 18.0)) or b == null or not is_instance_valid(b):
 		return
-	if foe == null or not is_instance_valid(foe):
-		reset_positions()
-		return
-	var bend := _foe_bending()
-	if bend == null:
-		return
-	if String(bend.get(&"casting")) != "" or float(bend.get(&"_follow")) > 0.0:
-		foe.held = false                     # (its lock fills and its cast clip plays: NpcBending.tick)
-		return
-	foe.held = true
-	if player == null or not is_instance_valid(player):
-		return
-	foe.face_point(player.global_position)
-	var bw := Bending.of(foe)
-	if bw != null:
-		bw.water = bw.water_max              # (a dummy never runs dry)
-	var now := BendStatus.now()
-	match dummy:
-		"throw":
-			if now >= _dummy_next:
-				_dummy_next = now + _pnum("throw_every_s", 3.0)
-				_dummy_cast(bend, _pmove("throw"))
-		"block":
-			var g := dummy_guard(bend)
-			if not g.is_empty():
-				_dummy_cast(bend, "%s/%s" % [g.id, g.mode])
-				return
-			var sc := SwayCaster.of(player)
-			if sc != null and sc.is_locking() and now >= _cover_next:
-				_cover_next = now + _pnum("block_every_s", 2.5)
-				_dummy_cast(bend, _pmove("cover"))
+	var kind := _element_of(by) if by != null and is_instance_valid(by) else "air"
+	var mat := {"earth": "stone", "water": "water", "fire": "fire", "air": "air"}.get(kind, "air") as String
+	if bool(cfg.get("launch_wake", false)):
+		var g := BendLooks.trail(b, mat, 0.3)
+		if g != null:
+			g.position = Vector3(0.0, 1.0, 0.0)
+			get_tree().create_timer(float(cfg.get("wake_s", 0.5)), false).timeout.connect(func() -> void:
+				if is_instance_valid(g):
+					BendLooks.stop_trail(g))
+	else:
+		BendLooks.burst(b.global_position + Vector3.UP * 1.0, mat, int(cfg.get("burst_n", 40)), v.normalized(), 70.0,
+				float(cfg.get("burst_mps", 7.0)), 0.4)
 
 
-## The dummy's element's move for `what` ("throw" | "cover": screens.json practice), "id/mode".
-func _pmove(what: String) -> String:
-	return String((((MatchSetup.screens().get("practice", {}) as Dictionary).get(what, {})) as Dictionary).get(foe_element, ""))
-
-
-## The dummy's lock of "id/mode" begun (let go: its tick fills it and casts it, NpcBending's own way).
-func _dummy_cast(bend: Object, key: String) -> bool:
-	if key == "" or not key.contains("/"):
-		return false
-	foe.held = false
-	bend.call(&"begin", key.get_slice("/", 0), key.get_slice("/", 1))
-	return true
-
-
-## A guard of the dummy's against what comes at it now ({id, mode, kind} or {}): its element's reaction whose lock fits the
-## threat's time (NpcBending's own rule, without its chance: a practice dummy answers every time it can).
-static func dummy_guard(bend: Object) -> Dictionary:
-	var threats: Array = bend.call(&"_threats")
-	if threats.is_empty():
-		return {}
-	var pn := String(bend.call(&"_preset_name"))
-	var best := {}
-	for th: Dictionary in threats:
-		var tti := float(th.tti)
-		for o: Dictionary in bend.get(&"options"):
-			var h: Dictionary = o.hint
-			if String(h.get("role", "")) != "reaction" or not String(th.kind) in (h.get("answers", []) as Array):
-				continue
-			if not bool(bend.call(&"castable", o)):
-				continue
-			var ls := NpcBending.lock_for(String(o.id), String(o.mode), pn, 0.0)
-			var window := float(o.spec.get("window_s", o.spec.get("life_s", o.spec.get("s", 1.0))))
-			if ls > tti or ls + window * 0.8 < tti:
-				continue
-			if best.is_empty() or ls < float(best.ls):
-				best = {"id": o.id, "mode": o.mode, "kind": th.kind, "ls": ls}
-	return best
+## RingRules.hit_safe: the hiss and the splash-through at the hit point (an effect of the hit, never a mark on him).
+func _on_hit_safe(b: Node3D, by: Node, point: Vector3) -> void:
+	var d := Vector3.FORWARD
+	if by is Node3D and is_instance_valid(by):
+		d = b.global_position - (by as Node3D).global_position
+	RingSpout.safe_hit(point, d)

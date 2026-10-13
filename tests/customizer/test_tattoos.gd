@@ -84,7 +84,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	if not _shots.is_empty() and not _headless():
-		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 		await _pictures()
 		print("TATTOOS SHOTS %s (%d checks%s)" % ["OK" if _fails.is_empty() else "FAILED", _checks,
 				"" if _fails.is_empty() else ", %d failed" % _fails.size()])

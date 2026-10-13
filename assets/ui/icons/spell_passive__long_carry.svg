@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 32 L50 32" stroke-width="3.4"/>
+  <path d="M48.8 35 L54 32 L48.8 29" stroke-width="3.4"/>
+  <path d="M56 29 L55.24 28.94 L54.5 28.77 L53.79 28.48 L53.13 28.1 L52.54 27.61 L52.03 27.04 L51.62 26.4 L51.3 25.71 L51.1 24.98 L51 24.22 L51.03 23.46 L51.17 22.71 L51.42 21.99 L51.78 21.31 L52.24 20.7 L52.79 20.17 L53.41 19.73 L54.09 19.38 L54.81 19.14 L55.56 19.02 L56.33 19.01 L57.08 19.12 L57.81 19.34 L58.5 19.67" stroke-width="1.6"/>
+  <path d="M4 22 L40 22" stroke-width="1.6"/>
+  <path d="M8 42 L36 42" stroke-width="1.6"/>
+  <path d="M4 50 L24 50" stroke-width="1.6"/>
+</svg>

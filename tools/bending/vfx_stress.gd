@@ -2,7 +2,9 @@ extends SceneTree
 ## The bent elements' effects under load (BendLooks, ToonFxPool): on the Tidebreak deck, two casters 12 m apart fire a bolt
 ## of a random kind at each other every 0.1 s each (they meet, land on the deck, burst), a zone goes up every 1.5 s, a
 ## lightning stroke every 2 s, a blast every 1 s, for `secs` s; before that the same view with nothing cast. Frame times
-## (avg, p95, max) of both, the pool's node count and the scene's at the end. Windowed (it draws), vsync off:
+## (avg, p95, max) of both, the pool's node count and the scene's at the end. Round 4 (LOOKS): at the load's worst moment
+## too, its draw calls and its live GPU particles (every emitting GPUParticles3D's amount x amount_ratio), and the most of
+## each over the load ("VFX STRESS worst ..."). Windowed (it draws), vsync off:
 ##   Godot --path . -s tools/bending/vfx_stress.gd [-- secs=10]
 
 const OffscreenView := preload("res://tools/environment/offscreen_view.gd")
@@ -10,6 +12,9 @@ const KINDS := ["fire", "water", "ice", "air", "stone"]
 const ZONES := ["fire_wall", "tornado", "bubble", "water_wall", "air_shield", "burn"]
 
 var _ms: Array[float] = []
+## The load's worst frame: [ms, draw calls, GPU particles], and the most draws and particles seen.
+var _worst := [0.0, 0, 0]
+var _most := [0, 0]
 
 
 func _initialize() -> void:
@@ -45,6 +50,8 @@ func _initialize() -> void:
 	var pool := current_scene.get_node_or_null("ToonFxPool")
 	print("VFX STRESS idle avg=%.2f p95=%.2f max=%.2f ms" % base)
 	print("VFX STRESS load avg=%.2f p95=%.2f max=%.2f ms" % load)
+	print("VFX STRESS worst frame_ms=%.2f draws=%d particles=%d | most draws=%d particles=%d" % [_worst[0], _worst[1],
+			_worst[2], _most[0], _most[1]])
 	print("VFX STRESS pool_nodes=%d scene_nodes=%d bolts_live=%d" % [pool.get_child_count() if pool else -1,
 			_count(current_scene), get_nodes_in_group(BendBolt.GROUP).size()])
 	quit()
@@ -56,6 +63,16 @@ func _pipelines() -> Vector4i:
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW),
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION))
+
+
+## The GPU particles live now under `n`: every emitting GPUParticles3D's amount x amount_ratio.
+func _particles(n: Node) -> int:
+	var c := 0
+	if n is GPUParticles3D and (n as GPUParticles3D).emitting and (n as GPUParticles3D).is_visible_in_tree():
+		c += int((n as GPUParticles3D).amount * (n as GPUParticles3D).amount_ratio)
+	for k in n.get_children():
+		c += _particles(k)
+	return c
 
 
 func _count(n: Node) -> int:
@@ -89,6 +106,12 @@ func _measure(secs: float, cast: bool) -> Array:
 		var dt := (now - last) / 1000.0
 		last = now
 		times.append(dt)
+		if cast and t > secs * 0.2:
+			var dc := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+			var np := _particles(current_scene)
+			_most = [maxi(_most[0], dc), maxi(_most[1], np)]
+			if dt > float(_worst[0]):
+				_worst = [dt, dc, np]
 		var pc := _pipelines()
 		if dt > 100.0:
 			print("VFX STRESS slow %.0f ms after: %s  pipelines +%s" % [dt, ev, str(pc - pipes)])

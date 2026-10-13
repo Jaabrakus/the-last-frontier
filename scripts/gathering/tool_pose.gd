@@ -38,13 +38,49 @@ const FOREARM_SHARE := 0.6
 
 var _tracks := {}      ## Animation -> {bone index: [rotation track, position track]}
 var _mask_cache := {}  ## mask -> PackedInt32Array of bone indices (skeleton-wide, before the clip filter)
+## Optional explicit group: {blend_from: layers, blend_to: layers, blend_weight: 0..1}.
+## Both sides see the same input pose, so partial weights and changing masks do not expose an extra base pose.
+## Its sparse sampled offsets are recorded here, inside the modifier, for bounded interrupted transitions.
+var blend_cost_usec := 0
 
 
 func _process_modification() -> void:
+	blend_cost_usec = 0
 	var sk := get_skeleton()
 	if sk == null or layers.is_empty():
 		return
-	for l: Dictionary in layers:
+	_apply_layers(sk, layers)
+	if absf(lean) > 1e-4:
+		# (the body faces +Z: forward is a turn about +X; each spine bone takes its share about its own position)
+		var share := Basis(Vector3.RIGHT, lean / float(LEAN_BONES.size()))
+		for nm: String in LEAN_BONES:
+			var b := sk.find_bone(nm)
+			if b >= 0:
+				var g := sk.get_bone_global_pose(b)
+				sk.set_bone_global_pose(b, Transform3D(share * g.basis, g.origin))
+	if hand_reverse > 1e-4:
+		_reverse_hand(sk)
+
+
+func _apply_layers(sk: Skeleton3D, stack: Array, scope: Dictionary = {}) -> void:
+	for l: Dictionary in stack:
+		var layer_scope := scope
+		if l.has("scope_masks"):
+			layer_scope = _intersect_masks(sk, l.scope_masks, scope)
+			if layer_scope.is_empty():
+				continue
+		if l.has("blend_from"):
+			_blend_layers(sk, l, layer_scope)
+			continue
+		if l.has("pose_offset"):
+			var offset: Dictionary = l.pose_offset
+			for b: int in offset.rotations:
+				if layer_scope.is_empty() or layer_scope.has(b):
+					sk.set_bone_pose_rotation(b, ((offset.rotations[b] as Quaternion) * sk.get_bone_pose_rotation(b)).normalized())
+			for b: int in offset.positions:
+				if layer_scope.is_empty() or layer_scope.has(b):
+					sk.set_bone_pose_position(b, sk.get_bone_pose_position(b) + (offset.positions[b] as Vector3))
+			continue
 		var w := clampf(float(l.get("weight", 0.0)), 0.0, 1.0)
 		var anim: Animation = l.get("anim")
 		if w <= 0.0 or anim == null:
@@ -54,7 +90,7 @@ func _process_modification() -> void:
 		var tr := _clip_tracks(sk, anim)
 		var allowed := _mask(sk, mask)
 		for b: int in tr:
-			if not allowed.has(b):
+			if not allowed.has(b) or (not layer_scope.is_empty() and not layer_scope.has(b)):
 				continue
 			var pair: Array = tr[b]
 			if int(pair[0]) >= 0:
@@ -67,16 +103,150 @@ func _process_modification() -> void:
 			if int(pair[1]) >= 0 and (bn in PROP_BONES or mask == "full" and bn in POSITION_BONES):
 				var p := anim.position_track_interpolate(int(pair[1]), t)
 				sk.set_bone_pose_position(b, sk.get_bone_pose_position(b).lerp(p, w))
-	if absf(lean) > 1e-4:
-		# (the body faces +Z: forward is a turn about +X; each spine bone takes its share about its own position)
-		var share := Basis(Vector3.RIGHT, lean / float(LEAN_BONES.size()))
-		for nm: String in LEAN_BONES:
-			var b := sk.find_bone(nm)
-			if b >= 0:
-				var g := sk.get_bone_global_pose(b)
-				sk.set_bone_global_pose(b, Transform3D(share * g.basis, g.origin))
-	if hand_reverse > 1e-4:
-		_reverse_hand(sk)
+
+
+## Sparse rotation/position channels actually owned by these layers; scale always belongs to the input pose.
+func _channels(sk: Skeleton3D, stack: Array) -> Dictionary:
+	var out := {}
+	for l: Dictionary in stack:
+		var own := {}
+		if l.has("blend_from"):
+			for side: String in ["blend_from", "blend_to"]:
+				var child := _channels(sk, l[side])
+				for b: int in child:
+					own[b] = int(own.get(b, 0)) | int(child[b])
+		elif l.has("pose_offset"):
+			for b: int in l.pose_offset.rotations:
+				own[b] = int(own.get(b, 0)) | 1
+			for b: int in l.pose_offset.positions:
+				own[b] = int(own.get(b, 0)) | 2
+		else:
+			var anim: Animation = l.get("anim")
+			if anim == null or float(l.get("weight", 0.0)) <= 0.0:
+				continue
+			var mask := String(l.get("mask", "upper"))
+			var allowed := _mask(sk, mask)
+			var tracks := _clip_tracks(sk, anim)
+			for b: int in tracks:
+				if not allowed.has(b):
+					continue
+				var pair: Array = tracks[b]
+				var flags := 1 if int(pair[0]) >= 0 else 0
+				var bn := sk.get_bone_name(b)
+				if int(pair[1]) >= 0 and (bn in PROP_BONES or mask == "full" and bn in POSITION_BONES):
+					flags |= 2
+				if flags != 0:
+					own[b] = int(own.get(b, 0)) | flags
+		var masks: Array = l.get("scope_masks", []).duplicate()
+		if l.has("blend_mask"):
+			masks.append(String(l.blend_mask))
+		var allowed := _intersect_masks(sk, masks) if not masks.is_empty() else {}
+		for b: int in own:
+			if masks.is_empty() or allowed.has(b):
+				out[b] = int(out.get(b, 0)) | int(own[b])
+	return out
+
+
+func _intersect_masks(sk: Skeleton3D, masks: Array, scope: Dictionary = {}) -> Dictionary:
+	var allowed := scope.duplicate()
+	var limited := not scope.is_empty()
+	for name: String in masks:
+		var next := _mask(sk, name)
+		if not limited:
+			allowed = next.duplicate()
+			limited = true
+		else:
+			for b: int in allowed.keys():
+				if not next.has(b):
+					allowed.erase(b)
+	return allowed
+
+
+func _read_channels(sk: Skeleton3D, channels: Dictionary) -> Dictionary:
+	var out := {"rotations": {}, "positions": {}}
+	for b: int in channels:
+		if int(channels[b]) & 1:
+			out.rotations[b] = sk.get_bone_pose_rotation(b)
+		if int(channels[b]) & 2:
+			out.positions[b] = sk.get_bone_pose_position(b)
+	return out
+
+
+func _write_channels(sk: Skeleton3D, sample: Dictionary) -> void:
+	for b: int in sample.rotations:
+		sk.set_bone_pose_rotation(b, sample.rotations[b])
+	for b: int in sample.positions:
+		sk.set_bone_pose_position(b, sample.positions[b])
+
+
+func _blend_layers(sk: Skeleton3D, group: Dictionary, scope: Dictionary = {}) -> void:
+	var began := Time.get_ticks_usec()
+	var mix := clampf(float(group.get("blend_weight", 0.0)), 0.0, 1.0)
+	var into: Array = group.blend_to
+	if group.has("blend_mask"):
+		var allowed := _mask(sk, String(group.blend_mask)).duplicate()
+		if not scope.is_empty():
+			for b: int in allowed.keys():
+				if not scope.has(b):
+					allowed.erase(b)
+			if allowed.is_empty():
+				return
+		scope = allowed
+	if mix >= 1.0:
+		_apply_layers(sk, into, scope)
+		blend_cost_usec += Time.get_ticks_usec() - began
+		return
+	var from: Array = group.blend_from
+	var channels := _channels(sk, from + into)
+	if not scope.is_empty():
+		for b: int in channels.keys():
+			if not scope.has(b):
+				channels.erase(b)
+	var base := _read_channels(sk, channels)
+	_apply_layers(sk, from, scope)
+	if mix > 0.0:
+		var outgoing := _read_channels(sk, channels)
+		_write_channels(sk, base)
+		_apply_layers(sk, into, scope)
+		for b: int in outgoing.rotations:
+			sk.set_bone_pose_rotation(b, (outgoing.rotations[b] as Quaternion).slerp(sk.get_bone_pose_rotation(b), mix).normalized())
+		for b: int in outgoing.positions:
+			sk.set_bone_pose_position(b, (outgoing.positions[b] as Vector3).lerp(sk.get_bone_pose_position(b), mix))
+	# Offsets are presentation-only and relative to this group's live input, before later contact/IK/body helpers.
+	var sample := _read_channels(sk, channels)
+	for b: int in sample.rotations:
+		sample.rotations[b] = ((sample.rotations[b] as Quaternion) * (base.rotations[b] as Quaternion).inverse()).normalized()
+	for b: int in sample.positions:
+		sample.positions[b] = (sample.positions[b] as Vector3) - (base.positions[b] as Vector3)
+	group["_sample"] = sample
+	blend_cost_usec += Time.get_ticks_usec() - began
+
+
+## A new transition retains one evaluated offset layer, never an ever-growing tree of interrupted groups.
+## Before a group has rendered, its source is still the last shown pose.
+static func collapse_layers(stack: Array, scope_masks: Array = []) -> Array:
+	var out: Array = []
+	for l: Dictionary in stack:
+		var masks := scope_masks.duplicate()
+		for name: String in l.get("scope_masks", []):
+			if not name in masks:
+				masks.append(name)
+		if l.has("blend_from"):
+			if l.has("blend_mask") and not String(l.blend_mask) in masks:
+				masks.append(String(l.blend_mask))
+			if l.has("_sample"):
+				var sampled := {"pose_offset": (l._sample as Dictionary).duplicate(true)}
+				if not masks.is_empty():
+					sampled["scope_masks"] = masks
+				out.append(sampled)
+			else:
+				out.append_array(collapse_layers(l.blend_from, masks))
+		else:
+			var sampled := l.duplicate(true)
+			if not masks.is_empty():
+				sampled["scope_masks"] = masks
+			out.append(sampled)
+	return out
 
 
 ## The right hand turned hand_reverse of half round the vertical through the wrist (the body faces +Z: the turn takes

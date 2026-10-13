@@ -9,6 +9,9 @@ extends CanvasLayer
 ##
 ## Off when a script drives the game (the tests, the films) unless howto=on; howto=off turns it off, howto=reset
 ## forgets the seen topics.
+## Round 3 (smash_r3 spec §11.2): in the % ring (RingRules.stock_on()) the ring's topic is "ring_stock" (the jumps and the
+## Rise, the air dodge, the roll and duck, C down, breaking your fall, steering, the edge's keys) instead of the zones'
+## "ring"; no word of the show's or of another game's.
 
 const CFG := "user://how_to.cfg"
 const FLASH_S := 0.35          ## a tapped key stays lit at least this long
@@ -23,13 +26,13 @@ const POLL_S := 0.25
 const CAP_ACTIONS := {
 	"W": [&"move_forward"], "A": [&"move_left"], "S": [&"move_back"], "D": [&"move_right"],
 	"Space": [&"jump"], "Shift": [&"sprint"], "Alt": [&"walk"], "C": [&"crouch"], "R": [&"reload"],
-	"T": [&"torch"], "E": [&"interact"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory", &"bend_wheel"],
-	"Z": [&"sleep"], "F": [&"cook"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
+	"T": [&"torch"], "E": [&"interact", &"bend_guard"], "Q": [&"equip_wheel", &"bend_quick_bind"], "B": [&"build_mode"], "Tab": [&"inventory", &"bend_wheel"],
+	"Z": [&"sleep"], "F": [&"cook", &"bend_swap"], "G": [&"grip"], "V": [&"eat"], "X": [&"sling_all"],
 	"1": [&"weapon_1"], "2": [&"weapon_2"], "3": [&"weapon_3"], "4": [&"weapon_4"], "5": [&"weapon_5"],
 	"6": [&"weapon_6"], "7": [&"weapon_7", &"tool_cycle", &"tool_axe"], "8": [&"weapon_8", &"fish_gear", &"tool_mattock"],
 	"9": [&"weapon_9"], "1-9": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4", &"weapon_5", &"weapon_6", &"weapon_7",
 			&"weapon_8", &"weapon_9"], "1-4": [&"weapon_1", &"weapon_2", &"weapon_3", &"weapon_4"], "H": [&"hands_free"],
-	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"club_grip"], "Wheel": [&"weapon_next", &"weapon_prev"],
+	"LMB": [&"fire"], "RMB": [&"aim"], "MMB": [&"sway_mode"], "Wheel": [&"weapon_next", &"weapon_prev"],
 }
 
 ## The topics in the order they are looked for: {title, steps (text with keys in brackets), pre (the first steps
@@ -74,28 +77,50 @@ const TOPICS := {
 			"[W]  Push: a doe, logs, or what the pack holds", "[E]  Set it down"]},
 	"hurt": {"title": "Your health", "steps": ["[Z]  Rest: sit down, the health refills",
 			"Hold [Z]  Sleep: a fire makes it better"]},
-	"elements": {"title": "Your element's moves", "steps": ["[1-4]  A key: its move  ·  the same key again: its other move",
-			"[Wheel]  Step through the move's three forms", "Hold [RMB]  On the aim: the lock fills; let go to cast",
-			"[Q]  The readied move onto left click  ·  Hold [LMB]  Lock it; let go to cast", "[5]  Mend; again: Patch"]},
-	# (each control scheme's own first-time panel: MatchSetup.scheme(), data/bending/schemes.json; the one in play comes up)
-	"elements_direction": {"title": "Your moves by direction", "steps": ["Hold [RMB]  The lock fills",
-			"Let go holding [W]  Your attack", "Let go holding [S]  Your defence", "Let go holding [A] [D]  Your dodge",
-			"[1-4]  Nothing held: the key's move  ·  [Q]  onto left click"]},
-	"elements_radial": {"title": "The wheel of your moves", "steps": ["Hold [Tab]  Every move round a wheel",
-			"Move the mouse toward one  Pick it", "[Wheel]  Its form", "Let go of [Tab]  Ready it",
-			"Hold [RMB]  The lock fills; let go to cast"]},
-	"elements_simple": {"title": "Four moves", "steps": ["[1-4]  A move  ·  [Wheel]  the next one",
-			"Hold [RMB]  The lock fills; let go to cast", "Near or far: the form picks itself as you let go",
-			"[Q]  The readied move onto left click  ·  Hold [LMB]  Cast it"]},
+	# (round 2 of the skills, skills_r2 spec §2: the same buttons for every element, one job each; each control scheme's own
+	# first-time panel, MatchSetup.scheme() through KitWords.scheme_id: the one in play comes up; the four rules in each)
+	"elements": {"title": "Your buttons", "steps": ["[LMB]  Hold: your jab. Let go when its circle is full",
+			"[1-4]  Strike, push, dash, wall  ·  tap a key twice: its other move",
+			"Hold [RMB]  Aim while it fills, let go to cast; early: called off",
+			"Hold [2] longer: ▲ it grows  ·  [5]  Heal",
+			"[E]  Guard: on the beat it's yours. Late, half gets through",
+			"Fire along the floor? [Space]  Jump. In the air: dash or guard"]},
+	"elements_first_moves": {"title": "Your four moves", "steps": ["[LMB]  Hold: your jab. Let go when its circle is full",
+			"[1-4]  Strike, push, dash, wall: one move a key",
+			"Hold [RMB]  Aim while it fills, let go to cast; early: called off",
+			"Hold [2] longer: ▲ it grows  ·  [5]  Heal",
+			"[E]  Guard: on the beat it's yours. Late, half gets through",
+			"Fire along the floor? [Space]  Jump. In the air: dash or guard"]},
+	"elements_direction": {"title": "Your moves by direction", "steps": ["Hold [W] as you press [RMB]  Your strike",
+			"Hold [S] as you press [RMB]  Your wall  ·  [A] [D]  your dash",
+			"Hold [RMB]  Aim while it fills, let go to cast; early: called off",
+			"Hold [LMB]  your jab  ·  [1-4]  the keys' moves",
+			"[E]  Guard: on the beat it's yours. Late, half gets through",
+			"Fire along the floor? [Space]  Jump. In the air: dash or guard"]},
+	"elements_radial": {"title": "The wheel of your moves", "steps": ["Hold [Tab]  Your moves round a wheel",
+			"Move the mouse toward one  Pick it", "Let go of [Tab]  Ready it",
+			"Hold [RMB]  Aim while it fills, let go to cast; early: called off",
+			"[E]  Guard: on the beat it's yours. Late, half gets through",
+			"Fire along the floor? [Space]  Jump. In the air: dash or guard"]},
 	"ring": {"title": "The ring", "steps": ["Knock the other side back through its three zones",
-			"Into the water behind them takes the round", "The grates refill a water fighter's water"]},
+			"Into the water behind them takes the round", "Water douses fire, fire melts ice, air drops stone",
+			"Rising under you: step off as it starts  ·  earth always catches stone"]},
+	# (round 3, the % ring: the movement and the edge, in the player's words)
+	"ring_stock": {"title": "Jumps, the edge, the water", "steps": [
+			"[Space]  Jumps; again in the air; off the deck once more: your Rise",
+			"[3]  In the air: dodge",
+			"Guard up + tap a direction: roll; + [C]: duck",
+			"[C]  Down",
+			"[E]  Just as you land: back on your feet",
+			"Thrown? Hold left or right: you curve",
+			"On the edge: [W] climbs, [Space] jumps, [E] rolls in, a click attacks, [C] lets go"]},
 }
 ## The arena's topics (Tidebreak's ring, FrontierPlayer.arena): only these come up there, the first of them at once (the
 ## world's Getting around and the rest are not the ring's).
-const ARENA_TOPICS := ["elements", "elements_direction", "elements_radial", "elements_simple", "ring"]
-## Each control scheme's moves topic (MatchSetup.scheme()).
-const SCHEME_TOPICS := {"keys": "elements", "direction": "elements_direction", "radial": "elements_radial",
-		"simple": "elements_simple"}
+const ARENA_TOPICS := ["elements", "elements_first_moves", "elements_direction", "elements_radial", "ring", "ring_stock"]
+## Each control scheme's moves topic (KitWords.scheme_id(): "simple" is the first moves').
+const SCHEME_TOPICS := {"keys": "elements", "first_moves": "elements_first_moves", "direction": "elements_direction",
+		"radial": "elements_radial"}
 
 var player: FrontierPlayer
 var enabled := true
@@ -202,13 +227,36 @@ func _doing(id: String) -> bool:
 			return p.pushing != null
 		"hurt":
 			return p.health < 70.0 and not p.is_dead
-		"elements", "elements_direction", "elements_radial", "elements_simple":
-			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0 \
-					and String(SCHEME_TOPICS.get(MatchSetup.scheme(), "elements")) == id
-		"ring":
-			var moves := String(SCHEME_TOPICS.get(MatchSetup.scheme(), "elements"))
-			return p.arena and seen.has(moves) and current != moves
+		"elements", "elements_first_moves", "elements_direction", "elements_radial":
+			return p.arena and p.hotbar != null and p.hotbar.spell != "" and _age > 1.0 and not _hints_up() \
+					and scheme_topic() == id
+		"ring", "ring_stock":
+			var moves := scheme_topic()
+			return p.arena and seen.has(moves) and current != moves and not _hints_up() \
+					and RingRules.pct_on() == (id == "ring_stock")
 	return false
+
+
+## The moves topic of the control scheme now.
+static func scheme_topic() -> String:
+	return String(SCHEME_TOPICS.get(KitWords.scheme_id(), "elements"))
+
+
+## A first match's key hints are up in the ring (FirstHints): they take this panel's place there (never both at once).
+func _hints_up() -> bool:
+	return player != null and player.arena and FirstHints.find(get_tree()) != null
+
+
+## The ring's key hints have come up in this panel's place (FirstHints): the ring's topics count as seen, and one up now
+## goes at once.
+func yield_to_hints() -> void:
+	for id: String in ARENA_TOPICS:
+		seen[id] = true
+	_save()
+	queue.clear()
+	if current in ARENA_TOPICS:
+		_panel.visible = false
+		current = ""
 
 
 func _process(delta: float) -> void:

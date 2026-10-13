@@ -74,6 +74,8 @@ var warm_frame_ms := -1.0
 ## The camera the stepped build is drawn through until the player's own stands (_build: without one nothing of the ring is
 ## drawn before the player, and every shader of the ring was compiled on his first frame, seconds long).
 var _build_cam: Camera3D
+## The Soft character look's shaders compiled during the stepped build (SoftLook.warm_up through _build_cam).
+var _soft_warmed := false
 ## The prefetch's paths by the part that loads them, and those asked for on the worker threads (held until the build is up).
 var _phases := {}
 var _fetching: PackedStringArray = []
@@ -141,6 +143,10 @@ func _build(steps: bool) -> void:
 	StartupProfile.mark("dressing")
 	if steps:
 		await _step(0.45, "competitors")
+		# (the Soft character look's shaders, SoftLook: each compiled on a frame of its own through the build camera before the
+		# fighters are dressed, not all on the player's frame)
+		await SoftLook.warm_up(_build_cam)
+		_soft_warmed = true
 		await _loaded(FrontierPlayer.CHARACTER_SCENE)
 		await _fetched("player")
 		while _graph_task >= 0 and not WorkerThreadPool.is_task_completed(_graph_task) and is_inside_tree():
@@ -249,6 +255,9 @@ func _physics_process(_dt: float) -> void:
 ## `body` (the player, or anyone with a yaw) stood at `xf`: on the deck, facing as it faces, still.
 static func place(body: Node3D, xf: Transform3D) -> void:
 	body.global_position = xf.origin + Vector3.UP * 0.1
+	var rm := RingMoves.of(body)
+	if rm != null:
+		rm.placed()                               # (round 3, the % ring: a deliberate placing clears its moves at once)
 	var f := -xf.basis.z
 	var yaw := atan2(-f.x, -f.z)
 	if body is FrontierPlayer:
@@ -299,16 +308,51 @@ func _dress(steps := false) -> void:
 
 
 ## The dressing follows match `m`: each round the ends' elements and the score (side 0 the ring's end 0, the end the
-## player's side holds swapping each round), the crowd roaring on a knock-back and more on a ring-out.
+## player's side holds swapping each round), the crowd roaring on a knock-back and more on a ring-out (the classic rules).
+## Under the stock rules (round 4 SHOW) the stands follow the % match's moments instead (RingDressing.react: seen and
+## heard): a launch of crowd.json launch_mps or more an ooh, every fall the ripple from its end (RingRules' own record of the
+## fall says which end: the only thing about where anyone is the stands are told), a side's last life starting half of
+## them up, sudden death half up clapping on the score's beat, all sat down again at the next countdown.
 func _follow(m: RingMode) -> void:
 	if m == null or dressing == null:
 		return
+	var sudden_seen := [false]
 	m.phase_changed.connect(func(ph: String) -> void:
 		if ph == "COUNTDOWN" or ph == "DONE":
-			_show_match(m))
+			_show_match(m)
+		if ph == "COUNTDOWN" and is_instance_valid(dressing):
+			sudden_seen[0] = false
+			dressing.react("calm"))
 	m.round_over.connect(func(_r: String, _why: String) -> void: _show_match(m))
 	m.knocked_back.connect(func(_w: Node3D, _a: int, _b: int) -> void: cheer(0.75, 1.6))
-	m.rang_out.connect(func(_w: Node3D, _by: Node) -> void: cheer(1.0, 3.5))
+	m.rang_out.connect(func(_w: Node3D, _by: Node) -> void:
+		if not m.stock():
+			cheer(1.0, 3.5))
+	if not m.new_ring() or m.rules == null:
+		return
+	var rules := m.rules
+	rules.launched.connect(func(_b: Node3D, v: Vector3, _hs: float, _by: Node, _tag: String) -> void:
+		var mps := RingCrowd.react_num("launch_mps", 12.0)
+		if v.length() >= mps and is_instance_valid(dressing):
+			dressing.react("launch", -1, clampf(v.length() / (2.0 * mps), 0.5, 1.0)))
+	rules.ko.connect(func(_b: Node3D, _by: Node, _pct: float, _tag: String, _left: int) -> void:
+		if is_instance_valid(dressing):
+			dressing.react("fall", fall_end(rules), 1.0))
+	rules.respawned.connect(func(b: Node3D) -> void:
+		if rules.lives_on and rules.stocks_of(b) == 1 and not rules.sudden and is_instance_valid(dressing):
+			dressing.react("last_life", -1, 1.0))
+	rules.pct_changed.connect(func(_b: Node3D, _p: float, _d: float) -> void:
+		if rules.sudden and not sudden_seen[0] and is_instance_valid(dressing):
+			sudden_seen[0] = true
+			dressing.react("sudden", -1, 1.0))
+
+
+## The end of the deck the last fall happened at (0 the -X end, 1 the +X end): RingRules' record of it (falls[-1].pos).
+func fall_end(rules: RingRules) -> int:
+	if rules == null or rules.falls.is_empty() or ring == null:
+		return 0
+	var at: Variant = (rules.falls[-1] as Dictionary).get("pos")
+	return 0 if not (at is Vector3) or ring.to_local(at).x < 0.0 else 1
 
 
 func _show_match(m: RingMode) -> void:
@@ -341,7 +385,15 @@ func _warm_looks() -> void:
 		var longest := 0
 		var done := [false]
 		var run := func() -> void:
+			# (the Soft character look's shaders, SoftLook, when the build had no camera of its own: each drawn once here)
+			if not _soft_warmed:
+				await SoftLook.warm_up(cam)
 			await BendLooks.warm_up(cam, func(f: float) -> void: set_meta(&"loading_progress", 0.8 + 0.2 * f))
+			# Draw the large fall effects only behind the loading screen. Direct scene launches
+			# must not cover the live competitors in a warm-up splash.
+			if ring.water != null and LoadingScreen.covering():
+				ring.water.ko_splash(player.global_position, 20.0, 2.0, true)
+				await get_tree().create_timer(3.3).timeout
 			done[0] = true
 		run.call()
 		while not done[0]:

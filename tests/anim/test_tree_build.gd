@@ -808,14 +808,16 @@ func _check_bank_leaf_warning(ctx: AnimTestContext, rig: RigFixture, real: AnimG
 	ctx.check(ix.errors.is_empty() and hits == 1, "doctored %s = %s: exactly one 'bank leaf ... differs' warning (%d) %s" % [key, other, hits, ix.warnings])
 
 
-## Loop-seam data issues (graph loop, clip not seamless per metrics) are recorded, not warned.
+## Loop-seam data issues (graph loop, clip not seamless per metrics) are recorded, not warned, and closed in the loaded clip
+## (TreeBuilder.close_seam since 2026-10-10; tests/anim/test_loop_seams.gd measures the closing). The graph no longer loops
+## actor_b-p-fall; the seams today are walk-fw-rt and sprint-bw-rt / -lt.
 func _check_loop_seams(ctx: AnimTestContext, data: AnimGraphData, idx: TreeIndex) -> void:
 	var bad := []
 	for c in idx.loop_seams:
-		if data.clip_metrics(c).get("loop", true) != false:
+		if data.clip_metrics(c).get("loop", true) != false or String((idx.loop_seams[c] as Dictionary).get("anim", "")) == "":
 			bad.append(c)
-	ctx.check(idx.loop_seams.has("actor_b-p-fall") and bad.is_empty(),
-			"loop-seam data issues recorded (graph loops, metrics loop = false): %s %s" % [idx.loop_seams.keys(), bad])
+	ctx.check(not idx.loop_seams.is_empty() and bad.is_empty(),
+			"loop-seam data issues recorded (graph loops, metrics loop = false) with the clip they close: %s %s" % [idx.loop_seams.keys(), bad])
 	for c in idx.loop_seams:
 		ctx.info("data issue: %s loops but its ends differ by %.3f rad / %.3f m (%s): pops at each wrap (WP1 / WP4 to decide)" % [
 				c, idx.loop_seams[c].rot_rad, idx.loop_seams[c].pos_m, idx.loop_seams[c].bone])

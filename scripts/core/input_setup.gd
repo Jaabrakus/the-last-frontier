@@ -33,6 +33,9 @@ const KEYS := {
 	# screen (FrontierPlayer's "inventory") only while that scheme is on. Nothing else in the ring reads Tab, Q is the quick
 	# spell's set key, 1-5 the keys, the mouse wheel the forms, F1 the help, Esc the menu
 	"bend_wheel": [KEY_TAB],
+	# an element's fighter's keys 1 and 2 swapped (Hotbar.swap_keys; the owner, 2026-10-11: "the F should toggle between 1 and
+	# 2"): F is the open world's cook key too, read there only at a lit campfire; the swap only by an element's fighter
+	"bend_swap": [KEY_F],
 }
 const MOUSE := {
 	"fire": [MOUSE_BUTTON_LEFT],
@@ -55,13 +58,37 @@ const DEBUG_KEYS := {
 	"debug_respawn": [KEY_F12],
 }
 
+## Tidebreak's guard (skills_r2 spec §2.1: E, and mouse button 4 as a second default; rebindable). E is read as the guard
+## only by an element's fighter (SwayCaster.SRC_GUARD); the open world's E stays the interact key ("interact", registered by
+## ThrownPickup / HorseInput on the same key).
+const GUARD_ACTION := &"bend_guard"
+const GUARD_KEYS := [KEY_E]
+const GUARD_BUTTONS := [MOUSE_BUTTON_XBUTTON1]
+
 static var _done := false
+
+
+## The guard's action (GUARD_ACTION) on E and mouse button 4, made when missing (SwayCaster.ensure_input calls it too, for
+## the scenes that never run ensure()). Safe to call again.
+static func ensure_guard() -> void:
+	if InputMap.has_action(GUARD_ACTION):
+		return
+	InputMap.add_action(GUARD_ACTION)
+	for key in GUARD_KEYS:
+		var e := InputEventKey.new()
+		e.physical_keycode = key
+		InputMap.action_add_event(GUARD_ACTION, e)
+	for button in GUARD_BUTTONS:
+		var m := InputEventMouseButton.new()
+		m.button_index = button
+		InputMap.action_add_event(GUARD_ACTION, m)
 
 
 static func ensure() -> void:
 	if _done:
 		return
 	_done = true
+	ensure_guard()
 	for action in KEYS:
 		if InputMap.has_action(action):
 			continue

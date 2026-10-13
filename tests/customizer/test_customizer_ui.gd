@@ -117,7 +117,7 @@ func _initialize() -> void:
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
 				# a window behind others is throttled by the OS
-				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	if FileAccess.file_exists(AppearanceStore.current_path()):
 		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())
 	await _run()

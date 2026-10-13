@@ -16,6 +16,8 @@ extends SceneTree
 ##   voices    (voices made headless for this) one id never more than its cap at once, all of them never more than
 ##             MAX_VOICES; the same id again within SAME_S at the same place is dropped; the jitter never moves the
 ##             game's global dice
+##   freed     projectile/stone references survive their nodes being freed: typed safe returns, watch/fade cleanup,
+##             and a following live flight still sounds; non-Object Variants are rejected safely
 ##   crowd     the ring's dressing (visuals forced on) loops the murmur at four places in the stands; the mood rising to a
 ##             knock-back's cheers or gasps, falling back says nothing, rising to a ring-out's roars and groans
 ##   words     no show words in the ids or the events' names
@@ -63,7 +65,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await _frames(2)
 	var t0 := Time.get_ticks_msec()
-	for part in ["table", "moves", "borrowed", "route", "voices", "crowd", "words"]:
+	for part in ["table", "moves", "borrowed", "route", "voices", "freed", "crowd", "words"]:
 		if only != "" and not part in only.split(","):
 			continue
 		var n0 := fails.size()
@@ -267,6 +269,112 @@ func _playing(id: StringName) -> int:
 		if p.playing and StringName(p.get_meta(&"id", &"")) == id:
 			n += 1
 	return n
+
+
+# ---------------------------------------------------------------- freed flight owners
+func _test_freed() -> void:
+	var previous_runner := BendSounds._runner
+	var previous_headless := BendSounds.voices_headless
+	BendSounds.voices_headless = true
+	var holder := Node3D.new()
+	root.add_child(holder)
+	# A real headless arena enables the automatic flight watch without loading a whole match.
+	var arena := RingArena.new()
+	holder.add_child(arena)
+	var pool := BendSounds._Voices.new()
+	holder.add_child(pool)
+	pool.set_physics_process(false)     # advance cleanup explicitly before any other owner can run
+	BendSounds._runner = pool
+	var bolt := BendBolt.new()
+	holder.add_child(bolt)
+	bolt.set_physics_process(false)
+	bolt.global_position = Vector3(2, 3, 4)
+	var voice := pool.flight_start(&"fire_flight", bolt, 0.0)
+	_expect(voice != null and voice.playing, "a real projectile starts its flight loop")
+	pool._fade(BendSounds.FLIGHT_IN_S)
+	var dead_bolt: Variant = bolt
+	bolt.free()
+	var flying: Variant = pool._flying(dead_bolt)
+	var place: Variant = pool._pos(dead_bolt)
+	_expect(typeof(flying) == TYPE_BOOL and flying == false,
+			"a freed projectile returns bool false, not a script-error null")
+	_expect(typeof(place) == TYPE_VECTOR3 and place == Vector3.ZERO,
+			"a freed projectile position returns Vector3.ZERO")
+	if voice != null:
+		voice.set_meta(&"own", true)
+		pool._fade(0.01)
+		_expect(not bool(voice.get_meta(&"own", true)) and voice.global_position == Vector3(2, 3, 4),
+				"a stale voice owner loses own-shot status without moving its last sound position")
+	pool._physics_process(BendSounds.FLIGHT_OUT_S)
+	_expect(pool.flights.is_empty() and pool._flight_of.is_empty(), "physics cleanup removes the freed projectile's flight and index")
+	_expect(voice != null and not voice.playing, "the freed projectile's loop finishes fading")
+
+	var flight := NpcBending.Flight.new()
+	var stone := FormStone.new()
+	stone.freeze = true
+	holder.add_child(stone)
+	stone.set_physics_process(false)
+	holder.add_child(flight)
+	flight.set_physics_process(false)
+	flight.add_to_group(NpcBending.FLIGHT_GROUP)
+	flight.stone = stone
+	var stone_voice := pool.flight_start(&"stone_whirr", flight, 0.0)
+	pool._fade(BendSounds.FLIGHT_IN_S)
+	var flight_id := flight.get_instance_id()
+	stone.free()                      # the owner still exists, but its typed stone reference is stale
+	flying = pool._flying(flight)
+	place = pool._pos(flight)
+	_expect(typeof(flying) == TYPE_BOOL and flying == false, "a bot flight with a freed stone returns bool false")
+	_expect(typeof(place) == TYPE_VECTOR3 and place == Vector3.ZERO, "a freed bot stone has a safe zero sound position")
+	# A valid flight after the stale one proves _watch does not abort on the dead stone.
+	var live := NpcBending.Flight.new()
+	var live_stone := FormStone.new()
+	live_stone.freeze = true
+	holder.add_child(live_stone)
+	live_stone.set_physics_process(false)
+	live_stone.global_position = Vector3(4, 5, 6)
+	holder.add_child(live)
+	live.set_physics_process(false)
+	live.stone = live_stone
+	live.add_to_group(NpcBending.FLIGHT_GROUP)
+	pool._physics_process(BendSounds.FLIGHT_OUT_S)
+	_expect(not pool._flight_of.has(flight_id) and pool.flights.size() == 1,
+			"physics cleanup drops the freed stone while retaining only the live flight")
+	var live_voice := pool.voice_of(live)
+	_expect(live_voice != null and live_voice.playing and live_voice.global_position == live_stone.global_position,
+			"the watch continues past a freed stone and sounds the following live flight")
+	_expect(stone_voice != null and not stone_voice.playing, "the freed stone's old voice completes its fade")
+
+	var lift := GustLift.new()
+	var lifted_stone := Node3D.new()
+	holder.add_child(lifted_stone)
+	holder.add_child(lift)
+	lift.set_physics_process(false)
+	lift.stone = lifted_stone
+	lift.phase = GustLift.Phase.FLIGHT
+	lift.add_to_group(GustLift.GROUP)
+	pool.flight_start(&"stone_whirr", lift, 0.0)
+	lifted_stone.free()
+	flying = pool._flying(lift)
+	place = pool._pos(lift)
+	_expect(typeof(flying) == TYPE_BOOL and flying == false, "a Gust flight with a freed stone returns bool false")
+	_expect(typeof(place) == TYPE_VECTOR3 and place == Vector3.ZERO, "a freed Gust stone has a safe zero sound position")
+	pool._physics_process(BendSounds.FLIGHT_OUT_S)
+	_expect(pool.flights.size() == 1 and pool._flight_of.has(live.get_instance_id()),
+			"freed Gust cleanup leaves the live bot flight intact")
+
+	for value: Variant in [null, 7, "stone", {}, [], Vector3.ONE, RefCounted.new()]:
+		flying = pool._flying(value)
+		place = pool._pos(value)
+		_expect(typeof(flying) == TYPE_BOOL and flying == false and typeof(place) == TYPE_VECTOR3 and place == Vector3.ZERO,
+				"non-Node Variant type %d returns safe typed flight/position values" % typeof(value))
+	live_stone.free()
+	pool._physics_process(BendSounds.FLIGHT_OUT_S)
+	_expect(pool.flights.is_empty() and pool._flight_of.is_empty() and pool.flight_count(true) == 0,
+			"final physics cleanup drains every flight/index/loop after its stone is freed")
+	BendSounds._runner = previous_runner
+	BendSounds.voices_headless = previous_headless
+	holder.free()
 
 
 # ---------------------------------------------------------------- crowd

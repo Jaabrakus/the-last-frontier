@@ -1,0 +1,82 @@
+// Spellbreak (Proletariat, UE4.22) root material /Game/VFX/Materials/TranslucentSoftBase01_FxM
+// and its 16 instances (Ice_Lance_Glow01/03, GlowSoftNear01 [additive], DeathsSweetEmbrace_Glow,
+// StarFilledWings_Glow, MI_MagatamaGlow, RascalsRise_Glow01, AGlow, WolfEyeGlow, ...).
+// Soft-particle glow sprite: one greyscale "Opacity Mask" eroded by particle alpha.
+//
+// MATH DECODED FROM THE GAME'S COMPILED SHADERS, NOT AUTHORED. The cooked graph is stripped, but the
+// material's inline shader map (decoded root json Exports[0].Extras) holds the hashes of its compiled
+// D3D11 shaders in artifacts/spell_fx_source_fireball/shaders/ShaderArchive-g3-PCD3D_SM5.ushaderbytecode.
+// Pixel shaders disassembled, all with the same opacity code:
+//   bff398a3 sprite base pass (translucent), 5fc033b2 GlowSoftNear01_FxMI sprite (additive),
+//   986bf464 beam/trail, 3f483215 mesh (particle colour and dynamic parameter fixed at 1 there).
+// Material uniform buffer, from the decoded preshader set: Vector[3].x = -MaskContrast,
+// Scalar[2] = MaskContrast + 1, Scalar[4] = Clamp(EdgeSoftness, 0.01, 1),
+// Scalar[6] = Max(PixelDepthFade, 1e-5), Scalar[7..10] = DepthMin, DepthMax, CameraFadeOffset,
+// CameraFadeLength. The cooked pixel code is:
+//   m   = OpacityMask.r                                         (sample_b ... t2.yzwx -> R)
+//   ero = saturate((CheapContrast(m, MaskContrast) - (1 - ParticleColor.a))
+//                  / Clamp(EdgeSoftness, 0.01, 1))              (MF_TransluscentToonErosion)
+//   op  = saturate(m * ero * DynamicParameter.x
+//                  * SmoothStep(DepthMin, DepthMax, saturate((SceneDepth - PixelDepth) / Max(PixelDepthFade, 1e-5)))
+//                  * saturate((PixelDepth - CameraFadeOffset) / CameraFadeLength))  (CameraDepthFade)
+//   emissive = max(ParticleColor.rgb + SelectionColor, 0); SelectionColor is black in game.
+//   Translucent writes (emissive, op); additive writes emissive * op with alpha 0.
+// Notes on the decoded code:
+//   - The raw mask multiplies the eroded value, so a glow at full alpha is the mask's own soft
+//     radial shape; the erosion ramp only hardens edges as particle alpha falls.
+//   - Particle alpha is not clamped. Alpha 3 (RascalsRise Glow Bits) gives ero = 1, so op = mask.
+//   - DynamicParameter.x is read by slot (TEXCOORD1.x), so it is the Opacity slot even where an
+//     emitter labels it "None" (AG_RascalsRise Glow sets 0.05 there).
+//   - LinearGradient (listed in MaterialFunctionInfos) does not appear in the compiled code, and
+//     RefractionDepthBias is only a material property.
+//
+// KNOWN DEVIATION, needs shared code: T_Star_1 and T_Debris_01_FxT carry no CompressionSettings or
+// SRGB override, so they take the engine defaults (TC_Default, SRGB=true) and the game samples them
+// linearised. The other masks are SRGB=false: T_f_SphereGradient_A/B are TC_Alpha (BC4),
+// T_f_Softglow_macroUVTest is TC_EditorIcon and LumpyGlow01_FxT is TC_Masks. materials.json does not
+// carry the flag, so mask_srgb stays false and those two masks are read raw. The faint star halo is
+// 0.13 raw against 0.015 linear, so it draws too opaque. mask_srgb is wired for when a source kind
+// exposes the flag.
+// Units: UE cm -> Godot m (scale 0.01 in families/translucent_soft.json).
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D opacity_mask : filter_linear_mipmap, repeat_disable;  // "Opacity Mask" (R)
+uniform bool mask_srgb = false;             // texture SRGB flag (not exposed by materials.json yet)
+uniform float edge_softness = 0.015;        // EdgeSoftness
+uniform float mask_contrast = 0.01;         // MaskContrast
+uniform float camera_fade_offset = 2.0;     // CameraFadeOffset, 200 cm
+uniform float camera_fade_length = 1.0;     // CameraFadeLength, 100 cm
+uniform float pixel_depth_fade = 0.5;       // PixelDepthFade, 50 cm
+uniform float depth_min = 0.0;              // DepthMin (SmoothStep min)
+uniform float depth_max = 1.0;              // DepthMax (SmoothStep max)
+uniform float alpha_clip = 0.333;           // only used if an instance were Masked (none are)
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	vec2 suv = particle_atlas(clamp(v_quv, 0.001, 0.999));
+	float m = texture(opacity_mask, suv).r;
+	if (mask_srgb) {
+		m = m <= 0.04045 ? m / 12.92 : pow((m + 0.055) / 1.055, 2.4);
+	}
+	// MF_TransluscentToonErosion: a linear ramp of width Clamp(EdgeSoftness, 0.01, 1) that the
+	// particle alpha slides through the contrasted mask.
+	float shaped = cheap_contrast(m, mask_contrast);
+	float ero = clamp((shaped - (1.0 - v_color.a)) / clamp(edge_softness, 0.01, 1.0), 0.0, 1.0);
+	// Soft particle: SmoothStep(DepthMin, DepthMax, DepthFade(PixelDepthFade)).
+	float dfade = depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, pixel_depth_fade);
+	float soft_particle = smoothstep(min(depth_min, depth_max - 1e-4), depth_max, dfade);
+	float op = m * ero
+		* v_dyn.x                                  // DynamicParameter slot 0 "Opacity"
+		* soft_particle
+		* camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length);
+	ALBEDO = max(v_color.rgb, vec3(0.0));         // emissive = particle colour (HDR -> bloom)
+	/*ALPHA_OUT*/
+}

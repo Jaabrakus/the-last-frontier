@@ -6,7 +6,8 @@ extends Node3D
 ##   stands     stone piers rising from the stands' back to a lacquered beam, striped awnings over the top tiers on
 ##              timber poles with a scalloped valance, red paper lanterns hung under each bay, a painted parapet along
 ##              the front in the two sides' colours (each side's colour on its own half), banners on the piers
-##   crowd      RingCrowd: about 900 low-poly fans on the tiers, swaying (the shader), three draws
+##   crowd      RingCrowd: about 860 built fans on the tiers in six poses, lit like the world, swaying and reacting in the
+##              shader, six draws in any view (round 4 SHOW)
 ##   gates      a gatehouse on each end wall: two towers with tile roofs and flags, a voussoired arch over a dark
 ##              tunnel with its portcullis raised, the side's plaque over it, braziers either side, four tall banners
 ##              in the side's colours along the wall and a painted frieze at its head
@@ -24,12 +25,20 @@ extends Node3D
 ##   RingDressing.build(level, preset := "noon") -> RingDressing    level: a RingLevel (or the RingArena itself)
 ##   set_mood(name)            "noon", "golden", "night" (RingLook.apply calls it)
 ##   set_sides(e0, e1)         the two sides' elements ("earth", "water", "fire", "air"): banners, flags, plaques,
-##                             friezes and parapet panels follow (the fans keep the colours they were built in)
+##                             friezes and parapet panels follow (the fans keep the clothes they were built in; their
+##                             flags wave their half's colour)
 ##   set_score(a, b)           the scoreboard's numbers
 ##   set_cheer(v)              the stands' mood 0..1 (a roar on a ring-out)
+##   react(kind, side, s)      a moment of the match for the stands, seen and heard (round 4 SHOW; RingLevel._follow
+##                             sends them): "launch" an ooh, "fall" the stands rising from that end (side: 0 the -X end,
+##                             1 the +X end) with a roar from its near stands and a groan from the far, "last_life" half
+##                             of them up with a cheer, "sudden" half up clapping on the score's beat and the murmur up,
+##                             "calm" all sat down again
 ## The crowd's sound (improvement round 1; BendSounds, tools/sfx/bend/): a murmur looping at each half of each stand, its
 ## level the stands' mood; the mood rising is heard: to a ring-out's (0.95 and over) one stand roars and the other groans,
 ## to a knock-back's a stand cheers or gasps (a little of it from the other stand too).
+## The stock ring's lanterns stand at the deck's four corners only (round 3's owner question, decided by default for round
+## 4: the mid-side and mid-end ones go).
 ## Cost (tools/ring/look_c_shots.gd, LOOK_C_COST; 1600x900 high, TAA, 2026-10-05, the deck view): +35 draws (64 -> 99),
 ## shadow draws 136 -> 212 (326 at night: two shadowed deck lamps), ~130k more triangles (the crowd most of it), frame
 ## 9.8 ms bare -> 10.9 noon / 11.1 golden / 12.5 night; 26 lights at night (2 shadowed), none by day; 8 GPU emitters.
@@ -43,7 +52,8 @@ extends Node3D
 ## the kit (a build without assets/ring_kit) the primitives are drawn as before.
 
 const NAME := "RingDressing"
-const GOLD := Color(1.0, 0.74, 0.32)
+## Restrained brass, slate and clay palette; the element glyphs retain their contrast.
+const GOLD := Color(0.86, 0.72, 0.47)
 const CLOTH_SHADER := "res://shaders/ring/ring_cloth.gdshader"
 const KIT_DIR := "res://assets/ring_kit/"
 const KIT_SHADER := "res://assets/ring_kit/ring_banner.gdshader"
@@ -53,7 +63,7 @@ const KIT_KEYS := {"lacquer": &"paint", "wood": &"paint", "board": &"paint", "pa
 		"paint_teal": &"paint", "gold": &"gold", "tile": &"tile", "stone": &"ring_walk", "lamp_red": &"lamp_red",
 		"iron": &"metal"}
 ## The canopies' glazed tiles, bay by bay.
-const CANOPY_TILES := [Color(0.08, 0.27, 0.29), Color(0.44, 0.11, 0.06)]
+const CANOPY_TILES := [Color(0.3, 0.43, 0.48), Color(0.48, 0.27, 0.21)]
 const FLAME_SHADER := "res://shaders/ring/ring_flame.gdshader"
 const HALO_SHADER := "res://shaders/ring/ring_halo.gdshader"
 const FOAM_SHADER := "res://shaders/ring/ring_foam.gdshader"
@@ -66,14 +76,14 @@ const FRONT_Y := 6.6              ## the awnings' front edge
 ## Each element's banner: base cloth, trim, mark, the mark's glyph (ring_cloth.gdshader) and its team colour (the
 ## parapet, the frieze, the fans' clothes).
 const ELEMENTS := {
-	"earth": {"base": Color(0.36, 0.24, 0.1), "trim": Color(1.0, 0.74, 0.32), "mark": Color(0.95, 0.84, 0.58), "glyph": 0,
-			"team": Color(0.6, 0.42, 0.18)},
-	"water": {"base": Color(0.05, 0.2, 0.48), "trim": Color(0.95, 0.78, 0.4), "mark": Color(0.7, 0.9, 1.0), "glyph": 1,
-			"team": Color(0.12, 0.34, 0.72)},
-	"fire": {"base": Color(0.58, 0.07, 0.04), "trim": Color(1.0, 0.72, 0.28), "mark": Color(1.0, 0.82, 0.4), "glyph": 2,
-			"team": Color(0.78, 0.16, 0.06)},
-	"air": {"base": Color(0.9, 0.87, 0.78), "trim": Color(0.95, 0.52, 0.14), "mark": Color(0.22, 0.5, 0.8), "glyph": 3,
-			"team": Color(0.92, 0.9, 0.82)},
+	"earth": {"base": Color(0.37, 0.33, 0.22), "trim": GOLD, "mark": Color(0.91, 0.84, 0.63), "glyph": 0,
+			"team": Color(0.56, 0.49, 0.3)},
+	"water": {"base": Color(0.15, 0.27, 0.42), "trim": GOLD, "mark": Color(0.74, 0.85, 0.9), "glyph": 1,
+			"team": Color(0.25, 0.43, 0.6)},
+	"fire": {"base": Color(0.6, 0.26, 0.17), "trim": GOLD, "mark": Color(0.96, 0.87, 0.66), "glyph": 2,
+			"team": Color(0.74, 0.32, 0.2)},
+	"air": {"base": Color(0.89, 0.86, 0.77), "trim": Color(0.73, 0.44, 0.28), "mark": Color(0.27, 0.44, 0.6), "glyph": 3,
+			"team": Color(0.9, 0.87, 0.8)},
 }
 ## The moods (RingLook's presets): lit lamps, the glow of lamps / letters / coals, the flames, the halos, the water's
 ## light on the stone, the deck lamps.
@@ -113,6 +123,16 @@ var _halos: Array = []             ## [Vector3, Color, size]
 var _lamps: Array = []             ## [Vector3, Color, energy, range]
 var _murmur: Array[AudioStreamPlayer3D] = []
 var _crowd_v := 0.25               ## the stands' mood as last set (their sound reacts to it rising)
+var _held_up := false              ## sudden death: the murmur held up till "calm"
+## Round 3, the stock overlay (RingArena.stock(); smash_r3 spec v2 §5.1): how far the walk, the stands and what stands on
+## them moved out with the wider tank (tank_margin over the classic 6 m: 4 m), and the lanterns on the lip's piers.
+var out_m := 0.0
+## How far the stands stand past the classic 1v1 ring's along the deck (x) and across it (z): out_m both ways on the 1v1 deck,
+## more on a team format's bigger one (the owner, 2026-10-10: 2v2, 4v4). The lamps, posts and awning poles are laid from them.
+var out_x := 0.0
+var out_z := 0.0
+var lanterns := 0
+var _front_z := FRONT_Z
 var _flame_mat: ShaderMaterial
 var _halo_mat: ShaderMaterial
 var _foam_mat: ShaderMaterial
@@ -169,6 +189,7 @@ func set_mood(name: String) -> void:
 	_caustic_mat.set_shader_parameter(&"tint", m.caustic_tint)
 	if crowd != null:
 		crowd.set_cheer(float(m.cheer), true)
+		crowd.set_light(mood)
 	_crowd_v = float(m.cheer)
 	_crowd_level(_crowd_v, true)
 
@@ -190,6 +211,8 @@ func set_sides(e0: String, e1: String) -> void:
 		fr.set_shader_parameter(&"trim", GOLD)
 		fr.set_shader_parameter(&"mark", e.mark)
 		(mats[StringName("team_%d" % s)] as StandardMaterial3D).albedo_color = e.team
+	if crowd != null:
+		crowd.set_sides([(ELEMENTS[side_elements[0]] as Dictionary).team, (ELEMENTS[side_elements[1]] as Dictionary).team])
 
 
 func set_score(a: int, b: int) -> void:
@@ -249,6 +272,51 @@ func _crowd_react(v: float) -> void:
 		BendSounds.event("cheer", _stand_point(-s), -7.0)
 
 
+## A moment of the match for the stands (see the header): the fans' motion (RingCrowd.react) and their sound. `side`: the
+## end a fall happened at (0 the -X end, 1 the +X end; -1 none) — the only thing about where it was they are told.
+func react(kind: String, side := -1, strength := 1.0) -> void:
+	if crowd != null:
+		crowd.react(kind, side, strength)
+	if mats.is_empty():
+		return
+	var mood_v := float((MOODS.get(mood, {}) as Dictionary).get("cheer", 0.25))
+	match kind:
+		"launch":
+			var s := 1.0 if BendSounds.rng.randf() < 0.5 else -1.0
+			BendSounds.event("ooh", _stand_point(s), -2.0 + 2.0 * clampf(strength, 0.0, 1.0))
+			BendSounds.event("ooh", _stand_point(-s), -8.0)
+		"fall":
+			var end := -1.0 if side == 0 else (1.0 if side == 1 else 0.0)
+			for sz: float in [-1.0, 1.0]:
+				BendSounds.event("roar", _end_point(sz, end))
+			BendSounds.event("groan", _end_point(1.0 if BendSounds.rng.randf() < 0.5 else -1.0, -end), -5.0)
+			_crowd_level(1.0, false)
+			if crowd != null:
+				crowd.set_cheer(1.0)
+			get_tree().create_timer(float(RingCrowd.react_num("sit_s", 3.0)), false).timeout.connect(func() -> void:
+				if is_instance_valid(self) and not _held_up:
+					_crowd_level(_crowd_v, false)
+					if crowd != null:
+						crowd.set_cheer(mood_v))
+		"last_life":
+			BendSounds.event("cheer", _stand_point(1.0))
+			BendSounds.event("cheer", _stand_point(-1.0), -4.0)
+		"sudden":
+			_held_up = true
+			BendSounds.event("roar", _stand_point(1.0))
+			BendSounds.event("roar", _stand_point(-1.0), -3.0)
+			_crowd_level(maxf(0.8, mood_v), false)
+		"calm":
+			_held_up = false
+			_crowd_level(_crowd_v, false)
+
+
+## A place on stand `sz` (-1 the far, 1 the near) toward end `end` (-1 the -X end, 1 the +X end, 0 anywhere along it).
+func _end_point(sz: float, end: float) -> Vector3:
+	var x := (end * 0.6 + BendSounds.rng.randf_range(-0.25, 0.25)) * ox if end != 0.0 else BendSounds.rng.randf_range(-0.6, 0.6) * ox
+	return to_global(Vector3(x, y0 + th * float(tiers) * 0.5, sz * (oz + back) * 0.5))
+
+
 ## A place in the middle of stand `sz` (-1 the far, 1 the near), along it at random.
 func _stand_point(sz: float) -> Vector3:
 	var x := BendSounds.rng.randf_range(-0.6, 0.6) * ox
@@ -267,6 +335,11 @@ func _build() -> void:
 	ox = t.x + wt + float(sd.get("plaza_end", 4.0))
 	oz = t.y + wt + float(sd.get("plaza_side", 3.0))
 	back = oz + td * float(tiers)
+	out_m = maxf(RingArena.num("tank_margin", 6.0) - 6.0, 0.0)     # (stock: the stands and the walk 4 m out)
+	# (the classic 1v1 ring's ox 27.8 and oz 16.8: the numbers below were laid for it)
+	out_x = maxf(ox - 27.8, out_m)
+	out_z = maxf(oz - 16.8, out_m)
+	_front_z = FRONT_Z + out_z
 	xs.clear()
 	for k in BAYS + 1:
 		xs.append(-ox + float(k) * 2.0 * ox / float(BAYS))
@@ -279,6 +352,8 @@ func _build() -> void:
 	_plinth(kit)
 	_braziers(kit)
 	_posts(kit)
+	if RingArena.stock():
+		_lanterns(kit)
 	board = RingBoard.new()
 	board.build(self, kit, Vector3(0.0, y0, -(back + 0.2 + 2.35)), 1.0)
 	_bunting(kit)
@@ -304,10 +379,10 @@ func _build() -> void:
 func _materials() -> void:
 	for k: StringName in ring.mats:
 		mats[k] = ring.mats[k]
-	mats[&"paint"] = _std(Color.WHITE, 0.7)
-	mats[&"tile"] = _std(Color.WHITE, 0.55)
-	var gold := _std(Color.WHITE, 0.3)
-	gold.metallic = 0.85
+	mats[&"paint"] = _std(Color.WHITE, 0.8)
+	mats[&"tile"] = _std(Color.WHITE, 0.75)
+	var gold := _std(Color.WHITE, 0.48)
+	gold.metallic = 0.65
 	mats[&"gold"] = gold
 	var metal := _std(Color.WHITE, 0.45)
 	metal.metallic = 0.7
@@ -338,19 +413,19 @@ func _materials() -> void:
 	_cloth_group("awning_b", 1, 0.05, 1.0)
 	_cloth_group("flag_x", 0, 0.18, 3.2)
 	var aa := _group("awning_a").mat as ShaderMaterial
-	aa.set_shader_parameter(&"base", Color(0.66, 0.1, 0.07))
+	aa.set_shader_parameter(&"base", Color(0.6, 0.26, 0.18))
 	aa.set_shader_parameter(&"trim", Color(0.93, 0.88, 0.76))
 	aa.set_shader_parameter(&"mark", GOLD)
 	aa.set_shader_parameter(&"stripes", 9.0)
 	aa.set_shader_parameter(&"wave_k", 2.0)
 	var ab := _group("awning_b").mat as ShaderMaterial
-	ab.set_shader_parameter(&"base", Color(0.07, 0.36, 0.4))
+	ab.set_shader_parameter(&"base", Color(0.25, 0.4, 0.45))
 	ab.set_shader_parameter(&"trim", Color(0.93, 0.88, 0.76))
 	ab.set_shader_parameter(&"mark", GOLD)
 	ab.set_shader_parameter(&"stripes", 9.0)
 	ab.set_shader_parameter(&"wave_k", 2.0)
 	var fx := _group("flag_x").mat as ShaderMaterial
-	fx.set_shader_parameter(&"base", Color(0.62, 0.08, 0.06))
+	fx.set_shader_parameter(&"base", Color(0.6, 0.26, 0.18))
 	fx.set_shader_parameter(&"trim", GOLD)
 	fx.set_shader_parameter(&"mark", Color(0.72, 0.92, 1.0))
 	fx.set_shader_parameter(&"glyph", 1)
@@ -641,8 +716,8 @@ func _string(kit: StructureMeshKit, a: Vector3, b: Vector3, sag: float, step := 
 				Vector2.ZERO, col, StructureMeshKit.KIND_TEX, 0.0, PackedColorArray(), side)
 	if not flags:
 		return
-	var palette := [Color(0.78, 0.1, 0.07), Color(0.98, 0.74, 0.22), Color(0.07, 0.42, 0.46), Color(0.94, 0.9, 0.8),
-			Color(0.14, 0.3, 0.66), Color(0.9, 0.42, 0.1)]
+	var palette := [Color(0.72, 0.38, 0.26), Color(0.84, 0.72, 0.46), Color(0.3, 0.44, 0.49), Color(0.9, 0.88, 0.81),
+			Color(0.34, 0.46, 0.6), Color(0.74, 0.49, 0.3)]
 	var count := floori(l / step)
 	for k in range(1, count):
 		var f := float(k) / float(count)
@@ -725,9 +800,9 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 			RingArena.wbox(kit, &"ring_walk", Vector3(cx, y0 + COLUMN_H - 0.2, bz), Vector3(1.15, 0.4, 1.15), 1.2, stone * 0.95, 8)
 			pbox(kit, &"gold", Vector3(cx, y0 + COLUMN_H - 0.48, bz), Vector3(0.88, 0.1, 0.88), GOLD)
 		# the front pole and its gold cap
-		var py := _tier_y(FRONT_Z - oz)
-		prism(kit, &"paint", Vector3(cx, py, sz * FRONT_Z), 0.1, 0.08, FRONT_Y - py, 8, timber)
-		prism(kit, &"gold", Vector3(cx, FRONT_Y - 0.05, sz * FRONT_Z), 0.11, 0.11, 0.12, 8, GOLD)
+		var py := _tier_y(_front_z - oz)
+		prism(kit, &"paint", Vector3(cx, py, sz * _front_z), 0.1, 0.08, FRONT_Y - py, 8, timber)
+		prism(kit, &"gold", Vector3(cx, FRONT_Y - 0.05, sz * _front_z), 0.11, 0.11, 0.12, 8, GOLD)
 		# a banner on the pier's face toward the ring (none on the middle one, the scoreboard's)
 		if k > 0 and k < xs.size() - 1 and k != int(BAYS / 2.0):
 			var s := 0 if x < 0.0 else 1
@@ -737,14 +812,14 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 	# the beam over the piers and its gold line; the front rail
 	pbox(kit, &"paint", Vector3(0.0, y0 + COLUMN_H + 0.2, bz), Vector3(2.0 * ox + 0.6, 0.42, 0.55), timber)
 	pbox(kit, &"gold", Vector3(0.0, y0 + COLUMN_H + 0.2, bz - sz * 0.29), Vector3(2.0 * ox + 0.5, 0.07, 0.04), GOLD)
-	pbox(kit, &"paint", Vector3(0.0, FRONT_Y + 0.02, sz * FRONT_Z), Vector3(2.0 * ox - 0.4, 0.18, 0.2), timber)
+	pbox(kit, &"paint", Vector3(0.0, FRONT_Y + 0.02, sz * _front_z), Vector3(2.0 * ox - 0.4, 0.18, 0.2), timber)
 	# the awnings: from the beam down to the front rail, a valance hanging at the front
 	for k in BAYS:
 		var x0 := xs[k] + (0.4 if k == 0 else 0.0)
 		var x1 := xs[k + 1] - (0.4 if k == BAYS - 1 else 0.0)
 		var nm := "awning_a" if k % 2 == 0 else "awning_b"
 		var a := Vector3(x0, y0 + COLUMN_H + 0.05, sz * (back - 0.2))
-		var f := Vector3(x0, FRONT_Y + 0.1, sz * FRONT_Z)
+		var f := Vector3(x0, FRONT_Y + 0.1, sz * _front_z)
 		var slope := f - a
 		var nrm := Vector3(x1 - x0, 0, 0).cross(slope).normalized()
 		if nrm.y < 0.0:
@@ -757,7 +832,7 @@ func _stand(kit: StructureMeshKit, sz: float) -> void:
 		cloth(nm, f, Vector3(x1 - x0, 0, 0), Vector3(0, -0.6, 0), 18, 1, Vector3(0, 0, -sz), float(k) * 0.17, 0.86, 1.0)
 		# a paper lantern under the bay
 		var lx := (x0 + x1) * 0.5
-		var lz := sz * (FRONT_Z + 0.05)
+		var lz := sz * (_front_z + 0.05)
 		prism(kit, &"metal", Vector3(lx, FRONT_Y - 0.95, lz), 0.012, 0.012, 0.9, 4, Color(0.15, 0.12, 0.1))
 		_paper_lantern(kit, Vector3(lx, FRONT_Y - 1.55, lz), 0.26, 0.62)
 		_halos.append([Vector3(lx, FRONT_Y - 1.24, lz), Color(1.0, 0.42, 0.18), 1.2])
@@ -946,8 +1021,9 @@ func _plinth(kit: StructureMeshKit) -> void:
 	var fh := ring.foot_half()
 	var step := y0 + RingArena.num("plinth_step_y", -0.65)
 	var brass := Color(0.95, 0.7, 0.36)
-	# a brass edge round the deck's laying
-	for sgn: float in [-1.0, 1.0]:
+	# a brass edge round the deck's laying (stock: the pale coping is the lip; no foot, the face sheer: only the frieze)
+	var edged: Array = [] if RingArena.stock() else [-1.0, 1.0]
+	for sgn: float in edged:
 		pbox(kit, &"gold", Vector3(sgn * (hl + 0.012), y0 - 0.05, 0.0), Vector3(0.024, 0.1, 2.0 * hw + 0.048), brass)
 		pbox(kit, &"gold", Vector3(0.0, y0 - 0.05, sgn * (hw + 0.012)), Vector3(2.0 * hl + 0.048, 0.1, 0.024), brass)
 		# the coursed band gilded top and bottom
@@ -984,7 +1060,7 @@ func _braziers(kit: StructureMeshKit) -> void:
 	var at: Array[Vector3] = []
 	for sg: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
-			at.append(Vector3(sg * 25.8, y0, sz * 15.3))
+			at.append(Vector3(sg * (25.8 + out_x), y0, sz * (15.3 + out_z)))
 			at.append(Vector3(sg * (ox - 2.2), y0, sz * 6.2))
 	for p in at:
 		var stone := Color(0.78, 0.74, 0.68)
@@ -1004,8 +1080,8 @@ func _posts(kit: StructureMeshKit) -> void:
 	var timber := Color(0.4, 0.11, 0.06)
 	for sz: float in [-1.0, 1.0]:
 		for k in 7:
-			var x := -21.0 + 7.0 * float(k)
-			var p := Vector3(x, y0, sz * 15.5)
+			var x := (-21.0 + 7.0 * float(k)) * (1.0 + out_x / 25.0)
+			var p := Vector3(x, y0, sz * (15.5 + out_z))
 			RingArena.wbox(kit, &"ring_walk", p + Vector3(0, 0.2, 0), Vector3(0.45, 0.4, 0.45), 1.2, Color(0.75, 0.72, 0.66), 8)
 			prism(kit, &"paint", p + Vector3(0, 0.4, 0), 0.08, 0.065, 2.6, 8, timber)
 			prism(kit, &"gold", p + Vector3(0, 3.0, 0), 0.1, 0.0, 0.22, 8, GOLD)
@@ -1019,6 +1095,36 @@ func _posts(kit: StructureMeshKit) -> void:
 			prism(kit, &"gold", lp + Vector3(0, 0.22, 0), 0.22, 0.0, 0.18, 4, GOLD)
 			_halos.append([lp, Color(1.0, 0.7, 0.35), 1.1])
 			_lamps.append([lp + Vector3(0, -0.1, 0), Color(1.0, 0.68, 0.36), 1.1, 7.0])
+
+
+## The stock overlay's lanterns (spec v2 §5.1): a post on each corner pier's head (RingArena.lantern_spots' corners, just
+## outside the lip; round 4: the mid-side and mid-end spots stand empty, the owner's round-3 question decided by default), a
+## square lantern on it (our own), warm at night (its light in _lamps, on only by night like every lamp here).
+func _lanterns(kit: StructureMeshKit) -> void:
+	var ld := RingArena.block("lanterns")
+	var h := float(ld.get("post_h", 1.7))
+	var lcol := RingArena._tint(ld.get("light"), Color(1.0, 0.7, 0.38))
+	var timber := Color(0.32, 0.1, 0.06)
+	var iron := Color(0.16, 0.14, 0.12)
+	for wp in ring.lantern_spots():
+		# (round 4: the deck's corners only; the mid-side and mid-end ones go)
+		var rl := ring.to_local(wp)
+		if absf(rl.x) < ring.half_l() or absf(rl.z) < ring.half_w():
+			continue
+		var p := to_local(wp)
+		p.y = y0 - 0.06
+		prism(kit, &"paint", p, 0.075, 0.06, h, 8, timber)
+		prism(kit, &"gold", p + Vector3(0, h - 0.02, 0), 0.09, 0.09, 0.05, 8, GOLD)
+		var lp := p + Vector3(0, h + 0.26, 0)
+		pbox(kit, &"metal", lp + Vector3(0, -0.24, 0), Vector3(0.34, 0.05, 0.34), iron)
+		pbox(kit, &"metal", lp + Vector3(0, 0.24, 0), Vector3(0.38, 0.05, 0.38), iron)
+		pbox(kit, &"lamp_warm", lp, Vector3(0.27, 0.42, 0.27), Color(0.96, 0.84, 0.58))
+		for c: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+			pbox(kit, &"metal", lp + Vector3(c.x * 0.14, 0.0, c.y * 0.14), Vector3(0.03, 0.46, 0.03), iron)
+		prism(kit, &"gold", lp + Vector3(0, 0.27, 0), 0.24, 0.0, 0.2, 4, GOLD)
+		_halos.append([lp, Color(lcol.r, lcol.g, lcol.b), 1.3])
+		_lamps.append([lp + Vector3(0, -0.05, 0), lcol, float(ld.get("energy", 1.6)), float(ld.get("range_m", 9.0))])
+		lanterns += 1
 
 
 ## Bunting strung from the scoreboard across the arena to the gates and the near stand.
@@ -1039,17 +1145,20 @@ func _water(t: Vector2) -> void:
 	if w == null:
 		return
 	if w.material != null:
-		w.material.set_shader_parameter(&"deep_color", Color(0.0, 0.05, 0.1))
-		w.material.set_shader_parameter(&"shallow_tint", Color(0.42, 0.8, 0.86))
+		w.material.set_shader_parameter(&"deep_color", Color(0.035, 0.07, 0.1))
+		w.material.set_shader_parameter(&"shallow_tint", Color(0.55, 0.67, 0.74))
 		w.material.set_shader_parameter(&"absorb", 0.95)
 		w.material.set_shader_parameter(&"ripple_strength", 0.42)
 	var wy := RingArena.num("water_y", -1.4)
 	var fh := ring.foot_half()
-	# foam: bands on the water along the tank's walls (inward) and round the plinth's foot (outward)
+	var stock := RingArena.stock()
+	# foam: bands on the water along the tank's walls (inward) and round the plinth's foot (outward); stock: the curtain's
+	# white water at its foot, wider
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_foam_rect(st, t, -1.0, wy + 0.012, 1.1)
-	_foam_rect(st, fh, 1.0, wy + 0.012, 1.3)
+	_foam_rect(st, t, -1.0, wy + 0.012, 2.2 if stock else 1.1)
+	if not stock:
+		_foam_rect(st, fh, 1.0, wy + 0.012, 1.3)
 	_foam_mat = ShaderMaterial.new()
 	_foam_mat.shader = load(FOAM_SHADER)
 	_foam_mat.render_priority = 2
@@ -1063,9 +1172,14 @@ func _water(t: Vector2) -> void:
 	var cs := SurfaceTool.new()
 	cs.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var step := y0 + RingArena.num("plinth_step_y", -0.65)
-	_caustic_rect(cs, t - Vector2(0.01, 0.01), -1.0, wy, y0 - 0.02, wy)
-	_caustic_rect(cs, fh + Vector2(0.012, 0.012), 1.0, wy, step - 0.04, wy)
-	_caustic_rect(cs, Vector2(ring.half_l() + 0.004, ring.half_w() + 0.004), 1.0, step, y0 - 0.39, wy)
+	if stock:
+		# (the water's light on the deck's face from below, faint: the face stands face_depth_m over a deep tank)
+		var fb := y0 - RingArena.num("face_depth_m", 3.0)
+		_caustic_rect(cs, Vector2(ring.half_l() + 0.004, ring.half_w() + 0.004), 1.0, fb, y0 - 0.25, wy)
+	else:
+		_caustic_rect(cs, t - Vector2(0.01, 0.01), -1.0, wy, y0 - 0.02, wy)
+		_caustic_rect(cs, fh + Vector2(0.012, 0.012), 1.0, wy, step - 0.04, wy)
+		_caustic_rect(cs, Vector2(ring.half_l() + 0.004, ring.half_w() + 0.004), 1.0, step, y0 - 0.39, wy)
 	_caustic_mat = ShaderMaterial.new()
 	_caustic_mat.shader = load(CAUSTIC_SHADER)
 	var cm := MeshInstance3D.new()

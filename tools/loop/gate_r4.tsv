@@ -1,0 +1,163 @@
+row	r3	now	now_exit	now_se	verdict
+r4_bend_clock	-	BEND CLOCK PASSED (6 checks)	0	0	new-pass
+r4_ring_feel	-	RING FEEL PASSED (24 checks)	0	0	new-pass
+r4_mammoth_knee	red at 0c19496 (IMPACT's base run): the same line	MAMMOTH KNEE TEST FAILED (1 of 19)	1	0	known-red
+r4_mammoth_temper	-	MAMMOTH TEMPER TEST PASSED (17 checks)	0	0	new-pass
+r4_soak_ee_ts1	-	RING SOAK PASSED (8 checks)	0	0	new-pass
+r4_soak_ee_ts4	-	RING SOAK PASSED (8 checks)	0	0	new-pass
+r4_ring_read	-	RING READ PASSED (32 checks)	0	0	new-pass
+r4_ring_camera	-	RING CAMERA PASSED (28 checks)	0	0	new-pass
+r4_looks	-	R4 LOOKS PASSED (43 checks)	0	0	new-pass
+r4_hud	-	R4 HUD TEST PASSED (19 checks)	0	0	new-pass
+r4_sides	-	RING SIDES TEST PASSED (22 checks)	0	0	new-pass
+r4_music	-	RING MUSIC PASSED (71 checks)	0	0	new-pass
+r4_crowd	-	RING CROWD PASSED (43 checks)	0	0	new-pass
+r4_music_director	-	112 checks, 0 failed	0	0	new-pass
+r4_replay	-	RING REPLAY PASSED (18 checks)	0	0	new-pass
+r4_highlights	-	RING HIGHLIGHTS PASSED (17 checks)	0	0	new-pass
+r4_clash	-	BEND CLASH PASSED (11 checks)	0	0	new-pass
+r4_photo	-	PHOTO MODE PASSED (11 checks)	0	0	new-pass
+r4_assist	-	RING ASSIST PASSED (23 checks)	0	0	new-pass
+r4_basic_scheme	-	BASIC SCHEME PASSED (25 checks)	0	0	new-pass
+r4_bots_pct	-	BOTS PCT PASSED (17 checks)	0	0	new-pass
+r4_tree_climb	-	TREE CLIMB TEST PASSED (31 checks)	0	0	new-pass
+r4_pc_earth	-	R4 PLAYCHECK PASSED (38 checks)	0	0	new-pass
+r4_pc_water	-	R4 PLAYCHECK PASSED (38 checks)	0	0	new-pass
+r4_pc_fire	-	R4 PLAYCHECK PASSED (38 checks)	0	0	new-pass
+r4_pc_air	-	R4 PLAYCHECK PASSED (38 checks)	0	0	new-pass
+r3_seams	R3 SEAMS PASSED (44 checks)	R3 SEAMS PASSED (44 checks)	0	0	pass
+r3_ring_pct	RING PCT PASSED (36 checks)	RING PCT PASSED (36 checks)	0	0	pass
+r3_hitstun	RING HITSTUN PASSED (21 checks)	RING HITSTUN PASSED (21 checks)	0	0	pass
+r3_stage	RING STAGE PASSED (16 checks)	RING STAGE PASSED (16 checks)	0	0	pass
+r3_percent_hud	PERCENT HUD PASSED (16 checks)	PERCENT HUD PASSED (16 checks)	0	0	pass
+r3_rules_stock	RING RULES TEST PASSED (67 checks)	RING RULES TEST PASSED (67 checks)	0	0	pass
+r3_match_stock	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+r3_match_classic	RING MATCH TEST PASSED (22 checks)	RING MATCH TEST PASSED (22 checks)	0	0	pass
+r3_moves	RING MOVES PASSED (66 checks)	RING MOVES PASSED (66 checks)	0	0	pass
+r3_edge	RING EDGE PASSED (20 checks)	RING EDGE PASSED (20 checks)	0	0	pass
+r3_predict	RING PREDICT PASSED (14 checks)	RING PREDICT PASSED (14 checks)	0	0	pass
+r3_player_gate	PLAYER GATE PASSED (10 checks)	PLAYER GATE PASSED (12 checks)	0	0	pass
+r3_air	R3 AIR PASSED (54 checks)	R3 AIR PASSED (54 checks)	0	0	pass
+r3_combo	R3 COMBO PASSED (26 checks)	R3 COMBO PASSED (26 checks)	0	0	pass
+r3_combo_real	R3 COMBO PASSED (8 checks)	R3 COMBO PASSED (8 checks)	0	0	pass
+r3_guard	R3 GUARD PASSED (61 checks)	R3 GUARD PASSED (61 checks)	0	0	pass
+r3_bot_pct	BOT PCT PASSED (23 checks)	BOT PCT PASSED (23 checks)	0	0	pass
+r3_bot_recovery	BOT RECOVERY PASSED (18 checks)	BOT RECOVERY PASSED (18 checks)	0	0	pass
+r3_bot_recovery_real	BOT RECOVERY PASSED (18 checks)	BOT RECOVERY PASSED (18 checks)	0	0	pass
+r3_practice_stock	PRACTICE TEST PASSED (37 checks)	PRACTICE TEST PASSED (37 checks)	0	0	pass
+r3_soak_stock_ew	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+r3_soak_stock_fa	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+r3_pc_earth	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+r3_pc_water	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+r3_pc_fire	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+r3_pc_air	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+r3_pc_practice	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+r2_cast	R2 CAST PASSED (60 checks)	R2 CAST PASSED (60 checks)	0	0	pass
+r2_guards	R2 GUARDS PASSED (50 checks)	R2 GUARDS PASSED (50 checks)	0	0	pass
+kits	KITS TEST PASSED	KITS TEST PASSED	0	0	pass
+guard_matrix	GUARD MATRIX PASSED	GUARD MATRIX PASSED	0	0	pass
+pg_earth	PRACTICE GUARDS PASSED (11 checks)	PRACTICE GUARDS PASSED (11 checks)	0	0	pass
+pg_water	PRACTICE GUARDS PASSED (6 checks)	PRACTICE GUARDS PASSED (6 checks)	0	0	pass
+pg_fire	PRACTICE GUARDS PASSED (6 checks)	PRACTICE GUARDS PASSED (6 checks)	0	0	pass
+pg_air	PRACTICE GUARDS PASSED (6 checks)	PRACTICE GUARDS PASSED (6 checks)	0	0	pass
+ring_hitches	RING HITCHES PASSED (4 checks)	RING HITCHES PASSED (4 checks)	0	0	pass
+balance	BALANCE PASSED (6 checks)	BALANCE PASSED (6 checks)	0	0	pass
+bend_sounds	BEND SOUNDS TEST PASSED	BEND SOUNDS TEST PASSED	0	0	pass
+lessons	LESSONS TEST PASSED (188 checks)	LESSONS TEST PASSED (188 checks)	0	0	pass
+soak_ee_s7300	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+flow_r1a	FLOW PASSED	FLOW PASSED	0	0	pass
+flow_r1b	FLOW PASSED	FLOW PASSED	0	0	pass
+flow_r1c	FLOW PASSED	FLOW PASSED	0	0	pass
+schemes	SCHEMES TEST PASSED (64 checks)	SCHEMES TEST PASSED (64 checks)	0	0	pass
+schemes_duel	SCHEMES TEST PASSED (8 checks)	SCHEMES TEST PASSED (8 checks)	0	0	pass
+bend_throw	BEND THROW PASSED	BEND THROW PASSED	0	0	pass
+soak_ee	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+soak_wf	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+soak_ae	RING SOAK PASSED (8 checks)	RING SOAK PASSED (8 checks)	0	0	pass
+ring_screens	RING SCREENS TEST PASSED (36 checks)	RING SCREENS TEST PASSED (36 checks)	0	0	pass
+practice	PRACTICE TEST PASSED (37 checks)	PRACTICE TEST PASSED (37 checks)	0	0	pass
+ring_teams	RING TEAMS TEST PASSED (22 checks)	RING TEAMS TEST PASSED (22 checks)	0	0	pass
+ring_assets	RING ASSETS TEST PASSED	RING ASSETS TEST PASSED	0	0	pass
+quick_ring	QUICK SPELL TEST PASSED (41 checks)	QUICK SPELL TEST PASSED (41 checks)	0	0	pass
+quick_duel	QUICK SPELL TEST PASSED (14 checks)	QUICK SPELL TEST PASSED (14 checks)	0	0	pass
+ring_look	RING LOOK TEST PASSED	RING LOOK TEST PASSED	0	0	pass
+ring_dress	RING DRESS TEST PASSED	RING DRESS TEST PASSED	0	0	pass
+bend_cast	BEND CAST PASSED	BEND CAST PASSED	0	0	pass
+flow	FLOW PASSED	FLOW PASSED	0	0	pass
+bend_bots	BEND BOTS PASSED	BEND BOTS PASSED	0	0	pass
+ring_rules	RING RULES TEST PASSED (67 checks)	RING RULES TEST PASSED (67 checks)	0	0	pass
+ring_hud	RING HUD TEST PASSED (66 checks)	RING HUD TEST PASSED (66 checks)	0	0	pass
+ring_hud_s7	RING HUD TEST PASSED (66 checks)	RING HUD TEST PASSED (66 checks)	0	0	pass
+match_earth	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+match_water	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+match_fire	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+match_air	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+match_ee	RING MATCH TEST PASSED (23 checks)	RING MATCH TEST PASSED (23 checks)	0	0	pass
+bend_caster	BEND_CASTER PASSED	BEND_CASTER PASSED	0	0	pass
+knock	KNOCK TEST PASSED	KNOCK TEST PASSED	0	0	pass
+ring	RING TEST PASSED (32 checks)	RING TEST PASSED (32 checks)	0	0	pass
+bend_poses	BEND POSES PASSED	BEND POSES PASSED	0	0	pass
+bend_clips	BEND_CLIPS PASSED	BEND_CLIPS PASSED	0	0	pass
+match_setup	MATCH SETUP TEST PASSED	MATCH SETUP TEST PASSED	0	0	pass
+player_words	PLAYER WORDS TEST PASSED	PLAYER WORDS TEST PASSED	0	0	pass
+bending	BENDING PASSED	BENDING PASSED	0	0	pass
+duel_spells	DUEL SPELLS PASSED	DUEL SPELLS PASSED	0	0	pass
+duel_bar	DUEL BAR PASSED	DUEL BAR PASSED	0	0	pass
+duel_bender	DUEL BENDER PASSED	DUEL BENDER PASSED	0	0	pass
+duel	DUEL TEST PASSED (48 checks)	DUEL TEST PASSED (48 checks)	0	0	pass
+form	FORM TEST PASSED (97 checks)	FORM TEST PASSED (97 checks)	0	0	pass
+sway	SWAY TEST PASSED (81 checks)	SWAY TEST PASSED (81 checks)	0	0	pass
+free_use	FREE USE TEST PASSED (59 checks)	FREE USE TEST PASSED (59 checks)	0	0	pass
+wall_matter	WALL MATTER TEST PASSED (64 checks)	WALL MATTER TEST PASSED (64 checks)	0	0	pass
+spike_faces	SPIKE FACES PASSED	SPIKE FACES PASSED	0	0	pass
+smoke	SMOKE TEST PASSED	SMOKE TEST PASSED	0	0	pass
+hotbar	HOTBAR TEST PASSED (71 checks)	HOTBAR TEST PASSED (71 checks)	0	0	pass
+tab_drops	TAB DROPS TEST PASSED (32 checks)	TAB DROPS TEST PASSED (32 checks)	0	0	pass
+hud_skills	"HUD SKILLS TEST FAILED (1 of 33): [""every pack item has a tag and a line ([\""bone\"", \""farm_hoe\"", \""farm_stick\"", \""rope_belt\"", \""rope_sling\"", \""saber\""])""]"	"HUD SKILLS TEST FAILED (1 of 33): [""every pack item has a tag and a line ([\""bone\"", \""farm_hoe\"", \""farm_stick\"", \""rope_belt\"", \""rope_sling\"", \""saber\""])""]"	1	0	known-red
+hud_vitals	HUD VITALS TEST FAILED 2/16	HUD VITALS TEST FAILED 2/16	1	0	known-red
+main_menu	MAIN MENU TEST PASSED 56	MAIN MENU TEST PASSED 56	0	0	pass
+how_to	HOW TO TEST PASSED (17 checks)	HOW TO TEST PASSED (17 checks)	0	0	pass
+menu_background	MENU BACKGROUND TEST PASSED 8	MENU BACKGROUND TEST PASSED 8	0	0	pass
+startup	STARTUP TEST PASSED	STARTUP TEST PASSED	0	0	pass
+npc_fighter	NPC FIGHTER TEST PASSED (69 checks)	NPC FIGHTER TEST PASSED (69 checks)	0	0	pass
+main_menu_nofps	MAIN MENU TEST PASSED 56	MAIN MENU TEST PASSED 56	0	0	pass
+hud_vitals_nofps	HUD VITALS TEST FAILED 2/16	HUD VITALS TEST FAILED 2/16	1	0	known-red
+hud_skills_nofps	"HUD SKILLS TEST FAILED (1 of 33): [""every pack item has a tag and a line ([\""bone\"", \""farm_hoe\"", \""farm_stick\"", \""rope_belt\"", \""rope_sling\"", \""saber\""])""]"	"HUD SKILLS TEST FAILED (1 of 33): [""every pack item has a tag and a line ([\""bone\"", \""farm_hoe\"", \""farm_stick\"", \""rope_belt\"", \""rope_sling\"", \""saber\""])""]"	1	0	known-red
+pc_earth_keys	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_water_keys	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_fire_keys	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_air_keys	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_practice_throw	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_fire_first	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_water_direction	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_air_radial	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+pc_practice_fire	PLAYCHECK PASSED (14 checks)	PLAYCHECK PASSED (14 checks)	0	0	pass
+tv_river	RIVER TEST PASSED (18 checks)	RIVER TEST PASSED (18 checks)	0	0	pass
+tv_story_layer	STORY LAYER TEST PASSED (69 checks)	STORY LAYER TEST PASSED (69 checks)	0	0	pass
+tv_fish	FISH TEST PASSED (24 checks)	FISH TEST PASSED (24 checks)	0	0	pass
+tv_boat	BOAT TEST PASSED (26 checks)	BOAT TEST PASSED (26 checks)	0	0	pass
+tv_fishing	FISHING TEST FAILED (2 of 17)	FISHING TEST FAILED (2 of 17)	1	0	known-red
+cz_clothing	CLOTHING TEST OK (177 checks)	CLOTHING TEST OK (177 checks)	0	0	pass
+cz_creator	CREATOR TEST OK (6793 checks)	CREATOR TEST OK (6793 checks)	0	0	pass
+cz_creator_integration	CREATOR INTEGRATION TEST OK (140 checks)	CREATOR INTEGRATION TEST OK (140 checks)	0	0	pass
+cz_customizer_ui	CUSTOMIZER UI TEST OK (33 checks)	CUSTOMIZER UI TEST OK (33 checks)	0	0	pass
+cz_faces	FACES TEST OK (13663 checks)	FACES TEST OK (13663 checks)	0	0	pass
+cz_head_v3	HEAD V3 TEST OK (107 checks)	HEAD V3 TEST OK (107 checks)	0	0	pass
+cz_jewellery	JEWELLERY TEST OK (1615 checks)	JEWELLERY TEST OK (1615 checks)	0	0	pass
+cz_new_garments	NEW GARMENTS TEST OK (281 checks)	NEW GARMENTS TEST OK (281 checks)	0	0	pass
+cz_new_peoples	NEW PEOPLES TEST OK (490 checks)	NEW PEOPLES TEST OK (490 checks)	0	0	pass
+cz_sea_peoples	SEA PEOPLES TEST OK (1002 checks)	SEA PEOPLES TEST OK (1002 checks)	0	0	pass
+cz_slots_patterns	SLOTS PATTERNS TEST OK (115 checks)	SLOTS PATTERNS TEST OK (115 checks)	0	0	pass
+cz_tattoos	TATTOOS TEST OK (207 checks)	TATTOOS TEST OK (207 checks)	0	0	pass
+st_captivity	CAPTIVITY TEST PASSED (68 checks)	CAPTIVITY TEST PASSED (68 checks)	0	0	pass
+st_dialogue	DIALOGUE TEST PASSED (76 checks)	DIALOGUE TEST PASSED (76 checks)	0	0	pass
+st_mission_flow	MISSION FLOW TEST PASSED (100 checks)	MISSION FLOW TEST PASSED (100 checks)	0	0	pass
+st_story	STORY TEST FAILED (1 of 30)	STORY TEST FAILED (1 of 30)	1	0	known-red
+env_sun_moon	SUN MOON TEST PASSED	SUN MOON TEST PASSED	0	0	pass
+env_forest_light	FOREST LIGHT TEST PASSED	FOREST LIGHT TEST PASSED	0	0	pass
+env_weather	WEATHER TEST PASSED	WEATHER TEST PASSED	0	0	pass
+r4_first_five_p1	-	FIRST FIVE PASSED (1 checks)	0	0	new-pass
+r4_first_five_p2	-	FIRST FIVE PASSED (1 checks)	0	0	new-pass
+r4_first_five_p3	-	FIRST FIVE PASSED (1 checks)	0	0	new-pass
+r4_first_five_p4	-	FIRST FIVE PASSED (1 checks)	0	0	new-pass
+r4_first_five	-	FIRST FIVE PASSED (8 checks)	0	0	new-pass

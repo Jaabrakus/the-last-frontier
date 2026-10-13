@@ -9,6 +9,8 @@ extends RefCounted
 ##   chest()         where ranges are measured from; facing() its flat way (the aim's when it has one)
 ##   aim_ray()       [from, dir]: the line the aim looks along (the camera's for the player; the chest to the target's for a body)
 ##   aim_point(ex, from)  where the aim falls NOW (live: a throw re-reads it while the stone rises); `ex` RIDs left out of its ray
+##   flight_point(ex, from)  where a thing flying from the hand is sent (aim_point; the player's: on his crosshair's line at the
+##                   depth of the foe by it, PlayerBendCaster)
 ##   aim_target()    a fighter or the player the aim is on (null: none); target_point(t, mps) where to send a thing at him
 ##                   (his chest; a body's led by his pace over the flight, scattered by its skill)
 ##   launch_point(f) where a bolt leaves from (the chest a little along `f`; the player's: the pose's strike point when it has
@@ -31,11 +33,25 @@ extends RefCounted
 ## zones); ally_rids(caster) are left out of its bolts' flight (a bolt passes an ally); BendZone.on_bolt lets an ally's bolt
 ## through its guards (an ally's shield never sends a teammate's bolt back, and still takes the other side's).
 
+## ROUND 2: `grown` (a grow move held past its second click: BendEffects merges the spec's grow into the cast while it is
+## true; SwayCaster sets it for the player's cast, a bot's mind for its own) and `guarded` (each guard's result: BendZone).
+
+## A guard of this caster's took something on the beat ("perfect"), late ("late"), or nothing at all ("whiff"); `what`
+## the kind it met ("stone", "fire", "water", "ice", "air", "lightning"; "" for a whiff). The HUD's and the soak's.
+signal guarded(result: String, what: String)
+
 const META := &"bend_caster"
 ## A body's side in the ring (RingRules.add; StringName or String).
 const TEAM_META := &"bend_team"
 
 var body: CharacterBody3D
+## The cast being made grows (▲): see the header.
+var grown := false
+## Round 3 (the % ring; BendR3): this caster's jab string ({hits, popped, victim, at, volley, casts, hit_last,
+## released_at}), when its next jab is ready by the step (-INF: no step owed) and its last hit landed (BendStatus.now()).
+var jab := {}
+var jab_step_until := -INF
+var last_hit_at := -INF
 
 
 func _init(p_body: CharacterBody3D = null) -> void:
@@ -111,6 +127,12 @@ func aim_point(ex: Array = [], from := Vector3.INF) -> Vector3:
 	return ray_point(r[0] if from == Vector3.INF else from, r[1], ex)
 
 
+## Where a cast flying from the hand is sent (a bolt, a throw, a hurled stone, a steer): aim_point for a body (its aim
+## looks from its own chest); the player's PlayerBendCaster.flight_point (his eye is not his hand).
+func flight_point(ex: Array = [], from := Vector3.INF) -> Vector3:
+	return aim_point(ex, from)
+
+
 func aim_target() -> Node3D:
 	return null
 
@@ -146,6 +168,28 @@ func held_side() -> float:
 	return side_sign()
 
 
+## The way a dash by the keys held goes (round 2's dir "held"): x right, y forward, each -1..1 (ZERO: nothing held, the
+## spec's none then). A body's: none (a bot sets its own: BodyBendCaster.dash_dir); the player's his move keys.
+func held_move() -> Vector2:
+	return Vector2.ZERO
+
+
+## Whether jump is held now (Leap's glide): a body's never; the player's his jump key.
+func jump_held() -> bool:
+	return false
+
+
+## Whether a bind holds its feet now (BendStatus.bound: its dash key's moves go nowhere; BendEffects). Online a remote
+## fighter's cast answers as his own machine did (NetBendCaster).
+func feet_bound() -> bool:
+	return BendStatus.bound(body)
+
+
+## Whether its Carried wind is charged now (meta bend_carry_until: a carry spec knocks harder; BendEffects). Online as feet_bound.
+func carry_ready() -> bool:
+	return BendStatus.until(body, &"bend_carry_until") > 0.0
+
+
 func mode_of(id: String) -> String:
 	var ms := SwayCaster.modes_of(id)
 	return String(ms[0]) if not ms.is_empty() else ""
@@ -153,10 +197,6 @@ func mode_of(id: String) -> String:
 
 func tier(_id: String) -> int:
 	return 1
-
-
-func water() -> Bending:
-	return Bending.of(body)
 
 
 func notice(_text: String, _s := 1.6) -> void:
@@ -230,7 +270,7 @@ func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 			pool.append(pl)
 	for n in pool:
 		var f := n as CharacterBody3D
-		if f == null or f == body or not NpcSenses.can_fight(f):
+		if f == null or f == body or not NpcSenses.can_fight(f) or assist_skips(f):
 			continue
 		var to := NpcSenses.chest_of(f) - from
 		var dist := to.length()
@@ -248,6 +288,11 @@ func assist_target(from: Vector3, dir: Vector3, ex: Array = []) -> Node3D:
 		best = f
 		best_a = a
 	return best
+
+
+## Whether the help leaves fighter `f` out (none here; the player's Normal leaves out his side: PlayerBendCaster).
+func assist_skips(_f: Node3D) -> bool:
+	return false
 
 
 ## `n`'s side for the team filter (&"" none): its TEAM_META, else a ring faction's side (and then the player is "player").

@@ -3,6 +3,7 @@
 	"version": 1,
 	"summary": "Tidebreak's screens over the ring (RoundScreen after each round, MatchScreen at the match's end), the loading screen's tips on the way into the ring, Quick match's line, and the practice dummy (RingMode's practice: a dummy of a chosen element that stands, blocks or throws; no timer, no rounds; R puts both back at their ends). Plain words only, none from any show (tests/ring/test_player_words.gd reads every string here). The owner, 2026-10-05: 'games not bad', 'it is fun'; catching a stone just before it hits and firing it back is the fun core, so practice is for trying moves and catching.",
 	"quick_line": "%s against a random opponent  ·  %s  ·  %s",
+	"one_game": "one game",
 	"round": {
 		"_doc": "RoundScreen (scripts/ui/round_screen.gd): who took the round and why, the score, a short tally of the round (no replay). %s is the other side's name (Stone, Tide, Ember, Gale); the round number %d.",
 		"head_win": "Round %d  ·  yours",
@@ -22,8 +23,23 @@
 		"yours": "You  ·  casts %d  ·  catches %d  ·  knock-backs %d",
 		"theirs": "The %s  ·  casts %d  ·  catches %d  ·  knock-backs %d",
 		"next": "next round in %d  ·  Space: now",
-		"decided": "the match is decided"
+		"decided": "the match is decided",
+		"_stock": "The % match (rule set stock): the screen stands only between games of a best of 3. %s the other side's name, %d the game.",
+		"head_game_win": "Game %d  ·  yours",
+		"head_game_loss": "Game %d  ·  the %s's",
+		"head_game_draw": "Game %d  ·  drawn",
+		"why_win_falls": "Into the water: the %s has no lives left",
+		"why_loss_falls": "Into the water: you have no lives left",
+		"why_win_time": "Time: you have more lives left",
+		"why_loss_time": "Time: the %s has more lives left",
+		"why_win_sudden": "Sudden: the %s went in first",
+		"why_loss_sudden": "Sudden: you went in first",
+		"why_draw_sudden_draw": "Sudden: nobody went in",
+		"yours_stock": "You  ·  falls dealt %d  ·  %d%% dealt  ·  catches %d",
+		"theirs_stock": "The %s  ·  falls dealt %d  ·  %d%% dealt  ·  catches %d",
+		"next_game": "next game in %d  ·  Space: now"
 	},
+	"spectate": {"_about": "RingSpectate: watching after your last life in a team format (the owner, 2026-10-10). One line at the foot.", "line": "Out of lives  ·  watching %s  ·  Space: next", "none": "Out of lives"},
 	"match": {
 		"_doc": "MatchScreen (scripts/ui/match_screen.gd) at the match's end: the result, the score, a line for each round, the match's tally; Rematch, your element and the opponent for the rematch, the main menu.",
 		"head_win": "Victory",
@@ -51,21 +67,42 @@
 		"opponent": "Opponent:  %s",
 		"opponent_line": "for the rematch",
 		"main_menu": "Main menu",
-		"main_menu_line": "back to the title"
+		"main_menu_line": "back to the title",
+		"_stock": "The % match: a line for each fall (when, who, into the water at what %, the move that took the life), then the tally (spec §10.6).",
+		"fall_line": "%s  ·  %s into the water at %d%%  ·  %s",
+		"fall_you": "you",
+		"fall_them": "the %s",
+		"fall_self": "own fall",
+		"fall_game": "Game %d",
+		"_team": "A team format (2v2, 4v4; the owner, 2026-10-10): your side and theirs instead of you and the foe, each fighter by his own name, and the roster of every fighter with his own numbers (RingMode.roster).",
+		"team_you": "Your team",
+		"team_them": "Their team",
+		"team_you_short": "Yours",
+		"team_them_short": "Theirs",
+		"line_win_team": "Your team takes the match",
+		"line_loss_team": "Their team takes the match",
+		"who_loss_team": "theirs",
+		"lives_line_team": "Lives left  ·  yours %d  ·  theirs %d",
+		"roster_head": "The fighters",
+		"roster_falls": "Falls",
+		"roster_pct": "%",
+		"roster_lost": "Lost",
+		"mvp": "Best",
+		"lives_line": "Lives left  ·  you %d  ·  the %s %d",
+		"tally_falls": "Falls  ·  dealt %d  ·  taken %d  (own falls %d)",
+		"tally_pct": "%% dealt %d  ·  highest %% survived %d  ·  %% healed %d",
+		"tally_string": "Longest string  ·  %d hits  ·  %d%%",
+		"tally_guards": "Catches %d  (clean %d)  ·  perfect guards %d  ·  falls broken %d  ·  edge saves %d"
 	},
 	"practice": {
-		"_doc": "RingMode's practice (MatchSetup.kind practice; the user arg practice=stand|block|throw). The dummy is a bot of the chosen element held at its end: 'stand' never casts; 'block' answers what comes at it with its element's guards (catch, deflect, redirect, parry, shield: no dice, every time its lock fits) and raises its cover when you begin a lock (cover, at most every block_every_s); 'throw' casts its throw at you every throw_every_s (earth a stone spike: catch it and send it back). No timer, no rounds, the soft walls off (walk anywhere); a fall into the water puts both back at their ends after reset_after_out_s; R (ring_reset) puts them back at once, B (ring_dummy) steps the dummy's way. Spent at 0 health: whole again at once.",
+		"_doc": "RingMode's practice (MatchSetup.kind practice; the user arg practice=stand|block|throw). The dummy is a bot of the chosen element held at its end: 'stand' never casts; 'block' answers what comes at it with its element's guard (round 2: the Catch, the Turn, the Parry, the Wind Guard; no dice, every time its lock fits) and raises its cover when you begin a lock (its wall key's first move: MatchSetup.practice_move, this table only when the kit has none; at most every block_every_s); 'throw' casts its throw at you every throw_every_s (its element's strike, round 2: earth a stone spike to catch and send back, water a lash, fire a punch, air a slice, each for its own guard). No timer, no rounds, the soft walls off (walk anywhere); a fall into the water puts both back at their ends after reset_after_out_s; R (ring_reset) puts them back at once, B (ring_dummy) steps the dummy's way. Spent at 0 health: whole again at once.",
 		"countdown_s": 1.0,
 		"throw_every_s": 3.0,
 		"block_every_s": 2.5,
 		"reset_after_out_s": 1.6,
-		"throw": {"earth": "stone_form/spike", "water": "ice/spear", "fire": "fire_blast/punch", "air": "air_blast/ball"},
-		"cover": {"earth": "earth_wall/wall", "water": "water_shield/ice_wall", "fire": "fire_wall/wall", "air": "air_shield/shield"},
-		"ways": {
-			"stand": "stands still",
-			"block": "blocks: its guards and its cover",
-			"throw": "throws at you every few seconds"
-		},
+		"throw": {"earth": "stone_form/spike", "water": "water_whip/whip", "fire": "fire_blast/punch", "air": "air_blast/slice"},
+		"cover": {"earth": "earth_wall/wall", "water": "water_shield/ice_wall", "fire": "fire_wall/wall", "air": "air_wall/wall"},
+		"ways": {"stand": "stands still", "block": "blocks: its guards and its cover", "throw": "throws at you every few seconds"},
 		"words": {
 			"banner": "Practice",
 			"hint": "Practice  ·  a %s dummy that %s  ·  R: reset positions  ·  B: stand, block or throw  ·  Esc: menu",
@@ -76,21 +113,101 @@
 		}
 	},
 	"tips": [
-		"Knock the other side back through its three zones and off the open end into the water to take the round.",
-		"Pushed back over a line, you are held to that zone for the rest of the round.",
-		"You may step into their half only once all of them are pushed back.",
-		"At the bell, the side holding more ground takes the round; on level ground, the stronger side.",
-		"Spent at nothing, you are not out: you are pushed back a zone and get your breath back.",
-		"A stone flying at you can be caught just before it hits and sent straight back.",
-		"A jet of water wears an earth wall down fast.",
-		"Fire melts an ice wall, and leaves water behind to draw on.",
-		"A water bubble stops fire and air, but not stone.",
-		"An air shield sends light bolts back; a stone goes through it.",
-		"Only fire can turn lightning back on its caster.",
-		"The grates on the zone lines refill your water.",
-		"A hit taken breaks your lock: cast from behind cover.",
-		"Two walls each at most: a third crumbles your oldest.",
-		"Q puts your readied move on the left button for quick casts.",
+		"The Kick runs along the floor: jump it.",
+		"Catch just before it hits: your throw back is faster.",
+		"A hit on the beat is yours.",
+		"Hold until the circle is full, then let go; let go early and nothing is spent.",
+		"Two walls each.",
+		"Water douses fire, fire melts ice, air drops stone.",
+		"Hold 2 longer: a second click, and it grows.",
+		"A hit knocks your lock back; it never wipes it. Your dash and your guard always go.",
+		"Rising under you? Step off as it starts.",
+		"Every return of a caught stone flies faster.",
+		"Q puts your readied move on left click; hold Q to have your jab back.",
 		"Practice from the main menu: a dummy that stands, blocks or throws, no timer."
-	]
+	],
+	"tips_classic": [
+		"Knock the other side back through its three zones and off the open end into the water to take the round.",
+		"A tug of war: knock one of them back over a line and the front moves a zone their way. Get knocked back, it moves yours.",
+		"Everyone stands up to the one front line: take ground and you may step into their half.",
+		"At the bell, the side holding more ground takes the round; on level ground, the stronger side.",
+		"Spent at nothing, you are not out: your side gives a zone and you get your breath back."
+	],
+	"tips_stock": [
+		"Three lives each: into the water loses one. The last side with lives left takes the game.",
+		"Every hit raises the %. The higher it climbs, the farther the next hit throws.",
+		"Thrown off the deck? Jump, jump and jump again: your element lifts you back.",
+		"Fall short and you grab the edge: climb up, jump, or roll back in.",
+		"At the bell, more lives left takes the game; level, the next one in the water loses."
+	],
+	"kit": {
+		"_doc": "Round 2 of the skills (the owner, 2026-10-05: 'make the skills easy hard to master ... think human made think avg IQ'): what the player reads about his kit, the same for every element (KitWords: the strip, the wheel, F1, the first-time panels, the element pick, the Controls panels, the lessons). {guard}, {quick}, {aim}, {fire}, {wheel} and {jump} are the keys as bound now. No word from any show.",
+		"roles": ["STRIKE", "PUSH", "DASH", "WALL", "HEAL"],
+		"role_jab": "JAB",
+		"role_guard": "GUARD",
+		"tap_twice": "tap twice: %s",
+		"tap_once": "tap: %s",
+		"grow_into": "hold to grow it: %s",
+		"grown": {"fire_blast/punch": "Fireball"},
+		"q_put": "{quick}: put %s on left click",
+		"q_back": "{quick}: %s back",
+		"q_hold_back": "hold {quick}: %s back",
+		"throw_back": "{guard} again: throw it back",
+		"help": {
+			"keys": "Hold {aim}: aim while it fills, let go to cast  ·  {swap} cycles 1, 2, 3  ·  let go early: nothing spent",
+			"first_moves": "1-4 your four moves  ·  hold {aim}: aim while it fills, let go to cast",
+			"direction": "Hold W, S, A or D as you press {aim}: strike, wall or dash  ·  nothing held: the readied move",
+			"radial": "Hold {wheel}: your moves round a wheel, point and let go  ·  hold {aim}: aim, let go to cast"
+		},
+		"_help_strip": "round 4 (HUD): the strip's one help line per scheme, ONE line of 64 characters or fewer with the keys as bound (KitWords.strip_help; the first letter made a capital); shown in the first match and in Practice until 20 casts",
+		"help_strip": {
+			"keys": "{aim}: hold to aim, let go to cast",
+			"first_moves": "1-4 your moves  ·  {aim}: hold to aim, let go to cast",
+			"direction": "Hold W, A, S or D with {aim}: strike, dash or wall",
+			"radial": "Hold {wheel} for the wheel  ·  {aim}: hold, let go to cast"
+		},
+		"rules": {
+			"lock": "Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
+			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
+			"web": "Water douses fire, fire melts ice, air drops stone.",
+			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground."
+		},
+		"passives": {
+			"earth": {"name": "Rooted", "line": "stand still and your locks fill faster, and you are pushed less."},
+			"water": {"name": "Flowing", "line": "your water curves toward where you look for a moment after it leaves."},
+			"fire": {"name": "Footwork", "line": "your locks fill at full speed while you move."},
+			"air": {"name": "Carried wind", "line": "hit straight out of a dash and you knock harder."}
+		},
+		"guards": {
+			"earth": "{guard} catches stones; {guard} again throws them back.",
+			"water": "{guard} on the beat swings their water round you and sends it back; their Air Lance comes back as ice.",
+			"fire": "{guard} on the beat sends fire straight back: the only answer to lightning.",
+			"air": "{guard} on the beat bounces their wind back and drops a stone at your feet."
+		},
+		"controls": "Controls",
+		"controls_line": "your buttons, the rules of the deck, and other ways to pick moves",
+		"controls_head": "%s: your buttons",
+		"other_ways_row": "Other ways to pick moves:  %s",
+		"other_ways_line": "the keys, as above; press for first moves only, direction or the wheel"
+	},
+	"loading": {
+		"_doc": "The ring's loading screen: a current arena screenshot (assets/ui/tidebreak/SOURCE.md) and a caption drawn by lot. No word from any show.",
+		"picture": "res://assets/ui/tidebreak/deck.png",
+		"title": "Tidebreak",
+		"captions": [
+			"Build pressure with each hit. Higher pressure makes the next launch stronger.",
+			"A fall into the water costs a life. Jump, dodge and rise to get back onto the deck.",
+			"The crowd fills the stands before the gong.",
+			"Stone, water, fire and wind: one ring, one rule. Stay on the deck."
+		]
+	},
+	"strip_stock": {
+		"_doc": "Your own strip in the % ring (BendStrip, rule set stock): while you are in the air key 2 shows your Slam's name, key 3 'Dodge', ground-dependent spells grey with 'lands' using SwayCaster.needs_ground; Fire Breath remains usable on the wall key. Key 3 is never lit as readied (it acts at once); your move names dim a shade at 2, 4 and 6 stale copies (stale_alpha); after a hit on a safe body 'safe' for safe_s on your own strip.",
+		"slam": {"earth": "Hammer", "water": "Downpour", "fire": "Axe Kick", "air": "Down Gust"},
+		"dodge": "Dodge",
+		"lands": "lands",
+		"safe": "safe",
+		"safe_s": 0.5,
+		"stale_alpha": [[2, 0.78], [4, 0.6], [6, 0.45]]
+	}
 }

@@ -167,6 +167,8 @@ var calm_s := NpcBrain.CALM_S
 var held := false
 ## Its feet held (a bend's root, BendStatus.root): it does not walk, its brain still thinks and it still casts.
 var feet_held := false
+## A jump asked for this frame (jump(): an element bot over a wave along the deck), m/s up; 0 none.
+var _jump_v := 0.0
 ## Never killed (Tidebreak's ring, RingRules; set on its competitors): every death (a blow, a mortal wound, a bleed-out, a
 ## script's die()) leaves him at 1 health, his wounds stopped, and emits winded(by) instead.
 var no_death := false
@@ -292,6 +294,12 @@ var _cap: CapsuleShape3D
 var _col: CollisionShape3D
 var _bark: Label3D
 var _bark_t := 0.0
+## Tidebreak's % ring (round 3, smash_r3 spec §9.1, §4.9): its RingMoves while a stock-rules ring installed one (it sets this
+## itself), else null; and the pad its mind fills (NpcPad: the same intent as the player's keys). With a RingMoves the body
+## moves only through RingMoves.pre(pad.intent(), dt): it never writes its own velocity. With none, exactly as before.
+var ring_moves: RingMoves = null
+var pad := NpcPad.new()
+var _ring_lean := false
 
 
 func _enter_tree() -> void:
@@ -445,6 +453,8 @@ func go(to: Vector3, speed: float, arrive := 0.8, straight := false) -> void:
 
 func halt() -> void:
 	_goal = Vector3.INF
+	if ring_moves != null:
+		pad.move = Vector3.ZERO
 
 
 func arrived() -> bool:
@@ -481,6 +491,18 @@ func busy() -> bool:
 func knock_t() -> float:
 	var kn := BendKnock.peek(self)
 	return kn.knock_t if kn != null else 0.0
+
+
+## A jump off the floor at `mps` up (an element bot jumping a wave along the deck: NpcBending; Tidebreak's floor rule, the
+## player's Space). Its lock goes on (a jump never gates one). False when it is not on the floor, dead, held, or its feet are.
+func jump(mps: float) -> bool:
+	if _dead or held or feet_held or not is_on_floor() or mps <= 0.0:
+		return false
+	if ring_moves != null:
+		pad.press("jump")                           # (the % ring: Space on its pad, the ring's full jump)
+		return true
+	_jump_v = mps
+	return true
 
 
 ## In the air from a knock-up (BendKnock), until back on the floor.
@@ -930,6 +952,8 @@ func _strike() -> void:
 
 # ---------------------------------------------------------------- moving
 func _move(dt: float) -> void:
+	if ring_moves != null and _ring_move(dt):
+		return                                      # (the % ring: RingMoves owns the body)
 	# A knock (BendKnock, the same model as the player's): its own velocity taken out of the body's first, the steering eased
 	# on what is left (none through the knock's reaction window), the knock's decayed velocity added back before the move;
 	# launched, the floor clamp skipped and the player's gravity (so a knock-up lifts it as high and as long as him). A bend's
@@ -951,10 +975,13 @@ func _move(dt: float) -> void:
 		# (a broken leg's bone: a limp at a part of the walk; short of breath: no running)
 		speed = minf(speed, WALK_SPEED * limp if limp < 0.95 else WALK_SPEED)
 	var v := velocity if kn == null else kn.base_of(velocity)
-	if launched:
+	if _jump_v > 0.0:
+		v.y = _jump_v                               # (a jump begun this frame: off the floor, its own gravity from here)
+		_jump_v = 0.0
+	elif launched:
 		v.y -= BendKnock.launch_gravity() * dt
 	elif not is_on_floor():
-		v.y -= GRAVITY * dt
+		v.y -= (RingMoves.gravity() if ring_moves != null else GRAVITY) * dt
 	else:
 		v.y = -0.5
 	var hv := Vector2(v.x, v.z)
@@ -991,6 +1018,43 @@ func _move(dt: float) -> void:
 	else:
 		_stuck_t = maxf(_stuck_t - dt, 0.0)
 	_last = global_position
+
+
+## The % ring's frame (spec §9.1): a go() order's way written on the pad (pad.move, a share of the run; sprint past the
+## run), the pad's intent handed to RingMoves (its body moved there, the player's own mover), the body turned to its facing
+## (RingMoves turns it to the deck on the edge). False: not this frame (RingMoves did not take it).
+func _ring_move(dt: float) -> bool:
+	var kn := BendKnock.peek(self)
+	var reeling := kn != null and kn.knock_t > 0.0
+	var dir := Vector3.ZERO
+	var speed := 0.0
+	if _goal != Vector3.INF:
+		if not busy() and not _surrendered and not reeling and not feet_held:
+			var w := _walk_to(_goal, _speed, _arrive)
+			dir = w[0]
+			speed = w[1]
+		pad.move = Vector3(dir.x, 0.0, dir.z).normalized() * clampf(speed / RUN_SPEED, 0.0, 1.0) if speed > 0.0 else Vector3.ZERO
+		pad.hold("sprint", speed > RUN_SPEED + 0.45)
+	if not _ring_lean and body != null and body.sk != null:
+		_ring_lean = true
+		RingMoves.lean_on(body.sk, ring_moves)
+	if AirTalents.crust_ahead(self, pad.move):
+		jump(1.0)                                   # (a frost crust across its way, a worn talent's: jumped, as anyone can)
+	if not ring_moves.pre(pad.intent(), dt):
+		return false
+	var moving := pad.move.length() > 0.05
+	if moving and face_lock == Vector3.INF:
+		_face = lerp_angle(_face, atan2(-pad.move.x, -pad.move.z), clampf(dt * 8.0, 0.0, 1.0))
+	elif face_lock != Vector3.INF:
+		face_point(face_lock)
+	if ring_moves.body_yaw() == INF:
+		rotation.y = lerp_angle(rotation.y, _face, clampf(dt * 9.0, 0.0, 1.0))
+	if moving and global_position.distance_to(_last) < RingMoves.num("physics", "run", 5.0) * pad.move.length() * dt * 0.25:
+		_stuck_t += dt
+	else:
+		_stuck_t = maxf(_stuck_t - dt, 0.0)
+	_last = global_position
+	return true
 
 
 ## Which way to go to `to` now: [direction, speed] along the walk grid's plan (NavMover), or straight at it, turned aside by a
@@ -1057,8 +1121,29 @@ func _probe(dir: Vector3) -> float:
 
 
 ## The clip for what it is doing now (the actions that play their own keep theirs).
+## The % ring's body-state clip (RingMoves.clip_state: its own clip when it is in, else its stand-in; a loop played again as
+## it ends), the same as the player's SwayPose plays. False: none now (its own locomotion and casts).
+func _ring_pose() -> bool:
+	var st := ring_moves.clip_state()
+	if st == "":
+		return false
+	var c := RingMoves.clip_for(st)
+	var nm := String(c[0])
+	if nm == "" or not (body.has_clip(nm) or (NpcBody._add_pose(nm) and body.has_clip(nm))):
+		return false
+	var loop := bool(RingMoves.clip_spec(st).get("loop", false))
+	if body.clip != nm or (loop and body.ap != null and not body.ap.is_playing()):
+		body.set_arms("")
+		body.play_once(nm, 0.1)
+	return true
+
+
 func _pose() -> void:
-	if body == null or action in ["swing", "flinch", "dead", "down", "cast"]:
+	if body == null or action in ["swing", "dead", "down", "cast"]:
+		return
+	if ring_moves != null and _ring_pose():
+		return                                      # (the % ring's body-state clip: the hang, a roll, the Rise...)
+	if action == "flinch":
 		return
 	if (knock_t() > 0.0 or is_launched()) and body.clip.begins_with(NpcBody.KNOCK_PREFIX):
 		return                                      # (a knock's own clip plays while the knock lasts: NpcBody.play_knock)
@@ -1085,10 +1170,21 @@ func _pose() -> void:
 		body.play("crouch", 0.4)
 		return
 	var alert := brain != null and brain.state in [NpcBrain.State.SUSPICIOUS, NpcBrain.State.COMBAT]
-	var hs := Vector2(velocity.x, velocity.z).length()
+	var motion := velocity
+	if ring_moves != null and not has_gun:
+		var kn := BendKnock.peek(self)
+		motion = kn.base_of(velocity) if kn != null else velocity
+	var hs := Vector2(motion.x, motion.z).length()
 	var key := "idle"
 	var arms := ""
 	var rate := 1.0
+	if hs > 0.25 and ring_moves != null and not has_gun:
+		# The ring bot circles its opponent with its facing locked. Its feet follow
+		# actual steering, including while the body turns, rather than always running forward.
+		var gait := "crouch_walk" if is_crouching else ("sprint" if hs > RUN_SPEED + 0.45 else ("run" if hs > WALK_SPEED + 0.6 else "walk"))
+		body.play_locomotion(gait, Vector2(motion.dot(global_basis.x), motion.dot(forward())))
+		body.set_arms("")
+		return
 	if hs > 0.25 and face_lock != Vector3.INF and has_gun:
 		# a step out to peek and back, facing the foe: the aimed side-steps (left, right) and the step back, at their own pace
 		var fwd := forward()

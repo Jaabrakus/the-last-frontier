@@ -2,6 +2,8 @@ shader_type spatial;
 // Cel facets (ToonFx): each face flat (its normal from the screen), lit by the cel sun in three hard tones, a light rim where
 // it turns away, and for ice a glint that sweeps across now and then. Ice shards and crystals, rock chunks and debris (as
 // meshes or particles).
+// Round 4 (LOOKS): `range_on` (instance, a bolt's core: the rock, the ice crystal) grows it about its origin with its
+// distance from the camera (fx_common range_scale); thinned near the camera (near_cut).
 render_mode unshaded, cull_back, shadows_disabled, fog_disabled;
 
 #include "res://shaders/bend_fx/fx_common.gdshaderinc"
@@ -16,14 +18,23 @@ uniform float rim = 0.62;
 uniform float rim_on = 1.0;
 uniform float glint = 1.0;
 uniform float glow = 1.0;
+instance uniform float range_on = 0.0;
+// (your own Ice Wall seen through, OwnFade: `fade` in a screen-door as form_matter's; 1 whole, every other use)
+instance uniform float fade = 1.0;
 
 varying vec3 v_wpos;
 
 void vertex() {
+	if (range_on > 0.5) {
+		VERTEX *= range_scale(length(CAMERA_POSITION_WORLD - MODEL_MATRIX[3].xyz));
+	}
 	v_wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy) || dither_cut(fade, FRAGCOORD.xy)) {
+		discard;
+	}
 	vec3 N = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
 	if (dot(N, VIEW) < 0.0) {
 		N = -N;

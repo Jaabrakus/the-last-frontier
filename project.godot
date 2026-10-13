@@ -10,13 +10,17 @@ config_version=5
 
 [application]
 
-config/name="Frontier"
-config/description="Colonial frontier third-person shooter: bow, musket and flintlock pistol."
+config/name="Tidebreak"
+config/description="Elemental arena combat. An early playable demo with four elements, aerial moves and water ring-outs."
+; Preserve existing desktop saves, settings and character looks across the title change.
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Godot/app_userdata/Frontier"
+config/custom_user_dir_name.linux="godot/app_userdata/Frontier"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7")
-boot_splash/bg_color=Color(0.03, 0.022, 0.014, 1)
+boot_splash/bg_color=Color(0.11, 0.145, 0.208, 1)
 boot_splash/stretch_mode=4
-boot_splash/image="res://assets/ui/splash.png"
+boot_splash/image="res://assets/ui/tidebreak_splash.png"
 boot_splash/minimum_display_time=1200
 
 [display]
@@ -74,6 +78,10 @@ sky_time={
 sky_cloud_offset={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
+}
+softlook_ambient={
+"type": "float",
+"value": 0.45
 }
 wind_direction={
 "type": "vec2",

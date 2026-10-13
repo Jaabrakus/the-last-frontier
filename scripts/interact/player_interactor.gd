@@ -206,6 +206,16 @@ func _process(delta: float) -> void:
 			_notice.text = ""
 
 
+## Whether E is an element fighter's guard now (SwayCaster.GUARD), never the interact key: in the ring, and in the duel while
+## a round is fought (its pause after a round keeps E for the fallen man's inspect), so a guard near a teammate or a downed
+## foe never talks to him or picks anything up (Tidebreak round 2: skills_r2 spec §2.1).
+func _e_guards() -> bool:
+	if BendPoses.element_of(player) == "":
+		return false
+	var duel := DuelMode.find(get_tree())
+	return duel == null or duel.player != player or duel.phase == DuelMode.Phase.FIGHT
+
+
 func _physics_process(_delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
@@ -215,6 +225,14 @@ func _physics_process(_delta: float) -> void:
 		target = null
 		_hl_nodes.clear()
 		_update_label()
+	if _e_guards():
+		_was_down = false
+		_press_t = -1.0
+		_close_menu()
+		_set_target(null)
+		_set_place({})
+		_set_more("")
+		return
 	# E's own edges from its held state (the "just" flags of an action pressed from script can lag the held
 	# state by a physics frame)
 	var down := Input.is_action_pressed(ThrownPickup.INTERACT)

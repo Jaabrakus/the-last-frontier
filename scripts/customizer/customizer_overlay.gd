@@ -25,6 +25,10 @@ extends CanvasLayer
 ## PlayerAppearance.dress() path as the game), idling, with a studio or a frontier light.
 
 const IDLE := &"actor_b/actor_b-p-stealth-idle"
+## The screen's margin, the left column's width and its sliders' label column (px).
+const MARGIN := 16
+const LEFT_W := 520
+const SLIDER_LABEL_W := 262
 
 var app: PlayerAppearance
 var look := {}
@@ -123,12 +127,17 @@ func _build_ui() -> void:
 	bg.color = Color(0.05, 0.055, 0.06, 1.0)      # opaque: the HUD text showed through the title
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(bg)
+	# (a margin round the screen: the title and the sliders' labels began at the window's left edge)
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, MARGIN)
+	root.add_child(margin)
 	var hb := HBoxContainer.new()
-	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hb.add_theme_constant_override("separation", 10)
-	root.add_child(hb)
+	hb.add_theme_constant_override("separation", 16)
+	margin.add_child(hb)
 	var left := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(460, 0)
+	left.custom_minimum_size = Vector2(LEFT_W, 0)
 	hb.add_child(left)
 	var title := Label.new()
 	title.text = "Character"
@@ -204,7 +213,7 @@ func _build_ui() -> void:
 		vrow.add_child(b)
 	var light := OptionButton.new()
 	light.add_item("Studio light", 0)
-	light.add_item("Frontier light", 1)
+	light.add_item("Game daylight", 1)
 	light.item_selected.connect(_set_light)
 	vrow.add_child(light)
 	var hint := Label.new()
@@ -220,10 +229,11 @@ func _label(t: String) -> Label:
 
 func _slider(key: String, label: String, lo: float, hi: float, parent: Container, cb: Callable) -> HSlider:
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
 	parent.add_child(row)
 	var l := _label(label)
-	l.custom_minimum_size = Vector2(210, 0)
-	l.clip_text = true
+	# (the label column as wide as the longest label, "Nose profile (straight / convex)": it was cut at 210 px)
+	l.custom_minimum_size = Vector2(SLIDER_LABEL_W, 0)
 	row.add_child(l)
 	var s := HSlider.new()
 	s.min_value = lo
@@ -479,16 +489,15 @@ func _refresh_presets() -> void:
 		c.queue_free()
 	var sex := 1.0 if float(look.get("sex", 0.0)) >= 0.5 else 0.0
 	var people_id := String(look.get("people", ""))
-	var world := CharacterPeoples.is_world(people_id)
 	var n := 0
 	for pr: Dictionary in CharacterPeoples.presets(people_id, sex):
 		n += 1
 		var b := Button.new()
-		b.text = String(pr.label) if not world else "Face %d" % n
+		b.text = String(pr.label)
 		var pid := String(pr.id)
 		b.pressed.connect(func() -> void:
 			var lk := CharacterPeoples.preset_look(pid)
-			lk["people"] = people_id          # (a world people's faces are real peoples' presets: still its look)
+			lk["people"] = people_id
 			look = _keep_outfit(lk)
 			_refresh_sliders()
 			_update_preview())

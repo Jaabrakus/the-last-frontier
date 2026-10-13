@@ -1,0 +1,96 @@
+{
+ "roots": [
+  "/Game/VFX/Materials/M_f_ParticleGeneric_Unlit"
+ ],
+ "shader": "fam_generic_unlit",
+ "template": false,
+ "u": {
+  "mask_tex": [
+   "t",
+   [
+    "Opacity mask"
+   ]
+  ],
+  "tex1": [
+   "t",
+   [
+    "Texture 1"
+   ]
+  ],
+  "erosion_tex": [
+   "t",
+   [
+    "AlphaErosion"
+   ]
+  ],
+  "brightness": [
+   "s",
+   "Brightness",
+   1.0,
+   1.0
+  ],
+  "depth_opacity": [
+   "s",
+   "Depth Opacity",
+   1.0,
+   1.0
+  ],
+  "fade_distance": [
+   "s",
+   "Fade Distance",
+   0.01,
+   0.0
+  ],
+  "fade_length": [
+   "s",
+   "Fade Length",
+   0.01,
+   10.0
+  ],
+  "fade_offset": [
+   "s",
+   "Fade Distance Offset",
+   0.01,
+   0.0
+  ],
+  "texture_scale": [
+   "s",
+   "Texture Scale",
+   1.0,
+   1.0
+  ],
+  "pan": [
+   "v2",
+   "Horizontal Pan",
+   "Vertical Pan"
+  ],
+  "alpha_start": [
+   "s",
+   "Alpha Start",
+   1.0,
+   0.99
+  ],
+  "has_panner": [
+   "sw",
+   "Has Panner",
+   false
+  ],
+  "has_rotation": [
+   "sw",
+   "Has Rotational Animation",
+   false
+  ],
+  "has_erosion": [
+   "sw",
+   "Has Alpha Erosion",
+   false
+  ],
+  "dyn_opacity": [
+   "dyn",
+   [
+    "Opacity"
+   ]
+  ]
+ },
+ "notes": "Spellbreak (Proletariat) M_f_ParticleGeneric_Unlit: every instance Translucent/Unlit/one-sided, all sprites. Evidence: params Opacity mask (TexCoord0, no coords input), Texture 1 (group Alpha, coords input), AlphaErosion; scalars Brightness, Depth Opacity, Fade Distance, Fade Length, Fade Distance Offset, Texture Scale, Horizontal/Vertical Pan, Alpha Start (non-default only on erosion instances: 1.0, 100); switches Has Panner / Has Rotational Animation / Has Alpha Erosion; DynamicParameter Opacity; functions CameraDepthFade, ScaleUVsByCenter, Luos_alphaErosion ('Erodes alpha mask instead of fade out'). All textures greyscale. AUTHORED: colour = particle colour * Brightness * Opacity mask.r (mask is in param group 'Color'; a flat-colour variant turned HDR 10-50 soft glows into white discs); opacity = mask.r * Texture1.r * (alpha or erosion) * dyn Opacity * Depth Opacity * depth fade * camera fade; Texture 1 UV = (uv-0.5)*scale+0.5 then panner/rotator (UE Rotator default 0.25 rad/s); erosion edge width = 1/Alpha Start, remapped so alpha 1 = full mask, alpha 0 = gone; erosion sampled at TexCoord0; cull_disabled although the source is one-sided (sprites are camera-facing in UE). Fixes vs uber: uber forced erosion on for every instance (function call present in root), ignored the switches/pan/rotation/Depth Opacity, and tiled the Opacity mask by Texture Scale (breaking sub-UV)."
+}

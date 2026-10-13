@@ -8,8 +8,8 @@ extends CanvasLayer
 ##                       the marine's aim, NpcFighter.SKILLS), at once (DuelMode.set_difficulty)
 ##   Element: Earth      the player's element in turn: a new duel as it
 ##   Opponent: Earth     the opponent's element in turn (DuelMode.foe_element): a new duel against it
-##   Control scheme: Keys  how moves are chosen, in turn (MatchSetup.set_scheme: keys, direction, wheel, simple; the same
-##                       one as the ring's, data/bending/schemes.json): at once, kept
+##   Controls            the element's buttons (round 2 of the skills, KitWords), the four rules, and "Other ways to pick
+##                       moves: Keys" (MatchSetup.set_scheme in turn, the same one as the ring's: at once, kept)
 ##   Settings            the main menu's (GameSettings)
 ##   Main menu           back to the title (nothing is saved in a duel)
 ##   Quit
@@ -73,8 +73,12 @@ func _ready() -> void:
 	_diff = _row("Difficulty:  %s" % DuelMode.difficulty, cycle_difficulty, "the opponent's skill: how quick its locks, how close its aim")
 	_elem = _row("Element:  %s" % DuelMode.element.capitalize(), cycle_element, "earth, water, fire, air: a new duel as it")
 	_foe = _row("Opponent:  %s" % DuelMode.foe_element.capitalize(), cycle_foe, "the opponent's element: a new duel against it")
-	_scheme = _row(MatchSetup.scheme_row(), cycle_scheme, MatchSetup.scheme_row_line())
+	var ctl := _row(KitWords.w("controls", "Controls"), _controls, KitWords.w("controls_line"))
+	ctl.name = "Controls"
+	# (the other ways to pick moves: a row of the Controls panel, round 2; kept here, laid into the panel as it opens)
+	_scheme = MenuUI.item(KitWords.other_ways_row(), 26, KitWords.other_ways_line())
 	_scheme.name = "Scheme"
+	_scheme.pressed.connect(cycle_scheme)
 	_row("Settings", _settings)
 	_row("Main menu", to_menu)
 	_row("Quit", _quit)
@@ -160,7 +164,12 @@ func cycle_element() -> void:
 	var list := Bending.ELEMENTS
 	DuelMode.element = String(list[(list.find(DuelMode.element) + 1) % list.size()])
 	if _elem != null:
-		_elem.text = "Element:  %s" % DuelMode.element.capitalize()
+		var t := _elem.find_child("Text", true, false) as Label
+		if t:
+			t.text = "Element:  %s" % DuelMode.element.capitalize()
+		var s := _elem.find_child("Sub", true, false) as Label
+		if s:
+			s.text = KitWords.passive_line(DuelMode.element)        # (the element's one passive, round 2)
 	if duel != null:
 		duel.choosing = false
 		duel.lay_bar()
@@ -185,6 +194,8 @@ func cycle_scheme() -> void:
 	_paint_scheme()
 	_note.text = String((MatchSetup.schemes_data().get("words", {}) as Dictionary).get("changed", "Control scheme: %s")) \
 			% MatchSetup.scheme_label()
+	if _scheme.get_parent() == _panel:
+		_controls()                           # (the Controls panel open: it follows)
 
 
 func _paint_scheme() -> void:
@@ -192,10 +203,31 @@ func _paint_scheme() -> void:
 		return
 	var t := _scheme.find_child("Text", true, false) as Label
 	if t:
-		t.text = MatchSetup.scheme_row()
+		t.text = KitWords.other_ways_row()
 	var s := _scheme.find_child("Sub", true, false) as Label
 	if s:
-		s.text = MatchSetup.scheme_row_line()
+		s.text = KitWords.other_ways_line()
+
+
+## The player's element's buttons (round 2 of the skills, KitWords: its passive and guard, each button's plain names), the
+## four rules, and "Other ways to pick moves" (the scheme in turn: at once, kept; the same as the ring's).
+func _controls() -> void:
+	_clear_panel()
+	var el := DuelMode.element
+	_panel.add_child(MenuUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
+	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
+	for line in KitWords.pick_lines(el):
+		_panel.add_child(MenuUI.label(String(line), 17, MenuUI.DIM, true))
+	for line in KitWords.kit_lines(el):
+		_panel.add_child(MenuUI.label(String(line), 18, MenuUI.INK, true))
+	for line in KitWords.rule_lines():
+		_panel.add_child(MenuUI.label(String(line), 16, MenuUI.DIM, true))
+	_paint_scheme()
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_scheme) and _scheme.get_parent() == null:
+		_scheme.queue_free()                  # (the scheme's row out of the Controls panel: freed with the menu)
 
 
 func cycle_difficulty() -> void:
@@ -221,7 +253,8 @@ func _paint_diff() -> void:
 func _clear_panel() -> void:
 	for c in _panel.get_children():
 		_panel.remove_child(c)
-		c.queue_free()
+		if c != _scheme:
+			c.queue_free()                    # (the scheme's row is kept: it is laid in again)
 
 
 func _settings() -> void:

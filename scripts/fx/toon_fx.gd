@@ -7,8 +7,14 @@ extends RefCounted
 ## style: "cel" (hard bands) or "ink" (the same with a dark outline round every shape, a drawn look). A tool can set it with
 ## Engine meta "bend_fx_style" before the first effect is made.
 ## The per-scene pool that plays them, caps them and reuses their nodes: ToonFxPool. The trail along a line: ToonRibbon.
+## Round 4 (LOOKS; the owner: "not blocky sprites", nothing of your own filling your view; data/bending/fx_looks.json, looks):
+## the flames blend soft (toon_flame, flame_field) over a soft additive glow (flame_glow, toon_glow), Breath's smoke is a lit
+## volume (puff_smoke, toon_smoke), every effect thins in a screen-door near the camera (near_alpha mirrors the shaders'
+## near_cut), a bolt's core grows at range (range_scale mirrors the shaders'), each bolt casts its own shadow from a
+## shadow-only core (shadow_mat), and is_own tells your own body (your own Wind Guard and walls are drawn for your eye).
 
 const SHADERS := {
+	"monsoon_seal": preload("res://shaders/bend_fx/monsoon_seal.gdshader"),
 	"flame": preload("res://shaders/bend_fx/toon_flame.gdshader"),
 	"puff": preload("res://shaders/bend_fx/toon_puff.gdshader"),
 	"spark": preload("res://shaders/bend_fx/toon_spark.gdshader"),
@@ -18,7 +24,11 @@ const SHADERS := {
 	"bolt": preload("res://shaders/bend_fx/toon_bolt.gdshader"),
 	"sprite": preload("res://shaders/bend_fx/toon_sprite.gdshader"),
 	"mark": preload("res://shaders/bend_fx/toon_mark.gdshader"),
+	"glow": preload("res://shaders/bend_fx/toon_glow.gdshader"),
+	"smoke": preload("res://shaders/bend_fx/toon_smoke.gdshader"),
 }
+## The looks' numbers (round 4).
+const LOOKS_PATH := "res://data/bending/fx_looks.json"
 
 static var style := "cel"
 ## The effects' own dice (their seeds, jitters, forks): never the global RNG, so drawing them (or not, headless) leaves the
@@ -32,6 +42,8 @@ static var _mats := {}
 static var _meshes := {}
 static var _recipes := {}
 static var _style_used := ""
+static var _looks := {}
+static var _shadow_mat: StandardMaterial3D
 
 
 ## The style in force: the Engine meta a tool set, else `style`.
@@ -67,6 +79,8 @@ static func mat(key: String) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	var p := {}
 	match key:
+		"monsoon_seal":
+			m.shader = SHADERS.monsoon_seal
 		"flame":
 			m.shader = SHADERS.flame
 		"flame_strip":
@@ -75,6 +89,22 @@ static func mat(key: String) -> ShaderMaterial:
 		"flame_low":
 			m.shader = SHADERS.flame
 			p = {"speed": 1.8, "turb": 1.1, "nscale": Vector2(1.4, 1.1)}
+		"flame_wave":
+			# (round 4: the Kick's rows, their heat in each instance's colour)
+			m.shader = SHADERS.flame
+			p = {"speed": 1.8, "turb": 1.0, "nscale": Vector2(1.4, 1.1), "heat_on": 1.0}
+		"flame_lip":
+			m.shader = SHADERS.flame
+			p = {"mode": 2, "speed": 3.0, "turb": 0.9, "nscale": Vector2(1.0, 2.2), "glow": 2.6, "embers": 0.0}
+		"flame_orb":
+			# (round 4: a fireball's core, soft-edged; drawn over its tongues)
+			m.shader = SHADERS.flame
+			p = {"mode": 3, "glow": 2.4}
+			m.render_priority = 1
+		"flame_glow":
+			m.shader = SHADERS.glow
+			p = {"strength": float(looks("flame").get("glow", 0.55))}
+			m.render_priority = -1                       # (under its flames: drawn first)
 		"puff_fire":
 			m.shader = SHADERS.puff
 			p = {"mode": 0, "glow": 1.8}
@@ -83,8 +113,12 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.84, 0.88, 0.93), "c_c": Color(0.6, 0.67, 0.77),
 					"c_ink": Color(0.25, 0.3, 0.38)}
 		"puff_smoke":
-			m.shader = SHADERS.puff
-			p = {"mode": 1, "c_a": Color(0.6, 0.58, 0.55), "c_b": Color(0.4, 0.38, 0.36), "c_c": Color(0.24, 0.23, 0.22)}
+			# (round 4: a lit volume, its own shader; the smoke kind only)
+			var sm := looks("smoke")
+			var gk: Array = sm.get("grow", [0.85, 1.35])
+			m.shader = SHADERS.smoke
+			p = {"curl": float(sm.get("curl", 1.6)), "grow_k": Vector2(float(gk[0]), float(gk[1])), "tint_k": float(sm.get("tint", 0.55)),
+					"deck_fade_m": float(sm.get("deck_fade_m", 0.6)), "opacity": float(sm.get("opacity", 0.92))}
 		"puff_dust":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.9, 0.8, 0.62), "c_b": Color(0.7, 0.58, 0.43), "c_c": Color(0.46, 0.37, 0.27),
@@ -114,9 +148,17 @@ static func mat(key: String) -> ShaderMaterial:
 		"spark_line":
 			m.shader = SHADERS.spark
 			p = {"mode": 0, "c_core": Color(1.0, 1.0, 1.0), "glow": 1.3, "rim_glow": 1.0, "stretch": 12.0}
+		"spark_sb":
+			# (the Spellbreak-shaded bolt's sparks, BendLooks.SB_BOLT: spark_elec's shader (nothing new to compile), a
+			# lavender core in the bolt's violet)
+			m.shader = SHADERS.spark
+			p = {"mode": 0, "c_core": Color(0.8, 0.72, 1.0), "glow": 3.2, "rim_glow": 1.8, "stretch": 6.0}
 		"star":
 			m.shader = SHADERS.spark
 			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6}
+		"star_sb":
+			m.shader = SHADERS.spark
+			p = {"mode": 1, "c_core": Color(0.84, 0.78, 1.0), "glow": 2.6, "rim_glow": 1.6}
 		"star_still":
 			m.shader = SHADERS.spark
 			p = {"mode": 1, "c_core": Color(1.0, 1.0, 1.0), "glow": 3.0, "rim_glow": 1.6, "twinkle": 1.0}
@@ -159,6 +201,18 @@ static func mat(key: String) -> ShaderMaterial:
 		"wind_arc":
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1}
+		"wind_arc_slice":
+			# (the Slice's blade: a deeper blue edge and an ink line, so it reads on the pale planks and apart from the Gust's
+			# pale wave; the move review 2026-10-12)
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.12, "glow": 1.25,
+					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.12, 0.28, 0.55), "ink": 0.7}
+		"wind_arc_pull":
+			# (the Pull's hook: teal, inked, its curve facing back to the caster)
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.15, "glow": 1.15,
+					"c_main": Color(0.85, 1.0, 0.97, 0.92), "c_edge": Color(0.25, 0.75, 0.75, 0.85), "c_ink": Color(0.08, 0.35, 0.38),
+					"ink": 0.6}
 		"ice":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
@@ -189,14 +243,75 @@ static func mat(key: String) -> ShaderMaterial:
 		_:
 			push_warning("ToonFx: no material %s" % key)
 			m.shader = SHADERS.puff
+	if m.shader == SHADERS.flame:
+		var fl := looks("flame")
+		for fk: String in ["soft", "warp", "embers", "deck_fade_m"]:
+			if not p.has(fk) and fl.has(fk):
+				m.set_shader_parameter(fk, float(fl[fk]))
+	var nr := looks("near")
+	var rg := looks("range")
+	m.set_shader_parameter(&"near_m", float(nr.get("near_m", 2.5)))
+	m.set_shader_parameter(&"far_m", float(nr.get("far_m", 4.0)))
+	m.set_shader_parameter(&"near_alpha", float(nr.get("near_alpha", 0.25)))
+	m.set_shader_parameter(&"range_from_m", float(rg.get("from_m", 14.0)))
+	m.set_shader_parameter(&"range_full_m", float(rg.get("full_m", 25.0)))
+	m.set_shader_parameter(&"range_max", float(rg.get("max", 2.2)))
 	for k in p:
 		m.set_shader_parameter(k, p[k])
-	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark]:
+	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke]:
 		m.set_shader_parameter(&"noise", noise())
 	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
 	m.set_shader_parameter(&"fx_gain", gain)
 	_mats[key] = m
 	return m
+
+
+## The looks' numbers under `key` (data/bending/fx_looks.json, read once; {} when it has none).
+static func looks(key: String) -> Dictionary:
+	if _looks.is_empty():
+		var f := FileAccess.open(LOOKS_PATH, FileAccess.READ)
+		if f != null:
+			var d: Variant = JSON.parse_string(f.get_as_text())
+			if d is Dictionary:
+				_looks = d
+		if _looks.is_empty():
+			_looks = {"_": true}
+	var v: Variant = _looks.get(key, {})
+	return v if v is Dictionary else {}
+
+
+## How much of an effect shows `d` m from the camera (the shaders' near_fade: near_alpha at near_m and nearer, whole from
+## far_m; drawn as a screen-door, so nothing needs sorting).
+static func near_alpha(d: float) -> float:
+	var nr := looks("near")
+	var n0 := float(nr.get("near_m", 2.5))
+	var n1 := float(nr.get("far_m", 4.0))
+	return lerpf(float(nr.get("near_alpha", 0.25)), 1.0, clampf((d - n0) / maxf(n1 - n0, 1e-3), 0.0, 1.0))
+
+
+## A bolt's drawn core scale `d` m from the camera (the shaders' range_scale; its hitbox unchanged).
+static func range_scale(d: float) -> float:
+	var rg := looks("range")
+	var a := float(rg.get("from_m", 14.0))
+	var b := float(rg.get("full_m", 25.0))
+	return 1.0 + (float(rg.get("max", 2.2)) - 1.0) * clampf((d - a) / maxf(b - a, 1e-3), 0.0, 1.0)
+
+
+## The material of a bolt's shadow-only core (shared): drawn into the shadows only, never seen.
+static func shadow_mat() -> StandardMaterial3D:
+	if _shadow_mat == null:
+		_shadow_mat = StandardMaterial3D.new()
+		_shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_shadow_mat.albedo_color = Color(0.2, 0.2, 0.2)
+	return _shadow_mat
+
+
+## Whether `body` is this machine's own player (the first of the group "player"): his own guard and walls are drawn for his
+## eye (thinner, faded by his camera); everyone else's read of them is unchanged.
+static func is_own(body: Node) -> bool:
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree() or not body.is_in_group(&"player"):
+		return false
+	return body.get_tree().get_first_node_in_group(&"player") == body
 
 
 ## Every effect's brightness `g` (the shaders' fx_gain; the shared materials now and those made later).
@@ -256,6 +371,28 @@ static func band_mesh(r0: float, r1: float, h: float, segs := 28) -> Mesh:
 		for i in segs:
 			var a0 := TAU * i / segs
 			var a1 := TAU * (i + 1) / segs
+			var u0 := float(i) / segs
+			var u1 := float(i + 1) / segs
+			var p00 := Vector3(cos(a0) * r0, 0.0, sin(a0) * r0)
+			var p10 := Vector3(cos(a1) * r0, 0.0, sin(a1) * r0)
+			var p01 := Vector3(cos(a0) * r1, h, sin(a0) * r1)
+			var p11 := Vector3(cos(a1) * r1, h, sin(a1) * r1)
+			for v: Array in [[p00, Vector2(u0, 0)], [p01, Vector2(u0, 1)], [p11, Vector2(u1, 1)],
+					[p00, Vector2(u0, 0)], [p11, Vector2(u1, 1)], [p10, Vector2(u1, 0)]]:
+				st.set_uv(v[1])
+				st.set_normal(Vector3((v[0] as Vector3).x, 0.0, (v[0] as Vector3).z).normalized())
+				st.add_vertex(v[0])
+		return st.commit())
+
+
+## An open band round local Y like band_mesh, but only `span` rad of it, centred on -Z (forward): a wave's front.
+static func band_arc_mesh(r0: float, r1: float, h: float, span: float, segs := 16) -> Mesh:
+	return _cached("band_arc_%.2f_%.2f_%.2f_%.2f_%d" % [r0, r1, h, span, segs], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in segs:
+			var a0 := -PI * 0.5 + span * (float(i) / segs - 0.5)
+			var a1 := -PI * 0.5 + span * (float(i + 1) / segs - 0.5)
 			var u0 := float(i) / segs
 			var u1 := float(i + 1) / segs
 			var p00 := Vector3(cos(a0) * r0, 0.0, sin(a0) * r0)
@@ -412,9 +549,22 @@ static func recipe(key: String) -> Dictionary:
 					if key == "spark_fire" else (ramp([[0.0, Color(0.55, 0.75, 1.0, 1.0)], [1.0, Color(0.4, 0.55, 1.0, 0.0)]])
 					if key == "spark_elec" else ramp([[0.0, Color(0.8, 0.92, 1.0, 1.0)], [1.0, Color(0.7, 0.85, 1.0, 0.0)]]))
 			r.amount = 48
+		"spark_sb":
+			# (the sparks round the Spellbreak-shaded bolt, BendLooks.SB_BOLT: a lavender core, the bolt's violet rim)
+			r.mat = mat("spark_sb")
+			pm.particle_flag_align_y = true
+			pm.angle_min = 0.0
+			pm.angle_max = 0.0
+			pm.color_ramp = ramp([[0.0, Color(0.52, 0.4, 1.0, 1.0)], [1.0, Color(0.42, 0.28, 1.0, 0.0)]])
+			r.amount = 48
 		"star":
 			r.mat = mat("star")
 			pm.color_ramp = ramp([[0.0, Color(0.6, 0.85, 1.0, 1.0)], [0.7, Color(0.6, 0.85, 1.0, 0.8)], [1.0, Color(0.6, 0.85, 1.0, 0.0)]])
+			r.amount = 24
+		"star_sb":
+			# (the stars round the Spellbreak-shaded bolt: a lavender core, the bolt's violet rim)
+			r.mat = mat("star_sb")
+			pm.color_ramp = ramp([[0.0, Color(0.56, 0.44, 1.0, 1.0)], [0.7, Color(0.56, 0.44, 1.0, 0.8)], [1.0, Color(0.46, 0.34, 1.0, 0.0)]])
 			r.amount = 24
 		"shard":
 			r.mesh = shard_mesh(1.0, 0.22, 3, 5)

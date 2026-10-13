@@ -23,8 +23,9 @@ extends CanvasLayer
 ## those keys wait (they reached the Tattoos row under it); Esc or B closes the editor.
 ## Every change dresses the stage figure at once (PlayerAppearance.dress, the game's path).
 ## Accept applies the look to the player and saves it (AppearanceStore); Back closes without
-## changes (at the first launch it keeps the default look and saves it, so the creator is
-## not offered again: O opens it any time).
+## changes. The first-launch offer is made once however it closes (AppearanceStore.mark_offered: a
+## flag, not a look; in a game, Back there also saves the player's default look as before); the
+## main menu's "Your look" opens it any time.
 
 signal closed(accepted: bool)
 
@@ -40,8 +41,8 @@ const ROW_FOCUS := Color(0.22, 0.17, 0.1, 0.9)
 ## note fit the panel at 1280 x 720.
 const ICON := 36
 ## Group names as shown (peoples.json groups).
-const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands", "The Downbelow": "The\nDownbelow",
-		"Southeast Asia": "Southeast\nAsia", "Mixed ancestry": "Mixed\nancestry"}
+const GROUP_LABELS := {"Eastern Woodlands": "Eastern\nWoodlands", "Southeast Asia": "Southeast\nAsia",
+		"Mixed ancestry": "Mixed\nancestry"}
 
 var app: PlayerAppearance
 var look := {}
@@ -84,14 +85,31 @@ var _outfit_ui: Control
 var _clothing := false
 var _clothing_button: Button
 var _right_panel: PanelContainer
+var _right_title: Label
 var _right_spacer: Control
 ## Right panel widths: the option rows, the garment rows (built for a wider column).
 const RIGHT_W := 360
-const RIGHT_W_CLOTHING := 470
+const RIGHT_W_CLOTHING := 500
+## The people panel's width (the hint's strip in the bottom bar ends under its right edge).
+const LEFT_W := 372
+## The keys, in two lines in the bottom bar beside Back.
+const HINT := "Drag: turn   Wheel: face / body\nArrows: choose, change   R: random"
 ## The Rings row's view: the figure turned until the ring's hand faces the camera (CreatorOptions.ring_hand: the
 ## left hand, the right), on the stage's "hands" framing; it turns back to face the camera off the row.
 const RING_YAW := {"l": -0.9, "r": 0.9}
 var _ring_turn := false
+## The Tattoos row's view turned the figure (the newest tattoo's place to the camera: _tattoo_row_view).
+var _tattoo_turn := false
+## Garment slots taken off while the Tattoos row or its editor shows a tattoo on an arm or a hand (the sash's hanging
+## tail crossed the forearm).
+const ARM_VIEW_CLEAR := ["accessories.waist"]
+## The Tattoos row's view of the newest tattoo: the editor's close view (Tattoos.view_of's distance) this much further off.
+const ROW_VIEW_DIST := 1.8
+## The Face picker's portraits (face_thumbs.gd, made at its first opening), and its columns.
+const FaceThumbs := preload("res://scripts/customizer/face_thumbs.gd")
+var _portraits: FaceThumbs
+const PORTRAIT_COLUMNS := 5
+static var _blank_portrait: ImageTexture
 ## The Tattoos row's value width (px) before the first layout (RIGHT_W less the panel's, the row's and the arrows'
 ## margins and the count): the summary is fitted to it (_fitting), then to the laid-out width.
 const TATTOO_VALUE_W := 200.0
@@ -123,13 +141,21 @@ func _ready() -> void:
 	get_tree().root.disable_3d = true
 	if look.is_empty():
 		look = AppearanceStore.default_look()
-	# the game's own peoples (a test, CharacterPeoples.world_listed): a look of a people not listed now shows as the listed
-	# default people (its face and colours kept); a first launch starts as that people's first individual
+	# a look wearing another people's face preset opens on that people (its Face row then shows the face: a look saved under
+	# the default people when its own was retired kept its face, the owner's "Tubber"); nothing is saved until Accept
+	var owner := CreatorOptions.preset_people(look)
+	if not owner.is_empty():
+		look["people"] = owner
+	# a look of a people not listed shows as the listed default people (its face and colours kept); a first launch starts
+	# as that people's first individual
 	if not CharacterPeoples.is_listed(String(look.get("people", ""))):
 		if first_launch:
 			look = CreatorOptions.with_people(look, CharacterPeoples.default_people())
 		else:
 			look["people"] = CharacterPeoples.default_people()
+	# a face none of the Face row's choices is (fine-tuned, another people's) stays one of them, "Your face", so the arrows
+	# never lose it (CreatorOptions.OWN_FACE)
+	CreatorOptions.keep_own_face(look)
 	_build_ui()
 	_refresh_all()
 	_set_focus("face" if not first_launch else "people")
@@ -147,6 +173,9 @@ func close(accept: bool) -> void:
 	_done = true
 	if is_instance_valid(_fine):
 		_fine.queue_free()
+	# the first-run offer was made, however it closed: it is not offered again (a flag, not a look: Back keeps none)
+	if first_launch:
+		AppearanceStore.mark_offered()
 	if is_instance_valid(app):
 		if accept:
 			app.apply(look)
@@ -246,7 +275,7 @@ func _build_left() -> void:
 	_left_panel.anchor_bottom = 1.0
 	_left_panel.offset_left = 16
 	_left_panel.offset_top = 16
-	_left_panel.offset_right = 16 + 372
+	_left_panel.offset_right = 16 + LEFT_W
 	_left_panel.offset_bottom = -92
 	_root.add_child(_left_panel)
 	var vb := VBoxContainer.new()
@@ -324,11 +353,14 @@ func _build_right() -> void:
 	panel.offset_right = -16
 	panel.offset_top = 16
 	panel.offset_bottom = -92
+	# (content wider than the panel grows it leftward, into the stage, never off the screen's right edge)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_root.add_child(panel)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 6)
 	panel.add_child(vb)
-	vb.add_child(_label("Appearance", 22, GOLD))
+	_right_title = _label("Appearance", 22, GOLD)
+	vb.add_child(_right_title)
 	_rows_scroll = ScrollContainer.new()
 	_rows_scroll.name = "RowsScroll"
 	_rows_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -368,7 +400,7 @@ func _build_right() -> void:
 	if _outfit_ui:
 		_clothing_button = _button("Clothing", Vector2(0, 32), func() -> void: _show_clothing(not _clothing), 14)
 		_clothing_button.name = "Clothing"
-		_clothing_button.tooltip_text = "Garments over the frontier clothes"
+		_clothing_button.tooltip_text = "Garments over your base outfit"
 		_clothing_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hb.add_child(_clothing_button)
 
@@ -390,7 +422,8 @@ func _show_clothing(on: bool) -> void:
 	_rows_box.visible = not on
 	_rows_scroll.visible = not on
 	_right_panel.offset_left = -16 - (RIGHT_W_CLOTHING if on else RIGHT_W)
-	_clothing_button.text = "Appearance" if on else "Clothing"
+	_right_title.text = "Clothing" if on else "Appearance"
+	_clothing_button.text = "Back to look" if on else "Clothing"
 	if on:
 		if _outfit_ui.has_method("refresh"):
 			_outfit_ui.call("refresh")
@@ -442,33 +475,41 @@ func _build_bottom() -> void:
 	accept.offset_top = -70
 	accept.offset_bottom = -24
 	_root.add_child(accept)
-	var dice := _button("", Vector2(56, 56), _randomize)
+	# the dice and the hint sit in the bottom bar under the side panels, beside Accept and Back: never over the figure
+	# (they crossed its chest and collar in the face and bust framings, the hint unreadable there)
+	var dice := _button("", Vector2(46, 46), _randomize)
 	dice.name = "Randomize"
 	dice.tooltip_text = "Randomize (R): a new individual of this people"
 	var icon := DiceIcon.new()
 	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dice.add_child(icon)
-	dice.anchor_left = 0.5
-	dice.anchor_right = 0.5
+	dice.anchor_left = 1.0
+	dice.anchor_right = 1.0
 	dice.anchor_top = 1.0
 	dice.anchor_bottom = 1.0
-	dice.offset_left = -28
-	dice.offset_right = 28
-	dice.offset_top = -86
-	dice.offset_bottom = -30
+	dice.offset_left = -186 - 10 - 46
+	dice.offset_right = -186 - 10
+	dice.offset_top = -70
+	dice.offset_bottom = -24
 	_root.add_child(dice)
-	var hint := _label("Drag to turn   Wheel: face / body   Arrows: choose and change   R: random", 12, DIM)
+	var hint_box := PanelContainer.new()
+	hint_box.name = "Hint"
+	hint_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_box.add_theme_stylebox_override("panel", _panel_style(PANEL_BG, Color(0, 0, 0, 0), 4.0))
+	hint_box.anchor_top = 1.0
+	hint_box.anchor_bottom = 1.0
+	hint_box.offset_left = 166 + 10
+	hint_box.offset_right = 16 + LEFT_W
+	hint_box.offset_top = -70
+	hint_box.offset_bottom = -24
+	_root.add_child(hint_box)
+	var hint := _label(HINT, 12, DIM)
+	hint.name = "HintText"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.anchor_left = 0.5
-	hint.anchor_right = 0.5
-	hint.anchor_top = 1.0
-	hint.anchor_bottom = 1.0
-	hint.offset_left = -260
-	hint.offset_right = 260
-	hint.offset_top = -24
-	hint.offset_bottom = -6
-	_root.add_child(hint)
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint.add_theme_constant_override("line_spacing", 0)
+	hint_box.add_child(hint)
 
 
 ## A die face, drawn (the Randomize button).
@@ -652,7 +693,7 @@ func _refresh_note() -> void:
 	elif focus_row == "body":
 		t = "Body type 1 is the male fit, 2 the female fit."
 	elif focus_row == "clothing":
-		t = "Garments worn over the frontier clothes."
+		t = "Garments worn over your base outfit."
 	_note.text = t
 
 
@@ -699,6 +740,7 @@ func _set_focus(row: String) -> void:
 	else:
 		stage.frame("body")
 	_ring_view(row)
+	_tattoo_row_view(row)
 	_refresh_focus()
 	_tattoo_view()
 
@@ -743,6 +785,9 @@ func _after_change(row: String) -> void:
 		if is_instance_valid(_tattoos):
 			_tattoos.refresh()
 		_tattoo_reveal(_tattoos.selected_place() if is_instance_valid(_tattoos) else "")
+		# (the newest tattoo may have moved to its new design's place: the row's view follows it)
+		if row == focus_row:
+			_tattoo_row_view(row)
 	if row in CreatorOptions.HANDS_ROWS and row == focus_row:
 		_ring_view(row)
 	if row == "face_style":
@@ -777,8 +822,11 @@ func _open_picker(row: String) -> void:
 	var opts := CreatorOptions.options(row, look)
 	var cur := CreatorOptions.current(row, look, opts)
 	var colors := not opts.is_empty() and (opts[0] as Dictionary).has("color")
+	# the Face row's choices with a portrait each (FaceThumbs: drawn as the picker opens, words alone without a renderer)
+	var portraits := row == "face" and FaceThumbs.available()
+	var buttons: Array[Button] = []
 	var grid := GridContainer.new()
-	grid.columns = (8 if opts.size() > 16 else 6) if colors else 2
+	grid.columns = (8 if opts.size() > 16 else 6) if colors else (PORTRAIT_COLUMNS if portraits else 2)
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	_picker.add_child(grid)
@@ -795,6 +843,15 @@ func _open_picker(row: String) -> void:
 			b.text = String(o.get("label", ""))
 			b.custom_minimum_size = Vector2(170, 30)
 			b.add_theme_color_override("font_color", GOLD if i == cur else TEXT)
+			if portraits:
+				b.custom_minimum_size = Vector2(FaceThumbs.SIZE.x + 10, FaceThumbs.SIZE.y + 36)
+				b.icon = _portrait_blank()
+				b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+			if i == cur:
+				# (the current choice framed, as the row's own focus: the gold words alone were hard to find)
+				b.add_theme_stylebox_override("normal", _panel_style(ROW_FOCUS, GOLD, 4.0))
+				b.add_theme_stylebox_override("hover", _panel_style(ROW_FOCUS.lightened(0.1), GOLD, 4.0))
 		var idx := i
 		b.pressed.connect(func() -> void:
 			CreatorOptions.select(row, look, idx)
@@ -802,6 +859,14 @@ func _open_picker(row: String) -> void:
 			stage.show_look(look)
 			_picker.hide())
 		grid.add_child(b)
+		buttons.append(b)
+	if portraits:
+		if not is_instance_valid(_portraits):
+			_portraits = FaceThumbs.new()
+			_root.add_child(_portraits)
+		_portraits.render(look, opts, func(i: int, tex: Texture2D) -> void:
+			if i < buttons.size() and is_instance_valid(buttons[i]):
+				buttons[i].icon = tex)
 	var ui: Dictionary = _row_ui.get(row, {})
 	var at := Vector2i(get_viewport().get_visible_rect().size.x - 16 - 360 - 16, 80)
 	if not ui.is_empty():
@@ -812,32 +877,78 @@ func _open_picker(row: String) -> void:
 	_picker.popup(Rect2i(Vector2i(at.x - int(sz.x), at.y), Vector2i(sz)))
 
 
+## A dark square in a face's place until its portrait is drawn (the picker keeps its size).
+static func _portrait_blank() -> ImageTexture:
+	if _blank_portrait == null:
+		var img := Image.create(FaceThumbs.SIZE.x, FaceThumbs.SIZE.y, false, Image.FORMAT_RGB8)
+		img.fill(Color(0.028, 0.032, 0.036))
+		_blank_portrait = ImageTexture.create_from_image(img)
+	return _blank_portrait
+
+
 # ---------------------------------------------------------------------------------------------
 # Tattoos (the Tattoos row and its editor, TattooPanel)
 # ---------------------------------------------------------------------------------------------
 
 ## The stage shows the tattooed skin through the clothes (CreatorStage.reveal / bare_top) while the Tattoos row is
-## focused: the places of the look's tattoos and `place`; the upper garments off for a chest or back tattoo.
+## focused: the places of the look's tattoos and `place`; the upper garments off for a chest or back tattoo. While the
+## view is on an arm or a hand (the editor's `place`, else the newest tattoo's; Tattoos.view_of: the arms or hands
+## framing), the garments that hang in front of it are off too (ARM_VIEW_CLEAR: the sash's tail crossed the forearm),
+## back on off the row.
 func _tattoo_reveal(place := "") -> void:
 	if focus_row != Tattoos.ROW or _clothing:
 		stage.reveal = []
 		stage.bare_top = false
+		stage.hide_slots = []
 		return
 	var ps := Tattoos.list(look).map(func(t: Dictionary) -> String: return String(t.get("place", "")))
 	if not place.is_empty():
 		ps.append(place)
 	stage.bare_top = Tattoos.on_torso(ps)
 	stage.reveal = Tattoos.regions_of(look, place)
+	var shown := place if not place.is_empty() else _newest_tattoo_place()
+	var on_arm := String(Tattoos.view_of(shown).get("frame", "")) in ["arms", "hands"]
+	stage.hide_slots = ARM_VIEW_CLEAR.duplicate() if on_arm else []
+
+
+## The place of the newest tattoo ("" none): the Tattoos row's view shows it.
+func _newest_tattoo_place() -> String:
+	var ts := Tattoos.list(look)
+	return String((ts[-1] as Dictionary).get("place", "")) if not ts.is_empty() else ""
+
+
+## What the stage shows of the tattoos now (a change re-dresses the figure).
+func _tattoo_state() -> Array:
+	return [stage.reveal.duplicate(), stage.bare_top, stage.hide_slots.duplicate()]
 
 
 ## After a focus change: the stage's tattoo view on or off (re-dressed when it changes), the editor closed off the row.
 func _tattoo_view() -> void:
-	var before := [stage.reveal.duplicate(), stage.bare_top]
+	var before := _tattoo_state()
 	_tattoo_reveal(_tattoos.selected_place() if is_instance_valid(_tattoos) else "")
 	if focus_row != Tattoos.ROW and is_instance_valid(_tattoos):
 		_close_tattoos()
-	if before != [stage.reveal, stage.bare_top]:
+	if before != _tattoo_state():
 		stage.show_look(look, not _clothing)
+
+
+## The Tattoos row's camera with the editor closed: the newest tattoo's place framed and turned to the camera
+## (Tattoos.view_of: a forearm's on the arms framing, a hand's on the hands), the bust when none is worn; off the row
+## the figure faces the camera again (unless the Rings row turned it: _ring_view).
+func _tattoo_row_view(row: String) -> void:
+	if row == Tattoos.ROW and not is_instance_valid(_tattoos) and not _clothing:
+		var view := Tattoos.view_of(_newest_tattoo_place())
+		_tattoo_turn = true
+		# the editor's close view of the place, from further off (the arm and the hand round the tattoo in view)
+		if view.has("bone") and view.has("at") and stage.focus_skin(String(view.bone), view.at, view.normal,
+				float(view.get("dist", 0.8)) * ROW_VIEW_DIST):
+			return
+		stage.frame(String(view.get("frame", "bust")))
+		stage.set_yaw(float(view.get("yaw", 0.0)))
+	elif _tattoo_turn and row != Tattoos.ROW:
+		_tattoo_turn = false
+		if not _ring_turn:
+			stage.set_yaw(0.0)
 
 
 func _open_tattoos() -> void:
@@ -865,9 +976,10 @@ func _close_tattoos() -> void:
 	_tattoos = null
 	_tattoo_place = ""
 	_left_panel.visible = true
-	stage.set_yaw(0.0)
+	if not _ring_turn:
+		stage.set_yaw(0.0)
 	if focus_row == Tattoos.ROW:
-		stage.frame("bust")
+		_tattoo_row_view(focus_row)
 	_tattoo_reveal()
 	stage.show_look(look, not _clothing)
 
@@ -876,11 +988,11 @@ func _close_tattoos() -> void:
 ## place's skin turned to the camera, CreatorStage.focus_skin; once per place, so a turn by hand stays while editing).
 func _on_tattoo_changed(place: String) -> void:
 	_refresh_row(Tattoos.ROW)
-	var before := [stage.reveal.duplicate(), stage.bare_top]
+	var before := _tattoo_state()
 	_tattoo_reveal(place)
 	# the same skin shown (a move, a size, a turn, the ink, the fade, another design at the place): only the skin's tattoo
 	# uniforms change (CreatorStage.update_tattoos); a new place, an added or removed tattoo dresses the figure again
-	if before != [stage.reveal, stage.bare_top] or not stage.update_tattoos(look):
+	if before != _tattoo_state() or not stage.update_tattoos(look):
 		stage.show_look(look, not _clothing)
 	if place == _tattoo_place:
 		return
@@ -901,6 +1013,8 @@ func _open_fine_tune() -> void:
 	_fine = CustomizerOverlay.edit(look, func(result: Dictionary) -> void:
 		if not result.is_empty():
 			look = result
+			# (a face moved off the Face row's choices on the sliders is the row's "Your face" from now on)
+			CreatorOptions.keep_own_face(look)
 		visible = true
 		_refresh_all(), get_tree())
 

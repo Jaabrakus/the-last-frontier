@@ -8,11 +8,21 @@ extends RigidBody3D
 ##               rests on it, in the physics (mass_kg): Gust pushes it, it rolls
 ## Both are stones Gust lifts and hurls (GustLift; group GROUP, meta sway_stone). Each lies life_s untouched and then
 ## sinks back into the ground in sink_s; one lifted begins its time again where it comes to rest (rest_again()).
+## Online (NetStones): named as it is made; the host's physics rolls it and its state goes to the others, whose own stay still
+## and follow the host's word.
 ## Each looks like a stone of the ground it came out of (`matter`, FormMatter.rock_material: data/sway/moves.json
 ## stone_form.looks; the user, 2026-10-03: "okay the stone spike is cool okay it works but we need to work on the textures"):
 ## our own weathered fieldstone, its freshly broken faces lighter, the ground's stain on its foot.
 
 const GROUP := &"form_stones"
+## ROUND 2 (skills_r2 spec §2.10, earth's ammo on the deck): a LOOSE stone is one let fall (a lock called off, a hit that
+## emptied it, a Wind Guard's drop, a stone off a wall hit): make_loose(s, by) marks it its maker's (meta LOOSE_META, the
+## body's instance id) and keeps at most Bending.stones().loose_max of one maker's lying: a fourth sinks the oldest. Any earth
+## fighter may shove a loose stone within shove_loose_m of himself (BendEffects.shove); a raised or held one is its raiser's.
+const LOOSE_META := &"bend_loose_by"
+
+## Loose stones in the order they were let fall: maker's instance id -> [FormStone].
+static var _loose := {}
 
 enum State { RISING, RESTING, HELD, SINKING }
 
@@ -109,7 +119,32 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	s.set_meta(&"surface", "stone")
 	s.set_meta(&"sway_stone", true)
 	s.add_to_group(GROUP)
+	NetStones.made(s)                             # (online: named in its cast's run, or the host's decision's: NetStones)
 	return s
+
+
+## Grown in the hands (FormEffects.grow_raised: a Spike or a Boulder held on past its lock): its body `k` x its size at once,
+## its look swelling to it over `over_s` (a little past and back).
+func grow(k: float, over_s := 0.25) -> void:
+	radius *= k
+	height *= k
+	var cs := get_node_or_null(^"Shape") as CollisionShape3D
+	if cs != null and cs.shape != null:
+		var sh := cs.shape.duplicate() as Shape3D
+		if sh is SphereShape3D:
+			(sh as SphereShape3D).radius *= k
+		elif sh is CylinderShape3D:
+			(sh as CylinderShape3D).radius *= k
+			(sh as CylinderShape3D).height *= k
+		cs.shape = sh
+		cs.position *= k
+	if mesh_instance == null:
+		return
+	if over_s <= 0.0 or not is_inside_tree():
+		mesh_instance.scale = Vector3.ONE * k
+		return
+	var tw := create_tween()
+	tw.tween_property(mesh_instance, ^"scale", Vector3.ONE * k, over_s).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Its place `u` (0..1) of the way out of the ground.
@@ -138,6 +173,7 @@ func rest_again() -> void:
 
 func _physics_process(dt: float) -> void:
 	_t += dt
+	NetStones.check(self, dt)                     # (online, the host's: its state told the others when it changes)
 	match state:
 		State.RISING:
 			var u := _t / maxf(rise_s, 0.01)
@@ -149,8 +185,8 @@ func _physics_process(dt: float) -> void:
 			if u >= 1.0:
 				state = State.RESTING
 				age = 0.0
-				if kind == "cannonball":
-					freeze = false              # (resting on the ground, in the physics: pushed, it rolls)
+				if kind == "cannonball" and NetSpells.decides():
+					freeze = false              # (resting on the ground, in the physics: pushed, it rolls; online the host's)
 					sleeping = false
 		State.RESTING:
 			age += dt
@@ -161,6 +197,41 @@ func _physics_process(dt: float) -> void:
 			global_transform = Transform3D(_sink_from.basis, _sink_from.origin - Vector3.UP * (height + 0.15) * u * u)
 			if u >= 1.0:
 				queue_free()
+
+
+## Stone `s` lies loose, `by`'s (null: no one's, uncapped): past loose_max of `by`'s the oldest sinks. It is held by no one.
+static func make_loose(s: Node3D, by: Node) -> void:
+	if s == null or not is_instance_valid(s):
+		return
+	for k: StringName in [&"bend_held_by", &"bend_raised_by"]:
+		if s.has_meta(k):
+			s.remove_meta(k)
+	if by == null or not is_instance_valid(by):
+		s.set_meta(LOOSE_META, 0)
+		return
+	var id := by.get_instance_id()
+	s.set_meta(LOOSE_META, id)
+	var list: Array = (_loose.get(id, []) as Array).filter(func(x: Variant) -> bool:
+		return is_instance_valid(x) and int((x as Node).get_meta(LOOSE_META, -1)) == id and not (x is FormStone and (x as FormStone).state == State.SINKING))
+	list.erase(s)
+	list.append(s)
+	var cap := int(Bending.stones().get("loose_max", 3))
+	while cap > 0 and list.size() > cap:
+		var old: Node = list.pop_front()
+		if old is FormStone:
+			(old as FormStone).sink()
+		else:
+			old.queue_free()
+	_loose[id] = list
+
+
+## The loose stones `by` let fall that still lie (oldest first).
+static func loose_of(by: Node) -> Array:
+	if by == null or not is_instance_valid(by):
+		return []
+	var id := by.get_instance_id()
+	return (_loose.get(id, []) as Array).filter(func(x: Variant) -> bool:
+		return is_instance_valid(x) and int((x as Node).get_meta(LOOSE_META, -1)) == id and not (x is FormStone and (x as FormStone).state == State.SINKING))
 
 
 ## Back into the ground (its time over).
@@ -178,3 +249,7 @@ func sink() -> void:
 	if is_inside_tree():
 		GatherFx.fall_dust(get_tree().current_scene, global_position, radius * 2.0)
 		FormEffects.sfx("crumble", global_position, -6.0, 1.1)
+
+
+func _exit_tree() -> void:
+	NetStones.gone(self)                          # (online, the host's: its end told the others)

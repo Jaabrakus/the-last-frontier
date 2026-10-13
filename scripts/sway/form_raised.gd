@@ -28,6 +28,9 @@ extends AnimatableBody3D
 ## freeze_water) crumbles that caster's oldest standing ones past the cap ("capped"). Only where a RingArena stands; the
 ## open world keeps its cover walls uncapped. The look (LOOK-B): BendLooks.rise as a wall comes up, BendLooks.shatter when
 ## one is shot down.
+## Round 4 (LOOKS): your own (its meta bend_by your player) standing between the camera and your head, or within 2.5 m of
+## the camera, is drawn at 35% in a screen-door (OwnFade; data/bending/fx_looks.json own_wall). A look only: it still stops
+## shots, bodies and the bots' sight; one in front of you is cover and stays whole.
 
 signal crumbled(raised: FormRaised, why: String)
 
@@ -65,6 +68,8 @@ var mended_line := "The earth packed again"
 var _t := 0.0
 var _shape: CollisionShape3D
 var _crumble_why := ""
+## Where its last counted hit struck (Brimstone Wall's cloud rises on that side).
+var _last_hit_at := Vector3.INF
 ## Raised over water entirely (dry_span: none of it dry): never seen, gone the next step.
 var drowned := false
 ## The width it was asked for before the water cut it (m).
@@ -136,9 +141,22 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 		r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed, bury, r.matter)
 	r.mesh_instance.set_instance_shader_parameter(&"seed", float(seed % 97))
 	r.add_child(r.mesh_instance)
+	# (round 4 LOOKS: your own wall or pillar between the camera and your head, or by the camera, drawn faded; it blocks
+	# all the same: OwnFade, form_matter's fade)
+	OwnFade.attach(r, [r.mesh_instance], AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
+	NetSpells.tag(r)                              # (online: its name in its cast's run; the host's wear on it a word)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
-	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree():
+	# (the Spellbreak effects, SbFx: visual only; keyed by the cast raising it, BendR3.cur, kept for its crumble)
+	var sbk := SbFx.key_of(BendR3.cur)
+	r.set_meta(&"sbfx_key", sbk)
+	var sbr := false
+	if not r.drowned and r.is_inside_tree() and sbk != "":
+		var ctx := {"at": r.base.origin, "dir": r.base.basis.z, "size": r.size, "node": r}
+		sbr = SbFx.fire(null, sbk, "rise", ctx)
+		r.set_meta(&"sbfx_rise", sbr)
+		SbFx.start(r, "stand", null, sbk, "stand", ctx)
+	if p_kind == "wall" and not r.drowned and r.matter != "wood" and r.is_inside_tree() and not sbr:
 		BendLooks.rise(r.base.origin, r.size, r.base.basis.z.normalized(), "ice" if r.matter == "snow" else "earth")
 	if r.drowned:
 		r.visible = false
@@ -262,13 +280,22 @@ func _crumbling(u: float) -> void:
 	global_transform = xf
 
 
-## Struck (Hit.deliver): a hit of at least hit_min counts, its matter thrown off; hits_max of them and it crumbles.
+## Struck (Hit.deliver): a hit of at least hit_min counts, its matter thrown off; hits_max of them and it crumbles. Online a
+## hit decided outside a cast's run is the host's (NetSpells.decide: his word "wall_hit" to the others).
 func apply_hit(damage: float, point: Vector3, dir: Vector3, _source: Node = null, _part := "body") -> void:
 	if state == State.CRUMBLING or damage < hit_min:
 		return
+	if not NetSpells.decide(self, "wall_hit", [damage, point, dir]):
+		return
+	if take_brace(self):
+		return                                # (mended or braced: this hit is taken free; round 2's Mend)
 	hits += 1
+	_last_hit_at = point
 	if is_inside_tree():
-		_chips(get_tree().current_scene, point, -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP, 10)
+		var nrm := -dir.normalized() if dir.length_squared() > 1e-6 else Vector3.UP
+		if not SbFx.fire(null, String(get_meta(&"sbfx_key", "")), "hit", {"at": point, "normal": nrm, "dir": nrm, "node": self}):
+			_chips(get_tree().current_scene, point, nrm, 10)
+		_crack(point, nrm)
 	if hits >= hits_max:
 		crumble("shot")
 
@@ -289,15 +316,62 @@ func _chips(scn: Node, point: Vector3, normal: Vector3, n: int) -> void:
 			GatherFx.stone_chips(scn, point, normal, n)
 
 
+## A brace on `w` (meta bend_brace: true takes one hit free, as Mend and the Catch's brace give; an int n takes n: Reinforce's
+## two, FormEffects.mend) spent on one hit: true when it took it.
+static func take_brace(w: Node) -> bool:
+	if w == null or not w.has_meta(&"bend_brace"):
+		return false
+	var v: Variant = w.get_meta(&"bend_brace")
+	if v is int and int(v) > 1:
+		w.set_meta(&"bend_brace", int(v) - 1)
+	else:
+		w.remove_meta(&"bend_brace")
+	return true
+
+
 ## Worn by shot (mend can pack it again).
 func worn() -> bool:
 	return state != State.CRUMBLING and hits > 0
 
 
-## Packed again (mend): its hits gone, its time begun again.
+## Packed again (mend): its hits gone, its time begun again, its cracks closed.
 func mend() -> void:
 	hits = 0
 	age = 0.0
+	for c in _cracks:
+		if is_instance_valid(c):
+			var tw := c.create_tween()
+			tw.tween_property(c, "scale", Vector3.ONE * 0.05, 0.35)
+			tw.tween_callback(c.queue_free)
+	_cracks.clear()
+
+
+## The hits it has taken shown on it (the move review 2026-10-12: a worn wall looked whole, so Mend had nothing to show):
+## a crack mark on its face where each landed, its own child (it moves and goes with it; mend closes them). Wood shows none.
+var _cracks: Array[MeshInstance3D] = []
+func _crack(point: Vector3, nrm: Vector3) -> void:
+	if matter == "wood" or kind != "wall" or not BendLooks.live():
+		return
+	var face := global_basis.z.normalized()
+	if face.dot(nrm) < 0.0:
+		face = -face                              # (the face it was struck on)
+	var x := face.cross(Vector3.UP).normalized()
+	if x.length_squared() < 1e-6:
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "Crack"
+	mi.mesh = ToonFx.plane()
+	mi.material_override = ToonFx.mat("mark_cracks")
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_instance_shader_parameter(&"t", 0.0)
+	mi.set_instance_shader_parameter(&"seed", float(hits) * 3.7 + float(get_instance_id() % 13))
+	add_child(mi)
+	var b := Basis(x, face, x.cross(face)).rotated(face, float(hits) * 1.9)
+	var on := global_position + face * (size.z * 0.5 + 0.06)
+	var local := point - global_position
+	var at := on + x * clampf(local.dot(x), -size.x * 0.4, size.x * 0.4) + Vector3.UP * clampf(point.y - global_position.y, 0.3, size.y - 0.3)
+	mi.global_transform = Transform3D(b.scaled(Vector3.ONE * 0.65), at)
+	_cracks.append(mi)
 
 
 func crumble(why: String) -> void:
@@ -310,7 +384,12 @@ func crumble(why: String) -> void:
 		var scn := get_tree().current_scene
 		var at := global_transform.origin
 		var wide := maxf(size.x, size.z) * 0.5
-		match crumble_style:
+		# (the Spellbreak effects, SbFx: its stand stopped; shot, melted or the rest, replacing the dust and the shatter)
+		var sbk := String(get_meta(&"sbfx_key", ""))
+		SbFx.stop(self, "stand")
+		var sbr := SbFx.fire(null, sbk, {"shot": "shatter", "melted": "melt"}.get(why, "crumble"),
+				{"at": at, "dir": global_basis.z, "size": size, "node": self})
+		match ("" if sbr and crumble_style != "rubble" else crumble_style):
 			"snow":
 				GatherFx._dust(scn, at + Vector3.UP * 0.3, Vector3.UP, 30, Vector2(0.3, 0.8), 1.8, Color(0.9, 0.93, 0.97, 0.45))
 			"slump":
@@ -322,18 +401,61 @@ func crumble(why: String) -> void:
 				for i in 4:
 					GatherFx.wood_chips(scn, global_transform * Vector3((float(i) - 1.5) * size.x * 0.25, size.y * 0.55, 0.0), global_basis.z, 14)
 			"rubble":
-				GatherFx.fall_dust(scn, at, wide)
-				for i in 3:
-					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 10)
+				if not sbr:
+					GatherFx.fall_dust(scn, at, wide)
+					for i in 3:
+						GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 10)
 				Rubble.spill(scn, self)
+			"":
+				pass
 			_:
 				GatherFx.fall_dust(scn, at, wide)
 				for i in 3:
 					GatherFx.stone_chips(scn, global_transform * Vector3((float(i) - 1.0) * size.x * 0.3, size.y * 0.6, 0.0), Vector3.UP, 8)
-		if why == "shot" and kind == "wall" and matter != "wood":
+		if why == "shot" and kind == "wall" and matter != "wood" and not sbr:
 			BendLooks.shatter(at, size, global_basis.z.normalized(), "ice" if matter == "snow" else "earth")
 		FormEffects.sfx("splinter" if matter == "wood" else "crumble", at, -2.0, 0.8)
+		if why in ["shot", "capped"] and kind == "wall":
+			_rubble_stones()
+		if why == "shot" and kind == "wall":
+			_brimstone()
 	crumbled.emit(self, why)
+
+
+## Brimstone Wall (the Sulphur set, BendZone.BendGas.WALL): its wearer's wall shot down (never his third's cap) vents a gas cloud
+## 1 m out from its face on the side the last shot came from.
+func _brimstone() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not (by is Node3D) or not BendLoadout.wears(by, BendZone.BendGas.WALL):
+		return
+	var face := global_basis.z.normalized()
+	var side := signf((_last_hit_at - global_position).dot(face)) if _last_hit_at.is_finite() else 1.0
+	if side == 0.0:
+		side = 1.0
+	BendZone.BendGas.make(by as Node3D, global_position + face * side * (size.z * 0.5 + 1.0), "cloud")
+
+
+## Earth's Rubble Wall (data/sway/skill_tree.json earth.wall.rubble; the owner, 2026-10-11: "make sure all the talents work"):
+## a wall raised by its wearer (meta bend_by) that crumbles shot down or broken by his third (the cap: "capped") leaves RUBBLE_N
+## loose stones at its foot, rising out of the ground as it sinks: his (FormStone.make_loose: still loose_max at most). A
+## Fissure that runs under them throws them on, whoever's they are (BendBolt._heave_loose). Its rise is the node's (0.8 s).
+const RUBBLE := "earth.wall.rubble"
+const RUBBLE_N := 2
+const RUBBLE_R := 0.2
+
+
+func _rubble_stones() -> void:
+	var by: Node = instance_from_id(int(get_meta(&"bend_by", 0))) as Node if has_meta(&"bend_by") else null
+	if by == null or not is_instance_valid(by) or not BendLoadout.wears(by, RUBBLE) or not NetSpells.decides():
+		return
+	var scn := get_tree().current_scene
+	for i in RUBBLE_N:
+		var across := (float(i) - float(RUBBLE_N - 1) * 0.5) * size.x * 0.5
+		var foot := FormEffects.ground_at(self, base * Vector3(across, 0.4, 0.0))
+		var s := FormStone.ball(scn, foot, {"radius_m": RUBBLE_R, "mass_kg": 20.0, "rise_s": 0.6, "life_s": 30.0, "sink_s": 1.0},
+				absi(hash(Vector3i(foot * 10.0))) % 97, matter if matter in ["earth", "stone", "mud", "snow"] else "stone")
+		s.set_meta(&"bend_weight", "medium")
+		FormStone.make_loose(s, by)
 
 
 ## Wall `r` (raised by the caster in its meta bend_by) counted against the ring's cap: past max_walls of that caster's

@@ -1,0 +1,149 @@
+// Family: M_f_FireSimple + M_f_FireSimple_Velocity (Spellbreak, Proletariat; reuse licence
+// reported by the owner in animations/SOURCE.md). Template: blend / unlit / culling per instance.
+//
+// EVIDENCE (cooked data; the node graph itself was stripped):
+//  * Parameter shells + static switches + function descriptions (materials.json, decoded roots).
+//  * The cooked inline shader maps of the roots AND of every static-switch instance keep the
+//    uniform-expression set (parameter-only math, in HLSL translation order). Parsed per permutation:
+//    - Emissive: [CustomRotator(TextureRotation*2pi) only if Has TextureRotation] -> speed,
+//      Distortion Scale, FPS, (Distortion Scale * speed) [one folded node], UV Offset, Distortion factor
+//      -> textures Noise 1, Noise 2, Mask, RGB -> Color Fade, Core Color 1.a, Edge Color 2.a,
+//      Edge Color 1.a -> Emissive Intensity. All four colours are used as .rgb.
+//    - Opacity, only with Alpha Erosion: append(U Panner, V Panner) [+ Rotator Speed only if Has
+//      Rotator Speed] -> Erosion Texture -> Erosion Scale, Debug Alpha -> clamp(Edge Softness, 0.01, 1)
+//      only with Toon Erosion -> max(Depth Fade Dist, 0) only for translucent/additive.
+//    - IS PARTICLE / TurnOffRandomPosition add no uniforms: they switch per-particle inputs.
+//  * Textures (looked at per channel): RGB/Mask are packed toon bands R core / G edge / B "rest of
+//    the quad" (Campfire5 + FBCHeadMask B fill to the texture border, HairFire's mask is a normal map
+//    with A ~ 1), so the silhouette is R + G and B is background. Mask alpha = soft envelope.
+//  * Emitters: dynamic param 0 is the material's "Erosion" (1 = intact -> 0 = gone, or a 0->1->0 bell);
+//    alpha curves: Debug Alpha 0 instances have low bells (0.24-0.48, fades), Debug Alpha >= 1
+//    instances run alpha to ~1 (GraveFlameR even to -0.25, i.e. alpha drives erosion).
+// AUTHORED (marked ## below): how the pieces combine (noise layout, distortion amplitude 0.1,
+// erosion gradient, Debug Alpha blend, colour-fade driver, use of the colour alphas).
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D rgb_tex : repeat_enable, filter_linear_mipmap;      // "RGB Texture": R core, G edge bands
+uniform sampler2D mask_tex : repeat_enable, filter_linear_mipmap;     // "MaskTextureUses Packed AlphaChannel": A
+uniform sampler2D noise1_tex : repeat_enable, filter_linear_mipmap;   // "Noise Texture 1"
+uniform sampler2D noise2_tex : repeat_enable, filter_linear_mipmap;   // "Noise Texture 2"
+uniform sampler2D erosion_tex : repeat_enable, filter_linear_mipmap;  // "Erosion Texture"
+// Root defaults (linear HDR, no sRGB hint). Instances override through ["v4", ...].
+uniform vec4 core_color_1 = vec4(1.0, 0.745558, 0.0, 1.0);
+uniform vec4 core_color_2 = vec4(0.963542, 0.649993, 0.0, 1.0);
+uniform vec4 edge_color_1 = vec4(1.0, 0.24826, 0.010417, 1.0);
+uniform vec4 edge_color_2 = vec4(0.963542, 0.0, 0.0, 1.0);
+uniform float color_fade = 0.0;
+uniform float emissive_intensity = 1.0;
+uniform float fps = 60.0;
+uniform float speed = 1.0;
+uniform float distortion_scale = 0.5;
+uniform float distortion_factor = 2.3;
+uniform float uv_offset = 0.0;
+uniform bool turn_off_random_position = false;
+uniform bool has_texture_rotation = false;
+uniform float texture_rotation = 0.0;       // turns (CustomRotator: 1 = full turn)
+uniform bool alpha_erosion = false;
+uniform bool toon_erosion = false;
+uniform bool is_particle = false;
+uniform vec2 panner = vec2(0.2, 0.2);       // U Panner, V Panner
+uniform bool has_rotator_speed = false;
+uniform float rotator_speed = 0.0;          // turns / s
+uniform float erosion_scale = 1.0;
+uniform float debug_alpha = 1.0;
+uniform float edge_softness = 1.0;
+uniform float depth_fade_m = 0.5;           // Depth Fade Dist (cm) * 0.01
+uniform float alpha_clip = 0.3333;          // UE default OpacityMaskClipValue (masked instances)
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+// Blend probe: FxMaterials writes the same mode list into every RENDER_MODE placeholder; it
+// starts with depth_draw_opaque only for masked/opaque instances. Defined after the render_mode
+// line, these macros turn the list into numbers so the masked/opaque permutations can skip
+// DepthFade, as the source does (its Depth Fade Dist uniform exists only in translucent/additive
+// shader maps; Godot's depth texture is not valid for alpha-scissor materials either).
+#define depth_draw_opaque 1.0
+#define depth_draw_never 0.0
+#define shadows_disabled 0.0
+#define blend_mix 0.0
+#define blend_add 0.0
+#define blend_premul_alpha 0.0
+#define unshaded 0.0
+#define cull_disabled 0.0
+#define cull_back 0.0
+#define fog_disabled 0.0
+
+void fragment() {
+	float fs_modes[] = { /*RENDER_MODE*/ };
+	bool opaque_pass = fs_modes[0] > 0.5;
+	float a = v_color.a;
+	// MF_PannerRotator / FPS: every pan steps at the instance's FPS.
+	float t = stepped(TIME, max(fps, 1.0));
+	// CustomRotator (Has TextureRotation): first in the emissive chain, so it rotates the base UV.
+	vec2 uv0 = has_texture_rotation ? rotate_uv(UV, texture_rotation, vec2(0.5)) : UV;
+	// UV Offset is always used; "Mask Particle Pos" adds the particle position unless
+	// TurnOffRandomPosition. ## per-particle random stands in for the masked particle position.
+	vec2 off = vec2(uv_offset + (turn_off_random_position ? 0.0 : v_extra.w * 7.31));
+	// ## two noise layers tiled by Distortion Scale: Noise 1 panned up at speed, Noise 2 (half
+	// frequency) panned at the folded (Distortion Scale * speed) rate.
+	vec2 nuv = uv0 * distortion_scale + off;
+	float n1 = texture(noise1_tex, nuv + vec2(0.0, speed * t)).r;
+	float n2 = texture(noise2_tex, nuv * 0.5 + vec2(0.31, distortion_scale * speed * t)).r;
+	// ## amplitude 0.2 * Distortion factor, weighted towards the top of the texture (bands sit at
+	// the bottom edge): the base stays anchored, the R/G band tops break into licking tongues.
+	float tip = mix(0.35, 1.0, clamp(1.0 - uv0.y, 0.0, 1.0));
+	vec2 uvd = uv0 + (vec2(n1, n2) - 0.5) * distortion_factor * 0.2 * tip;
+	uvd.y = clamp(uvd.y, 0.002, 0.998);
+	vec4 m = texture(mask_tex, uvd);
+	vec4 b = texture(rgb_tex, uvd);
+
+	// Colours: Color Fade lerps set 1 -> set 2. ## driver = particle alpha (fire cools as it fades;
+	// 1.1 instances with grey/neutral set 2 let the particle colour through, 0 / -1 stay on set 1).
+	float f = clamp(color_fade * a, 0.0, 1.0);
+	// ## colour alphas (Core 1.a, Edge 1.a, Edge 2.a are referenced; Core 2.a is not) weight the bands.
+	vec3 core = mix(core_color_1.rgb * core_color_1.a, core_color_2.rgb, f);
+	vec3 edge = mix(edge_color_1.rgb * edge_color_1.a, edge_color_2.rgb * edge_color_2.a, f);
+	float band = b.r + b.g;
+	vec3 col = (core * b.r + edge * b.g) / max(band, 1e-3);
+	float shape = clamp(band, 0.0, 1.0);
+
+	float op;
+	if (alpha_erosion) {
+		// Global panner on the erosion texture: U/V Panner (## times speed), stepped time,
+		// Erosion Scale = ## tiling, Rotator Speed when Has Rotator Speed.
+		vec2 euv = uv0 * erosion_scale + panner * speed * t + off;
+		if (has_rotator_speed) {
+			euv = rotate_uv(euv, rotator_speed * t, vec2(0.5 * erosion_scale));
+		}
+		float n = texture(erosion_tex, euv).r;
+		// "Erodes alpha mask instead of fade out": ## gradient = mask alpha broken up by the noise,
+		// so a flame first shrinks from its soft edge, then breaks apart.
+		float grad = m.a * (0.5 + 0.5 * n);
+		// ## Debug Alpha blends how the particle alpha is used: 0 = fade (erosion from the dynamic
+		// "Erosion" param only), 1 = erode instead of fade (root default), 2 = sharper, < 0 = fade.
+		float dyn_e = is_particle ? v_dyn.x : 1.0;
+		float vis = dyn_e * mix(1.0, a, debug_alpha);
+		float fade = clamp(mix(a, 1.0, debug_alpha), 0.0, 1.0);
+		// MF_TransluscentToonErosion uses clamp(Edge Softness, 0.01, 1); Luos_alphaErosion has none
+		// (## fixed 0.1).
+		float soft = toon_erosion ? clamp(edge_softness, 0.01, 1.0) : 0.1;
+		float lo = mix(-soft, 1.0, clamp(1.0 - vis, 0.0, 1.0));
+		float er = smoothstep(lo, lo + soft, grad) * step(0.001, grad);
+		op = shape * er * fade;
+	} else {
+		op = shape * m.a * a;
+	}
+	// DepthFade: translucent/additive only (masked/opaque skip it, see the blend probe).
+	if (!opaque_pass && depth_fade_m > 0.0) {
+		op *= depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, depth_fade_m);
+	}
+	ALBEDO = col * v_color.rgb * emissive_intensity;
+	/*ALPHA_OUT*/
+}

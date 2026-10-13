@@ -16,9 +16,14 @@ extends RefCounted
 ## THE TIMING: it launches at once. The player's release already waits for his pose's strike (SwayCaster defers every
 ## STRIKE_DOS spec, "throw" among them, until SwayPose says struck: the one deferral); a bot's NpcBending times its clip's
 ## strike to its release (NpcBody.play_cast). Nothing here waits again (no double delay).
-## Keys of the spec (moves.json, a mode's bend): do "throw", kind, shape (spear, disc, ball), flight, mps, gravity, damage,
-## knock_mps, up_mps, radius_m, range_m, count, every_s, spread_deg, lift_deg, m_per_turn, tilt_deg, low, long.
+## Keys of the spec (moves.json, a mode's bend): do "throw", kind, shape (spear, disc, ball, crescent: round 2's High Kick,
+## width_m across, its body BendLooks' crescent), flight, mps, gravity, damage, knock_mps, up_mps, radius_m, range_m, count,
+## every_s, spread_deg, lift_deg, m_per_turn, tilt_deg, low, long.
 
+## The High Kick's crescent (shape "crescent"): the top of its lob over the higher of hand and aim by default (m: a 2 m
+## wall between is cleared), and the share of its width it is met by (its ball's radius; its look is the whole width).
+const CRESCENT_APEX_M := 2.0
+const CRESCENT_HIT := 0.3
 ## A spinning throw turns once per this many metres of its flight by default (m).
 const M_PER_TURN := 3.2
 ## Close in (the aim within this many hand-to-chest lengths), the hand's line blended toward the chest's.
@@ -34,11 +39,12 @@ static func throw(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	var n := maxi(int(spec.get("count", 1)), 1)
 	var every := float(spec.get("every_s", 0.0))
 	var first: BendBolt = null
+	var nctx := NetSpells.ctx()                   # (online: the later throws named in the cast's run, NetSpells)
 	for i in n:
 		if every > 0.0 and i > 0:
 			var later := func() -> void:
 				if bc.valid():
-					one(bc, BendEffects.aim(bc, spec), spec, i, n)
+					NetSpells.with(nctx, func() -> void: one(bc, BendEffects.aim(bc, spec), spec, i, n))
 			bc.body.get_tree().create_timer(every * i, false).timeout.connect(later)
 		else:
 			var b := one(bc, a, spec, i, n)
@@ -55,12 +61,35 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 	var from: Vector3 = a.from
 	var point: Vector3 = a.point
 	var low := bool(spec.get("low", false))
+	if bool(spec.get("float_from", false)) and p.has_meta(BendLooks.FLOAT_META):
+		# (the Ice Spear: from where its spear floated over the arm, BendLooks.FloatSpear: the same spear flying)
+		var fm: Dictionary = p.get_meta(BendLooks.FLOAT_META)
+		if BendStatus.now() - float(fm.get("t", -INF)) < 0.4:
+			from = fm.at
 	var dir: Vector3
+	# (round 3: the air High Kick, spec "straight": along the aim, no lob)
+	var lob := (String(spec.get("shape", "")) == "crescent" or spec.has("apex_m")) and not bool(spec.get("straight", false))
 	if low:
 		from = Vector3(from.x, p.global_position.y + BendBolt.LOW_M, from.z)
 		dir = Vector3((a.flat as Vector3).x, -0.02, (a.flat as Vector3).z).normalized()
+	elif lob and g > 0.0 and point.is_finite():
+		# (the High Kick: a lob over walls onto the aim; its speed the arc's, mps at most)
+		var v := lob_velocity(from, point, float(spec.get("apex_m", CRESCENT_APEX_M)), g, mps * 1.5)
+		mps = v.length()
+		dir = v.normalized()
 	else:
 		dir = aim_dir(from, bc.chest(), point, mps, g)
+	if spec.has("min_reach_m") and not low and not BendR3.airborne(p) and dir.y < 0.0:
+		# (on the ground never into the deck close before him: the High Kick at a near foe, the crosshair on the deck between
+		# them, the owner 2026-10-11 "it hits the ground its like useless"; tipped up only as far as it needs to meet the deck's
+		# level no nearer than min_reach_m, so an aim down the deck far off is still exactly the crosshair's)
+		var h := maxf(from.y - p.global_position.y, 0.05)
+		var flat := Vector2(dir.x, dir.z).length()
+		var reach := float(spec.min_reach_m)
+		if flat > 1e-4 and h * flat / -dir.y < reach:
+			var hd := Vector2(dir.x, dir.z) / flat
+			var down := atan2(h, reach)
+			dir = Vector3(hd.x * cos(down), -sin(down), hd.y * cos(down)).normalized()
 	var flight := String(spec.get("flight", "point_first"))
 	var spread := deg_to_rad(float(spec.get("spread_deg", 0.0)))
 	if spread > 0.0 and n > 1:
@@ -76,6 +105,11 @@ static func one(bc: BendCaster, a: Dictionary, spec: Dictionary, i := 0, n := 1)
 			dir = dir.rotated(side2.normalized(), lift)
 	var s := spec.duplicate()
 	s["flight"] = flight
+	s["mps"] = mps
+	if String(spec.get("shape", "")) == "crescent" and not spec.has("radius_m"):
+		# (the High Kick's crescent: drawn its width across, met as a thinner ball, a flat arc of flame passing a wall's top)
+		s["look_r"] = float(spec.get("width_m", 1.6)) * 0.5
+		s["radius_m"] = float(spec.get("width_m", 1.6)) * CRESCENT_HIT
 	match flight:
 		"spinning":
 			s["spin_rate"] = spin_for(from, point, mps, float(spec.get("m_per_turn", M_PER_TURN)))
@@ -100,6 +134,27 @@ static func aim_dir(from: Vector3, chest: Vector3, point: Vector3, mps: float, g
 		return d
 	var dc := Weapon.ballistic_dir(chest, point, mps, g, 0.0)
 	return dc.slerp(d, t).normalized()
+
+
+## A lob from `from` that lands on `to` under gravity `g` with its top `apex_m` over the higher of the two (round 2's High
+## Kick: "over walls and into jumpers"; spec apex_m): the launch velocity (its speed capped at `cap` by lowering the top).
+static func lob_velocity(from: Vector3, to: Vector3, apex_m: float, g: float, cap: float) -> Vector3:
+	var flat := Vector3(to.x - from.x, 0.0, to.z - from.z)
+	var dist := flat.length()
+	if dist < 0.5:
+		return (to - from).normalized() * cap
+	var top := maxf(from.y, to.y) + maxf(apex_m, 0.1)
+	var v := Vector3.ZERO
+	for i in 6:
+		var vy := sqrt(2.0 * g * (top - from.y))
+		var t_up := vy / g
+		var t_down := sqrt(2.0 * maxf(top - to.y, 0.0) / g)
+		var t := t_up + t_down
+		v = flat / dist * (dist / t) + Vector3.UP * vy
+		if v.length() <= cap or top <= maxf(from.y, to.y) + 0.15:
+			break
+		top = lerpf(maxf(from.y, to.y) + 0.1, top, 0.7)
+	return v
 
 
 ## A spinning throw's turn (rad/s): the turn its speed gives (a whole turn per `m_per_turn` m), rounded to whole turns over

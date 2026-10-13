@@ -39,6 +39,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (near_cut(VERTEX, FRAGCOORD.xy)) {
+		discard;
+	}
 	vec2 p = UV * 2.0 - 1.0;
 	float fill = clamp(COLOR.a, 0.0, 1.0);
 	float v;

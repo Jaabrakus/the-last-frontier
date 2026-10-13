@@ -34,23 +34,29 @@
 	"clock_hour": 12.25,
 	"looks": {
 		"_about": "How each part of the deck is laid: kind stone (cut slabs, slab_m square, a little uneven) or boards (planks plank_w wide running along grain x or z, board_m long, joints staggered); tint multiplies the material's own colour; jitter the slab-to-slab or plank-to-plank tint spread.",
-		"neutral": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.92, 0.58, 0.42], "jitter": 0.06},
-		"zone_1": {"kind": "boards", "grain": "z", "plank_w": 0.24, "board_m": 3.5, "tint": [1.0, 0.7, 0.42], "jitter": 0.08},
-		"zone_2": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.5, 0.58, 0.7], "jitter": 0.07},
-		"zone_3": {"kind": "boards", "grain": "x", "plank_w": 0.24, "board_m": 2.5, "tint": [0.27, 0.2, 0.16], "jitter": 0.08},
-		"plinth": {"tint": [0.72, 0.7, 0.66]},
-		"tank": {"tint": [0.5, 0.52, 0.5]},
-		"plaza": {"tint": [0.78, 0.76, 0.72]},
-		"stands": {"tint": [0.86, 0.74, 0.6]},
+		"neutral": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.87, 0.66, 0.53], "jitter": 0.06},
+		"zone_1": {"kind": "boards", "grain": "z", "plank_w": 0.24, "board_m": 3.5, "tint": [0.93, 0.84, 0.65], "jitter": 0.08},
+		"zone_2": {"kind": "stone", "slab_m": 1.0, "uv_m": 5.0, "tint": [0.58, 0.67, 0.75], "jitter": 0.07},
+		"zone_3": {"kind": "boards", "grain": "x", "plank_w": 0.24, "board_m": 2.5, "tint": [0.3, 0.28, 0.25], "jitter": 0.08},
+		"plinth": {"tint": [0.76, 0.74, 0.68]},
+		"tank": {"tint": [0.5, 0.54, 0.59]},
+		"plaza": {"tint": [0.84, 0.82, 0.75]},
+		"stands": {"tint": [0.81, 0.77, 0.67]},
 		"ground": {"tint": [0.34, 0.31, 0.24]}
 	},
 	"sockets": {
-		"_about": "Stone sockets in the deck (open rules too): a stone sits in each for Shove, Gust lift and the cushion to work on; taken away, another rises refill_s later; RingArena.rebuild puts every one back. [s, z] per side, mirrored.",
-		"at": [[5.0, 5.6], [5.0, -5.6]],
+		"_about": "Stone sockets in the deck (open rules too): a stone sits in each for Shove, Gust lift and the cushion to work on; taken away, another rises refill_s later; RingArena.rebuild puts every one back. [s, z] per side, mirrored. None since 2026-10-10 (the owner: \"remove the boulders in the arenas now\"): no stone, no iron collar, in every format; the old places were [[5.0, 5.6], [5.0, -5.6]] (2v2 [[6.0, 7.5], [11.0, 3.0]], 4v4 [[6.0, 10.5], [13.5, 4.0]]: formats' sockets_at). A stone Shove kicks up and every other stone on the deck keep these hurls.",
+		"at": [],
 		"refill_s": 8.0,
 		"away_m": 0.9,
 		"loose_life_s": 25.0,
-		"stone": {"radius_m": 0.26, "rise_s": 0.6, "mass_kg": 45.0, "life_s": 0.0, "sink_s": 1.2}
+		"stone": {"radius_m": 0.26, "rise_s": 0.6, "mass_kg": 45.0, "life_s": 0.0, "sink_s": 1.2},
+		"_hurl": "A stone on the deck shoved or lifted (a socket's cannonball, a dropped spike, a kicked-up stone: any flight with the open world's moves.json gust.stone.hurl numbers; RingArena._ring_hurls) flies with these by its kind instead: knock-back ammo, not the open world's 45-110 blows (KITS round 2's soak: earth won on shoved cannonballs). A Stone Form cast and a caught stone sent back keep their own.",
+		"hurl": {
+			"stone": {"mps": [12.0, 26.0], "gravity": 7.0, "damage": [12.0, 22.0], "roll": true, "knock_mps": 6.0},
+			"spike": {"mps": [14.0, 32.0], "gravity": 3.0, "damage": [15.0, 28.0], "pierce": true, "mass_kg": 30.0, "knock_mps": 6.0},
+			"cannonball": {"mps": [12.0, 28.0], "gravity": 6.0, "damage": [16.0, 30.0], "roll": true, "mass_kg": 45.0, "knock_mps": 7.0}
+		}
 	},
 	"water": {
 		"_about": "The tank's water (RiverWater's shader, river.gdshader, its own material): the colour of 2 m of clear water over a stone floor, a slow drift, no ice.",
@@ -60,7 +66,7 @@
 		"shallow_tint": [0.7, 0.86, 0.88],
 		"absorb": 0.55,
 		"ripple_strength": 0.3,
-		"water_roughness": 0.03,
+		"water_roughness": 0.1,
 		"grid_m": 2.0,
 		"splash_n": 46,
 		"splash_mps": 6.5
@@ -75,5 +81,86 @@
 		"back_h": 1.4,
 		"end_wall_h": 4.6,
 		"end_wall_t": 1.0
+	},
+	"formats": {
+		"_about": "The team formats' decks (docs/tidebreak/team_formats_and_arenas.md; the owner, 2026-10-10: 2v2 and 4v4 \"we need arenas built big enough\"): merged over the base and the rule set's overlay (modes.stock) when MatchSetup's format is one of these (RingArena.set_format); 1v1 is the base. deck_l = neutral_m + 2 x zones x zone_m. slot_z: the spawn line's places across the deck, the player's side's slot 0 his; spout_z: the respawn grates on each end's s line_s(zones - 1), one per fighter of a side; grate_z: every grate line's grates (spout_z among them); sockets.at [s, z] per side. layout: the team arena's raised pieces (RingArena THE LAYOUT; the owner's pick 2026-10-10, 'C · Ruins': a perch with its stairs on each team's flank, broken walls for cover, a broken column, the centre open; each piece also built turned half round the middle), checked against the spawns, grates, spouts and sockets (none within 1 m).",
+		"2v2": {
+			"_size": "16 x 34 since 2026-10-12 (the owner: \"the zones and 2v2 should have a smaller arena\"; was 20 x 40, zone_m 6): the Ruins drawn in to fit, every piece at least 0.3 m off a grate and 2 m off a spawn; the spawns 1 m clear of the grates (at 3 m a ground wave reaching a bot on its spawn ran into a grate's edge)",
+			"deck_w": 16.0,
+			"deck_l": 34.0,
+			"zone_m": 5.0,
+			"slot_z": [-2.5, 2.5],
+			"grate_z": [4.5, -4.5],
+			"grates_per_line": 2,
+			"spout_z": [4.5, -4.5],
+			"sockets_at": [],
+			"layout": {
+				"name": "ruins",
+				"pieces": [
+					{"id": "perch", "kind": "perch", "rect": [-6.0, 5.8, -3.0, 7.4], "h": 2.4, "ramp": {"rect": [-10.5, 5.8, -6.0, 7.4], "up": "+x"}},
+					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -6.2, 0.0, -4.2], "h": 1.8},
+					{"id": "wall_back", "kind": "wall", "rect": [-9.8, -1.5, -9.0, 1.5], "h": 1.6},
+					{"id": "pillar", "kind": "pillar", "rect": [-3.6, -7.0, -2.6, -6.0], "h": 3.4}
+				]
+			}
+		},
+		"4v4": {
+			"deck_w": 28.0,
+			"deck_l": 52.0,
+			"zone_m": 8.0,
+			"slot_z": [-3.0, 3.0, -7.0, 7.0],
+			"grate_z": [4.0, -4.0, 8.0, -8.0],
+			"grates_per_line": 4,
+			"spout_z": [8.0, -8.0, 4.0, -4.0],
+			"sockets_at": [],
+			"layout": {
+				"name": "ruins",
+				"pieces": [
+					{"id": "perch", "kind": "perch", "rect": [-9.0, 9.0, -3.0, 13.0], "h": 3.0, "ramp": {"rect": [-15.0, 9.5, -9.0, 12.5], "up": "+x"}},
+					{"id": "wall_mid", "kind": "wall", "rect": [-0.8, -10.0, 0.0, -6.5], "h": 1.8},
+					{"id": "wall_back", "kind": "wall", "rect": [-13.4, -1.5, -12.6, 1.5], "h": 1.6},
+					{"id": "wall_flank", "kind": "wall", "rect": [-7.5, -13.0, -4.5, -12.2], "h": 1.4},
+					{"id": "pillar", "kind": "pillar", "rect": [-4.0, -12.6, -3.0, -11.6], "h": 3.6}
+				]
+			}
+		}
+	},
+	"modes": {
+		"zones": {
+			"_about": "Zones' deck (rule set zones, over stock; a team format's numbers over these): smaller than Lives' (the owner, 2026-10-12: \"the zones and 2v2 should have a smaller arena\"), 12 x 28, three zones of 4 m a side, the territory fought over closer",
+			"deck_w": 12.0,
+			"deck_l": 28.0,
+			"zone_m": 4.0,
+			"slot_z": [0.0, 2.5, -2.5],
+			"grate_z": [3.5, -3.5],
+			"spout_z": [3.5, -3.5, 0.0]
+		},
+		"_about": "Overlays on the numbers above for a rule set (RingArena.set_mode: the ring's rule set, RingRules.pick_rule_set). A key here replaces the base's; a block (coping, lanterns, piers, curtain) is the overlay's own. classic has none: today's numbers.",
+		"stock": {
+			"_about": "The % ring's stage (smash_r3 spec v2 §5.1-5.2): the deck where it is, the water 6 m under it in a deep tank 10 m wide on every side, the deck on piers with a stone face (grabbable), no ropes, the tank's edge a curtain of falling water from a rim channel curtain_up_m over the deck (touching it is touching water: out), a pale stone coping along the four lips (proud for the eye, its collider flush) and lanterns on pier heads just outside the lip. A wall (key 4) stands at least wall_lip_clear_m inside every lip. Respawn spouts on the s 12 m line at spout_z.",
+			"water_y": -6.0,
+			"floor_y": -9.0,
+			"out_drop_m": 6.0,
+			"tank_margin": 10.0,
+			"curtain_up_m": 3.0,
+			"ropes": false,
+			"deck_w": 14.0,
+			"face_depth_m": 3.0,
+			"wall_lip_clear_m": 3.5,
+			"spout_z": [4.0, -4.0, 0.0],
+			"coping": {"w": 0.25, "proud": 0.04, "nose_r": 0.04, "tint": [0.89, 0.87, 0.8]},
+			"piers": {"every_m": 4.25, "w": 1.1, "inset_m": 1.2, "tint": [0.66, 0.64, 0.6]},
+			"lanterns": {"post_h": 1.7, "out_m": 0.45, "light": [1.0, 0.7, 0.38], "energy": 1.6, "range_m": 9.0},
+			"curtain": {
+				"flow_mps": 5.5,
+				"tint": [0.53, 0.69, 0.77],
+				"foam": [0.9, 0.92, 0.89],
+				"alpha": 0.82,
+				"channel_w": 0.9,
+				"channel_h": 0.5
+			},
+			"lip_sound": {"near_m": 4.0, "loud_db": -4.0, "quiet_db": -34.0, "stream": "res://audio/sfx/ambience/river_flow_loop_01.wav"},
+			"curtain_sound": {"db": -16.0, "stream": "res://audio/sfx/ambience/river_rapids_loop_01.wav"}
+		}
 	}
 }

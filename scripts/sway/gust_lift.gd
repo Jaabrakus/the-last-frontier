@@ -25,6 +25,12 @@ extends Node
 ## the data gives none) and a little up (knock_up_mps). While it is held and flies it does not touch its caster nor whom it
 ## has struck (collision exceptions, taken off as it comes to rest): a held stone never shoves its caster, and a lance through
 ## a man goes through him, not carrying him along on its point.
+## Round 2: a burrower under the deck (meta bend_under_until) is flown over; two casters' stones meeting in the air, the
+## heavier goes on and the lighter drops (_meet_lifts; equal ones both).
+## Online (NetStones, docs/tidebreak/ring_netcode.md "Stones"): a flight is run alike on every machine (its throw is in a
+## cast's run, or the host's word); only the host's strikes, meets another stone, slows on a man or bursts on him. A ghost's
+## flight passes bodies, lands and bursts on the world as the host's will, and is stopped by the host's word (net_stop: its
+## stone's place told; net_burst: it burst where the host's did). No machine but the host lets a stone roll.
 
 signal struck(who: Node, damage: float)
 signal landed(at: Vector3)
@@ -195,9 +201,12 @@ func _take() -> void:
 		_rb.angular_velocity = Vector3.ZERO
 	var scn := get_tree().current_scene
 	var foot := FormEffects.ground_at(stone, stone.global_position)
-	GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 14)
-	GatherFx.soil(scn, foot, Vector3.UP, 10)
-	GatherFx.fall_dust(scn, foot, radius * 2.0)
+	if not bool(stone.get_meta(&"sbfx_rise", false)):        # (its Spellbreak rise played instead: FormEffects, SbFx)
+		GatherFx.stone_chips(scn, foot + Vector3.UP * 0.1, Vector3.UP, 14)
+		GatherFx.soil(scn, foot, Vector3.UP, 10)
+		GatherFx.fall_dust(scn, foot, radius * 2.0)
+	if stone.has_meta(&"sbfx_rise"):
+		stone.remove_meta(&"sbfx_rise")
 	FormEffects.sfx("tear", foot, -2.0, 1.1)
 	_ex = caster.exclude()                         # (the caster's capsule, and a fighter's hit parts)
 	_except(by())
@@ -295,8 +304,14 @@ func hurl(toward := Vector3.INF) -> void:
 	velocity = dir * lerpf(float(mps[0]), float(mps[1]), power)
 	phase = Phase.FLIGHT
 	_fly_t = 0.0
+	_hurl_from = from
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
 	GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
+	# (the Spellbreak flight, SbFx: visual only, keyed by its Throw's hit info; a held stone thrown back by the catch's own)
+	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
+	var sbo := {"node": stone, "dir": velocity, "info": get_meta(&"bend_info", {})}
+	if not (sbk.ends_with(".return") and SbFx.start(self, "flight", by(), "stone_catch/catch", "return_flight", sbo.merged({"el": "earth"}))):
+		SbFx.start(self, "flight", by(), sbk, "flight", sbo)
 
 
 ## The point that leads the flight, from the stone's origin (world offset): a spike's (its origin is its foot) most of the
@@ -310,6 +325,13 @@ func _lead() -> Vector3:
 
 func _fly(dt: float) -> void:
 	_fly_t += dt
+	var ghost := not NetSpells.decides()
+	if not ghost and _meet_lifts():
+		return
+	if not heated and not ghost and BendLoadout.wears(by(), BendZone.KILN_STONE):
+		_kiln_check()
+	if not ghost and _trail_step != 0.0:
+		_trail()                                 # (Sulphur Boulder worn: its gas puffs laid behind it as it flies)
 	var hd := _hurl_d()
 	velocity.y -= float(hd.get("gravity", 6.0)) * dt
 	var lead := _lead() * smoothstep(0.0, LEAD_IN_S, _fly_t)
@@ -347,18 +369,46 @@ func _fly(dt: float) -> void:
 			return
 		var who := FormSpikes.taker(col, caster)
 		var body := who is CharacterBody3D or who is NpcFighter or who is WildAnimal
+		if body and ghost:
+			# (a ghost's flight passes him: the host's strike and its word decide)
+			_except(who)
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
+		if body and BendStatus.until(who, &"bend_under_until") > 0.0:
+			# (a burrower under the deck: the stone passes over him; round 2's Burrow)
+			_except(who)
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
 		if body:
 			_except(who)                        # (through him or past him: never carrying him on)
+			var first_hit := not hit.has(who.get_instance_id())
 			_strike(col, who, c_at)
+			# A fighter has a capsule, torso and head. Exclude all of them after
+			# contact so its reaction pose cannot slow the same stone again.
+			if who.has_method(&"ray_exclude"):
+				_ex.append_array(who.call(&"ray_exclude"))
 			if info.has("rid"):
 				_ex.append(info.rid)
 			if who is CollisionObject3D:
 				_ex.append((who as CollisionObject3D).get_rid())
-			if not bool(hd.get("pierce", false)):
+			if first_hit and _shatters():
+				_shatter(c_at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)
+				return                              # (the ring: it bursts on him)
+			if first_hit and not bool(hd.get("pierce", false)):
 				velocity *= 0.65                    # (a ball knocks a man down and goes on, slowed)
 			_place(to)
 			return
-		# the world (a raised wall too: struck, then it stops there)
+		# the world (a raised wall too: struck, then it stops there; a Boulder through its thrower's own Earth Wall tears a piece
+		# off it and flies on bigger: _through_wall)
+		if who is FormRaised and _through_wall(who as FormRaised, c_at):
+			if info.has("rid"):
+				_ex.append(info.rid)
+			_place(to)
+			return
 		if who != null:
 			_strike(col, who, c_at)
 		_land(from + (to - from) * frac[0], Vector3(info.get("normal", Vector3.UP)), Vector3(info.get("point", c_at)))     # (the touch itself)
@@ -366,6 +416,30 @@ func _fly(dt: float) -> void:
 	_place(to)
 	if _fly_t > FLIGHT_MAX_S or to.y < -200.0:
 		_land(to, Vector3.UP, to)
+
+
+## Another caster's flying stone met in the air (round 2: the bigger stone wins, light < medium < heavy, equal ones both
+## break; BendBolt.weight_of): the lighter one drops where it is. True when this one dropped.
+func _meet_lifts() -> bool:
+	for o in get_tree().get_nodes_in_group(GROUP):
+		var l := o as GustLift
+		if l == null or l == self or l.phase != Phase.FLIGHT or l.get_instance_id() < get_instance_id() or l.stone == null \
+				or not is_instance_valid(l.stone) or l.by() == by():
+			continue
+		if l.stone.global_position.distance_to(stone.global_position) > radius + l.radius + 0.25:
+			continue
+		var wa := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(self), 1))
+		var wb := int(BendBolt.WEIGHTS.get(BendBolt.weight_of(l), 1))
+		var mid := (stone.global_position + l.stone.global_position) * 0.5
+		if not SbFx.fire(by(), "clash/stone", "clash", {"at": mid, "el": "earth", "node": stone}):
+			BendLooks.burst(mid, "stone", 22)
+		BendZone.BendGas.clash(by(), l.by(), mid)          # (the Sulphur set: a cloud where his stones clash with a foe's)
+		if wb <= wa:
+			l.drop()
+		if wa <= wb:
+			drop()
+			return true
+	return false
 
 
 func _place(p: Vector3) -> void:
@@ -379,6 +453,47 @@ func _place(p: Vector3) -> void:
 
 
 ## The damage of a strike at the speed it has now.
+## The Boulder through its thrower's own (or his side's) Earth Wall (the new ring; the owner, 2026-10-12: "if a boulder hits it
+## ... tears off a piece of the wall and it continues"; rules.json stock.wall_boost): the wall takes a hit where it went through
+## (its crack, its chips), the Boulder flies on bigger, harder and a little faster (its hit info wall_boost "earth": RingRules'
+## d and growth), once. True when it went through.
+var wall_boosted := false
+var _knock_k := 1.0
+
+
+func _through_wall(w: FormRaised, at: Vector3) -> bool:
+	if kind != "cannonball" or wall_boosted or not RingRules.stock_on() or not NetSpells.decides() or bool(w.get_meta(&"bend_ice", false)):
+		return false
+	var src := by()
+	var wb := int(w.get_meta(&"bend_by", 0))
+	var whose: Variant = instance_from_id(wb) if wb != 0 else null
+	if src == null or not (wb == src.get_instance_id() or (whose is Node and BendCaster.same_team(src, whose as Node))):
+		return false
+	wall_boosted = true
+	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else -w.global_basis.z
+	w.apply_hit(maxf(w.hit_min, 60.0), at, dir, src)          # (a piece torn out: its crack and chips; worn a hit)
+	if is_instance_valid(w):
+		_ex.append(w.get_rid())
+		w._chips(w.get_tree().current_scene, at, -dir, 18)
+	BendLooks.burst(at, "stone", 22, dir, 70.0, 6.0, 0.35, false)
+	FormEffects.sfx("strike", at, 0.0, 0.7)
+	BendSounds.play(&"earth_crumble", at, 0.0)
+	var b := RingRules.stock_block("wall_boost")
+	var k := float(b.get("size", 1.4))
+	velocity *= float(b.get("stone_speed", 1.1))
+	power = minf(power + float(b.get("stone_power", 0.35)), 1.0)
+	_knock_k = float(b.get("knock", 1.2)) * 1.15
+	radius *= k
+	if _q != null and _q.shape is SphereShape3D:
+		(_q.shape as SphereShape3D).radius = radius * 0.85
+	if stone != null and is_instance_valid(stone) and stone.mesh_instance != null and is_instance_valid(stone.mesh_instance):
+		stone.mesh_instance.scale *= k
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf["wall_boost"] = "earth"
+	set_meta(&"bend_info", inf)
+	return true
+
+
 func damage_now() -> float:
 	var hd := _hurl_d()
 	var dm: Array = hd.get("damage", [20.0, 60.0])
@@ -394,6 +509,16 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 	var dmg := damage_now()
 	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.FORWARD
 	var src := by()
+	SbFx.fire(src, SbFx.key_of(get_meta(&"bend_info", {})), "hit", {"at": p, "dir": dir, "node": stone})
+	if RingRules.stock_on() and (who is FrontierPlayer or who is NpcFighter):
+		# (round 3, the % ring: the hit with its info, meta bend_info from its Throw: BendR3.deliver; AIR)
+		var fl := Vector3(dir.x, 0.0, dir.z).normalized() if Vector2(dir.x, dir.z).length_squared() > 1e-6 else Vector3.FORWARD
+		var hd0 := _hurl_d()
+		BendR3.deliver(who, dmg, p, dir, src, -1.0, (fl * float(hd0.get("knock_mps", KNOCK_MPS)) + Vector3.UP * float(hd0.get("knock_up_mps", KNOCK_UP_MPS))) * _knock_k,
+				get_meta(&"bend_info", {}))
+		struck.emit(who, dmg)
+		FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)
+		return
 	Hit.deliver(col, dmg, p, dir, src)
 	struck.emit(who, dmg)
 	FormEffects.sfx("strike", p, 0.0, 0.8 if kind == "cannonball" else 1.1)
@@ -415,10 +540,20 @@ func _strike(col: Node, who: Node, p: Vector3) -> void:
 ## It meets the world at `p` (its middle; `contact` the touch): a spike sticks there along its flight; a ball or a stone is in
 ## the physics again with what is left of its speed (it rolls).
 func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
+	if _shatters():
+		_avalanche(contact, n)                   # (Avalanche worn: three stones roll on from where it lands)
+		_shatter(contact, n)                     # (the ring: it bursts on what it met, nothing left lying)
+		return
 	phase = Phase.DONE
+	_gas_end(contact)
 	var scn := get_tree().current_scene
-	GatherFx.stone_chips(scn, contact, n, 12)
-	GatherFx.fall_dust(scn, contact, radius * 1.6)
+	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
+	SbFx.stop(self, "flight")
+	if not SbFx.fire(by(), sbk, "land", {"at": contact, "normal": n, "dir": velocity, "node": stone}):
+		GatherFx.stone_chips(scn, contact, n, 12)
+		GatherFx.fall_dust(scn, contact, radius * 1.6)
+	if kind != "spike":
+		SbFx.start(stone, "roll", by(), sbk, "roll", {"node": stone, "dir": velocity})
 	FormEffects.sfx("strike", contact, -2.0, 0.7)
 	if kind == "spike":
 		var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.DOWN
@@ -430,7 +565,7 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 			(stone as FormStone).rest_again()
 	else:
 		_place(p)
-		if _rb != null:
+		if _rb != null and NetSpells.decides():
 			_rb.freeze = false
 			_rb.freeze_mode = _mode
 			var v := velocity
@@ -447,18 +582,225 @@ func _land(p: Vector3, n: Vector3, contact: Vector3) -> void:
 	queue_free()
 
 
+## Kiln Stone (BendZone.KILN_STONE): heated by fire it flew through (its hit info says so; a fire trail on the stone) until it
+## lands; douse() a plain stone again (a Turn).
+var heated := false
+var _kiln_trail: GPUParticles3D
+## Where its flight began (hurl), for Sulphur Boulder's trail (BendZone.BendGas.stone_end).
+var _hurl_from := Vector3.INF
+## Sulphur Boulder's trail (BendGas.BOULDER worn): the flat distance between the puffs it lays as it flies (BendGas.trail_step,
+## worked out on its first flight frame; -1 not yet, 0 none) and how many it has laid.
+var _trail_step := -1.0
+var _trail_n := 0
+
+
+## Its stone stopped at `at` (a burst on a body, the deck, a wall; a landing): the Sulphur set's gas where a wearer's own Spike
+## or Boulder stops (BendGas.stone_end; never a returned stone), and the trail puffs its flight did not reach.
+func _gas_end(at: Vector3) -> void:
+	if _gas_ours():
+		BendZone.BendGas.stone_end(by() as Node3D, kind, at, _hurl_from, _trail_n)
+
+
+## Whether its stone is a Stone Form throw of its caster's own (never a returned one), decided here (the host's online).
+func _gas_ours() -> bool:
+	var inf: Dictionary = get_meta(&"bend_info", {})
+	return String(inf.get("tag", "")).begins_with("stone_form/") and not bool(inf.get("returned", false)) and NetSpells.decides()
+
+
+## Sulphur Boulder (BendGas.BOULDER): its Boulder lays TRAIL_PUFFS gas puffs behind it as it flies, evenly over the flight
+## foreseen from where it was hurled (BendGas.trail_step), each on the deck under the Boulder as it passes its mark (none over
+## the water); the ones its flight did not reach are laid where it stops (stone_end).
+func _trail() -> void:
+	if _trail_step < 0.0:
+		_trail_step = 0.0
+		if kind == "cannonball" and _hurl_from.is_finite() and _gas_ours():
+			_trail_step = BendZone.BendGas.trail_step(by() as Node3D, _hurl_from, velocity, float(_hurl_d().get("gravity", 6.0)))
+		if _trail_step <= 0.0:
+			return
+	var p := stone.global_position
+	var flat := Vector2(p.x - _hurl_from.x, p.z - _hurl_from.z).length()
+	while _trail_n < BendZone.BendGas.TRAIL_PUFFS and flat >= _trail_step * float(_trail_n + 1):
+		_trail_n += 1
+		BendZone.BendGas.trail_puff(by() as Node3D, p, _hurl_from)
+
+
+func _kiln_check() -> void:
+	for z in get_tree().get_nodes_in_group(BendZone.GROUP):
+		var bz := z as BendZone
+		if bz != null and bz.kind in BendZone.KILN_FIRES and not bz.is_queued_for_deletion() and bz.inside(stone.global_position):
+			heat()
+			return
+
+
+func heat() -> void:
+	if heated or stone == null or not is_instance_valid(stone):
+		return
+	heated = true
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf["heated"] = true
+	set_meta(&"bend_info", inf)
+	_kiln_trail = BendLooks.trail(stone, "fire", radius)
+	BendLooks.burst(stone.global_position, "fire", 10, -velocity.normalized(), 60.0, 2.0, 0.2)
+
+
+func douse() -> void:
+	if not heated:
+		return
+	heated = false
+	var inf: Dictionary = (get_meta(&"bend_info", {}) as Dictionary).duplicate()
+	inf.erase("heated")
+	set_meta(&"bend_info", inf)
+	BendLooks.stop_trail(_kiln_trail)
+	_kiln_trail = null
+	if stone != null and is_instance_valid(stone):
+		BendLooks.burst(stone.global_position, "steam", 12, Vector3.UP, 90.0, 1.5, 0.4)
+
+
+## Earth's Avalanche (data/sway/skill_tree.json earth.boulder.avalanche; the owner, 2026-10-11: "make sure all the talents
+## work"): its wearer's Boulder that lands on the deck (a floor under it, not a wall's face; never a returned stone) breaks into
+## three stones that roll on along the deck from there, fanned AVALANCHE_DEG apart about its flight: low stone bolts (BendBolt
+## low: jumped, stopped by walls, taken by a Catch: BendZone keeps only one of a volley, the rest dropped at the catcher's feet,
+## the thrower's loose stones), one volley (a fresh volley_id, volley_n 3: together the Boulder's %, only the first to hit
+## knocks; the node's class base for its wearer). Online the host's. The Boulder in flight is one Boulder (its own hit whole:
+## FormEffects marks its info volley_n 1).
+const AVALANCHE := "earth.boulder.avalanche"
+const AVALANCHE_DEG := 15.0
+const AVALANCHE_ROLL := {"mps": 12.0, "range_m": 8.0, "radius_m": 0.18}
+
+
+func _avalanche(at: Vector3, n: Vector3) -> void:
+	var by_n := by() as Node3D
+	var inf: Dictionary = get_meta(&"bend_info", {})
+	if kind != "cannonball" or by_n == null or n.y < 0.5 or not BendLoadout.wears(by_n, AVALANCHE) \
+			or not String(inf.get("tag", "")).begins_with("stone_form/cannonball") or bool(inf.get("returned", false)) \
+			or not NetSpells.decides():
+		return
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	flat = flat.normalized() if flat.length_squared() > 1e-4 else caster.facing()
+	var vi := inf.duplicate()
+	vi.erase("heated")                           # (a Kiln Stone's heat ends where the Boulder lands)
+	vi["volley_id"] = BendR3.new_volley()
+	vi["volley_n"] = 3
+	vi["avalanche"] = true
+	var hd := _hurl_d()
+	var r := float(AVALANCHE_ROLL.radius_m)
+	for i in 3:
+		var dir := flat.rotated(Vector3.UP, deg_to_rad(AVALANCHE_DEG * float(i - 1)))
+		var spec := {"kind": "stone", "low": true, "mps": float(AVALANCHE_ROLL.mps), "range_m": float(AVALANCHE_ROLL.range_m),
+				"radius_m": r, "damage": damage_now() / 3.0, "knock_mps": float(hd.get("knock_mps", KNOCK_MPS)), "up_mps": 1.0,
+				"weight": "medium", "flight": "spinning", "spin_rate": float(AVALANCHE_ROLL.mps) / r, "spin_axis": Vector3.RIGHT,
+				"_info": vi}
+		BendBolt.launch(by_n, Vector3(at.x, at.y + BendBolt.LOW_M, at.z) + dir * 0.35, dir, spec)
+	BendLooks.burst(at + Vector3.UP * 0.2, "stone", 16, Vector3.UP, 120.0, 3.0, 0.3)
+
+
+## A stone piece's look for the bursts: jagged shards of each ground's stone (six, made once: about 0.25 m long, scaled per
+## piece), so the burst reads as broken stone, not pebbles.
+static var _chunk_cache := {}
+
+
+static func _chunk_mesh(matter: String, i: int) -> Mesh:
+	if not _chunk_cache.has(matter):
+		var list: Array = []
+		for j in 6:
+			list.append(FormModels.spike_mesh(0.09 + 0.015 * float(j % 3), 0.2 + 0.05 * float(j % 2), 13 + j * 7, 0.0, matter))
+		_chunk_cache[matter] = list
+	var l: Array = _chunk_cache[matter]
+	return l[i % l.size()]
+
+
+## Whether this stone bursts on what it meets (moves.json stone_form.shatter; the owner, 2026-10-10: "the boulders and rocks
+## they need to explode", shatter on impact): a Spike's or a Boulder's (a FormStone) in the ring (ring_only), a deck socket's
+## stone hurled too.
+func _shatters() -> bool:
+	var sd := shatter_d()
+	if sd.is_empty() or not (stone is FormStone) or not is_inside_tree():
+		return false
+	return not bool(sd.get("ring_only", true)) or RingArena.find(get_tree()) != null
+
+
+static func shatter_d() -> Dictionary:
+	var v: Variant = SwayMoves.move("stone_form").get("shatter", {})
+	return v if v is Dictionary else {}
+
+
+## It bursts at `at` (`n` the face it met): chips, dust, stone bits and a few pieces flung out that fade, a crack; the stone
+## gone. Bigger for a grown one (its scale). Its hit was struck before (_strike); `landed` is told as a landing's is.
+func _shatter(at: Vector3, n: Vector3) -> void:
+	phase = Phase.DONE
+	SbFx.stop(self, "flight")
+	_gas_end(at)
+	var sd := shatter_d()
+	var k := float(stone.get_meta(FormEffects.GROWN_META, 1.0)) if stone != null and is_instance_valid(stone) else 1.0
+	var scn := get_tree().current_scene
+	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.DOWN
+	var out := (n - dir * 0.6).normalized() if (n - dir * 0.6).length_squared() > 1e-4 else Vector3.UP
+	GatherFx.stone_chips(scn, at, n, int(float(sd.get("chips", 24)) * k))
+	GatherFx.fall_dust(scn, at, float(sd.get("dust_m", 1.8)) * k)
+	BendLooks.burst(at, "stone", int(float(sd.get("burst_n", 36)) * k), out, 150.0, float(sd.get("burst_mps", 6.5)) * sqrt(k),
+			float(sd.get("burst_size", 0.5)) * k)
+	GatherFx.fall_dust(scn, at + Vector3.UP * 0.4 * k, float(sd.get("dust_m", 1.8)) * k * 0.7)
+	FormEffects.sfx("break", at, 2.0, 0.9 / sqrt(k))
+	FormEffects.sfx("strike", at, -1.0, 0.75)
+	var matter := (stone as FormStone).matter if stone is FormStone else "stone"
+	_chunks(scn, at, out, k, matter, sd)
+	_release_stone()
+	landed.emit(at)
+	if stone != null and is_instance_valid(stone):
+		stone.queue_free()
+	queue_free()
+
+
+## A few pieces of the stone flung out from `at` round `out`, falling under the flight's own gravity and shrinking away over
+## chunk_life_s (looks only: no body).
+static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: String, sd: Dictionary) -> void:
+	if scn == null or DisplayServer.get_name() == "headless":
+		return
+	var n := int(float(sd.get("chunks", 7)) * k)
+	var life := float(sd.get("chunk_life_s", 1.3))
+	var ar := RingArena.find(scn.get_tree())
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var side := out.cross(Vector3.UP)
+	side = side.normalized() if side.length_squared() > 1e-4 else Vector3.RIGHT
+	for i in n:
+		var mi := MeshInstance3D.new()
+		mi.mesh = _chunk_mesh(matter, i)
+		var sz := rng.randf_range(0.8, 2.0) * k
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		scn.add_child(mi)
+		mi.global_position = at
+		var a := rng.randf_range(-PI, PI)
+		var d := (out + side.rotated(out, a) * rng.randf_range(0.4, 1.0)).normalized()
+		var v0 := d * float(sd.get("chunk_mps", 5.5)) * rng.randf_range(0.6, 1.2) + Vector3.UP * float(sd.get("chunk_up_mps", 3.5)) * rng.randf_range(0.5, 1.1)
+		var spin := Vector3(rng.randf_range(-9, 9), rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+		var tw := mi.create_tween()
+		tw.tween_method(func(t: float) -> void:
+			if is_instance_valid(mi):
+				var p := at + v0 * t + Vector3.DOWN * 9.0 * t * t
+				if ar != null and is_instance_valid(ar) and ar.on_deck(p):
+					p.y = maxf(p.y, ar.deck_y() + ar.floor_at(p) + 0.05)    # (it lands on the deck, a piece, a step)
+				mi.global_position = p
+				mi.rotation = spin * t
+				mi.scale = Vector3.ONE * sz * clampf(1.0 - pow(t / life, 3.0), 0.01, 1.0), 0.0, life, life)
+		tw.tween_callback(mi.queue_free)
+
+
 ## The hold broken: it falls where it hangs. In flight too (a Catch, a deflect, a cushion took it: BendZone): it stops there
 ## and falls, its flight over.
 func drop(fx := true) -> void:
 	if phase == Phase.DONE:
 		return
 	phase = Phase.DONE
+	SbFx.stop(self, "flight")
 	if stone != null and is_instance_valid(stone):
 		if fx and is_inside_tree():
 			var scn := get_tree().current_scene
-			GatherFx.fall_dust(scn, stone.global_position, radius * 2.0)
+			# (the entry grounds the point itself (at "ground"), only when it plays: no rays while the effects are off)
+			if not SbFx.fire(by(), "stone_form/drop", "drop", {"at": stone.global_position, "el": "earth", "node": stone}):
+				GatherFx.fall_dust(scn, stone.global_position, radius * 2.0)
 			FormEffects.sfx("break", stone.global_position, 0.0, 0.9)
-		if _rb != null:
+		if _rb != null and NetSpells.decides():
 			_rb.freeze_mode = _mode
 			_rb.freeze = false
 			_rb.linear_velocity = Vector3.DOWN * 0.5
@@ -480,6 +822,9 @@ func _except(b: Node) -> void:
 
 
 func _release_stone() -> void:
+	if _kiln_trail != null:
+		BendLooks.stop_trail(_kiln_trail)        # (Kiln Stone: the heat ends where it lands)
+		_kiln_trail = null
 	if stone is PhysicsBody3D and is_instance_valid(stone):
 		for b in _excepted:
 			if is_instance_valid(b):
@@ -494,3 +839,23 @@ func _release_stone() -> void:
 func _exit_tree() -> void:
 	if phase == Phase.HELD:
 		drop(false)
+
+
+# ---------------------------------------------------------------- online (see the header)
+## The host's word that its flight is over (a ghost's): stopped where it is, nothing played (the stone's place is the word's).
+func net_stop() -> void:
+	if phase == Phase.DONE:
+		return
+	phase = Phase.DONE
+	SbFx.stop(self, "flight")
+	_release_stone()
+	if stone is FormStone and is_instance_valid(stone):
+		(stone as FormStone).rest_again()
+	queue_free()
+
+
+## The host's word that its stone burst at `at` (a ghost's): its burst played there, the stone gone.
+func net_burst(at: Vector3) -> void:
+	if phase == Phase.DONE:
+		return
+	_shatter(at, -velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.UP)

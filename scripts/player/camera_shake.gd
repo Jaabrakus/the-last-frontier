@@ -5,6 +5,12 @@ extends Node
 ## nothing at its edge. The shake is the camera's own screen offsets (h_offset, v_offset): the view jolts, the camera
 ## does not turn and the aim does not move. A trauma (0..1) that runs down over the shake's seconds, the jolt its square
 ## (hard at the start, settling), from smooth noise. One CameraShake under a player's camera, made when first needed.
+## ROUND 4 (IMPACT; the owner's "camera kick" for the ring's hits): jolt(amount, secs, dir) on the same offset path: the view
+## knocked `amount` m along `dir` (screen x right, y up) at once, springing back in a few damped swings over `secs`. Never a
+## turn: the camera's basis and the aim (FrontierPlayer.get_aim_point: the camera node's own position and basis) are the
+## same through it, bit for bit (tests/ring/test_ring_feel.gd). For a hit nothing calls kick() or sustain() (they turn the
+## camera, and so the aim; spec §3). The offsets this writes are its own share only (taken back out each frame), so an
+## offset someone else gives the camera is kept. The quake's noise is seeded from the camera's id, not the global RNG.
 
 const MAX_OFFSET := 0.22         ## m of screen offset at full trauma
 const FREQ := 14.0               ## how fast it jolts (noise per second)
@@ -27,6 +33,14 @@ const SUSTAIN_EASE_S := 0.35
 var _fall := 1.0
 var _t := 0.0
 var _noise := FastNoiseLite.new()
+## Round 4: the jolt now (m at its start, s long, its way on the screen, s since it began; JOLT_FREQ swings a second), and the
+## offsets this node put on the camera last frame (taken back before the next are put on).
+var jolt_amount := 0.0
+var _jolt_secs := 0.25
+var _jolt_dir := Vector2(0.0, -1.0)
+var _jolt_t := 0.0
+var _applied := Vector2.ZERO
+const JOLT_FREQ := 9.0
 
 
 ## Shakes the view of each player within `radius` m of `at`, `strength` (0..1) close by, over `secs` seconds.
@@ -67,6 +81,34 @@ func sustain(amount: float) -> void:
 	_sustain_hold = 0.1
 
 
+## Round 4: the view knocked `amount` m along `dir` (screen: x right, y up), springing back over `secs` (the stronger of it and
+## what is left of the last). Offsets only: never a turn.
+func jolt(amount: float, secs: float, dir := Vector2(0.0, -1.0)) -> void:
+	if amount <= jolt_left():
+		return
+	jolt_amount = amount
+	_jolt_secs = maxf(secs, 0.05)
+	_jolt_dir = dir.normalized() if dir.length_squared() > 1e-6 else Vector2(0.0, -1.0)
+	_jolt_t = 0.0
+
+
+## What is left of the jolt now (m).
+func jolt_left() -> float:
+	if jolt_amount <= 0.0 or _jolt_t >= _jolt_secs:
+		return 0.0
+	var k := 1.0 - _jolt_t / _jolt_secs
+	return jolt_amount * k * k
+
+
+## The jolt's offset now (m, screen x / y).
+func jolt_offset() -> Vector2:
+	if jolt_amount <= 0.0 or _jolt_t >= _jolt_secs:
+		return Vector2.ZERO
+	var k := 1.0 - _jolt_t / _jolt_secs
+	# (a knock at once, then damped swings back: cos, the envelope squared)
+	return _jolt_dir * jolt_amount * k * k * cos(TAU * JOLT_FREQ * _jolt_t)
+
+
 ## A jolt of `amount` (0..1; the stronger of it and what is left of the last), running down over `secs`.
 func add(amount: float, secs: float) -> void:
 	if amount <= trauma:
@@ -78,23 +120,30 @@ func add(amount: float, secs: float) -> void:
 func _ready() -> void:
 	_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	_noise.frequency = 1.0
-	_noise.seed = randi()
+	# (round 4: from the camera's id, never the global RNG: a test's or a match's dice stay its own)
+	_noise.seed = int((camera.get_instance_id() if camera != null else get_instance_id()) % 2147483647)
 
 
 func _process(dt: float) -> void:
 	if camera == null or not is_instance_valid(camera):
 		return
 	_tremble(dt)
-	if trauma <= 0.0:
-		if camera.h_offset != 0.0 or camera.v_offset != 0.0:
-			camera.h_offset = 0.0
-			camera.v_offset = 0.0
-		return
-	_t += dt
-	trauma = maxf(trauma - _fall * dt, 0.0)
-	var a := trauma * trauma * MAX_OFFSET
-	camera.h_offset = a * _noise.get_noise_2d(_t * FREQ, 0.0) * 1.4
-	camera.v_offset = a * _noise.get_noise_2d(0.0, 50.0 + _t * FREQ) * 1.4
+	var off := Vector2.ZERO
+	if trauma > 0.0:
+		_t += dt
+		trauma = maxf(trauma - _fall * dt, 0.0)
+		var a := trauma * trauma * MAX_OFFSET
+		off = Vector2(a * _noise.get_noise_2d(_t * FREQ, 0.0) * 1.4, a * _noise.get_noise_2d(0.0, 50.0 + _t * FREQ) * 1.4)
+	if jolt_amount > 0.0:
+		_jolt_t += dt
+		off += jolt_offset()
+		if _jolt_t >= _jolt_secs:
+			jolt_amount = 0.0
+	# (only this node's share: last frame's taken back, this frame's put on; an offset of someone else's is kept)
+	if off != _applied:
+		camera.h_offset = camera.h_offset - _applied.x + off.x
+		camera.v_offset = camera.v_offset - _applied.y + off.y
+		_applied = off
 
 
 ## The tremble's turn of the camera (the bow's waves: Bow.tremble_offset()).

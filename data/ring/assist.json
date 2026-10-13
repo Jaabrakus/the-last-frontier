@@ -1,0 +1,39 @@
+{
+  "format": "ring_assist",
+  "version": 1,
+  "_doc": "Round 4 SIMPLE (the owner, 2026-10-05/06: \"simple like runescape but hard to master like runescape\", \"make the skills easy hard to master ... think human made think avg IQ\"): the Basic control set's helpers (RingAssist, scripts/ring/ring_assist.gd). They act only under Basic (MatchSetup.controls() \"basic\"), only for this machine's own player in a % ring (his RingMoves on), never for a bot, never under Full. Each drives the player's own keys (the input he would give: Space pressed, a direction held) the way NpcPad drives a bot; none of them ever turns the camera, moves the aim or touches a lock. Every toggle and number here.",
+  "recovery": {
+    "_doc": "Off the deck (or thrown, in hitstun) with Space HELD, or pressed within mash_window_s (mashing works too): Space no longer jumps by itself; the helper steers toward the nearest lip (lip_in_m inside it) and presses Space for the double jump, then for the Rise, when RingMoves.simulate (the bots' own look-ahead, RingPredict's physics) says that brings him back: the drift alone first (nothing spent), then the earliest press time of press_times_s with the Rise after it at the first of rise_after_s that comes back. Replanned every replan_s (sim_dt steps over horizon_s, at most budget simulations a look); nothing comes back: the lead model's late order (desperate: the double jump falling under the lip + dj_under_m, the Rise falling under the lip + rise_under_m). Its own escape from hitstun when the plan says so.",
+    "on": true,
+    "mash_window_s": 0.35,
+    "replan_s": 0.1,
+    "sim_dt": 0.03333,
+    "horizon_s": 2.4,
+    "budget": 40,
+    "lip_in_m": 0.5,
+    "press_times_s": [0.0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1.0],
+    "rise_after_s": [0.22, 0.3, 0.4, 0.55, 0.7, 0.9],
+    "desperate": {"dj_under_m": 0.5, "rise_under_m": -0.5}
+  },
+  "steer": {
+    "_doc": "While thrown (a launch, until he is back on the deck, on the edge or out): with no direction held, a light steer toward the deck's centre: frac of the full steer (the flight's steer read at 0.1 s, then the air drift); a direction held is added to it (his own steer always wins the larger share).",
+    "on": true,
+    "frac": 0.4
+  },
+  "edge": {
+    "_doc": "Basic's edge: the grab is automatic (RingMoves); hanging, Space or any direction climbs, and it climbs by itself climb_after_s after the grab unless E or C is held (kept_by). E, a click and C never roll in, attack or let go under Basic (Full's edge options).",
+    "on": true,
+    "climb_after_s": 0.4,
+    "kept_by": ["bend_guard", "crouch"]
+  },
+  "blocks": {
+    "_doc": "Full-only under Basic: each true is held back from the player's keys under Basic (the keys do nothing): air_dodge (3 in the air), roll (the guard up + a fresh direction), duck and crouch (C on the deck), fast_fall (C in the air), short_hop (Space within the hop's window of a cast's release: always the full jump), edge_options (E, a click, C on the edge). Keys 4 and 5 (Wall, Heal) come in after the player's first win (later_keys; the win kept in GameSettings' match section, key first_win) and always under Full.",
+    "air_dodge": true,
+    "roll": true,
+    "crouch": true,
+    "fast_fall": true,
+    "short_hop": true,
+    "edge_options": true,
+    "later_keys": [4, 5]
+  }
+}

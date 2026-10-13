@@ -73,7 +73,7 @@ func _initialize() -> void:
 			_shots = a.substr(6)
 			DirAccess.make_dir_recursive_absolute(_shots)
 			if not _headless():
-				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	_had_file = FileAccess.file_exists(AppearanceStore.current_path())
 	if _had_file:
 		_backup = FileAccess.get_file_as_string(AppearanceStore.current_path())

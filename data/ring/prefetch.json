@@ -18,10 +18,7 @@
    "res://audio/sfx/weather/thunder_far_02.wav",
    "res://audio/sfx/weather/thunder_near_03.wav",
    "res://audio/sfx/weather/thunder_far_03.wav",
-   "res://audio/sfx/weather/rain_loop_01.wav",
-   "res://assets/sky/sky_galleon.glb",
-   "res://assets/sky/sky_galleon_galleon_atlas.png",
-   "res://assets/sky/sky_galleon_galleon_emission.png"
+   "res://audio/sfx/weather/rain_loop_01.wav"
   ],
   "structures": [
    "res://assets/environment/structures/textures/fieldstone_albedo_2k.png",

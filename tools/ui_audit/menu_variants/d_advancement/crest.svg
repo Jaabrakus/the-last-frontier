@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="40" viewBox="0 0 400 40">
+  <defs>
+    <linearGradient id="l" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="200" y2="0">
+      <stop offset="0" stop-color="#8a6630" stop-opacity="0"/><stop offset="0.35" stop-color="#b8924f"/><stop offset="1" stop-color="#f3d690"/>
+    </linearGradient>
+    <linearGradient id="r" gradientUnits="userSpaceOnUse" x1="380" y1="0" x2="200" y2="0">
+      <stop offset="0" stop-color="#8a6630" stop-opacity="0"/><stop offset="0.35" stop-color="#b8924f"/><stop offset="1" stop-color="#f3d690"/>
+    </linearGradient>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="34">
+      <stop offset="0" stop-color="#fbe6ae"/><stop offset="0.5" stop-color="#d7b26a"/><stop offset="1" stop-color="#8a6630"/>
+    </linearGradient>
+  </defs>
+  <path d="M184 18.6 L20 20 L184 21.4 Z" fill="url(#l)"/>
+  <path d="M216 18.6 L380 20 L216 21.4 Z" fill="url(#r)"/>
+  <path d="M176 14.5 L120 16.4" stroke="url(#l)" stroke-width="1" fill="none"/>
+  <path d="M176 25.5 L120 23.6" stroke="url(#l)" stroke-width="1" fill="none"/>
+  <path d="M224 14.5 L280 16.4" stroke="url(#r)" stroke-width="1" fill="none"/>
+  <path d="M224 25.5 L280 23.6" stroke="url(#r)" stroke-width="1" fill="none"/>
+  <path d="M166 20 L171 15.5 L176 20 L171 24.5 Z" fill="#d7b26a" stroke="#07080b" stroke-width="1"/>
+  <path d="M224 20 L229 15.5 L234 20 L229 24.5 Z" fill="#d7b26a" stroke="#07080b" stroke-width="1"/>
+  <g stroke="#07080b" stroke-width="4.4" stroke-linejoin="round" fill="#141820">
+    <path d="M190 10 L210 10 L210 30 L190 30 Z"/>
+    <path d="M200 5.9 L214.1 20 L200 34.1 L185.9 20 Z"/>
+  </g>
+  <g stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="none">
+    <path d="M190 10 L210 10 L210 30 L190 30 Z"/>
+    <path d="M200 5.9 L214.1 20 L200 34.1 L185.9 20 Z"/>
+  </g>
+  <circle cx="200" cy="20" r="5.2" fill="#07080b"/>
+  <circle cx="200" cy="20" r="3.9" fill="url(#g)"/>
+</svg>

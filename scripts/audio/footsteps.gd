@@ -50,7 +50,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_cloth_cd -= delta
 	var on_floor := player.is_on_floor()
-	var speed := player.horizontal_speed()
+	var speed := _step_speed()
 
 	# Leaving and meeting the floor.
 	if on_floor:
@@ -90,6 +90,19 @@ func _physics_process(delta: float) -> void:
 	_was_crouching = player.is_crouching
 	_was_sprinting = player.is_sprinting
 	_was_steady = steady
+
+
+## Ring locomotion excludes knock carry, like FrontierPlayer._ring_move. Rolls and
+## other body-state moves have their own sounds; sliding on a hit is not running.
+## World locomotion retains its existing distance-based sound behavior.
+func _step_speed() -> float:
+	if player.ring_moves == null:
+		return player.horizontal_speed()
+	if player.ring_moves.mode != "":
+		return 0.0
+	var kn := BendKnock.peek(player)
+	var own := kn.base_of(player.velocity) if kn != null else player.velocity
+	return Vector2(own.x, own.z).length()
 
 
 func _gait(speed: float) -> String:

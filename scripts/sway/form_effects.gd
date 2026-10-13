@@ -27,17 +27,29 @@ extends RefCounted
 ##                 it (its look the wall's, its strength pillar.materials)
 ##   mend          the piece back one stage (mend_stage): a ruin stands again (charred), a piece alight is put out, a charred
 ##                 one made whole, a raised wall worn by shot packed again; wood from the pack for each (not the earth wall)
-## Dust, stone chips and a grinding of stone with each (Sfx ids from moves.json form_sfx, when they exist).
+## Dust, stone chips and a grinding of stone with each (Sfx or BendSounds ids from moves.json form_sfx, when they exist).
 ## Any caster (the owner, 2026-10-04: the ring's bots cast the same moves as the player; BendCast.cast is their one entry):
 ## every helper but apply takes a caster untyped (a SwayCaster, a BendCaster, a body) and asks BendCaster.wrap(c) for it, so
 ## the player's own callers (SwayCaster, FormCast, the tests with a SwayCaster) are as they were. What only the player has stays
 ## his: the lock's matter (FormCast.lock_matter), the stride's boost (plant_times), the aim camera's view (Throw.cam_off), the
 ## pack's wood for mend. A bot mends only its own raised earth (meta bend_by: whoever raised it), and with no wood.
+## ROUND 2 (skills_r2 spec §2.7, §2.10, §3.1; an element's fighter, the player as the bots):
+##   the wall      rises where the crosshair is, place.min_m to place.max_m (2-6 m) from the caster, facing him (place_point;
+##                 its lock is the caster's own: SwayCaster.self_lock_of)
+##   the stone     Spike's and Boulder's stone rises during the lock (raise_stone: at the spec's raise_at_fill) and hangs
+##                 before the caster, its point on the aim (a Throw waiting: GustLift held); the cast throws it (stone_form
+##                 takes it); a switch turns a spike to a boulder (reshape_raised); called off it drops loose (drop_raised:
+##                 FormStone.make_loose). A raised stone is its raiser's (meta bend_raised_by)
+##   mend          with an element the player too mends only his own pieces, with no wood; a mended piece takes its next hit
+##                 free (meta bend_brace)
 
 const FormMatter := preload("res://scripts/sway/form_matter.gd")
 const MOVES := ["earth_wall", "stone_form", "pillar", "mend"]
 
 
+## ROUND 3 (AIR, the % ring): walls' places kept air_rules.wall_lip_clear_m inside every lip (place_point, BendR3.off_lip);
+## a stone raised in the air off the deck tears from the deck's face within air_stone_reach_m and follows the caster's hands
+## (air_face, Throw.follow); a Throw carries its cast's hit info to its flight (Throw.info, the lift's meta bend_info).
 static func handles(m: String) -> bool:
 	return m in MOVES or SwayMoves.move(m).has("bend")
 
@@ -52,15 +64,36 @@ static func apply(c: SwayCaster, m: String, t: Node3D, at: Vector3) -> void:
 	if bd.has(mode):
 		BendEffects.apply(c, m, mode, bd[mode], t, at)
 		return
+	var ts := BendLoadout.talent_spec(c.player, m, mode)
+	if ts.is_empty():
+		ts = BendLoadout.new_spec(c.player, m, mode)     # (a new mode a worn talent adds through the tree: Mire)
+	if ts.is_empty() and FireTalents.any(c.player):
+		ts = FireTalents.own_spec(c.player, m, mode)     # (a worn new skill's own spec: Cauterize; none in moves.json)
+	if not ts.is_empty():
+		BendEffects.apply(c, m, mode, ts, t, at)         # (a worn new skill's own mode: the Sulphur Vent, Mire, Cauterize)
+		return
+	var keep := BendR3.cur
+	var bc0 := BendCaster.of(c.player)
+	var grew := bc0 != null and bc0.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary
+	BendR3.cur = BendR3.info_for(c, m, mode, grew)  # (round 3: the hit info a stone thrown now carries; ".grown" when it grew)
 	match m:
 		"earth_wall":
-			earth_wall(c, at, d)
+			if BendPoses.element_of(c.player) != "":
+				# (where the crosshair is, 2-6 m off, facing the caster: its ahead_m taken back so its foot stands there)
+				var pt := place_point(c, d.get("place", (d.get("wall", {}) as Dictionary).get("place", {})))
+				at = pt - way_to(c, pt) * float((d.get("wall", {}) as Dictionary).get("ahead_m", 0.75))
+				if BendR3.stock():
+					at = BendR3.off_lip(c.player.get_tree(), at, BendR3.num("wall_lip_clear_m", 3.5))
+				earth_wall(c, at, d, FormMatter.of_ground(c.player.get_tree(), pt))
+			else:
+				earth_wall(c, at, d)
 		"stone_form":
 			stone_form(c, at, d, c.mode_of(m))
 		"pillar":
 			pillar(c, at, d, c.mode_of(m))
 		"mend":
 			mend(c, t, d)
+	BendR3.cur = keep
 
 
 ## The caster's flat way to `at` (their facing when it is under them).
@@ -128,18 +161,20 @@ static func earth_wall(c: Variant, at: Vector3, d: Dictionary, matter := "", tre
 	var tree := bc.body.get_tree()
 	if matter == "" or matter == "wood":
 		matter = FormMatter.of_ground(tree, at)
-	var wn := FormMatter.numbers(w, FormMatter.entry("earth_wall", matter), matter)
+	var wn := BendLoadout.wall_numbers(bc.body, "wall", w, matter)          # (the wearer's Earth Wall numbers; Classic: the move's)
 	var way := way_to(bc, at)
 	var foot := ground_at(bc, at + way * float(wn.get("ahead_m", 0.75)))
 	var across := Vector3.UP.cross(way).normalized()
 	var xf := Transform3D(Basis(across, Vector3.UP, way), foot)
 	var scn := tree.current_scene
+	# (raised before a floating teammate it rises to cover him: BendStatus.float_cover)
+	wn["height_m"] = maxf(float(wn.get("height_m", 2.0)), BendStatus.float_cover(bc.body, foot))
 	var r := FormRaised.raise(scn, "wall", xf, wn, absi(hash(foot)) % 97)
 	_mark(r, bc)
 	FormRaised.count_wall(r)                            # (the ring's cap: rules.json max_walls)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, ground_at(bc, at - way * 0.15), way, float(h.get("width_m", 3.0)), float(h.get("depth_m", 1.5)), float(h.get("fade_s", 600.0)))
-	_raised_fx(bc, foot, float(wn.get("width_m", 3.0)), matter)
+	_raised_fx(bc, foot, float(wn.get("width_m", 3.0)), matter, bool(r.get_meta(&"sbfx_rise", false)))
 	return r
 
 
@@ -157,7 +192,7 @@ static func tree_wall(c: Variant, i: int, d: Dictionary) -> FormRaised:
 	var td := hv.describe("tree", "tree", i) if hv != null else {}
 	if td.is_empty():
 		return null
-	var wn := FormMatter.numbers(d.get("wall", {}), FormMatter.entry("earth_wall", "wood"), "wood")
+	var wn := BendLoadout.wall_numbers(bc.body, "wall", d.get("wall", {}), "wood")
 	var root := ground_at(bc, td.pos)
 	var way := way_to(bc, root)
 	var past := float(td.radius) + float(wn.get("thick_m", 0.4)) * 0.5 + float((d.get("tree", {}) as Dictionary).get("gap_m", 0.06))
@@ -185,6 +220,8 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 	var pd: Dictionary = (d.get("pillar", {}) as Dictionary).duplicate()
 	var ld: Dictionary = pd.get("launch", {})
 	var p := bc.body
+	if mode == "self" and BendStatus.bound(p) and BendStatus.element_mode(p):
+		return null                              # (earth's Lift is its dash key's: a bind holds the feet, BendStatus.bind)
 	var sc := _sway(bc)
 	if at == Vector3.INF:
 		at = p.global_position
@@ -219,16 +256,30 @@ static func pillar(c: Variant, at: Vector3, d: Dictionary, mode := "self") -> Fo
 	_mark(r, bc)
 	var h: Dictionary = d.get("hollow", {})
 	FormHollow.dig(scn, foot, way, float(h.get("width_m", 2.1)), float(h.get("depth_m", 2.1)), float(h.get("fade_s", 600.0)))
-	_raised_fx(bc, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter)
+	_raised_fx(bc, foot, float(pd.get("radius_m", 0.55)) * 2.0, matter, bool(r.get_meta(&"sbfx_rise", false)))
+	var elem := BendPoses.element_of(p) != ""
+	if elem:
+		# (round 2's Lift: it sinks back sink_s after it is up, never a wall)
+		var sk := float(d.get("sink_s", pd.get("sink_s", 0.0)))
+		if sk > 0.0:
+			r.life_s = sk
 	if how == "run":
-		# launched up and forward off the column coming up under the stride; on a foot plant, a boost
+		# launched up and forward off the column coming up under the stride; on a foot plant, a boost (with an element: no
+		# footfall window, the run itself carries it farther: run_mult above 3 m/s)
 		var gap := plant_gap(p)
 		var pt := plant_times(p)
 		var boost := pt.y <= float(ld.get("plant_window_s", 0.045)) or pt.x <= float(ld.get("plant_after_s", 0.02))
 		var k := float(ld.get("boost", 1.3)) if boost else 1.0
+		if elem:
+			boost = false
+			k = float(d.get("run_mult", ld.get("run_mult", 1.3))) if run.length() >= 3.0 else 1.0
 		p.velocity = run * float(ld.get("carry", 0.85)) + way * float(ld.get("fwd_mps", 3.0)) * k + Vector3.UP * float(ld.get("up_mps", 6.0)) * k
 		if sc != null:
 			sc.last_launch = {"boost": boost, "gap": gap, "velocity": p.velocity, "k": k}
+		# (the Spellbreak launch, its trail and its landing: SbFx, visual only)
+		var lk := SbFx.key_of(BendR3.cur, "pillar", mode)
+		SbFx.fire(p, lk, "launch", {"at": foot, "dir": way})
+		SbFx.watch_landing(p, lk, "air_trail", "land")
 		if boost:
 			_tell(bc, "On the step: a boost")
 	return r
@@ -295,24 +346,295 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return null
+	var th0 := raised_of(bc.body)
+	if th0 != null:
+		# (the stone raised during the lock: thrown now, as its shape is: a switch reshaped it)
+		bc.body.remove_meta(RAISED_META)
+		th0.stone.remove_meta(&"bend_raised_by")
+		SbFx.stop(th0.stone, "hang")              # (its Spellbreak hang let go: the flight follows, SbFx)
+		th0.waiting = false
+		if not BendR3.cur.is_empty():
+			th0.info = BendR3.cur.duplicate()
+		if String(th0.info.get("tag", "")).ends_with(".grown") and not th0.stone.has_meta(GROWN_META):
+			grow_raised(th0, "stone_form", mode, true)    # (grown with no stone swelled yet: at once)
+		_one_boulder(bc, th0, mode)
+		return th0.stone
 	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else at)
 	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var face := air_face(bc)
+	if face != Vector3.INF:
+		foot = face                                # (round 3: in the air it tears from the nearest deck face)
 	var scn := bc.body.get_tree().current_scene
 	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
 	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
 	var s: FormStone
 	if mode == "cannonball":
-		s = FormStone.ball(scn, foot, d.get("cannonball", {}), seed, matter)
+		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
 	var h: Dictionary = d.get("hollow", {})
-	FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	if face == Vector3.INF:
+		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
-	Throw.start(bc, s, td)
+	if SbFx.fire(bc.body, "stone_form/" + mode, "rise", {"at": foot, "dir": way}):
+		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
+	var th := Throw.start(bc, s, _throw_d(bc, d))
+	if th != null and BendR3.on(bc.body) and BendR3.airborne(bc.body):
+		th.follow = true
+	if th != null and String(BendR3.cur.get("tag", "")).ends_with(".grown"):
+		grow_raised(th, "stone_form", mode, true)     # (cast grown with no stone raised first: a bot's, a test's)
+	_one_boulder(bc, th, mode)
 	return s
+
+
+## Avalanche's wearer (GustLift.AVALANCHE: the node's class numbers, a volley of three at base 5.9, are the rolling stones' own,
+## class_when avalanche): the Boulder itself, until it lands, one stone whose hit is whole (its info volley_n 1; its class
+## Classic's). Anyone else's throw: untouched.
+static func _one_boulder(bc: BendCaster, th: Throw, mode: String) -> void:
+	if th != null and mode == "cannonball" and BendLoadout.wears(bc.body, GustLift.AVALANCHE) and not th.info.is_empty():
+		th.info["volley_n"] = 1
+
+
+## Round 3: where an earth caster in the air off the deck tears his stone from (spec §6.1): the deck's face just under its
+## nearest lip, when that is within air_rules.air_stone_reach_m of him (INF: on the ground, over the deck, too far, or the
+## gate off: the ground before him, as ever).
+static func air_face(bc: BendCaster) -> Vector3:
+	if bc == null or not bc.valid() or not BendR3.on(bc.body) or not BendR3.airborne(bc.body):
+		return Vector3.INF
+	var ar := BendR3.arena(bc.body.get_tree())
+	if ar == null:
+		return Vector3.INF
+	var lip := ar.nearest_lip(bc.body.global_position)
+	if float(lip.get("out_m", 0.0)) <= 0.0:
+		return Vector3.INF                         # (over the deck: the deck under him)
+	var pt: Vector3 = lip.point
+	if pt.distance_to(bc.body.global_position) > BendR3.num("air_stone_reach_m", 12.0):
+		return Vector3.INF
+	return pt - (lip.normal as Vector3) * 0.2 + Vector3.DOWN * 0.6
+
+
+# ---------------------------------------------------------------- round 2: the raised stone, the wall's place
+## The body's meta naming the Throw of a stone raised during its lock (its instance id).
+const RAISED_META := &"bend_raised"
+
+
+## Spike's or Boulder's stone (move `m`, `mode` "spike" or "cannonball") raised now before caster `c` (any) during its lock:
+## it bursts up a step before him toward the aim and rises to chest height, where it hangs, its point on the aim (a Throw,
+## waiting) until the cast throws it (stone_form) or it is let go loose (drop_raised). One at a time (an earlier one drops
+## loose). The Throw, or null.
+static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return null
+	drop_raised_of(bc.body)
+	var d := SwayMoves.move(m if m != "" else "stone_form")
+	var s := _new_stone(bc, d, mode)
+	var sbk := "%s/%s" % [m if m != "" else "stone_form", mode]
+	if SbFx.fire(bc.body, sbk, "rise", {"at": s.global_position, "dir": bc.facing()}):
+		s.set_meta(&"sbfx_rise", true)            # (GustLift's tear dust left out: the Spellbreak rise stands for it)
+	var th := Throw.start(bc, s, _throw_d(bc, d))
+	if th == null:
+		s.queue_free()
+		return null
+	if BendR3.on(bc.body) and BendR3.airborne(bc.body):
+		th.follow = true                            # (round 3: torn from the deck's face, it flies to the hand and keeps there)
+	th.waiting = true
+	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
+	bc.body.set_meta(RAISED_META, th.get_instance_id())
+	SbFx.start(s, "hang", bc.body, sbk, "hang", {"node": s, "dir": bc.facing()})
+	return th
+
+
+## A new stone of `mode` ("cannonball" a ball, else a spike) of move data `d`, burst up before caster `bc` toward the aim
+## (its hollow, its sounds), as stone_form raises one.
+static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone:
+	var td: Dictionary = d.get("throw", {})
+	var aim := aim_point(bc)
+	var way := way_to(bc, aim if aim != Vector3.INF else bc.body.global_position + bc.facing() * 10.0)
+	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var face := air_face(bc)
+	if face != Vector3.INF:
+		foot = face                                # (round 3: in the air it tears from the nearest deck face)
+	var scn := bc.body.get_tree().current_scene
+	var seed := absi(hash(Vector3i(roundi(foot.x * 10.0), roundi(foot.y * 10.0), roundi(foot.z * 10.0)))) % 97
+	var matter := FormMatter.of_ground(bc.body.get_tree(), foot)
+	var s: FormStone
+	if mode == "cannonball":
+		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
+	else:
+		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
+	var h: Dictionary = d.get("hollow", {})
+	if face == Vector3.INF:
+		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
+	sfx("rise", foot, -2.0, 0.9)
+	sfx("rumble", foot, -4.0, 1.1)
+	return s
+
+
+## The meta on a stone grown in the hands (its scale).
+const GROWN_META := &"form_grown"
+
+
+## The raised stone of Throw `th` (move `m`'s `mode`) grown (stone_form.grow.<mode>; the caster held on past the full lock):
+## it swells to scale x its size over swell_s (`now`: at once), its flight's sweep and hurl the grown one's (slower, harder).
+static func grow_raised(th: Node, m: String, mode: String, now := false) -> void:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t) or t.stone == null or not is_instance_valid(t.stone) or t.stone.has_meta(GROWN_META):
+		return
+	var g: Variant = (SwayMoves.move(m if m != "" else "stone_form").get("grow", {}) as Dictionary).get(mode)
+	if not (g is Dictionary):
+		return
+	var gd := g as Dictionary
+	var k := float(gd.get("scale", 1.5))
+	t.stone.set_meta(GROWN_META, k)
+	t.stone.grow(k, 0.0 if now else float(gd.get("swell_s", 0.25)))
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.radius *= k
+		t.lift._q = null                           # (its sweep made again at the new size)
+		var hurl := (t.lift.d.get("hurl", {}) as Dictionary).duplicate(true)
+		var kind := t.lift.kind
+		var hk: Dictionary = (hurl.get(kind, {}) as Dictionary).duplicate()
+		hk.merge(gd.get("hurl", {}) as Dictionary, true)
+		hurl[kind] = hk
+		t.lift.d["hurl"] = hurl
+	var at := t.stone.global_position
+	sfx("rumble", at, -1.0, 0.8)
+	sfx("rise", at, -3.0, 0.75)
+	if t.stone.is_inside_tree():
+		GatherFx.fall_dust(t.stone.get_tree().current_scene, at, t.stone.radius * 2.0)
+
+
+## Stone Form's throw data for caster `bc`: the move's, with the wearer's own hurl speeds (a skill tree node: Swift Lance, Heavy
+## Boulder; BendLoadout tune move:stone_form.throw.hurl.<kind>.mps). Classic: the move's own dictionary.
+static func _throw_d(bc: BendCaster, d: Dictionary) -> Dictionary:
+	var td: Dictionary = d.get("throw", {})
+	if bc == null or BendLoadout.overlay_of(bc.body).is_empty():
+		return td
+	var out := td.duplicate(true)
+	var hurl: Dictionary = out.get("hurl", {})
+	for k: String in ["spike", "cannonball"]:
+		if hurl.get(k) is Dictionary:
+			(hurl[k] as Dictionary)["mps"] = BendLoadout.tune(bc.body, "move:stone_form.throw.hurl.%s.mps" % k, (hurl[k] as Dictionary).get("mps"))
+	return out
+
+
+## The Boulder's own data for caster `bc`: the move's, with the wearer's radius (Heavy Boulder; tune
+## move:stone_form.cannonball.radius_m).
+static func _ball_d(bc: BendCaster, d: Dictionary) -> Dictionary:
+	var cb: Dictionary = d.get("cannonball", {})
+	if bc == null or BendLoadout.overlay_of(bc.body).is_empty():
+		return cb
+	var out := cb.duplicate()
+	out["radius_m"] = BendLoadout.tune_f(bc.body, "move:stone_form.cannonball.radius_m", float(cb.get("radius_m", 0.26)))
+	return out
+
+
+## The Throw of the stone `body` raised and still holds (null none).
+static func raised_of(body: Node) -> Throw:
+	if body == null or not is_instance_valid(body) or not body.has_meta(RAISED_META):
+		return null
+	var th := instance_from_id(int(body.get_meta(RAISED_META))) as Throw
+	if th == null or not is_instance_valid(th) or th.is_queued_for_deletion() or not th.waiting or th.stone == null \
+			or not is_instance_valid(th.stone):
+		body.remove_meta(RAISED_META)
+		return null
+	return th
+
+
+## A raised stone (its waiting Throw) let go: it falls where it hangs and lies as its raiser's loose stone
+## (FormStone.make_loose: the loose cap). Its raiser's meta gone.
+static func drop_raised(th: Node) -> void:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t):
+		return
+	var by: Node = t.caster.body if t.caster != null and t.caster.valid() else null
+	if by != null and int(by.get_meta(RAISED_META, -1)) == t.get_instance_id():
+		by.remove_meta(RAISED_META)
+	var s := t.stone
+	if s != null and is_instance_valid(s):
+		SbFx.stop(s, "hang")
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.drop()
+	t.waiting = false
+	t.queue_free()
+	if s != null and is_instance_valid(s):
+		s.remove_meta(&"bend_raised_by")
+		FormStone.make_loose(s, by)
+
+
+## The stone `body` raised and still holds, let go loose (a cast that did not throw it; a lock called off).
+static func drop_raised_of(body: Node) -> void:
+	var th := raised_of(body)
+	if th != null:
+		drop_raised(th)
+
+
+## A raised stone turned to `mode`'s ("cannonball" a boulder, else a spike) where it hangs (a switch mid-lock: Spike to
+## Boulder), still waiting for the cast. The new Throw (the raiser's meta moved to it), or the old one when nothing changed.
+static func reshape_raised(th: Node, mode: String) -> Node:
+	var t := th as Throw
+	if t == null or not is_instance_valid(t) or t.stone == null or not is_instance_valid(t.stone):
+		return th
+	var want := "cannonball" if mode == "cannonball" else "spike"
+	if t.stone.kind == want:
+		return th
+	var bc := t.caster
+	var at := t.stone.global_position
+	var old_s := t.stone
+	var matter := old_s.matter
+	if t.lift != null and is_instance_valid(t.lift):
+		t.lift.drop(false)
+	t.waiting = false
+	t.queue_free()
+	old_s.queue_free()
+	if bc == null or not bc.valid():
+		return null
+	var d := SwayMoves.move("stone_form")
+	var scn := bc.body.get_tree().current_scene
+	var s: FormStone
+	if want == "cannonball":
+		s = FormStone.ball(scn, at, d.get("cannonball", {}), 7, matter)
+	else:
+		s = FormStone.spike(scn, at, bc.facing(), d.get("spike", {}), 7, matter)
+	s.base = Transform3D(s.base.basis, at)
+	s.global_transform = s.base
+	s.state = FormStone.State.RESTING
+	var td: Dictionary = (d.get("throw", {}) as Dictionary).duplicate()
+	td["chest_m"] = at.y - bc.body.global_position.y
+	var nt := Throw.start(bc, s, td)
+	if nt == null:
+		return null
+	nt.waiting = true
+	s.set_meta(&"bend_raised_by", bc.body.get_instance_id())
+	bc.body.set_meta(RAISED_META, nt.get_instance_id())
+	SbFx.start(s, "hang", bc.body, "stone_form/" + ("cannonball" if want == "cannonball" else "spike"), "hang", {"node": s})
+	sfx("rumble", at, -4.0, 0.8)
+	return nt
+
+
+## Where a wall of caster `c` rises (spec §2.7): the ground under the crosshair (a bot's: its target), place.min_m to
+## place.max_m (2 to 6 m by default) from the caster on that line.
+static func place_point(c: Variant, place: Variant = {}) -> Vector3:
+	var bc := BendCaster.wrap(c)
+	if bc == null or not bc.valid():
+		return Vector3.INF
+	var pd: Dictionary = place if place is Dictionary else {}
+	var lo := float(pd.get("min_m", 2.0))
+	var hi := float(pd.get("max_m", 6.0))
+	var p := bc.body.global_position
+	var aim := aim_point(bc)
+	var flat := (aim - p) if aim != Vector3.INF else bc.facing() * hi
+	flat.y = 0.0
+	if flat.length_squared() < 1e-4:
+		flat = bc.facing()
+	var dist := clampf(flat.length(), lo, hi)
+	var pt := p + flat.normalized() * dist
+	if BendR3.stock():
+		pt = BendR3.off_lip(bc.body.get_tree(), pt, BendR3.num("wall_lip_clear_m", 3.5))   # (round 3: off every lip)
+	return ground_at(bc, pt)
 
 
 ## Gust on a raised wall or pillar (the user, 2026-10-04: "we should be able to use gust to push certain parts of the rock wall
@@ -398,6 +720,8 @@ class Throw:
 	var rise_s := 0.25
 	var t := 0.0
 	var is_thrown := false
+	## Raised during a lock (round 2: raise_stone): it hangs at chest height, its point on the aim, until this goes false.
+	var waiting := false
 	## Where it was hurled at (the crosshair then), whom it struck ([who, damage]) and what it knocked on.
 	var target := Vector3.INF
 	var struck: Array = []
@@ -407,6 +731,12 @@ class Throw:
 	## A place it goes to instead of the crosshair (INF: the crosshair): Earth Shove's pull (the caster's feet), split. Set
 	## before its first aim (start's `p_fixed`).
 	var fixed := Vector3.INF
+	## Round 3: the hit info its stone carries (BendR3.cur at its start; the cast's, set again at the throw: stone_form,
+	## BendZone.return_stone), handed to its flight (GustLift meta bend_info); and `follow` (raised in the air, or taken into
+	## a jump while still held: from its source to the caster's hands over its rise, and kept there as he moves).
+	var info := {}
+	var follow := false
+	var _from := Vector3.INF
 
 	## Stone `s` thrown by caster `c` (a SwayCaster, a BendCaster, a body: BendCaster.wrap) with throw data `p_td`, at
 	## `p_fixed` (INF: the aim). Null when there is no caster or no stone.
@@ -420,6 +750,7 @@ class Throw:
 		th.stone = s
 		th.td = p_td
 		th.fixed = p_fixed
+		th.info = BendR3.cur.duplicate()
 		th.rise_s = maxf(float(p_td.get("rise_s", 0.25)), 0.05)
 		th.add_to_group(GROUP)
 		var cam := FormEffects.cam_of(bc)
@@ -450,12 +781,30 @@ class Throw:
 		var aim := _aim()
 		if aim != Vector3.INF:
 			lift.aim = aim
-		if t >= rise_s:
+		if waiting and not follow and caster != null and caster.valid() and BendR3.on(caster.body) and BendR3.airborne(caster.body):
+			follow = true                          # (a stone raised before takeoff joins the hands; no new stone or charge)
+		if follow and caster != null and caster.valid():
+			_follow()
+		if t >= rise_s and not waiting:
 			is_thrown = true
+			if not info.is_empty():
+				lift.set_meta(&"bend_info", info)
 			var last := _aim(true) if cam_off == Vector3.INF and fixed == Vector3.INF else Vector3.INF
 			target = last if last != Vector3.INF else lift.aim
 			lift.hurl(_arced(target))
 			thrown.emit(stone, target)
+
+	## Round 3: raised in the air, its lift's start moved from where it tore loose to before the caster's hands (its rise's
+	## height taken off) over rise_s, and kept there while it waits (he falls, it falls with him).
+	func _follow() -> void:
+		var p := caster.body
+		if _from == Vector3.INF:
+			_from = lift._start.origin
+		var way := caster.facing()
+		var h := float((lift.d.get("hold", {}) as Dictionary).get("rise_m", 1.3))
+		var want := p.global_position + way * float(td.get("ahead_m", 1.4)) + Vector3.UP * (float(td.get("chest_m", 1.3)) - h)
+		var k := smoothstep(0.0, rise_s, t)
+		lift._start.origin = _from.lerp(want, k)
 
 	## The crosshair's point now, from the aim's view (cam_off); a fighter near the crosshair (FormEffects.assist_target): his
 	## chest, ahead of him by his pace over the flight. Any other caster's: its target's chest (`final`: led and scattered,
@@ -471,13 +820,13 @@ class Throw:
 			var f := FormEffects.assist_target(caster, from if from != Vector3.INF else cam.global_position, -cam.global_basis.z, [stone.get_rid()])
 			if f != null:
 				return caster.target_point(f, _mps())     # (the player's: his aim-help setting; PlayerBendCaster)
-			return FormEffects.aim_point(caster, [stone.get_rid()], from)
+			return caster.flight_point([stone.get_rid()], from)     # (the crosshair's line at the foe's depth: PlayerBendCaster)
 		if caster is PlayerBendCaster:
-			return FormEffects.aim_point(caster, [stone.get_rid()])       # (no camera: INF, as ever)
+			return caster.flight_point([stone.get_rid()])       # (no camera: INF, as ever)
 		var who := caster.aim_target()
 		if who != null:
 			return caster.target_point(who, _mps()) if final else NpcSenses.chest_of(who)
-		return caster.aim_point([stone.get_rid()])
+		return caster.flight_point([stone.get_rid()])
 
 	## Its flight's speed (the hurl's last).
 	func _mps() -> float:
@@ -531,7 +880,7 @@ class Throw:
 				if not (who is FrontierPlayer or who is NpcFighter) or knocked.has(who) or met.has(who.get_instance_id()):
 					continue
 				knocked.append(who)
-				BendStatus.knock(who, flat * k + Vector3.UP * 1.0, by)
+				BendR3.deliver(who, 0.0, at, flat, by, -1.0, flat * k + Vector3.UP * 1.0, info)
 			if kind == "spike" and things > 0:
 				stone.freeze = false              # (it met a thing that went on: nothing to stick in, it falls)
 				stone.sleeping = false
@@ -540,12 +889,14 @@ class Throw:
 
 ## The ground breaking as it rises, by its matter: dust and clods and stones (earth), mud thrown up, stone chips, a white
 ## cloud (snow).
-static func _raised_fx(c: Variant, foot: Vector3, width: float, matter := "earth") -> void:
+static func _raised_fx(c: Variant, foot: Vector3, width: float, matter := "earth", sound_only := false) -> void:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return
 	var scn := bc.body.get_tree().current_scene
-	match matter:
+	match ("" if sound_only else matter):
+		"":
+			pass                                   # (its Spellbreak rise played instead: SbFx)
 		"mud":
 			GatherFx._dust(scn, foot + Vector3.UP * 0.1, Vector3.UP, 18, Vector2(0.08, 0.24), 1.0, Color(0.16, 0.11, 0.07, 0.75))
 		"snow":
@@ -617,13 +968,20 @@ static func take_wood(p: Node, kind: String, n: int) -> bool:
 	return true
 
 
+## Earth's Reinforce (data/sway/skill_tree.json earth.mend.reinforce; the owner, 2026-10-11: "make sure all the talents work"):
+## a piece its wearer mends takes its next REINFORCE_N hits free (meta bend_brace an int: FormRaised.take_brace); Mend's lock
+## is the node's (2.6 s).
+const REINFORCE := "earth.mend.reinforce"
+const REINFORCE_N := 2
+
+
 ## Mend `t` by caster `c` (see the header): the stage it mended ("" none). The player pays the pack's wood; any other caster
 ## (a bot: BendCast.cast) mends only raised earth it raised itself (own()), worn, and pays nothing.
 static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 	var bc := BendCaster.wrap(c)
 	if bc == null or not bc.valid():
 		return ""
-	var pack := bc.body is FrontierPlayer
+	var pack := bc.body is FrontierPlayer and BendPoses.element_of(bc.body) == ""     # (an element's fighter: his own, no wood)
 	var stage := mend_stage(t)
 	if not pack and not (stage == "worn" and own(bc, t)):
 		stage = ""
@@ -641,6 +999,9 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 	match stage:
 		"worn":
 			(t as FormRaised).mend()
+			if not pack:
+				# (round 2: a mended piece takes its next hit free; Reinforce's wearer, its next REINFORCE_N)
+				t.set_meta(&"bend_brace", REINFORCE_N if BendLoadout.wears(bc.body, REINFORCE) else true)
 			_tell(bc, (t as FormRaised).mended_line)       # (by its matter: "The stones set again", "The logs set again")
 		"alight":
 			var fs := FireSpread.find(t.get_tree())
@@ -672,7 +1033,8 @@ static func mend(c: Variant, t: Node3D, d: Dictionary) -> String:
 					at = p.global_position
 			_tell(bc, "The %s stands again, charred" % BuildData.get_default().name_of(type).to_lower())
 	var scn := bc.body.get_tree().current_scene
-	GatherFx.wood_chips(scn, at + Vector3.UP * 1.0, Vector3.UP, 10)
+	if not SbFx.fire(bc.body, "mend", "mend", {"at": at, "node": t}):
+		GatherFx.wood_chips(scn, at + Vector3.UP * 1.0, Vector3.UP, 10)
 	sfx("mend", at, -2.0, 1.25)
 	return stage
 
@@ -718,9 +1080,12 @@ static func ground_at(n: Object, p: Vector3, down := 4.0) -> Vector3:
 
 static func sfx(key: String, at: Vector3, db := 0.0, pitch := 1.0) -> void:
 	var id := StringName(String((SwayMoves.data().get("form_sfx", {}) as Dictionary).get(key, "")))
-	if id == &"" or not Sfx.has(id):
+	if id == &"":
 		return
-	Sfx.play_3d(id, at, db, pitch)
+	if Sfx.has(id):
+		Sfx.play_3d(id, at, db, pitch)
+	elif BendSounds.TABLE.has(id) and BendSounds.has(id):     # a bend sound (crackle: lightning_crack)
+		BendSounds.play(id, at, db, pitch)
 
 
 static func _tell(c: Variant, text: String) -> void:

@@ -20,12 +20,18 @@ extends CanvasLayer
 ##   edges          a red heartbeat at the edges of the screen when health is low; a flash when hurt
 ##   F1             the controls (hidden; a hint at the start), F3 the debug lines
 ## ARENA MODE (set_arena(true): Tidebreak's ring, FrontierPlayer.arena): the compass and the clock, the rested row, the
-## torch and the needs are gone; the hotbar's strip gives way to the BendStrip (bottom centre: keys 1-5, both skills each,
-## the readied one bright, its variation pips, the ready line "2 · Earth Wall · column (2/3)"), the MatchBar sits top centre
-## (the round, the time, the score, your own zone and the ground each side holds: read off the match node, never a mark of
-## the other side's body), a thin water bar under the health for a water fighter, the status words (rooted, slowed,
-## anchored, winded) under it, and F1 shows ARENA_HELP. Nothing is ever drawn on or over the opponent (the owner: no target
-## cues of any kind); the aim dot shows while a move is readied.
+## torch and the needs are gone; the hotbar's strip gives way to the BendStrip (bottom centre: the seven chips LMB JAB,
+## E GUARD and keys 1-5 STRIKE PUSH DASH WALL HEAL, the readied one lit, each with its move's plain name and its "tap twice"
+## move, one help line under the row), the MatchBar sits top centre (the round, the time, the score, your own zone and the
+## ground each side holds: read off the match node, never a mark of the other side's body), the status words (rooted,
+## slowed, anchored, winded) under the health, and F1 shows ARENA_HELP (KitWords). Nothing is ever drawn on or over the
+## opponent (the owner: no target cues of any kind); the aim dot shows while a move is readied.
+## Round 3 (smash_r3 spec v2 §10): in the % ring (RingRules.stock_on() as set_arena runs) the PercentBar (scripts/ui/
+## percent_bar.gd: each side's % and lives on fixed plates, your pips and fresh band on your own, the clock) stands in place of
+## the MatchBar, and the health row is hidden (there is no health in the % ring); the classic ring keeps the MatchBar.
+## Round 4 (HUD; the owner: "a cleaner HUD"): the BendStrip lays itself out off the player's body (hud.json strip_layout: L1
+## bottom-left under your plate by default, over the health row in the classic ring), its one help line above it; the status
+## words and the 12 px "F1 controls" (fading after arena_f1_s) sit in the bottom corner away from the strip.
 ## Hooks kept: player, show_debug, on_projectile_hit(), on_target_killed() (group hit_listeners), toast().
 
 @export var color := Color(0.95, 0.92, 0.8)
@@ -62,44 +68,71 @@ const HELP := "WASD move · Shift sprint · Ctrl/C crouch (toggle) · Space jump
 		+ "Z rest, hold Z sleep (a lean-to and a fire make it better) · V eat · F cook at a lit campfire\n" \
 		+ "T: tap light / raise, hold put away, double-tap set or throw it (click)  ·  hold U drink · hold Y smoke a pipe\n" \
 		+ "Tab gear · K skills · O character · F1 this help · F3 debug · Esc free mouse"
-## F1 in the arena (no show words: tests/ring/test_ring_hud.gd holds the HUD's arena lines to that).
-const ARENA_HELP := "WASD move · Shift sprint · Space jump · Ctrl/C crouch\n" \
-		+ "1-4 a key's move, the same key again its other move · 5 Mend, again Patch · wheel: the move's three forms\n" \
-		+ "Hold RMB on the aim: the lock fills; let go to cast · F1 this help · Esc free mouse\n" \
-		+ "Q: the readied move onto LMB (as it is now) · hold LMB: lock and cast it, the keys left as they are\n" \
-		+ "Knock the other side back through its three zones: into the water behind them takes the round"
+## F1 in the arena (round 2 of the skills: the same buttons for every element, KitWords; no show words:
+## tests/ring/test_ring_hud.gd holds the HUD's arena lines to that): the moving keys, the buttons (ARENA_KEYS, the scheme's),
+## the four rules (KitWords.rule_lines: the lock, the guard, the counters, the floor and the air), Q, the ring's rule
+## (ARENA_RING: the rule set's own, the % ring's lives or the zones).
+## ("Ctrl/C" held together by word joiners: the wrapped column broke it at the slash at 1280x720.)
+const ARENA_HELP := "WASD move · %SHIFT% · Space jump, even while you hold a cast · Ctrl⁠/⁠C crouch\n" \
+		+ "%KEYS%\n%RULES%\n" \
+		+ "{quick}: the readied move onto LMB · hold {quick}: your jab back · F1 this help · Esc free mouse\n" \
+		+ "%RING%"
+## F1's Shift: the new ring's movement spells (Hotbar._shift_dir; no sprint there, the owner 2026-10-11), else the sprint.
+const ARENA_SHIFT := {"ring": "Shift + a direction dash", "else": "Shift sprint"}
+## F1's last line, the ring's rule, per rule set (RingRules.stock_on(): "stock" the % ring's lives; else the zones).
+const ARENA_RING := {
+	"stock": "Three lives each: into the water loses one, and the last side with lives left takes the game",
+	"classic": "Knock the other side back through its three zones: into the water behind them takes the round",
+}
+## F1 in the arena (the UI audit, 2026-10-09: its lines ran over the strip's names and the player's body): a column at the
+## right, its lines wrapped to ARENA_HELP_W of the screen's width, its foot ARENA_HELP_UP px (at 720 high) over the bottom
+## and clear of the strip, over the soft shade from the screen's right edge (the menus' MenuUI.left_shade, mirrored: no box).
+## While it is open the hint boxes (the key hints, the lesson or hint card, the first-time panel) are put away: one help at
+## a time, and the card stands where its column does.
+const ARENA_HELP_W := 0.4
+const ARENA_HELP_UP := 64.0
+## The buttons' line of F1 per control scheme (KitWords.scheme_id; {guard}, {wheel}, {aim} as bound).
+const ARENA_KEYS := {
+	"keys": "LMB jab · {guard} guard · 1 strike · 2 push ▲ · 3 dash · 4 wall · 5 heal · tap a key twice: its other move",
+	"first_moves": "LMB jab · {guard} guard · 1 strike · 2 push ▲ · 3 dash · 4 wall · 5 heal · one move a key",
+	"direction": "LMB jab · {guard} guard · hold W, S or A/D as you press {aim}: strike, wall or dash · 1-5 the keys' moves",
+	"radial": "LMB jab · {guard} guard · hold {wheel}: your moves round a wheel, point and let go · 1-5 the keys' moves",
+}
 ## HELP's lines that change outside the arena while the player has an element (the duel): Q and LMB are the quick
 ## spell's then (SwayCaster's; ELEMENT_LMB, ELEMENT_Q with the set key as bound).
 const WORLD_LMB := "LMB hold to aim, release to fire"
 const WORLD_Q := "hold Q: equip wheel"
+## HELP's E in the duel (round 2: E is the element's guard while a round is fought; PlayerInteractor._e_guards).
+const WORLD_E := "E use (hold E: all there is to do)"
+const ELEMENT_E := "{guard} guard (between rounds: E use)"
 const ELEMENT_LMB := "Hold RMB on the aim: lock the readied move, let go to cast · hold LMB: the same with the left-click move"
 const ELEMENT_Q := "%s: the readied move onto LMB"
 
 
-## F1's text now: ARENA_HELP in the arena; with an element outside it (the duel) HELP with its Q and LMB as the quick
-## spell has them; else HELP. The quick spell's set key as bound (SwayCaster.quick_bind_key; "no key" when unbound).
+## F1's text now: ARENA_HELP in the arena (the scheme's buttons, the four rules); with an element outside it (the duel) HELP
+## with its Q and LMB as the quick spell has them; else HELP. The keys as bound (KitWords.key: "(no key)" when unbound).
 func help_text() -> String:
-	var k := SwayCaster.quick_bind_key()
-	var shown_k := k if k != "" else "(no key)"
-	# (the control scheme's own line for how moves are chosen: MatchSetup.scheme(), data/bending/schemes.json "f1")
-	var keys_l := ARENA_HELP.get_slice("\n", 1)
-	var scheme_l := MatchSetup.scheme_text("f1") if MatchSetup.scheme() != "keys" else ""
+	var shown_k := KitWords.key(SwayCaster.QUICK_BIND)
 	if arena:
-		var h := ARENA_HELP if scheme_l == "" else ARENA_HELP.replace(keys_l, scheme_l)
-		return h.replace("Q: the readied move", "%s: the readied move" % shown_k)
+		var keys_l := String(ARENA_KEYS.get(KitWords.scheme_id(), ARENA_KEYS.keys))
+		var h := ARENA_HELP.replace("%KEYS%", keys_l).replace("%RULES%", "\n".join(PackedStringArray(KitWords.rule_lines())))
+		h = h.replace("%SHIFT%", String(ARENA_SHIFT.ring if RingRules.stock_on() else ARENA_SHIFT["else"]))
+		h = h.replace("%RING%", String(ARENA_RING.stock if RingRules.pct_on() else ARENA_RING.classic))
+		return KitWords.keyed(h)
+	# (the control scheme's own line for how moves are chosen, outside the keys scheme)
+	var scheme_l := KitWords.help_line() if KitWords.scheme_id() != "keys" else ""
 	var c := SwayCaster.of(player) if player != null else null
 	if c == null or c.quick_element() == "":
 		return HELP
 	var q_line := ELEMENT_Q % shown_k
 	var wheel_k := SwayCaster.key_name(EquipWheel.ACTION)
-	if wheel_k != "" and wheel_k != k:
+	if wheel_k != "" and wheel_k != shown_k:
 		q_line = "hold %s: equip wheel · %s" % [wheel_k, q_line]     # (the wheel keeps a key of its own)
-	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB)
+	var out := HELP.replace(WORLD_Q, q_line).replace(WORLD_LMB, ELEMENT_LMB).replace(WORLD_E, KitWords.keyed(ELEMENT_E))
 	return out + "\n" + scheme_l if scheme_l != "" else out
 
 
-## The water bar's colour, and how long "winded" stays among the status words (s).
-const WATER := Color(0.42, 0.68, 0.95)
+## How long "winded" stays among the status words (s).
 const WINDED_S := 2.5
 const EDGE_SHADER := "shader_type canvas_item;
 uniform float amount = 0.0;
@@ -154,6 +187,11 @@ var _clock: Label
 var _clock_icon: TextureRect
 var _toasts: VBoxContainer
 var _help_box: Control
+## The arena's F1 shade: the soft shade from the screen's right edge behind the help's column (shown with it; no box).
+var _help_shade: TextureRect
+## The hint boxes' layers F1's arena help put away (shown again as it closes), and whether it has.
+var _hints_away := false
+var _hints_hidden: Array = []
 var _help_hint: Label
 var _help_t := 0.0
 var _icons: ItemIcons
@@ -163,10 +201,9 @@ var _heading := 0.0
 var arena := false
 var bend_strip: BendStrip
 var match_bar: MatchBar
+## Round 3: the % ring's plates (PercentBar), shown in place of the MatchBar while a stock-rules ring is on.
+var percent_bar: PercentBar
 var _help_label: Label
-var _water_row: HBoxContainer
-var _water_bar: ProgressBar
-var _water_text: Label
 var _status: Label
 var _winded_t := 0.0
 
@@ -245,6 +282,13 @@ func _ready() -> void:
 	help.text = HELP
 	_help_label = help
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_help_shade = MenuUI.left_shade(0.8)
+	_help_shade.name = "HelpShade"
+	_help_shade.flip_h = true
+	_help_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_help_shade.anchor_left = 1.0 - ARENA_HELP_W * 1.5
+	_help_shade.visible = false
+	_root.add_child(_help_shade)
 	_help_box = _shaded(help, Vector2(60, 26))
 	_help_box.name = "Help"
 	_root.add_child(_help_box)
@@ -270,6 +314,16 @@ func _place(c: Control, at: Vector2, off: Vector2, pivot: Vector2) -> void:
 	c.anchor_top = at.y
 	c.anchor_bottom = at.y
 	c.minimum_size_changed.connect(_reflow.bind(c))
+	_reflow(c)
+
+
+## A control _place put somewhere put elsewhere (its reflow kept).
+func _replace(c: Control, at: Vector2, off: Vector2, pivot: Vector2) -> void:
+	c.set_meta(&"hud_place", [at, off, pivot])
+	c.anchor_left = at.x
+	c.anchor_right = at.x
+	c.anchor_top = at.y
+	c.anchor_bottom = at.y
 	_reflow(c)
 
 
@@ -405,8 +459,8 @@ func _build_compass() -> void:
 	_place(v, Vector2(0.5, 0), Vector2(0, 8), Vector2(0.5, 0))
 
 
-## Arena mode on or off (see the header): the world's readouts hidden, the BendStrip, the MatchBar, the water bar and the
-## status words shown (built the first time).
+## Arena mode on or off (see the header): the world's readouts hidden, the BendStrip, the MatchBar and the status words
+## shown (built the first time).
 func set_arena(on: bool) -> void:
 	arena = on
 	if on and bend_strip == null:
@@ -415,9 +469,20 @@ func set_arena(on: bool) -> void:
 	if compass != null:
 		compass.visible = not on
 	if bend_strip != null:
-		(bend_strip.get_parent() as Control).visible = on
-		match_bar.visible = on
+		bend_strip.visible = on
+		# (round 3: the % ring's plates in place of the zones' bar; the zones, classic or on the new ring, keep the MatchBar)
+		var pct := RingRules.pct_on()
+		match_bar.visible = on and not pct
+		match_bar.set_process(not pct)
+		percent_bar.set_process(on)
+		percent_bar.visible = on and pct
 		(_status.get_parent() as Control).visible = on
+		if _health_bar != null:
+			(_health_bar.get_parent().get_parent() as Control).visible = not (on and pct)   # (no health in the % ring)
+		# (round 4: the strip stands over the health row where it shows: the classic ring)
+		bend_strip.lift_px = PercentBar.cnum("strip_lift_health", 30.0) if on and not pct else 0.0
+	_arena_hint(on)
+	_arena_help(on)
 	if _help_label != null:
 		_help_label.text = help_text()
 	if on:
@@ -431,44 +496,136 @@ func _build_arena() -> void:
 	bend_strip = BendStrip.new()
 	bend_strip.name = "BendStrip"
 	bend_strip.player = player
-	var sh := _shaded(bend_strip, Vector2(40, 10))
-	sh.name = "BendStripShade"
-	_root.add_child(sh)
-	_place(sh, Vector2(0.5, 1), Vector2(0, -6), Vector2(0.5, 1))
+	_root.add_child(bend_strip)               # (it lays itself out: hud.json strip; no card behind it)
+	_root.move_child(bend_strip, 0)
 	match_bar = MatchBar.new()
 	match_bar.name = "MatchBar"
 	match_bar.player = player
 	_root.add_child(match_bar)
 	_place(match_bar, Vector2(0.5, 0), Vector2(0, 10), Vector2(0.5, 0))
-	# a water fighter's water and the status words: over the health (the vitals' own rows are the world's)
+	percent_bar = PercentBar.new()
+	percent_bar.name = "PercentBar"
+	percent_bar.player = player
+	_root.add_child(percent_bar)
+	# the status words: over the health (the vitals' own rows are the world's)
 	var box := VBoxContainer.new()
 	box.name = "ArenaVitals"
 	box.add_theme_constant_override("separation", 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status = _label(16, GOLD)
+	_status = _label(16, INK)
 	_status.name = "Status"
 	_status.visible = false
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_status.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+	_status.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
 	box.add_child(_status)
-	_water_row = HBoxContainer.new()
-	_water_row.name = "Water"
-	_water_row.add_theme_constant_override("separation", 8)
-	_water_row.visible = false
-	box.add_child(_water_row)
-	var wspace := Control.new()
-	wspace.custom_minimum_size = Vector2(22, 4)
-	wspace.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_water_row.add_child(wspace)
-	_water_bar = _bar(190, 4, WATER)
-	_water_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_water_row.add_child(_water_bar)
-	_water_text = _label(15, TEXT)
-	_water_row.add_child(_water_text)
 	_root.add_child(box)
-	_place(box, Vector2(0, 1), Vector2(24, -50), Vector2(0, 1))
+	# (round 4: the bottom corner away from the strip, over the "F1 controls" hint)
+	var at := _away_corner()
+	_place(box, Vector2(at, 1), Vector2(-24.0 if at > 0.5 else 24.0, -PercentBar.cnum("status_up", 34.0)), Vector2(at, 1))
 	if player != null and player.has_signal(&"winded"):
 		player.winded.connect(func(_by: Node) -> void: _winded_t = WINDED_S)
 	# (a knock the player dealt: the hit mark at the centre, the bending's hit confirmation; BendKnock tells its listeners)
 	add_to_group(BendKnock.LISTENERS)
+
+
+## The bottom corner away from the strip (1 the right: the strip at the left or the centre; 0 the left).
+func _away_corner() -> float:
+	return 1.0
+
+
+## Arena mode's "F1 controls": 12 px in the bottom corner away from the strip, fading after hud.json arena_f1_s (20 s); out
+## of it the world's own hint where it always was.
+func _arena_hint(on: bool) -> void:
+	if _help_hint == null:
+		return
+	if on:
+		var at := _away_corner()
+		_help_hint.add_theme_font_size_override("font_size", int(PercentBar.cnum("f1_px", 12.0)))
+		_help_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if at > 0.5 else HORIZONTAL_ALIGNMENT_LEFT
+		_help_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.015, 0.01, 0.88))
+		_help_hint.add_theme_constant_override("outline_size", int(BendStrip.snum("ink_px", 5.0)))
+		_replace(_help_hint, Vector2(at, 1), Vector2(-24.0 if at > 0.5 else 24.0, -12.0), Vector2(at, 1))
+		_help_t = PercentBar.cnum("arena_f1_s", 20.0)
+	elif _help_hint.has_meta(&"hud_place") and (_help_hint.get_meta(&"hud_place") as Array)[0] != Vector2(0, 1):
+		_help_hint.add_theme_font_size_override("font_size", 15)
+		_help_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_help_hint.remove_theme_constant_override("outline_size")
+		_replace(_help_hint, Vector2(0, 1), Vector2(24, -112), Vector2(0, 1))
+
+
+## Arena mode's F1 help: a column at the right (ARENA_HELP_W of the width, its lines wrapped and left-aligned) over the soft
+## shade from the right edge, clear of the strip (_lay_arena_help); out of it the world's centred lines at the bottom.
+func _arena_help(on: bool) -> void:
+	if _help_label == null or _help_box == null:
+		return
+	if on:
+		_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_help_label.add_theme_constant_override("paragraph_spacing", 9)
+		for m: String in ["margin_left", "margin_right"]:
+			_help_box.add_theme_constant_override(m, 20)
+		for m: String in ["margin_top", "margin_bottom"]:
+			_help_box.add_theme_constant_override(m, 10)
+		_lay_arena_help()
+		return
+	_help_shade.visible = false
+	_put_hints_away(false)
+	for m: String in ["margin_left", "margin_right"]:
+		_help_box.add_theme_constant_override(m, 60)
+	for m: String in ["margin_top", "margin_bottom"]:
+		_help_box.add_theme_constant_override(m, 26)
+	_help_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_help_label.remove_theme_constant_override("paragraph_spacing")
+	_help_label.custom_minimum_size.x = 0.0
+	if (_help_box.get_meta(&"hud_place") as Array)[0] != Vector2(0.5, 1):
+		_replace(_help_box, Vector2(0.5, 1), Vector2(0, -20), Vector2(0.5, 1))
+
+
+## The arena help's place now: its column ARENA_HELP_W of the width at the right, its foot ARENA_HELP_UP px (at 720 high)
+## over the bottom, and higher still if a rect of the strip's stands under it (another strip layout): never over the strip.
+func _lay_arena_help() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	var k := vp.y / 720.0
+	var w := roundf(vp.x * ARENA_HELP_W)
+	if not is_equal_approx(_help_label.custom_minimum_size.x, w):
+		_help_label.custom_minimum_size.x = w
+	var up := ARENA_HELP_UP * k
+	var bw := _help_box.size.x
+	if bend_strip != null and bend_strip.is_visible_in_tree():
+		for sr: Rect2 in bend_strip.strip_rects():
+			if sr.position.x < vp.x - 24.0 and sr.end.x > vp.x - 24.0 - bw:
+				up = maxf(up, vp.y - sr.position.y + 8.0)
+	var pl: Array = _help_box.get_meta(&"hud_place")
+	if pl[0] != Vector2(1, 1) or not (pl[1] as Vector2).is_equal_approx(Vector2(-24.0, -up)):
+		_replace(_help_box, Vector2(1, 1), Vector2(-24.0, -up), Vector2(1, 1))
+
+
+## The hint boxes put away while F1's arena help is open (`on`), or shown again: the key hints (FirstHints), the lesson and
+## hint card (LessonCard) and the first-time panel (HowTo). Looked for each frame it is open: a box shown since (an overlay
+## over the ring closing, MenuUI.cover_hud; Key hints switched on) is put away too. Shown again as it closes, or handed to
+## an overlay still covering the HUD (MenuUI.show_again).
+func _put_hints_away(on: bool) -> void:
+	if not on and not _hints_away:
+		return
+	_hints_away = on
+	if on:
+		for n in get_tree().root.find_children("*", "CanvasLayer", true, false):
+			if (n is FirstHints or n is LessonCard or n is HowTo) and (n as CanvasLayer).visible:
+				if not _hints_hidden.has(n):
+					_hints_hidden.append(n)
+				(n as CanvasLayer).visible = false
+		return
+	for cl in _hints_hidden:
+		if is_instance_valid(cl):
+			MenuUI.show_again(cl as CanvasLayer)
+	_hints_hidden.clear()
+
+
+## The F1 help's rect on the screen (the tests: clear of the strip).
+func help_rect() -> Rect2:
+	return _help_box.get_global_rect() if _help_box != null else Rect2()
 
 
 ## BendKnock's listeners: a body knocked by the player (not himself) flashes the hit mark at the centre (never at the body).
@@ -478,17 +635,11 @@ func on_knocked(n: Node, _v: Vector3, by: Node) -> void:
 		_hits += 1
 
 
-## The arena's readouts each frame: the water (a water fighter's), the status words.
+## The arena's readouts each frame: the status words.
 func _update_arena(delta: float) -> void:
 	_rest_row.visible = false
 	_torch_row.visible = false
 	_needs_row.visible = false
-	var b := player.get_node_or_null(NodePath(String(Bending.NODE_NAME))) as Bending
-	var wet := b != null and b.element == "water"
-	_water_row.visible = wet
-	if wet:
-		_water_bar.value = clampf(b.water / maxf(b.water_max, 1.0), 0.0, 1.0)
-		_water_text.text = "water %d" % roundi(b.water)
 	_winded_t = maxf(_winded_t - delta, 0.0)
 	_status.text = "  ·  ".join(status_words())
 	_status.visible = _status.text != ""
@@ -692,6 +843,10 @@ func _process(delta: float) -> void:
 	_cross.queue_redraw()
 	_help_t = maxf(0.0, _help_t - delta)
 	_help_hint.modulate.a = clampf(_help_t / 2.0, 0.0, 1.0)
+	if arena and _help_box.visible:
+		_lay_arena_help()
+	_help_shade.visible = arena and _help_box.visible
+	_put_hints_away(arena and _help_box.visible)
 	_tick_toasts(delta)
 	if player == null:
 		return
@@ -808,11 +963,11 @@ func _update_card() -> void:
 ## and the help line; hidden in the open world without an element (LMB is the weapon's there).
 func _update_quick() -> void:
 	var c := SwayCaster.of(player)
-	var ql := c.quick_label() if c != null and c.quick_ready() else ""
+	var ql := KitWords.move_name(c.quick_id(), c.quick_mode()) if c != null and c.quick_ready() else ""
 	quick_name.text = ql
 	quick_row.visible = ql != ""
-	quick_help.text = BendStrip.help_text() if ql != "" else ""
-	quick_help.visible = ql != ""
+	quick_help.text = BendStrip.q_text(c) if ql != "" else ""
+	quick_help.visible = quick_help.text != ""
 
 
 ## A readied spell's line: its name and mode, the caster's motes and its mastery when there is one ("Stone Form (cannonball)
@@ -828,16 +983,13 @@ func _spell_line(id: String) -> String:
 		var ml := (fm as FormCast).matter_label(id)
 		if ml != "":
 			line += ": " + ml
-	# (a bending skill: its variation's place, the key's other skill, a waterbender's water; docs/bending_design.md)
+	# (a bending skill: its variation's place, the key's other skill; docs/bending_design.md)
 	var ms: Array = SwayMoves.move(id).get("modes", [])
 	if ms.size() > 1 and c != null and c.has_method(&"base_mode_of"):
 		line += "  %d/%d" % [ms.find(String(c.call(&"base_mode_of", id))) + 1, ms.size()]     # (the key's: never the quick lock's)
 	var other := Bending.partner_of(id)
 	if other != "":
 		line += "  ·  again: " + String(SwayMoves.move(other).get("label", other))
-	if Bending.element_of(id) == "water":
-		var b := Bending.of(player)
-		line += "  ·  water %d" % roundi(b.water)
 	if c != null and c.get("motes") != null and c.get("belt_max") != null and not SwayCaster.free_use():
 		line += "  ·  motes %d/%d" % [int(c.get("motes")), int(c.get("belt_max"))]
 	if c != null and c.has_method(&"tier_name"):

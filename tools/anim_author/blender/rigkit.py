@@ -17,7 +17,7 @@ Key-pose model (a SPEC dict):  the move's frame is +Z forward, +X left, +Y up. t
 import bpy, sys, json, math, os, bisect
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rigmap
-from mathutils import Vector, Quaternion, Euler
+from mathutils import Vector, Quaternion, Euler, Matrix
 
 SPINE = [("spinea", 0.2), ("spineb", 0.4), ("spinec", 0.7), ("spined", 1.0)]
 NECK = [("neck", 0.4), ("heada", 0.75), ("headb", 1.0)]
@@ -204,6 +204,126 @@ def ik2(rots, pos_root, a, b, c, target, pole):
     reach = L1 + L2
     if d_raw > reach:
         MISS.append((c, d_raw - reach))
+
+
+def _frame(f, n):
+    """The rotation matrix whose columns are f, n and f x n (f and n perpendicular unit vectors)."""
+    return Matrix((f, n, f.cross(n))).transposed()
+
+
+_HINGES = {}
+## The last ik2_hinge solve's pole conditioning by its upper bone (the sine of the pole's angle off the limb's line).
+COND = {}
+## The bend's plane rate limit (ik2_hinge, a bake run frame by frame in time order: NOW its time in s, None outside a bake):
+## a knee's or an elbow's plane turns about the limb's line at most RATE_DPS deg/s (0: no limit), so a pole keyed across the
+## limb's line between two frames (the elbow flipping to the other side of the arm in one frame) swings round over a few
+## frames instead; the hand and the foot still reach their places exactly. PLANES: each limb's last planes (reset for each
+## clip). OFF (2026-10-11): tried at 1200 deg/s it held an elbow on its old side while the arm moved on (fire's low kick:
+## the elbow flared up and out for four frames, worse than the quick drop it replaced), so it waits for a clip-by-clip pass
+## (bend_clips.py --plane-rate) rather than running on every clip.
+RATE_DPS = 0.0
+NOW = None
+PLANES = {}
+## The flip guard (ik2_hinge; bend_clips.py sets it for every clip but a loop): a knee's or an elbow's bend side that the keys would move more
+## than GUARD_FLIP_DEG in one step swings round at GUARD_DPS deg/s instead (0: off). Unlike the rate limit above it never holds
+## back a side that moves less than that: it acts only on a flip (the owner's "elastic" glitch, 2026-10-11: the rolls' and the
+## get-ups' knees and elbows flipped side in a frame, the thighs and upper arms turned 140-178 degrees at once). SIDES: each
+## limb's last side and the way it is swinging (reset for each clip).
+GUARD_DPS = 0.0
+GUARD_FLIP_DEG = 100.0
+SIDES = {}
+
+
+def hinge(a, b, c):
+    """The chain a-b-c's hinge, in a's own frame: (a's way to b, the axis b bends about, the rest's bend in radians). The
+    axis is the rest pose's own bend (a's way crossed with b's way at the rest: the elbow's and the knee's natural fold), so
+    rotating a's way about it by the bend angle gives b's way."""
+    key = (a, b, c)
+    if key not in _HINGES:
+        d1 = SK.rest_t[b].normalized()
+        d2 = (SK.rest_q[b] @ SK.rest_t[c]).normalized()
+        h = d1.cross(d2)
+        if h.length < 1e-5:
+            h = d1.orthogonal()
+        _HINGES[key] = (d1, h.normalized(), math.atan2(d1.cross(d2).dot(h.normalized()), d1.dot(d2)))
+    return _HINGES[key]
+
+
+def ik2_hinge(rots, pos_root, a, b, c, target, pole):
+    """Two-bone IK as ik2 (c's origin to `target`, b's joint toward `pole`: the same joint places), with the twist decided:
+    a turned so its hinge lies across the bend's plane (a's twist follows the pole, so it never flips between frames the way
+    a shortest-arc turn from the rest does when the limb swings far from it), and b only folded about that hinge from its
+    rest (a knee and an elbow bend, they do not twist). c's own turn is the caller's (set_global)."""
+    P, G = SK.fk(rots, pos_root)
+    pa = P[a]
+    L1, L2 = SK.rest_t[b].length, SK.rest_t[c].length
+    d_raw = (target - pa).length
+    d = min(max(d_raw, abs(L1 - L2) + 1e-4), L1 + L2 - 1e-4)
+    u = (target - pa).normalized()
+    cosA = max(-1.0, min(1.0, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d)))
+    A = math.acos(cosA)
+    pd = pole - pa
+    perp = pd - u * pd.dot(u)
+    # (how well the pole sets the bend's plane: the sine of its angle off the limb's line; near 0 the plane is ill-defined)
+    COND[a] = perp.length / max(pd.length, 1e-9)
+    perp = perp.normalized() if perp.length > 1e-6 else u.orthogonal().normalized()
+    if NOW is not None and GUARD_DPS > 0.0:
+        # (the flip guard: where the keys would put the bend's side more than GUARD_FLIP_DEG from the last
+        # frame's at once (a pole across the limb's line, or the limb swung across it), the side swings round at GUARD_DPS
+        # instead, one way until it has caught up, then follows the keys again; a side that moves less is the keys' own. In
+        # the limb's parent's frame: a body turning whole (a roll) turns the side with it)
+        gp = G[SK.parent[a]]
+        gpi = gp.inverted()
+        ul = (gpi @ u).normalized()
+        pl = (gpi @ perp).normalized()
+        st = SIDES.setdefault(a, {"t": None, "p": None, "t_prev": None, "p_prev": None, "dir": 0.0, "dir_prev": 0.0})
+        if st["t"] != NOW:
+            st["t_prev"], st["p_prev"], st["dir_prev"] = st["t"], st["p"], st["dir"]
+        st["dir"] = 0.0
+        if st["p_prev"] is not None and NOW > st["t_prev"]:
+            q = st["p_prev"] - ul * st["p_prev"].dot(ul)
+            if q.length > 1e-6:
+                q.normalize()
+                ang = math.atan2(q.cross(pl).dot(ul), q.dot(pl))
+                lim = math.radians(GUARD_DPS) * (NOW - st["t_prev"])
+                if (st["dir_prev"] != 0.0 or abs(ang) > math.radians(GUARD_FLIP_DEG)) and abs(ang) > lim:
+                    sgn = st["dir_prev"] if st["dir_prev"] != 0.0 else math.copysign(1.0, ang)
+                    pl = (Quaternion(ul, sgn * lim) @ q).normalized()
+                    perp = gp @ pl
+                    perp = (perp - u * perp.dot(u)).normalized()
+                    st["dir"] = sgn
+        st["t"], st["p"] = NOW, (gpi @ perp).normalized()
+    n = perp.cross(u).normalized()
+    d1l, hl, rest_bend = hinge(a, b, c)
+    if NOW is not None and RATE_DPS > 0.0:
+        # (measured in the limb's parent's frame, the pelvis's or the chest's: a body turning whole (a somersault, a roll)
+        # turns its limbs' planes with it, which is no swing of the limb's own)
+        gp = G[SK.parent[a]]
+        gpi = gp.inverted()
+        nl, ul = gpi @ n, gpi @ u
+        st = PLANES.setdefault(a, {"t_cur": None, "n_cur": None, "t_prev": None, "n_prev": None})
+        if st["t_cur"] != NOW:
+            st["t_prev"], st["n_prev"] = st["t_cur"], st["n_cur"]
+        if st["n_prev"] is not None and NOW > st["t_prev"]:
+            q = st["n_prev"] - ul * st["n_prev"].dot(ul)
+            if q.length > 1e-6:
+                q.normalize()
+                ang = math.atan2(q.cross(nl).dot(ul), q.dot(nl))
+                lim = math.radians(RATE_DPS) * (NOW - st["t_prev"])
+                if abs(ang) > lim:
+                    nl = Quaternion(ul, math.copysign(lim, ang)) @ q
+                    n = (gp @ nl).normalized()
+                    perp = u.cross(n).normalized()
+        st["t_cur"], st["n_cur"] = NOW, nl.copy()
+    dir1 = u * math.cos(A) + perp * math.sin(A)
+    pb_new = pa + dir1 * L1
+    dir2 = (pa + u * d - pb_new).normalized()
+    Ga_new = (_frame(dir1, n) @ _frame(d1l, hl).inverted()).to_quaternion()
+    rots[a] = G[SK.parent[a]].inverted() @ Ga_new
+    phi = math.atan2(dir1.cross(dir2).dot(n), dir1.dot(dir2))
+    rots[b] = Quaternion(hl, phi - rest_bend) @ SK.rest_q[b]
+    if d_raw > L1 + L2:
+        MISS.append((c, d_raw - (L1 + L2)))
 
 
 def chain(rots, pos_root, bones, d_from, d_to):

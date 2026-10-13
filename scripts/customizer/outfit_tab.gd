@@ -17,46 +17,13 @@ extends ScrollContainer
 ## Outfits one click away: [name, the look's "outfit" dictionary], shown for a body type when each of their garments was
 ## cut for it (PlayerOutfit.cut_for, their catalog tags: a petticoat for women, breeches for men; every garment is still
 ## offered to both in the slot rows). Colours may name a garment's catalog colour preset
-## ({"preset": ...}: PlayerOutfit.resolve_colors). The clothes agents' assembled outfits.
+## ({"preset": ...}: PlayerOutfit.resolve_colors). (The period outfits went with their garments, 2026-10-06.)
 const PRESETS := [
 	["Basic dress", {}],
-	["Settler", {"shirt": {"id": "shirt_tucked", "colors": {"0": "tow", "1": "tow"}},
+	["Working dress", {"shirt": {"id": "shirt_tucked", "colors": {"0": "tow", "1": "tow"}},
 			"legs.lower": {"id": "breeches", "colors": {"0": "buckskin_pale", "1": "buckskin_pale"}},
-			"vest": {"id": "waistcoat_sb"}, "outer": {"id": "frock_coat", "colors": {"preset": "palatine_brown"}},
-			"accessories.neck": {"id": "neckerchief", "colors": {"preset": "checked"}},
-			"legs.over": {"id": "stockings", "colors": {"preset": "settler"}}, "feet": {"id": "shoes_buckled"},
-			"head": {"id": "round_hat"}}],
-	["Settler", {"vest": {"id": "stays_laced", "colors": {"0": "madder_red", "3": "linen_unbleached"}},
-			"legs.lower": {"id": "petticoat", "colors": {"0": "walnut_brown"}},
-			"accessories.waist": {"id": "apron", "colors": {"preset": "margaretha"}},
-			"accessories.neck": {"id": "kerchief_womens"}, "legs.over": {"id": "stockings", "colors": {"0": "stroud_blue"}},
-			"feet": {"id": "shoes_buckled"}, "head": {"id": "cap_linen"}}],
-	["Settler, winter", {"vest": {"id": "stays_laced", "colors": {"0": "madder_red", "3": "linen_unbleached"}},
-			"legs.lower": {"id": "petticoat", "colors": {"0": "walnut_brown"}},
-			"accessories.waist": {"id": "apron", "colors": {"preset": "margaretha"}},
-			"accessories.neck": {"id": "kerchief_womens"}, "outer": {"id": "jacket_womens"},
-			"accessories.wrap": {"id": "cloak_hooded"}, "legs.over": {"id": "stockings", "colors": {"0": "stroud_blue"}},
-			"feet": {"id": "shoes_buckled"}, "head": {"id": "cap_linen"}}],
-	["British regular", {"shirt": {"id": "shirt_tucked"},
-			"legs.lower": {"id": "breeches", "colors": {"0": "madder_red", "1": "madder_red"}},
-			"vest": {"id": "waistcoat_skirted", "colors": {"preset": "22nd_foot"}},
-			"outer": {"id": "coat_regimental_1751", "colors": {"preset": "22nd_foot"}},
-			"head": {"id": "cocked_hat", "colors": {"preset": "british_private"}}, "accessories.neck": {"id": "stock_linen"},
-			"accessories.waist": {"id": "belt_cartridge", "colors": {"preset": "british"}}, "legs.over": {"id": "stockings"},
-			"feet": {"id": "shoes_buckled"}}],
-	["French marine, garrison", {"legs.lower": {"id": "breeches", "colors": {"0": "stroud_blue", "1": "stroud_blue"}},
-			"vest": {"id": "veste_sleeved", "colors": {"preset": "marine"}},
-			"outer": {"id": "coat_skirted", "colors": {"preset": "marine_justaucorps"}},
-			"accessories.neck": {"id": "neckerchief", "colors": {"preset": "cravat"}},
-			"accessories.waist": {"id": "belt_cartridge", "colors": {"preset": "marine"}},
-			"legs.over": {"id": "stockings", "colors": {"0": "royal_blue", "1": "logwood_black"}},
-			"feet": {"id": "shoes_buckled", "colors": {"preset": "marine"}},
-			"head": {"id": "cocked_hat", "colors": {"preset": "marine"}}}],
-	["Sky crew gunner", {"shirt": {"id": "shirt_check", "colors": {"preset": "deckhand"}},
-			"legs.lower": {"id": "slops", "colors": {"preset": "deckhand"}},
-			"feet": {"id": "sea_boots", "colors": {"preset": "black"}},
-			"outer": {"id": "sea_jacket", "colors": {"preset": "gunner"}},
-			"accessories.neck": {"id": "glim", "colors": {"preset": "open"}}, "head": {"id": "tar_hat"}}],
+			"accessories.waist": {"id": "sash_worsted"}}],
+	["Working dress", {"shirt": {"id": "shift_linen"}, "legs.lower": {"id": "petticoat", "colors": {"0": "walnut_brown"}}}],
 ]
 ## The fighters' dress one click away (NpcFactions.outfit_of: the faction's garments and colours): [name, faction].
 const FACTION_PRESETS := [
@@ -160,6 +127,11 @@ func _build() -> void:
 		head.add_child(name_l)
 		var opt := OptionButton.new()
 		opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# (as wide as the column, not as the longest garment's name: that pushed the creator's Clothing panel off the
+		# screen's right edge; a longer name ends in an ellipsis, whole in the list)
+		opt.fit_to_longest_item = false
+		opt.clip_text = true
+		opt.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var in_set := "\n"                  # (no set yet: a separator with the set's name before its first garment)
 		for i in ids.size():
 			var id := String(ids[i])

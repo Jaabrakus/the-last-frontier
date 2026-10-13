@@ -1,0 +1,10 @@
+{
+ "roots": ["/Engine/EngineMaterials/DefaultParticle"],
+ "shader": "fam_default_flamebits_particle",
+ "template": false,
+ "u": {
+  "orient_tex": ["t_fixed", ["OrientParticle"]],
+  "alpha_clip": ["c", 0.3333]
+ },
+ "notes": "Unreal Engine DefaultParticle as cooked into Spellbreak (Proletariat). SOURCE: BLEND_Masked / MSM_Unlit / one-sided; the only expression is a TextureSample of /Engine/EngineMaterials/OrientParticle (no ParticleColor node), UE default clip 0.3333. Spellbreak uses it on helper emitters (Light, RibbonSource, SmokeSource, BoltTrailSource): 82 of 84 enabled users are ERM_None / ERM_LightsOnly so cascade.gd never draws their sprites; the one drawn user (TinkerersDisassembly_CB_FxP / Light) is 0.1 cm. AUTHORED: emissive = texture RGB, opacity mask = texture alpha (the output wiring)."
+}

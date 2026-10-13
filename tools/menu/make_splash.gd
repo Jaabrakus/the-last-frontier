@@ -1,13 +1,11 @@
 extends SceneTree
-## The boot splash (user 2026-09-27: "instead of the godot"): the fort at evening (assets/ui/paintings/, painted by
-## tools/menu/paint_views.gd) darkened toward the middle, the title over it. Windowed (it draws in a SubViewport):
-##
-##   Godot --path . -s tools/menu/make_splash.gd
-##
-## Writes assets/ui/splash.png (1920 x 1080; project.godot application/boot_splash/image, stretch Cover).
+## Tidebreak boot splash, rendered from an unchanged arena still and native vector/type graphics.
+## GODOT_TIMEOUT=120 zsh tools/loop/godot_run.sh --path . --resolution 480x270 -s tools/menu/make_splash.gd
+## Writes assets/ui/tidebreak_splash.png; the previous splash remains available as historical artwork.
 
-const OUT := "res://assets/ui/splash.png"
-const PAINTING := "res://assets/ui/paintings/fort_evening.jpg"
+const OUT := "res://assets/ui/tidebreak_splash.png"
+const PICTURE := "res://assets/ui/tidebreak/deck.png"
+const TITLES := preload("res://tools/ring/trailer_titles.gd")
 
 
 func _initialize() -> void:
@@ -15,38 +13,36 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	if DisplayServer.get_name() == "headless":
+		push_error("Splash generation requires a rendered Godot window.")
+		quit(2)
+		return
 	var vp := SubViewport.new()
 	vp.size = Vector2i(1920, 1080)
-	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(vp)
 	var pic := TextureRect.new()
-	pic.texture = load(PAINTING)
+	pic.texture = load(PICTURE)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	pic.size = Vector2(1920, 1080)
 	vp.add_child(pic)
 	var veil := ColorRect.new()
-	veil.color = Color(0.03, 0.022, 0.014, 0.45)
+	veil.color = Color(MenuUI.BACKDROP, 0.36)
 	veil.size = Vector2(1920, 1080)
 	vp.add_child(veil)
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.size = Vector2(1920, 1080)
-	box.add_theme_constant_override("separation", 10)
-	vp.add_child(box)
-	var title := MenuUI.label("FRONTIER", 120, MenuUI.INK)
-	var fv := FontVariation.new()
-	fv.base_font = FrontierHUD.serif()
-	fv.spacing_glyph = 18
-	title.add_theme_font_override("font", fv)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	var sub := MenuUI.label("Cosby's Manor, on the Mohawk  ·  1765", 34, MenuUI.GOLD)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sub)
-	for i in 4:
-		await RenderingServer.frame_post_draw
+	var art := TITLES.TitleArt.new()
+	art.configure("opening")
+	vp.add_child(art)
+	var note := MenuUI.label("EARLY PLAYABLE DEMO  ·  IN DEVELOPMENT", 23, MenuUI.DIM)
+	note.position = Vector2(0, 945)
+	note.size = Vector2(1920, 50)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vp.add_child(note)
+	for i in 6:
+		await process_frame
+		RenderingServer.force_draw(false)
 	var img := vp.get_texture().get_image()
-	img.save_png(ProjectSettings.globalize_path(OUT))
-	print("SPLASH WRITTEN ", img.get_size())
-	quit(0)
+	var err := img.save_png(ProjectSettings.globalize_path(OUT))
+	print("SPLASH WRITTEN ", img.get_size(), " result=", err)
+	quit(0 if err == OK else 1)

@@ -41,7 +41,19 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 	if bd.has(mode):
 		BendEffects.apply(bc, id, mode, bd[mode], t, at)
 		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
+	var ts := BendLoadout.talent_spec(bc.body, id, mode)
+	if ts.is_empty():
+		ts = BendLoadout.new_spec(bc.body, id, mode)     # (a new mode a worn talent adds through the tree: Mire)
+	if ts.is_empty() and FireTalents.any(bc.body):
+		ts = FireTalents.own_spec(bc.body, id, mode)     # (a worn new skill's own spec: Cauterize; none in moves.json)
+	if not ts.is_empty():
+		BendEffects.apply(bc, id, mode, ts, t, at)       # (a worn new skill's own mode: the Sulphur Vent, Mire, Cauterize; a bot's)
+		return not String(BendEffects.last_of(bc).get("do", "")) in ["", "dry"]
 	var made: Object = null
+	var keep := BendR3.cur
+	# (round 3: the hit info a stone thrown now carries; ".grown" for a Spike or Boulder held on: stone_form.grow)
+	var grew := bc.grown and (d.get("grow", {}) as Dictionary).get(mode) is Dictionary
+	BendR3.cur = BendR3.info_for(bc, id, mode, grew)
 	match id:
 		"gust":
 			made = _gust(bc, d, mode, t, at)
@@ -49,6 +61,12 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 			made = FormEffects.stone_form(bc, at if at != Vector3.INF else bc.aim_point(), d, mode if mode == "cannonball" else "spike")
 		"earth_wall":
 			var reach := float(d.get("range_m", 3.2))
+			if at == Vector3.INF and BendStatus.element_mode(bc.body):
+				# (round 2: where the aim is, 2-6 m off, facing the caster: FormEffects.place_point; its ahead_m taken back)
+				var pt := FormEffects.place_point(bc, d.get("place", (d.get("wall", {}) as Dictionary).get("place", {})))
+				at = pt - FormEffects.way_to(bc, pt) * float((d.get("wall", {}) as Dictionary).get("ahead_m", 0.75))
+				if BendR3.stock():
+					at = BendR3.off_lip(bc.body.get_tree(), at, BendR3.num("wall_lip_clear_m", 3.5))
 			made = FormEffects.earth_wall(bc, at if at != Vector3.INF else toward(bc, reach * WALL_SHARE, 0.5), d)
 		"pillar":
 			if mode == "free":
@@ -59,7 +77,9 @@ static func cast(c: Variant, id: String, mode: String, t: Node3D = null, at := V
 		"mend":
 			made = _mend(bc, d, t)
 		_:
+			BendR3.cur = keep
 			return false
+	BendR3.cur = keep
 	var ok := made != null and is_instance_valid(made) and not (made is FormRaised and (made as FormRaised).drowned)
 	BendEffects.record(bc, {"do": "old", "move": id, "mode": mode, "made": made, "ok": ok})
 	return ok
@@ -200,7 +220,7 @@ class Hurl:
 		var who := caster.aim_target()
 		var ex: Array = [(lift.stone as CollisionObject3D).get_rid()] if lift.stone is CollisionObject3D else []
 		if who == null:
-			return caster.aim_point(ex)
+			return caster.flight_point(ex)
 		if not final:
 			return NpcSenses.chest_of(who)
 		var hd := lift._hurl_d()

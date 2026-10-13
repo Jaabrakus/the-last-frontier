@@ -1,0 +1,91 @@
+// Family: Flames_Distort01_FxM (Spellbreak, Proletariat; UE4.22 Cascade). Flame bits, sparks
+// and embers (15 instances; BLEND_Translucent and BLEND_Additive, all MSM_Unlit) -> template.
+//
+// SOURCE (cooked root graph, stripped to parameter nodes + function shells):
+//   MaskTexture (TextureSampleParameter2D, group "Noise", Coordinates input connected, root default
+//   FlameBits02_FxT), DistortionNormalMap (TextureObjectParameter) + Luos_Mask_Distorter_FPS
+//   "Distorts/Refracts the Texture" (its own ScalarParameter FPS) + NormalMapScaleU/V,
+//   NormalMapPanU/V, Distortion Strength; CheapContrast (MaskContrast); MF_TransluscentToonErosion
+//   "Erodes alpha mask instead of fade out." (EdgeSoftness); CameraDepthFade
+//   (CameraFadeOffset/Length); SmoothStep + DepthMin/DepthMax + PixelDepthFade; DynamicParameter
+//   index 0 "EmissiveScale". Every value below is filled per instance from the source
+//   (families/flames_distort.json).
+// Same parameter/function set as the sibling root PowerSurge_Glow01_FxM (fireball_core_flames,
+// owner-approved), plus the EmissiveScale dynamic parameter and DepthMin/DepthMax.
+//
+// AUTHORED (graph wiring is not in the data):
+//  * Mask channel, chosen per texture from its content. This is an authored rule: no single UE
+//    channel read fits all 15 instances, and the real graph may read R, R*A or something else.
+//    - A mask with an alpha channel uses A. FlameBits02_FxT (the root default; 11 instances,
+//      plus the LashingLeathers copy) has a hand-posterised toon flame in A (bands ~0.47, 0.57,
+//      0.69, 0.81, 0.94; 0 outside). Its RGB is only a blurred copy of that shape over a 0.216
+//      grey floor. T_ArcaneCurse_BrightSparks has the same cell layout, a soft silhouette in A
+//      and a blurrier copy in RGB. Reading A keeps the authored prongs and bands for the toon
+//      erosion. R or R*A (sRGB-decoded) keep rounded blobs at about 54% or 42% of the silhouette
+//      area. CheapContrast already cuts the grey floor at every instance's MaskContrast: an
+//      R-only read leaves 0 opacity where A = 0, except max 0.017 on the unused LashingLeathers
+//      instance. So multiplying by A removed only shape.
+//    - A mask without alpha uses R. T_ArcaneCurse_Sparks is PF_DXT1 (A = 1 in UE). Its shards are
+//      in RGB on black, and it drives 62-100 cm velocity-aligned bits, so reading A would draw
+//      squares.
+//    - Detection: the coarsest mip's alpha is the texture's mean alpha. It is 1.0 only for an
+//      alpha-less (or fully opaque) mask: T_ArcaneCurse_Sparks 1.0, FlameBits02 / BrightSparks
+//      ~0.12. This is the same idea as the library's uber rule (shape_from_rgb when
+//      Image.detect_alpha finds none).
+//  * No sRGB decode on the mask: alpha is never sRGB-encoded, and the only R read
+//    (T_ArcaneCurse_Sparks) is SRGB=false in the cooked header, so UE reads it raw as well.
+//  * Distortion: normal map RG*2-1 sampled at atlas UV * NormalMapScale + NormalMapPan * stepped
+//    time (floor(t*FPS)/FPS). The offset is added to the atlas UV, because Cascade sprites bake
+//    the sub-image into TexCoord0, so the offset is in atlas space. No clamping, as in UE.
+//  * Toon erosion: smoothstep(1 - particle alpha, 1 - particle alpha + EdgeSoftness, contrasted mask).
+//  * SmoothStep(DepthMin, DepthMax, DepthFade(PixelDepthFade)) for the soft-particle fade.
+//  * Emissive = particle colour (HDR) * EmissiveScale (dynamic param 0, read by index; Cascade
+//    feeds 1 when the emitter has no ParameterDynamic module) * mask tone. The mask-tone multiply
+//    follows the approved sibling, not source evidence.
+shader_type spatial;
+render_mode /*RENDER_MODE*/;
+#include "res://shaders/cascade/common.gdshaderinc"
+#include "res://shaders/cascade/particle.gdshaderinc"
+
+uniform sampler2D mask_tex : repeat_enable, filter_linear_mipmap;   // raw: see header (no sRGB)
+uniform sampler2D distortion_normal : hint_normal, repeat_enable, filter_linear_mipmap;
+uniform float distortion_strength = 0.125;   // root default
+uniform vec2 normal_pan = vec2(0.5, 0.6);
+uniform vec2 normal_scale = vec2(0.3, 0.3);
+uniform float fps = 12.0;
+uniform float edge_softness = 0.3;
+uniform float mask_contrast = 0.5;
+uniform float camera_fade_offset = 1.0;      // 100 cm
+uniform float camera_fade_length = 1.0;      // 100 cm
+uniform float pixel_depth_fade = 0.35;       // 35 cm
+uniform float depth_min = 0.0;
+uniform float depth_max = 1.0;
+uniform float alpha_clip = 0.333;            // only used if an instance were BLEND_Masked
+
+void vertex() {
+	vec4 _e; vec4 _d;
+	particle_vertex(VERTEX, UV, INSTANCE_CUSTOM, INSTANCE_ID, UV2, _e, _d);
+	v_extra = _e; v_dyn = _d; v_color = COLOR; v_quv = UV;
+}
+
+void fragment() {
+	// Luos_Mask_Distorter_FPS: FPS-stepped panning normal map offsets the mask UV.
+	float t = stepped(TIME, max(fps, 0.001));
+	vec2 auv = particle_atlas(v_quv);
+	vec2 n = texture(distortion_normal, auv * normal_scale + normal_pan * t).xy * 2.0 - 1.0;
+	vec2 muv = auv + n * distortion_strength;
+	vec4 mt = texture(mask_tex, muv);
+	// Authored per-texture channel rule (header): A when the mask has alpha, else R.
+	bool no_alpha = textureLod(mask_tex, vec2(0.5), 20.0).a > 0.99;   // coarsest mip = mean alpha
+	float m = no_alpha ? mt.r : mt.a;
+	// CheapContrast + MF_TransluscentToonErosion (hard edge, width EdgeSoftness).
+	float shaped = cheap_contrast(m, mask_contrast);
+	float thr = 1.0 - clamp(v_color.a, 0.0, 1.0);
+	float ero = smoothstep(thr, thr + max(edge_softness, 1e-4), shaped);
+	// Soft particle: SmoothStep(DepthMin, DepthMax, DepthFade(PixelDepthFade)).
+	float df = depth_fade(SCREEN_UV, VERTEX, INV_PROJECTION_MATRIX, pixel_depth_fade);
+	float soft = smoothstep(depth_min, max(depth_max, depth_min + 1e-4), df);
+	float op = ero * soft * camera_depth_fade(-VERTEX.z, camera_fade_offset, camera_fade_length);
+	ALBEDO = v_color.rgb * v_dyn.x * m;
+	/*ALPHA_OUT*/
+}

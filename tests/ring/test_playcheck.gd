@@ -7,19 +7,26 @@ extends SceneTree
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_playcheck.gd -- pc_practice=throw [pc_el=earth] [pc_foe=earth]
 ## (pc_ args, not MatchSetup's own element= / foe= / scheme=, so the setup is what the menu's rows chose.)
 ##   the menu    scenes/main_menu.tscn; the sport's panel: the element's row, Opponent stepped to pc_foe, Rounds to best of
-##               3, the Scheme row stepped to pc_scheme (kept at once in the test's own settings file), Begin: through the
+##               3, its Controls row and there "Other ways to pick moves" stepped to pc_scheme (round 2: the scheme is
+##               chosen only there; kept at once in the test's own settings file), back to the panel, Begin: through the
 ##               LoadingScreen into scenes/ring.tscn (no launch hook)
 ##   the match   the player's casts made through the scheme's own input every CAST_S in the fight, aimed at the bot:
 ##               keys      a key pressed (Hotbar.select, 1-5 in turn), RMB held to the full lock and let go
 ##               direction SwayCaster.dir_override forward / back / side / none in turn, RMB
 ##               radial    the wheel held (RadialWheel.held_override), the mouse toward a move (pick_toward), let go: the
 ##                         move readied on its key, then RMB
-##               simple    the mouse wheel steps the four moves (weapon_next), RMB (the form by the distance)
+##               first_moves  1-4 in turn (each key's first move only; it replaced simple, and pc_scheme=simple asks
+##                         for it), RMB
 ##               the match reaches DONE (match_over once), the round screen shows in a round's pause, the match screen at
 ##               the end; its Main menu row goes back to the menu (MatchSetup.leave)
 ##   practice    the menu's Practice row: its panel's Dummy and It rows stepped to pc_foe / pc_practice, Begin practice:
 ##               the ring in practice (RingMode.practice, the dummy's way, the soft walls off), the clock counting up, no
 ##               round's end and no screen over 12 s, a throwing dummy casts at the player, the practice line shown
+##   the % ring (round 3, smash_r3 spec §15; pc_rules=stock, or whenever the ring plays the stock rules): the PercentBar
+##               shown from the countdown on; the scripted player double jumps (Space, Space), air dodges (3 in the air), is
+##               thrown off an end and comes back with the Rise (Space, Space, Space toward the deck: RingMoves.moved rise,
+##               then grab or the deck); then falls in three times, and the match reaches DONE (match_over once). Needs MOVE's
+##               RingMoves and PERCENT's rules: until they merge it says SKIP and checks nothing of it.
 ## In-test watchdog LIMIT_S. The last line "PLAYCHECK PASSED" or "PLAYCHECK FAILED"; exit 0 only on a pass.
 
 const NAME := "PLAYCHECK"
@@ -44,6 +51,8 @@ var matches: Array = []
 var round_screen_frames := 0
 var rounds_over := 0
 var _turn := 0
+var rules_asked := ""
+var moved_kinds: Array = []
 
 
 func _expect(ok: bool, what: String) -> void:
@@ -70,12 +79,14 @@ func _initialize() -> void:
 			"pc_foe":
 				foe_el = v
 			"pc_scheme":
-				scheme = v
+				scheme = String(MatchSetup.SCHEME_ALIASES.get(v, v))
 			"pc_practice":
 				practice_way = v
 			"pc_round_s":
 				if v.is_valid_float():
 					round_s = float(v)
+			"pc_rules":
+				rules_asked = v
 	if foe_el == "":
 		var els: Array = Bending.ELEMENTS
 		foe_el = el if practice_way != "" else String(els[(els.find(el) + 1) % els.size()])
@@ -170,9 +181,89 @@ func _run() -> void:
 	c.cast.connect(func(mv: String, _t: Node3D) -> void: casts.append([mv, c.mode_of(mv)]))
 	if practice_way != "":
 		await _practice()
+	elif rules_asked == "stock" or RingRules.stock_on():
+		await _stock_match()
 	else:
 		await _match()
 	_end()
+
+
+# ---------------------------------------------------------------- round 3: the % ring
+func _stock_match() -> void:
+	var moves := RingMoves.of(player)
+	var real_moves := moves != null and not moves.intent_from_keys().is_empty()
+	var bar := lvl.find_child("PercentBar", true, false)
+	if not RingRules.stock_on() or not real_moves:
+		print("  SKIP the %% ring's play check: stock rules %s, MOVE's RingMoves on the player %s (PERCENT and MOVE merge first)"
+				% [RingRules.stock_on(), real_moves])
+		return
+	mode.match_over.connect(func(w: int) -> void: matches.append(w))
+	moves.moved.connect(func(kind: String) -> void: moved_kinds.append(kind))
+	_expect(bar != null and (bar as CanvasItem).is_visible_in_tree(), "the PercentBar shown from the countdown on (%s)" % mode.phase)
+	await _until(func() -> bool: return mode.phase == "FIGHT", 15.0)
+	# a double jump, an air dodge
+	await _press(&"jump")
+	await _secs(0.3)
+	await _press(&"jump")
+	await _secs(0.15)
+	await _key(&"weapon_3")                          # (the number keys come as events: the Hotbar reads them so)
+	await _until(func() -> bool: return player.is_on_floor(), 3.0)
+	_expect("double_jump" in moved_kinds and "dodge" in moved_kinds, "Space, Space: a double jump; 3 in the air: a dodge (%s)" % [moved_kinds])
+	# thrown off an end, back with the Rise
+	var a := mode.ring
+	var e := mode.player_end
+	var out := (a.axis() * RingArena.side_sign(e)).normalized()
+	player.global_position = a.to_global(Vector3(RingArena.side_sign(e) * (a.half_l() - 1.0), a.top() + 0.1, 0.0))
+	await _secs(0.2)
+	# (a real hit of the foe's, its held Fissure at 45%: launched over the end, 5-7 m out past the lip; the tapped one is a
+	# knock-up since 2026-10-11, straight up: docs/tidebreak/knockups_2026-10-11.md)
+	RingRules.current().reset_pct(player, 45.0)
+	BendStatus.knock(player, out * 9.0 + Vector3.UP * 4.0, mode.foe, {"tag": "earth_shove/push.grown", "from": player.global_position - out * 3.0})
+	await _until(func() -> bool: return moves.off_deck(), 2.0)
+	await _until(func() -> bool: return not RingRules.current().stunned(player), 2.0)
+	# (he looks at the deck, then holds W: camera-relative, toward it)
+	var cam_in := -out
+	player.yaw = atan2(-cam_in.x, -cam_in.z)
+	Input.action_press(&"move_forward")
+	await _press(&"jump")
+	await _secs(0.35)
+	await _press(&"jump")
+	await _secs(0.3)
+	await _press(&"jump")
+	var back := await _until(func() -> bool: return moves.on_ledge() or (player.is_on_floor() and not moves.off_deck()), 4.0)
+	Input.action_release(&"move_forward")
+	_expect("rise" in moved_kinds and back < INF, "thrown off an end, back with the Rise (%s; %s)" % [moved_kinds, "back" if back < INF else "lost"])
+	# three falls: the match over
+	for i in 3:
+		await _until(func() -> bool: return mode.phase == "FIGHT" and not moves.on_spout(), 12.0)
+		if mode.phase == "DONE":
+			break
+		player.global_position = a.to_global(Vector3(RingArena.side_sign(e) * (a.half_l() + 4.0), a.top() - 5.0, 0.0))
+		await _until(func() -> bool: return mode.phase == "DONE" or moves.on_spout(), 6.0)
+	await _until(func() -> bool: return mode.phase == "DONE", 20.0)
+	_expect(mode.phase == "DONE" and matches.size() == 1, "three falls: the match reaches DONE (%s, %s)" % [mode.phase, matches])
+
+
+## Action `a` pressed and let go as input events (what the Hotbar's number keys read: FrontierPlayer._unhandled_input).
+func _key(a: StringName) -> void:
+	var ev := InputEventAction.new()
+	ev.action = a
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await physics_frame
+	var up := InputEventAction.new()
+	up.action = a
+	up.pressed = false
+	Input.parse_input_event(up)
+	await physics_frame
+
+
+func _press(a: StringName) -> void:
+	Input.action_press(a)
+	await physics_frame
+	await physics_frame
+	Input.action_release(a)
+	await physics_frame
 
 
 # ---------------------------------------------------------------- the menu
@@ -182,11 +273,30 @@ func _menu_match() -> void:
 	(m._element_rows[el] as Button).pressed.emit()
 	await process_frame
 	_expect(MatchSetup.element == el, "the panel: %s chosen" % el)
-	_expect(await _step("Opponent", func() -> bool: return MatchSetup.foe() == foe_el), "the panel: the opponent %s" % foe_el)
-	_expect(await _step("Rounds", func() -> bool: return MatchSetup.rounds_to_win == 2), "the panel: best of 3")
-	_expect(await _step("Scheme", func() -> bool: return MatchSetup.scheme() == scheme), "the panel: the %s scheme (%s)" % [scheme,
-			MatchSetup.scheme_row()])
+	# (the broadcast setup: the opponent is a row of chips, one per element, and the rounds' chips are the zone rules' only)
+	var foe_chip := _row("Opponent_" + foe_el)
+	if foe_chip != null:
+		foe_chip.pressed.emit()
+		await process_frame
+	_expect(MatchSetup.foe() == foe_el, "the panel: the opponent %s" % foe_el)
+	var rounds := m._panel.find_child("Rounds", true, false) as BroadcastUI.Segments
+	if rounds != null:
+		rounds.chip(1).pressed.emit()
+		await process_frame
+	_expect(MatchSetup.rounds_to_win == 2, "the panel: best of 3")
+	# (round 2: the scheme is picked under Controls, "Other ways to pick moves"; the keys by default)
+	var ctl := _row("Controls")
+	_expect(ctl != null, "the panel's Controls row")
+	if ctl != null:
+		ctl.pressed.emit()
+		await process_frame
+	_expect(_row("Scheme") != null and await _step("Scheme", func() -> bool: return MatchSetup.scheme() == scheme),
+			"Controls, other ways to pick moves: the %s scheme (%s)" % [scheme, MatchSetup.scheme_row()])
+	m._open_match()                              # (back to the sport's panel: its picks are MatchSetup's, kept)
+	await process_frame
 	MatchSetup.round_s = round_s                 # (the panel has no round length: a short one for the check)
+	if rules_asked != "":
+		MatchSetup.rules_choice = String({"lives": "stock", "zones": "classic"}.get(rules_asked, rules_asked))
 	var begin := _row("Begin")
 	_expect(begin != null, "the panel's Begin")
 	if begin != null:
@@ -280,15 +390,8 @@ func _scheme_cast() -> void:
 				w.held_override = false
 				await _ticks(2)
 				w.held_override = null
-		"simple":
-			var e := InputEventAction.new()
-			e.action = &"weapon_next"
-			e.pressed = true
-			Input.parse_input_event(e)
-			await _ticks(2)
-			var u := e.duplicate() as InputEventAction
-			u.pressed = false
-			Input.parse_input_event(u)
+		"first_moves", "simple":
+			player.hotbar.select((_turn - 1) % 4)  # (1-4, each key's first move only)
 			await _ticks(2)
 	if mode.phase != "FIGHT" or mode.foe == null or not is_instance_valid(mode.foe):
 		return

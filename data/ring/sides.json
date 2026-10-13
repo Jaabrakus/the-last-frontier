@@ -1,0 +1,59 @@
+{
+	"_about": "Tidebreak round 4 (HUD): side colours, like team jerseys (the owner's FEEL list: \"side colours in mirror matches\"; critic_r2 backlog item 5). RingSides (scripts/ring/ring_sides.gd) reads it. In a mirror match (an element worn on both sides) team 1 wears its element's AWAY dress: the same ring garments (the catalog's set ring, nothing new, nothing drawn on anyone), only their cloth colours changed: the element's family kept, its trims and its value turned round. The player's side is always home and the player's own dress never changes (PlayerAppearance.ring_dress). The plates' 2 px side rule and life glyphs take colour(team): the element's home colour, or its away colour for a side wearing away. always: true puts team 1 in its away dress in every ring match, not only in mirrors (the owner's call; default false). The duel and the open world never read this (no ring match: home).",
+	"always": false,
+	"always_teams": true,
+  "_team_colours": "A team format (2v2, 4v4; the owner, 2026-10-10: \"Triple AAA\"): each side's own colour on the plates' rule and life pips and on the match screen, whatever its fighters' elements (a side of four is of several): home the player's side (the menus' accent teal), away the other (a coral no element wears). The element still shows by its mark beside each name.",
+  "team_colours": {"home": [0.13, 0.83, 0.76], "away": [1.0, 0.36, 0.38]},
+	"_elements": "per element: home (the plates' colour for a side in the element's own dress), away (the plates' colour for a side in the away dress: its trim's), away_dress (slot -> zone -> palette token or #hex, merged over ring_team_a's element_dress colours for that slot; the garments themselves are the home dress's)",
+	"elements": {
+		"earth": {
+			"_away": "bone and umber against ochre and moss: a bone tunic with umber bands, bone trousers with umber shin wraps, an umber sash, bone arm wraps",
+			"home": [0.7804, 0.6471, 0.4078],
+			"away": [0.93, 0.9, 0.8],
+			"away_dress": {
+				"shirt": {"0": "linen_white", "1": "ring_umber", "3": "ring_umber"},
+				"legs.lower": {"0": "linen_white", "1": "ring_umber"},
+				"accessories.waist": {"0": "ring_umber", "3": "linen_white"},
+				"accessories.arms": {"0": "linen_white", "1": "ring_umber"},
+				"feet": {"0": "ring_umber", "1": "ring_sole", "2": "linen_white"}
+			}
+		},
+		"water": {
+			"_away": "ice and navy against sea blue: an ice-blue parka with navy seams over frost trousers, a navy belt, ice boots",
+			"home": [0.4431, 0.7216, 0.6863],
+			"away": [0.78, 0.9, 1.0],
+			"away_dress": {
+				"outer": {"0": "ring_ice", "1": "ring_snow_fur", "2": "ring_navy"},
+				"legs.lower": {"0": "drift_frost", "1": "ring_navy"},
+				"accessories.waist": {"0": "ring_navy", "1": "ring_ice", "2": "silver"},
+				"feet": {"0": "ring_ice", "1": "ring_snow_fur", "2": "ring_navy"}
+			}
+		},
+		"fire": {
+			"_away": "warm ivory against charcoal: dark collar and bands, copper sash trim",
+			"home": [0.8941, 0.6353, 0.4627],
+			"away": [0.98, 0.78, 0.36],
+			"away_dress": {
+				"shirt": {"0": "#e3cfb0", "1": "#50404a", "2": "#e3cfb0"},
+				"legs.lower": {"0": "#e3cfb0", "1": "#50404a"},
+				"accessories.waist": {"0": "#50404a", "3": "#e4a276"},
+				"accessories.arms": {"0": "#e3cfb0", "1": "#50404a"},
+				"feet": {"0": "#50404a", "1": "ring_sole", "2": "#e3cfb0"}
+			}
+		},
+		"air": {
+			"_away": "rust and umber against pale lilac: a rust tunic with cream bands, umber trousers with rust bands, a cream sash",
+			"home": [0.7725, 0.7412, 0.8392],
+			"away": [0.85, 0.48, 0.24],
+			"away_dress": {
+				"shirt": {"0": "ring_rust", "1": "ring_cream"},
+				"legs.lower": {"0": "ring_umber", "1": "ring_rust"},
+				"accessories.waist": {"0": "ring_cream", "3": "ring_rust"},
+				"feet": {"0": "ring_umber", "1": "ring_sole", "2": "ring_cream"}
+			}
+		}
+	},
+	"_metric": "the review lineup's check (tools/ring/r4_hud_shots.gd sides): the OKLab dE (x100) between the two sides' mean garment colour at 25 m is at least min_delta_e, and their OKLab L differs by at least min_value_diff",
+	"min_delta_e": 25.0,
+	"min_value_diff": 0.12
+}

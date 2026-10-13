@@ -54,6 +54,10 @@ extends RefCounted
 ## Body type 1 is the male fit (sex 1), body type 2 the female fit (sex 0).
 ##   trait         a world people's mark in the skin, 0..1 (the Keelfolk's keelstone flecks, the Etched's Form veins:
 ##                 CharacterPeoples.trait_of, people_trait.gdshaderinc); the Mark row, shown for those peoples only
+##   own_face      (the creator's while it is open; AppearanceStore.validate drops it) the face the creator opened with
+##                 when it is none of the Face row's choices (fine-tuned, or a face of another people): {face, preset,
+##                 people, sex}. The Face row lists it last as "Your face" for that people and body type, so stepping
+##                 away from a saved face can come back to it (OWN_FACE; kept like the name, KEEP)
 
 const PATH := "res://data/customizer/creator.json"
 const ROWS := ["face_style", "skin", "bust", "face", "complexion", "hair_style", "hair_color", "facial_hair", "eyebrows", "eyes",
@@ -96,6 +100,9 @@ const SKIN_STEP := 0.035
 const NAME_MAX := 24
 ## Colours added to every people's hair list (age).
 const AGE_HAIR := ["grizzled", "grey", "white"]
+## The look key of the creator's own face (see the header), and the Face row's choice that gives it back.
+const OWN_FACE := "own_face"
+const OWN_FACE_ID := "own_face"
 
 static var _data := {}
 
@@ -254,8 +261,7 @@ static func _face_options(look: Dictionary) -> Array:
 	var prs: Array = CharacterPeoples.presets(pid, sex)
 	if BodyMaterials.is_stylized(look):
 		prs = CharacterPeoples.stylized_presets(pid, sex) + prs
-	# (a world people: more faces, two from each region of the real peoples: CharacterPeoples.WORLD_FACES)
-	var cap := CharacterPeoples.WORLD_FACES if CharacterPeoples.is_world(pid) else FACE_VARIANTS
+	var cap := FACE_VARIANTS
 	for pr: Dictionary in prs:
 		if out.size() >= cap:
 			break
@@ -272,7 +278,36 @@ static func _face_options(look: Dictionary) -> Array:
 		out.append({"id": "%s_%d_%d" % [pid, int(sex), k], "label": "Face %d" % (out.size() + 1),
 				"face": lk.get("face", {})})
 		k += 1
+	# the face the creator opened with, when none of these is it: last, so the arrows come back to it
+	var own: Variant = look.get(OWN_FACE)
+	if own is Dictionary and (own as Dictionary).get("face") is Dictionary and String(own.get("people", "")) == pid \
+			and (float(own.get("sex", 0.0)) >= 0.5) == (sex >= 0.5):
+		var o := {"id": OWN_FACE_ID, "label": "Your face", "face": (own.face as Dictionary).duplicate(),
+				"note": "The face this character had when the creator opened."}
+		if String(own.get("preset", "")) != "":
+			o["preset"] = String(own.preset)
+		out.append(o)
 	return out
+
+
+## The people whose face preset the look wears when that is not the look's own people (a look saved under another
+## people: the owner's "Tubber", the chinese_m_a face filed under English when the invented peoples were retired), ""
+## otherwise or when that people is not listed. The creator opens such a look on the preset's people.
+static func preset_people(look: Dictionary) -> String:
+	var pp := String(CharacterPeoples.preset(String(look.get("preset", ""))).get("people", ""))
+	if pp.is_empty() or pp == String(look.get("people", "")) or not CharacterPeoples.is_listed(pp):
+		return ""
+	return pp
+
+
+## Keeps the look's face as the Face row's "Your face" (OWN_FACE) when it is none of the row's choices; true when it did.
+static func keep_own_face(look: Dictionary) -> bool:
+	if not look.get("face") is Dictionary or current("face", look) >= 0:
+		return false
+	var p := _people(look)
+	look[OWN_FACE] = {"face": (look.face as Dictionary).duplicate(), "preset": String(look.get("preset", "")),
+			"people": String(p.get("id", "")), "sex": 1.0 if is_male(look) else 0.0}
+	return true
 
 
 static func hair_style_tags(style: String) -> Array:
@@ -517,9 +552,10 @@ static func step(row: String, look: Dictionary, d: int) -> int:
 
 
 ## Keys that survive a change of people or body type (the rest come from the new individual): the name, the clothes,
-## the tattoos and the jewellery rows (for everyone, like the clothes: browsing the peoples keeps what was chosen).
+## the tattoos and the jewellery rows (for everyone, like the clothes: browsing the peoples keeps what was chosen), and the
+## creator's own face (OWN_FACE: back in its people's Face row after browsing).
 const KEEP := ["name", "outfit", "weathering", "face_style", "complexion", "tattoos",
-		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands"]
+		"jewel_ears", "jewel_nose", "jewel_neck", "jewel_hands", OWN_FACE]
 
 
 static func _keep(from: Dictionary, to: Dictionary) -> Dictionary:
@@ -543,31 +579,10 @@ static func with_people(look: Dictionary, people_id: String) -> Dictionary:
 	if BodyMaterials.is_stylized(look):
 		pr = CharacterPeoples.stylized_presets(people_id, sex) + pr
 	var out := CharacterPeoples.preset_look(String(pr[0].id)) if not pr.is_empty() else {"people": people_id, "sex": sex}
-	out["people"] = people_id          # (a world people's faces are real peoples' presets: the look is still its)
+	out["people"] = people_id
 	out = _keep(look, out)
-	_world_people(out)
 	_settle(out)
 	return out
-
-
-## A world people's own on a look just made from one of its faces (a real people's preset): its first hair style, its
-## weathering, its mark at its own strength; the eyes and hair colour settle on its lists (its most common first).
-static func _world_people(look: Dictionary) -> void:
-	var p := CharacterPeoples.people(String(look.get("people", "")))
-	if not bool(p.get("world", false)):
-		return
-	var own: Array = (p.get("hair_styles", {}) as Dictionary).get("m" if is_male(look) else "f", [])
-	if not own.is_empty():
-		_hair(look)["style"] = String(own[0])
-	_hair(look).erase("color")
-	look.erase("iris")
-	if p.has("weathering"):
-		look["weathering"] = float(p.weathering)
-	var tr := CharacterPeoples.trait_of(look)
-	if not tr.is_empty():
-		look["trait"] = _nearest_trait(float(tr.get("default", 0.6)))
-	else:
-		look.erase("trait")
 
 
 ## The Mark row's level nearest `v`.
@@ -579,11 +594,27 @@ static func _nearest_trait(v: float) -> float:
 	return best
 
 
-## The same people with body type 1 (male fit) or 2 (female fit).
+## The same people with body type 1 (male fit) or 2 (female fit): the skin, eye and hair colours kept when the other
+## body type offers them too (a skin off the swatches: the nearest), and the face at the same place of the people's
+## list (Face 3 stays Face 3); the rest is the people's first individual of that body type.
 static func with_body_type(look: Dictionary, bt: int) -> Dictionary:
 	var lk := look.duplicate(true)
 	lk["sex"] = 1.0 if bt == 1 else 0.0
-	return with_people(lk, String(_people(look).get("id", CharacterPeoples.default_people())))
+	var out := with_people(lk, String(_people(look).get("id", CharacterPeoples.default_people())))
+	for r: String in ["skin", "eyes", "hair_color"]:
+		var was := options(r, look)
+		var i := current(r, look, was)
+		var opts := options(r, out)
+		var j := _index_of(opts, String(was[i].id)) if i >= 0 else -1
+		if j < 0 and r == "skin":
+			j = _nearest_skin(look, opts)
+		if j >= 0:
+			select(r, out, j, opts)
+	var fi := current("face", look)
+	var faces := options("face", out)
+	if fi > 0 and fi < faces.size() and String(faces[fi].id) != OWN_FACE_ID:
+		select("face", out, fi, faces)
+	return out
 
 
 ## Every row on a choice of its list (the nearest, or the first): a preset's continuous values
@@ -603,7 +634,7 @@ static func _settle(look: Dictionary) -> void:
 				if absf(float(opts[j].bust) - bu) < absf(float(opts[i].bust) - bu):
 					i = j
 		if i < 0:
-			i = _nearest_skin(look, opts) if r == "skin" else (_nearest_brows(look, opts) if r == "eyebrows" else 0)
+			i = _nearest_skin(look, opts) if r == "skin" else (nearest_brows(look, opts) if r == "eyebrows" else 0)
 		select(r, look, i, opts)
 	if not is_male(look):
 		look["facial_hair"] = ""
@@ -623,7 +654,8 @@ static func _nearest_skin(look: Dictionary, opts: Array) -> int:
 	return best
 
 
-static func _nearest_brows(look: Dictionary, opts: Array) -> int:
+## The Eyebrows choice nearest the look's brows (thickness and arch; AppearanceStore.default_look snaps to it).
+static func nearest_brows(look: Dictionary, opts: Array) -> int:
 	var b: Dictionary = look.get("brows", {}) if look.get("brows") is Dictionary else {}
 	var best := 0
 	var bd := 99.0
@@ -656,7 +688,9 @@ static func randomized(look: Dictionary, rng: RandomNumberGenerator) -> Dictiona
 	if lk.has("trait"):
 		lk["trait"] = _nearest_trait(float(lk.trait))
 	var faces := options("face", lk)
-	select("face", lk, rng.randi() % faces.size(), faces)
+	# (a new individual: one of the people's faces, never the creator's own one, "Your face", listed last)
+	var n_faces := faces.size() - (1 if String(faces[-1].id) == OWN_FACE_ID else 0)
+	select("face", lk, rng.randi() % n_faces, faces)
 	var skins := options("skin", lk)
 	select("skin", lk, _nearest_skin(lk, skins), skins)
 	var styles := options("hair_style", lk)

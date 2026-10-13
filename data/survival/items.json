@@ -130,12 +130,9 @@
    "dry_h": 0.5,
    "garments": [
     "shirt_linen",
-    "shirt_check",
     "shirt_white",
-    "ew_shirt_linen",
     "ew_shirt_calico",
     "shift_linen",
-    "ew_shift_f",
     "hab_chemise_f"
    ]
   },
@@ -148,9 +145,7 @@
    "wet_keep": 0.3,
    "dry_h": 0.75,
    "garments": [
-    "hunting_shirt_tow",
-    "hunting_shirt_linsey",
-    "hunting_frock"
+    "hunting_shirt_linsey"
    ]
   },
   {
@@ -163,10 +158,6 @@
    "dry_h": 1.5,
    "garments": [
     "waistcoat_sleeved",
-    "waistcoat_sb",
-    "waistcoat_db",
-    "br_waistcoat",
-    "fr_veste",
     "stays",
     "jumps",
     "hab_bodice_f"
@@ -183,15 +174,10 @@
    "garments": [
     "ranger_short_coat",
     "bearskin_short_coat",
-    "frock_coat",
-    "provincial_coat_ma",
     "provincial_coat_va",
-    "br_regimental_coat_1751",
-    "br_coat_cropped_1758",
     "br_regimental_coat_1768",
     "br_highland_jacket",
     "br_light_coat_80th",
-    "fr_marine_justaucorps",
     "fr_terre_habit",
     "fr_drummer_livery",
     "ew_trade_coat",
@@ -223,8 +209,6 @@
    "wet_keep": 0.6,
    "dry_h": 3.0,
    "garments": [
-    "capot_blanket",
-    "capot_fur_trim",
     "ew_capot",
     "fr_capot"
    ],
@@ -253,9 +237,7 @@
    "dry_h": 3.0,
    "bedding_ins": 3,
    "garments": [
-    "ew_matchcoat",
-    "tumpline_blanket_roll",
-    "cloak_hooded"
+    "tumpline_blanket_roll"
    ],
    "notes": "also bedding (K:9.2)"
   },
@@ -269,7 +251,6 @@
    "dry_h": 6.0,
    "bedding_ins": 5,
    "garments": [
-    "fur_mantle",
     "ew_fur_robe"
    ],
    "notes": "Smith's bearskin beds; French winter kit (K:1, K:27). The buffalo robe dressed with the hair on (rcp.dress_robe): worn as a wrap over the coat, or slept under. Pulled forward from M3 to the slice with the plains bison in the game (2026-09-28).",
@@ -286,10 +267,6 @@
    "garments": [
     "breeches_buckskin",
     "breeches_wool",
-    "br_breeches",
-    "fr_breeches",
-    "stockings",
-    "fr_stockings",
     "br_diced_hose",
     "trousers_linen"
    ]
@@ -304,16 +281,10 @@
    "dry_h": 1.0,
    "garments": [
     "breechclout_cloth",
-    "ew_breechcloth",
     "fr_breechcloth",
-    "leggings_wool",
     "leggings_long_wool",
-    "ew_leggings_m",
-    "ew_leggings_f",
     "br_leggings_1758",
-    "fr_mitasses",
-    "br_gaiters",
-    "fr_gaiters_white"
+    "fr_mitasses"
    ],
    "notes": "dry quickly; common among Native people and woodsmen (K:9.2)"
   },
@@ -329,7 +300,6 @@
     "petticoat_wool",
     "petticoat_linsey",
     "petticoat_linen",
-    "ew_wrap_skirt_f",
     "hab_jupe_f",
     "br_belted_plaid",
     "br_philibeg"
@@ -347,9 +317,6 @@
    "quiet": true,
    "durability_game_days": 6,
    "garments": [
-    "moccasins_puckered",
-    "ew_moccasins_m",
-    "ew_moccasins_f",
     "fr_souliers_sauvages"
    ],
    "notes": "quiet; soak through fast; wear out quickly (K:9)"
@@ -363,9 +330,7 @@
    "wet_keep": 0.3,
    "dry_h": 2.0,
    "noise_mult": 1.2,
-   "garments": [
-    "shoes_buckled"
-   ]
+   "garments": []
   },
   {
    "id": "clothing.mitts",
@@ -389,10 +354,8 @@
    "wet_keep": 0.5,
    "dry_h": 1.0,
    "garments": [
-    "fur_cap",
     "coonskin_tail_cap",
     "tuque_red",
-    "monmouth_cap",
     "scotch_bonnet",
     "br_grenadier_bearskin",
     "br_blue_bonnet"
@@ -407,18 +370,10 @@
    "wet_keep": 0.5,
    "dry_h": 1.0,
    "garments": [
-    "round_hat",
-    "hunting_cap",
-    "tricorn",
-    "round_hat_cut",
-    "br_cocked_hat",
     "br_round_hat_1758",
     "br_grenadier_mitre",
     "br_leather_cap_80th",
-    "fr_tricorne",
-    "cap_linen",
     "straw_hat_f",
-    "ew_head_wrap",
     "hab_cap_f"
    ]
   }

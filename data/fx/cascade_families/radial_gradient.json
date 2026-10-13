@@ -1,0 +1,18 @@
+{
+  "roots": ["/Game/VFX/Materials/Shared/RadialGradient01_FxM"],
+  "shader": "fam_radial_gradient",
+  "template": true,
+  "u": {
+    "gradient_radius": ["s", "GradientRadius", 1.0, 0.5],
+    "gradient_density": ["s", "GradientDensity", 1.0, 1.0],
+    "add_gradient2": ["sw", "AddGradient2", false],
+    "gradient2_radius": ["s", "Gradient2Radius", 1.0, 0.25],
+    "gradient2_density": ["s", "Gradient2Density", 1.0, 1.0],
+    "use_camera_depth_fade": ["sw", "UseCameraDepthFade", true],
+    "camera_fade_offset": ["s", "CameraFadeOffset", 0.01, 200.0],
+    "camera_fade_length": ["s", "CameraFadeLength", 0.01, 100.0],
+    "use_depth_fade": ["sw", "UseDepthFade", true],
+    "depth_fade_m": ["s", "PixelDepthFade", 0.01, 50.0]
+  },
+  "notes": "Spellbreak (Proletariat) RadialGradient01_FxM. EVIDENCE: Translucent/Unlit one-sided root + one Additive instance (template); scalar params GradientRadius/GradientDensity/Gradient2Radius/Gradient2Density/CameraFadeOffset/CameraFadeLength/PixelDepthFade, switches UseCameraDepthFade/UseDepthFade (default true) and AddGradient2 (default false, not serialised in the root); 2x RadialGradientExponential + CameraDepthFade function calls, DepthFade expression class; engine ExponentialDensity description = inverted D3DFOG_EXP (1-exp(-d*density)). No textures. All 119 emitters are sprites (Square/Velocity/Rectangle/FacingCameraPosition, no sub-UV, no dynamic params used by the graph). AUTHORED: linear input saturate(1-dist/radius) to ExponentialDensity, gradient2 added unclamped, emissive = particle colour, opacity = gradient * particle alpha * fades."
+}

@@ -257,11 +257,6 @@ func interact_actions(player: Node) -> Array:
 		out.append({"id": "smother", "text": "Smother the fire"})
 	elif not state.lit and fuel_min() > 0.0 and more and (_torch_lit(player) or _has_striker(player) or _has_drill(player)):
 		out.append({"id": "wood", "text": "Lay on more firewood (%d laid)" % wood_left()})
-	# casting balls at the lit fire (ShotMaking: the mould and bar lead in the pack)
-	if state.lit:
-		var cast := ShotMaking.row(self, player)
-		if not cast.is_empty():
-			out.append(cast)
 	return out
 
 
@@ -274,8 +269,6 @@ func interact_action(player: Node, id: String) -> void:
 			smother()
 		"wood":
 			add_wood(player)
-		"cast":
-			ShotMaking.cast(self, player)
 		_:
 			interact(player)
 

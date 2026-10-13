@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "note": "First Tidebreak identity pass: project-authored geometric release marks and costume colour overrides. Existing garment shapes and runtime IDs are retained. Mirror-match away colours remain separately defined in sides.json.",
+  "elements": {
+    "earth": {
+      "name": "Stone",
+      "motif": "three stepped peaks",
+      "accent": "#c7a568"
+    },
+    "water": {
+      "name": "Tide",
+      "motif": "three offset wave arcs",
+      "accent": "#71b8af"
+    },
+    "fire": {
+      "name": "Ember",
+      "motif": "a split seven-ray sun",
+      "accent": "#e4a276"
+    },
+    "air": {
+      "name": "Gale",
+      "motif": "four open turning vanes",
+      "accent": "#c5bdd6"
+    }
+  }
+}

@@ -69,7 +69,7 @@ func _watch(b: Node3D, off := Vector3(2.4, 0, 2.2), at := Vector3.INF) -> void:
 
 func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	await _frames(5)
 	player = current_scene.get_node("Player") as FrontierPlayer
 	player.ignore_mouse_capture = true

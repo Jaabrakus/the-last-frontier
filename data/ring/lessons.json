@@ -1,16 +1,31 @@
 {
   "format": "ring_lessons",
-  "version": 1,
-  "summary": "Tidebreak's lessons in Practice (RingLessons, LessonCard: the owner, 2026-10-05, found switching moves hard and nothing in the game taught the controls) and a first Quick match's key hints (FirstHints). Every word here is shown to the player: no word from any show. In a line [action] is a key cap drawn from the action's binding now (InputMap: the text is right whatever the player rebound), {press} the key(s) that ready the lesson's move under the scheme, {name} its name, {form} the wheel to its form when the key is on another, {what} and {thing} the element's words below.",
-  "_doc": "lessons: in order; each {id, title, dummy (stand | throw: what the practice dummy does through it), schemes (only under these; all when missing), elements (only for these; all when missing), per_element (its progress kept per element: its words differ), needs_forms (the readied move must have forms: the line says to ready one first when it has none), role (the move it teaches: attack, dodge, guard, send_back, patch; RingLessons.role_move), by: {scheme or '*': {line, do}}}. do: walk (walk_m on foot), cast (an aim cast; of the role's move when it has one), quick (a cast from the left button after the bind key), partner (the same key again: its other move readied), ready (another move readied), wheel_ready (the move wheel opened, a move readied from it), form (the wheel stepped the readied move's form), near (a cast at the near form the distance picked), guard (a guard of yours took one of its throws), knocked (the dummy pushed back a zone), out (the dummy into the water).",
+  "version": 3,
+  "summary": "Tidebreak's lessons in Practice (RingLessons, LessonCard: the owner, 2026-10-05, found switching moves hard and nothing in the game taught the controls; round 2 of the skills: the same buttons for every element, LMB jab, E guard, 1 strike, 2 push, 3 dash, 4 wall, 5 heal) and a first Quick match's key hints (FirstHints). Every word here is shown to the player: no word from any show. In a line [action] is a key cap drawn from the action's binding now (InputMap: the text is right whatever the player rebound), {press} the key(s) that ready the lesson's move under the scheme, {name} its plain name, {jab} the element's jab, {grow} what fire's strike grows into, {what} and {thing} the element's words below.",
+  "_doc": "lessons: in order; each {id, title, dummy (stand | throw: what the practice dummy does through it), slow (the dummy throws more slowly through it: slow_every_s between throws, its shots at slow_speed: a beginner's time to read and answer them), throws (per element: the dummy's throw through it instead of its strike, when the move exists), schemes (only under these; all when missing), elements (only for these; all when missing), per_element (its progress kept per element: its words differ), role (the move it teaches: jab, strike, push, dash, wall, heal, guard; RingLessons.role_move), by: {scheme or '*': {line, do}}}. do: walk (walk_m on foot), jab (a cast from the left button), cast (an aim cast of the role's move), quick (a cast from the left button after the bind key), guard (a guard of yours took one of its throws), return (earth: a stone caught, then thrown back), jump (a jump off the deck), knocked (the dummy pushed back a zone), out (the dummy into the water).",
   "walk_m": 3.0,
   "done_hold_s": 1.2,
   "finished_s": 5.0,
   "skip_action": "lesson_skip",
-  "sounds": {"_doc": "Existing sounds (Sfx ids) as a lesson is done and as the last is: [id, gain dB, pitch].", "done": ["nock_click", -3.0, 1.35], "finished": ["dummy_reset", -4.0, 1.0]},
-  "dummy": {"earth": "earth", "water": "fire", "fire": "fire", "air": "fire"},
-  "simple_guard": {"earth": "earth_wall", "water": "water_shield", "fire": "fire_jets", "air": "air_shield"},
-  "send_back": {"earth": "earth_shove/push"},
+  "sounds": {
+    "_doc": "The ring's own sounds (BendSounds ids; an Sfx id also plays) as a lesson is done and as the last is: [id, gain dB, pitch].",
+    "done": [
+      "count_tick",
+      -2.0,
+      1.35
+    ],
+    "finished": [
+      "round_bell",
+      -4.0,
+      1.0
+    ]
+  },
+  "dummy": {
+    "earth": "earth",
+    "water": "water",
+    "fire": "fire",
+    "air": "air"
+  },
   "words": {
     "kicker": "LESSON %d OF %d",
     "done": "Done",
@@ -19,93 +34,741 @@
     "finished": "That is every lesson. The dummy stays: R puts you both back, B changes what it does.",
     "twice": "twice",
     "readied": "Readied",
-    "form_first": "First [weapon_1]: a move with forms.  ",
-    "roll_to": ", roll [weapon_next] to %s",
     "menu_row": "Lessons",
     "menu_line_new": "a card at a time, each done by doing it: %d lessons for %s with the %s controls",
     "menu_line_resume": "resume at %d of %d: %s",
     "menu_line_done": "all %d done with the %s controls: from the start again",
-    "panel_line": "Lessons: the dummy stands while you learn to move, cast and switch, then throws at you to catch. Each card is done by doing it; Enter skips one; your place is kept."
+    "panel_line": "Lessons: the dummy stands while you learn your buttons, then throws at you, slowly, so you can guard on the beat. Each card is done by doing it; Enter skips one; your place is kept.",
+    "hint_kicker": "A HINT"
   },
   "elements": {
-    "earth": {"thing": "stones", "guard_what": "caught and held before you", "simple_what": "close in first: it is a shell round you, and its stones break on it", "dodge_what": "a dash out of the way"},
-    "water": {"thing": "fire", "guard_what": "the fire dies in it", "simple_what": "close in, it is a bubble the fire dies in", "dodge_what": "a dash out of the way"},
-    "fire": {"thing": "fire", "guard_what": "knocked aside", "simple_what": "a jet out of its way", "dodge_what": "a hop out of the way"},
-    "air": {"thing": "fire", "guard_what": "sent back at it", "simple_what": "from afar it sends the bolt back", "dodge_what": "a step out of the way"}
+    "earth": {
+      "thing": "stones",
+      "guard_what": "it is caught and held before you",
+      "dash_what": "you drop into the deck and come up that way"
+    },
+    "water": {
+      "thing": "water",
+      "guard_what": "it swings round you and goes back",
+      "dash_what": "you slide that way"
+    },
+    "fire": {
+      "thing": "fire",
+      "guard_what": "it goes straight back",
+      "dash_what": "a hop that way; nothing held: a back-flip"
+    },
+    "air": {
+      "thing": "wind",
+      "guard_what": "it bounces back, and your next hit knocks harder",
+      "dash_what": "a light step that way"
+    }
   },
   "lessons": [
-    {"id": "move", "title": "Move", "dummy": "stand",
-      "by": {"*": {"line": "Walk with [move_forward] [move_left] [move_back] [move_right]", "do": "walk"}}},
-    {"id": "cast", "title": "Cast", "dummy": "stand",
-      "by": {"*": {"line": "Hold [aim] on the dummy: the lock fills.  Let go to cast", "do": "cast"}}},
-    {"id": "switch", "title": "Switch your move", "dummy": "stand", "role": "attack",
+    {
+      "id": "move",
+      "title": "Move",
+      "dummy": "stand",
       "by": {
-        "keys": {"line": "Press [weapon_2] for another move, then [weapon_2] again: the same key's other move", "do": "partner"},
-        "direction": {"line": "Hold [move_forward] as you let go of [aim]: your attack, {name}", "do": "cast"},
-        "radial": {"line": "Hold [bend_wheel]: every move round a wheel.  Point at one, let go: it is readied", "do": "wheel_ready"},
-        "simple": {"line": "Press [weapon_1] to [weapon_4], or roll [weapon_next]: the next of your four moves", "do": "ready"}}},
-    {"id": "form", "title": "Its three forms", "dummy": "stand", "needs_forms": true,
+        "*": {
+          "line": "Walk with [move_forward] [move_left] [move_back] [move_right]",
+          "do": "walk"
+        }
+      }
+    },
+    {
+      "id": "jab",
+      "title": "Jab",
+      "dummy": "stand",
+      "role": "jab",
       "by": {
-        "*": {"line": "Roll [weapon_next]: the readied move steps through its forms", "do": "form"},
-        "simple": {"line": "Walk close and cast: near the dummy a move takes its near form", "do": "near"}}},
-    {"id": "dodge", "title": "Dodge", "dummy": "stand", "role": "dodge", "per_element": true,
+        "*": {
+          "line": "Hold [fire]: {jab}.  Let go once its circle is full",
+          "do": "jab"
+        }
+      }
+    },
+    {
+      "id": "strike",
+      "title": "Strike",
+      "dummy": "stand",
+      "role": "strike",
+      "per_element": true,
       "by": {
-        "keys": {"line": "{press}: {name}.  Hold [aim], let go: {what}", "do": "cast"},
-        "direction": {"line": "Hold [move_left] or [move_right] as you let go of [aim]: {name}, {what}", "do": "cast"},
-        "radial": {"line": "Hold [bend_wheel], point at {name}, let go.  Then hold [aim], let go: {what}", "do": "cast"},
-        "simple": {"line": "{press}: {name}.  Hold [aim], let go: it carries you", "do": "cast"}}},
-    {"id": "quick", "title": "The quick spell", "dummy": "stand",
-      "by": {"*": {"line": "Press [bend_quick_bind]: the readied move goes on [fire].  Hold [fire], let go to cast it", "do": "quick"}}},
-    {"id": "mend", "title": "Mend and Patch", "dummy": "stand", "role": "patch", "schemes": ["keys", "direction", "radial"],
+        "keys": {
+          "line": "{press}: {name}.  Hold [aim]: aim while it fills, let go to cast.  Let go early: nothing is spent{grow}",
+          "do": "cast"
+        },
+        "first_moves": {
+          "line": "{press}: {name}.  Hold [aim]: aim while it fills, let go to cast.  Let go early: nothing is spent{grow}",
+          "do": "cast"
+        },
+        "direction": {
+          "line": "Hold [move_forward] as you press [aim]: {name}.  Let go to cast{grow}",
+          "do": "cast"
+        },
+        "radial": {
+          "line": "Hold [bend_wheel], point at {name}, let go.  Then hold [aim], let go to cast{grow}",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "push",
+      "title": "Push ▲",
+      "dummy": "stand",
+      "role": "push",
+      "per_element": true,
       "by": {
-        "*": {"line": "{press}: Patch.  Hold [aim], let go: a little health back  ·  Mend, on the same key, makes a broken wall whole", "do": "cast"},
-        "direction": {"line": "{press}: Patch.  Let go of [aim] with nothing held: a little health back", "do": "cast"}}},
-    {"id": "guard", "title": "Answer its throw", "dummy": "throw", "role": "guard", "per_element": true,
+        "keys": {
+          "line": "{press}: {name}.  Hold [aim] past the second click: ▲ it grows.  Let go to cast",
+          "do": "cast"
+        },
+        "first_moves": {
+          "line": "{press}: {name}.  Hold [aim] past the second click: ▲ it grows.  Let go to cast",
+          "do": "cast"
+        },
+        "direction": {
+          "line": "{press}: {name}.  Let go of [aim] with nothing held.  Held past the second click: ▲ it grows",
+          "do": "cast"
+        },
+        "radial": {
+          "line": "Hold [bend_wheel], point at {name}, let go.  Hold [aim] past the second click: ▲ it grows",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "dash",
+      "title": "Dash",
+      "dummy": "stand",
+      "role": "dash",
+      "per_element": true,
       "by": {
-        "keys": {"line": "It throws {thing} now.  {press}: {name}{form}.  Cast it as one comes: {what}", "do": "guard"},
-        "direction": {"line": "It throws {thing} now.  Hold [move_back] as you let go of [aim] as one comes: {name}, {what}", "do": "guard"},
-        "radial": {"line": "It throws {thing} now.  Hold [bend_wheel], point at {name}{form}, let go.  Cast it as one comes: {what}", "do": "guard"},
-        "simple": {"line": "It throws {thing} now.  {press}: {name}.  Cast it as one comes: {what}", "do": "cast"}}},
-    {"id": "send_back", "title": "Send it back", "dummy": "throw", "role": "send_back", "elements": ["earth"], "schemes": ["keys", "direction", "radial"], "per_element": true,
+        "keys": {
+          "line": "{press}: {name}.  Hold [move_left] or [move_right], let go of [aim]: {what}",
+          "do": "cast"
+        },
+        "first_moves": {
+          "line": "{press}: {name}.  Hold [move_left] or [move_right], let go of [aim]: {what}",
+          "do": "cast"
+        },
+        "direction": {
+          "line": "Hold [move_left] or [move_right] as you press [aim]: {name}, {what}",
+          "do": "cast"
+        },
+        "radial": {
+          "line": "Hold [bend_wheel], point at {name}, let go.  Then hold [aim], let go: {what}",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "wall",
+      "title": "Wall",
+      "dummy": "stand",
+      "role": "wall",
+      "per_element": true,
       "by": {
-        "keys": {"line": "A stone held before you?  {press}: {name}.  Hold [aim], let go: it flies back", "do": "cast"},
-        "direction": {"line": "A stone held before you?  {press}: {name}.  Let go of [aim] with nothing held: it flies back", "do": "cast"},
-        "radial": {"line": "A stone held before you?  Hold [bend_wheel], point at {name}, let go.  Cast it: it flies back", "do": "cast"}}},
-    {"id": "zones", "title": "The zones", "dummy": "stand",
-      "by": {"*": {"line": "Knock the dummy back: a hard hit pushes it back a zone at a time", "do": "knocked"}}},
-    {"id": "water", "title": "Into the water", "dummy": "stand",
-      "by": {"*": {"line": "Knock it off the open end into the water: that takes a round", "do": "out"}}}
+        "keys": {
+          "line": "{press}: {name}, where you aim.  Hold [aim], let go.  Two walls each",
+          "do": "cast"
+        },
+        "first_moves": {
+          "line": "{press}: {name}, where you aim.  Hold [aim], let go.  Two walls each",
+          "do": "cast"
+        },
+        "direction": {
+          "line": "Hold [move_back] as you press [aim]: {name}, where you aim.  Two walls each",
+          "do": "cast"
+        },
+        "radial": {
+          "line": "Hold [bend_wheel], point at {name}, let go.  Hold [aim], let go: it rises where you aim",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "guard",
+      "title": "Guard on the beat",
+      "dummy": "throw",
+      "slow": true,
+      "role": "guard",
+      "per_element": true,
+      "elements": [
+        "water",
+        "fire",
+        "air"
+      ],
+      "by": {
+        "*": {
+          "line": "It throws {thing} now, slowly.  [bend_guard] just before one hits: {name}.  On the beat {what}",
+          "do": "guard"
+        }
+      },
+      "stock_by": {
+        "*": {
+          "line": "[bend_guard]: up as soon as it's ready, and it stays while you hold it.  Tap a direction to roll.  On the beat, nothing gets through",
+          "do": "guard"
+        }
+      }
+    },
+    {
+      "id": "catch",
+      "title": "Catch and throw it back",
+      "dummy": "throw",
+      "slow": true,
+      "role": "guard",
+      "per_element": true,
+      "elements": [
+        "earth"
+      ],
+      "by": {
+        "*": {
+          "line": "It throws stones now, slowly.  [bend_guard] just before one hits: {name}.  [bend_guard] again: throw it back",
+          "do": "return"
+        }
+      },
+      "stock_by": {
+        "*": {
+          "line": "[bend_guard]: up as soon as it's ready, and it stays while you hold it.  Just before a stone hits: caught.  [bend_guard] again: throw it back",
+          "do": "return"
+        }
+      }
+    },
+    {
+      "id": "jump",
+      "title": "Fire along the floor? Jump.",
+      "dummy": "throw",
+      "slow": true,
+      "throws": {
+        "fire": "fire_kick/kick"
+      },
+      "by": {
+        "*": {
+          "line": "Fire along the floor? [jump]: jump it.  Through the air: dash or guard.  Rising under you: step off",
+          "do": "jump"
+        }
+      }
+    },
+    {
+      "id": "quick",
+      "title": "Your second favourite",
+      "dummy": "stand",
+      "by": {
+        "*": {
+          "line": "[bend_quick_bind] puts the readied move on [fire].  Hold [fire], let go to cast it.  Hold [bend_quick_bind]: your jab back",
+          "do": "quick"
+        }
+      }
+    },
+    {
+      "id": "heal",
+      "title": "Heal",
+      "dummy": "stand",
+      "role": "heal",
+      "schemes": [
+        "keys",
+        "first_moves",
+        "direction",
+        "radial"
+      ],
+      "by": {
+        "*": {
+          "line": "{press}: {name}.  Hold [aim], let go: a little health back",
+          "do": "cast"
+        },
+        "radial": {
+          "line": "Hold [bend_wheel], point at {name}, let go.  Then hold [aim], let go: a little health back",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "zones",
+      "title": "The zones",
+      "dummy": "stand",
+      "by": {
+        "*": {
+          "line": "Knock the dummy back: a hard hit pushes it back a zone at a time",
+          "do": "knocked"
+        }
+      },
+      "rules": [
+        "classic"
+      ]
+    },
+    {
+      "id": "water",
+      "title": "Into the water",
+      "dummy": "stand",
+      "by": {
+        "*": {
+          "line": "Knock it off the open end into the water: that takes a round",
+          "do": "out"
+        }
+      },
+      "rules": [
+        "classic"
+      ]
+    },
+    {
+      "id": "pct",
+      "title": "The number",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "dummy_pct": 0,
+      "do_pct": 40,
+      "by": {
+        "*": {
+          "line": "Every hit raises the number.  The higher it is, the farther you fly",
+          "do": "pct"
+        }
+      }
+    },
+    {
+      "id": "out",
+      "title": "Out",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "dummy_pct": 110,
+      "place": "dummy_near_end",
+      "place_m": 6.0,
+      "by": {
+        "*": {
+          "line": "Only the water puts you out",
+          "do": "out"
+        }
+      }
+    },
+    {
+      "id": "jumps",
+      "title": "Jumps",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "by": {
+        "*": {
+          "line": "[jump] jumps.  [jump] again in the air",
+          "do": "double_jump"
+        }
+      }
+    },
+    {
+      "id": "dodge",
+      "title": "Dodge",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "by": {
+        "*": {
+          "line": "[sprint] + a direction in the air dodges",
+          "do": "air_dodge"
+        }
+      }
+    },
+    {
+      "id": "back",
+      "title": "Back",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "place": "player_off",
+      "place_m": 4.0,
+      "place_below_m": 0.5,
+      "by": {
+        "*": {
+          "line": "Look at the deck, then [jump], [jump], [jump]",
+          "do": "back"
+        }
+      }
+    },
+    {
+      "id": "edge",
+      "title": "The edge",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "place": "player_off",
+      "place_m": 0.4,
+      "place_below_m": 0.0,
+      "by": {
+        "*": {
+          "line": "[move_forward] climbs, [jump] jumps, [bend_guard] rolls in, a click attacks",
+          "do": "edge"
+        }
+      }
+    },
+    {
+      "id": "string",
+      "title": "A string",
+      "dummy": "stand",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "per_element": true,
+      "dummy_pct": 0,
+      "element_lines": {
+        "earth": "Jab him three times: up he goes, and you keep a stone.  Then [bend_guard]: throw it",
+        "air": "Jab him three times: up he goes.  Then hold right-click: your [weapon_2]"
+      },
+      "by": {
+        "*": {
+          "line": "Jab him three times: up he goes.  Then hold right-click: your [weapon_1]",
+          "do": "string"
+        }
+      }
+    },
+    {
+      "id": "steer",
+      "title": "Steer",
+      "dummy": "throw",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "player_pct": 100,
+      "by": {
+        "*": {
+          "line": "Thrown?  Hold left or right: you curve",
+          "do": "steer"
+        }
+      }
+    },
+    {
+      "id": "keep_off",
+      "title": "Keep him off",
+      "dummy": "recover",
+      "rules": [
+        "stock"
+      ],
+      "more": true,
+      "dummy_pct": 90,
+      "by": {
+        "*": {
+          "line": "Hit him while he climbs back.  Not while he's safe",
+          "do": "keep_off"
+        }
+      }
+    },
+    {
+      "id": "basics_move_jab",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Move and jab",
+      "dummy": "stand",
+      "role": "jab",
+      "by": {
+        "*": {
+          "line": "Move with [move_forward] [move_left] [move_back] [move_right]. Aim with the mouse. Walk close to the dummy, hold [fire] and let go: {jab}",
+          "do": "jab"
+        }
+      }
+    },
+    {
+      "id": "basics_cast",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Ready and cast",
+      "dummy": "stand",
+      "role": "strike",
+      "per_element": true,
+      "by": {
+        "*": {
+          "line": "Press {press} to choose {name}. Aim at the dummy, hold right-click until its circle is full, then let go{grow}",
+          "do": "cast"
+        }
+      }
+    },
+    {
+      "id": "basics_guard",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Guard",
+      "dummy": "throw",
+      "slow": true,
+      "role": "guard",
+      "per_element": true,
+      "by": {
+        "*": {
+          "line": "Hold [bend_guard] for {name} to block its slow throw. Press just before it reaches you for a stronger guard",
+          "do": "guarded"
+        }
+      }
+    },
+    {
+      "id": "basics_push_off",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Push it off",
+      "dummy": "stand",
+      "role": "push",
+      "per_element": true,
+      "rules": ["stock"],
+      "dummy_pct": 110,
+      "place": "dummy_near_end",
+      "place_m": 6.0,
+      "by": {
+        "*": {
+          "line": "Press {press} to choose {name}. Aim at the dummy, hold right-click to charge, then release to push it into the water",
+          "do": "out"
+        }
+      }
+    },
+    {
+      "id": "basics_back",
+      "track": "basics",
+      "schemes": ["basic"],
+      "title": "Get back",
+      "dummy": "stand",
+      "rules": ["stock"],
+      "place": "player_off",
+      "place_m": 4.0,
+      "place_below_m": 0.5,
+      "by": {
+        "*": {
+          "line": "Off the deck? Hold [jump] right away for help getting back. Keep holding until you land",
+          "do": "back"
+        }
+      }
+    }
   ],
+  "basics_hints": {
+    "_doc": "Round 4 SIMPLE: the hint queue's lines under the Basic controls (RingLessons, MatchSetup.basic()), over hint_queue.lines where one is here: the edge climbs by itself, Space held brings you back.",
+    "edge": "Fall off and you grab the edge.  It climbs by itself, or press [jump] or any direction",
+    "recover": "Off the deck? Hold [jump] right away for help getting back"
+  },
+  "_doc_basics": "Round 4 SIMPLE: the Basics track (track 'basics'), five cards for the Basic controls (MatchSetup.controls() 'basic'), each done by doing it: move and jab, ready and cast (1, right-click), guard a slow throw (do 'guarded': any guard of yours that took one of its throws, on the beat or late), push it off (2 held, the dummy at 110% near an end, do 'out'), get back (you put off an end: hold Space, RingAssist brings you back, do 'back'). Under Basic the run is this track only; under Full every card but these ('schemes': ['basic'] keeps them out until RingLessons reads the track). The first launch of the game offers them once (RingAssist.offer_basics).",
   "hints": {
-    "_doc": "FirstHints: a first Quick match's key hints, top left, by the control scheme; each row fades once one of its uses (actions) is pressed. On or off in the ring's Esc menu (GameSettings' hints section, key key_hints; the first Quick match that shows them turns them off as it ends).",
+    "_doc": "FirstHints: a first Quick match's key hints, top left, in the ring's first-time panel's place, by the control scheme; each row fades once one of its uses (actions) is pressed. On or off in the ring's Esc menu (GameSettings' hints section, key key_hints; the first Quick match that shows them turns them off as it ends).",
     "kicker": "YOUR KEYS",
     "row": "Key hints:  %s",
     "row_line": "your control scheme's keys at the top left until you have used each",
+    "basic": [
+      {"line": "[move_forward] [move_left] [move_back] [move_right]: move · Mouse: aim", "uses": ["move_forward", "move_left", "move_back", "move_right"]},
+      {"line": "Up close: hold [fire] and let go to jab", "uses": ["fire"]},
+      {"line": "[weapon_1] strike or [weapon_2] push, then [aim] to cast", "uses": ["aim"]},
+      {"line": "Hold [bend_guard]: guard", "uses": ["bend_guard"]},
+      {"line": "[jump]: jump · Thrown off? Hold [jump] for help", "uses": ["jump"], "rules": ["stock"]},
+      {"line": "[jump]: jump", "uses": ["jump"], "rules": ["classic"]},
+      {"line": "[sprint] + a direction: dash", "uses": ["sprint"]}
+    ],
     "keys": [
-      {"line": "Hold [aim], let go: cast", "uses": ["aim"]},
-      {"line": "[weapon_1] to [weapon_4]: a move, again: its other", "uses": ["weapon_1", "weapon_2", "weapon_3", "weapon_4"]},
-      {"line": "[weapon_next]: its form", "uses": ["weapon_next", "weapon_prev"]},
-      {"line": "[bend_quick_bind]: onto [fire]", "uses": ["bend_quick_bind", "fire"]},
-      {"line": "[weapon_5]: Mend, again: Patch", "uses": ["weapon_5"]}
+      {
+        "line": "Hold [fire], let go: your jab",
+        "uses": [
+          "fire"
+        ]
+      },
+      {
+        "line": "Hold [aim], let go: cast",
+        "uses": [
+          "aim"
+        ]
+      },
+      {
+        "line": "[weapon_1] strike  ·  [weapon_2] push  ·  [weapon_4] wall  ·  [sprint] + a direction: dash",
+        "uses": [
+          "weapon_1",
+          "weapon_2",
+          "weapon_4",
+          "sprint"
+        ]
+      },
+      {
+        "line": "[bend_guard]: guard, on the beat",
+        "uses": [
+          "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
+        "uses": [
+          "jump",
+          "sprint"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
+        "line": "Fire along the floor? [jump]",
+        "uses": [
+          "jump"
+        ]
+      },
+      {
+        "line": "[weapon_5]: heal",
+        "uses": [
+          "weapon_5"
+        ]
+      }
     ],
     "direction": [
-      {"line": "Hold [aim], let go: cast", "uses": ["aim"]},
-      {"line": "As you let go: [move_forward] attack", "uses": ["move_forward"]},
-      {"line": "[move_back] defence", "uses": ["move_back"]},
-      {"line": "[move_left] [move_right] dodge", "uses": ["move_left", "move_right"]},
-      {"line": "[bend_quick_bind]: onto [fire]", "uses": ["bend_quick_bind", "fire"]}
+      {
+        "line": "Hold [fire], let go: your jab",
+        "uses": [
+          "fire"
+        ]
+      },
+      {
+        "line": "Hold [move_forward] as you press [aim]: strike",
+        "uses": [
+          "move_forward"
+        ]
+      },
+      {
+        "line": "[move_back]: your wall  ·  [move_left] [move_right]: dash",
+        "uses": [
+          "move_back",
+          "move_left",
+          "move_right"
+        ]
+      },
+      {
+        "line": "[bend_guard]: guard, on the beat",
+        "uses": [
+          "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
+        "uses": [
+          "jump",
+          "sprint"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
+        "line": "Fire along the floor? [jump]",
+        "uses": [
+          "jump"
+        ]
+      }
     ],
     "radial": [
-      {"line": "Hold [bend_wheel]: every move", "uses": ["bend_wheel"]},
-      {"line": "Hold [aim], let go: cast", "uses": ["aim"]},
-      {"line": "[weapon_next]: its form", "uses": ["weapon_next", "weapon_prev"]},
-      {"line": "[bend_quick_bind]: onto [fire]", "uses": ["bend_quick_bind", "fire"]}
+      {
+        "line": "Hold [fire], let go: your jab",
+        "uses": [
+          "fire"
+        ]
+      },
+      {
+        "line": "Hold [bend_wheel]: your moves",
+        "uses": [
+          "bend_wheel"
+        ]
+      },
+      {
+        "line": "Hold [aim], let go: cast",
+        "uses": [
+          "aim"
+        ]
+      },
+      {
+        "line": "[bend_guard]: guard, on the beat",
+        "uses": [
+          "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
+        "uses": [
+          "jump",
+          "sprint"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
+        "line": "Fire along the floor? [jump]",
+        "uses": [
+          "jump"
+        ]
+      }
     ],
-    "simple": [
-      {"line": "[weapon_1] to [weapon_4]: a move", "uses": ["weapon_1", "weapon_2", "weapon_3", "weapon_4"]},
-      {"line": "[weapon_next]: the next move", "uses": ["weapon_next", "weapon_prev"]},
-      {"line": "Hold [aim], let go: near or far picks the form", "uses": ["aim"]},
-      {"line": "[bend_quick_bind]: onto [fire]", "uses": ["bend_quick_bind", "fire"]}
+    "first_moves": [
+      {
+        "line": "Hold [fire], let go: your jab",
+        "uses": [
+          "fire"
+        ]
+      },
+      {
+        "line": "Hold [aim], let go: cast",
+        "uses": [
+          "aim"
+        ]
+      },
+      {
+        "line": "[weapon_1] strike  ·  [weapon_2] push  ·  [weapon_4] wall  ·  [sprint] + a direction: dash",
+        "uses": [
+          "weapon_1",
+          "weapon_2",
+          "weapon_4",
+          "sprint"
+        ]
+      },
+      {
+        "line": "[bend_guard]: guard, on the beat",
+        "uses": [
+          "bend_guard"
+        ]
+      },
+      {
+        "line": "[jump] twice  ·  [sprint] + a direction in the air",
+        "uses": [
+          "jump",
+          "sprint"
+        ],
+        "rules": [
+          "stock"
+        ]
+      },
+      {
+        "line": "Fire along the floor? [jump]",
+        "uses": [
+          "jump"
+        ]
+      }
     ]
+  },
+  "slow_every_s": 5.0,
+  "slow_speed": 0.6,
+  "_doc_r3": "Round 3, the % ring (smash_r3 spec §11.2; only under its rules, RingRules.stock_on()): rules (a lesson only under these rule sets: 'stock' the % ring, 'classic' the zones; all when missing), stock_by (its line and do under the % ring's rules, over by), element_lines (per element, over the line: the String card), dummy_pct and player_pct (each side's % as the card begins, RingRules.reset_pct), place (player_off: you put place_m out from an end and place_below_m under the lip, facing the deck; dummy_near_end: the dummy place_m in from its end), more (the three 'more' cards, after the six), do_pct (pct's goal). New do's: pct (the dummy's % at do_pct or more), out (the dummy into the water), double_jump, air_dodge (RingMoves.moved: double_jump, dodge in the air), back (you on the deck or hanging again), edge (any edge option: climb, ledge_jump, ledge_roll, ledge_attack), string (string_n true hits on the dummy: RingRules.string_hits), steer (a launch of yours steered by steer_frac of the most or more: RingRules.last_steer_deg), keep_off (the dummy, coming back from off the deck, into the water). The hint queue (hint_queue): at most one hint every gap_s, those in pre_empt always shown at once (they replace one up), those in after_fall only after the first fall; each once a match; shown show_s on the card's place.",
+  "string_n": 3,
+  "steer_frac": 0.5,
+  "hint_queue": {
+    "_doc": "One hint queue in a % ring match (RingLessons.HintQueue): at most one every gap_s; pre_empt ones at once; after_fall ones only after the first fall; each once a match; thrown_mps: the throw that brings the steer hint.",
+    "gap_s": 20.0,
+    "show_s": 6.0,
+    "thrown_mps": 10.0,
+    "pre_empt": [
+      "edge",
+      "recover"
+    ],
+    "after_fall": [
+      "stale"
+    ],
+    "stale_n": 2,
+    "kicker": "A HINT",
+    "lines": {
+      "edge": "Fall off and you grab the edge.  [move_forward] climbs, [jump] jumps, [bend_guard] rolls in, a click attacks",
+      "recover": "Off the deck: [jump], [jump], [jump].  Up, up, and your element lifts you",
+      "steer": "Thrown?  Hold left or right: you curve",
+      "break_fall": "[bend_guard] just as you land: back on your feet",
+      "stale": "The same move again and again hits softer: mix them"
+    }
   }
 }

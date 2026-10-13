@@ -186,6 +186,16 @@ func show_finished(kicker: String, spec: String) -> void:
 	_want = 1.0
 
 
+## Round 3: a hint of the % ring's hint queue on the card's place (RingLessons.HintQueue): its kicker in gold, the line.
+func show_hint(kicker: String, spec: String) -> void:
+	done = false
+	_kicker.text = kicker
+	_kicker.add_theme_color_override("font_color", GOLD)
+	_bar.color = GOLD
+	_set_line(spec, "")
+	_want = 1.0
+
+
 func hide_card() -> void:
 	_want = 0.0
 
@@ -231,7 +241,11 @@ func _process(dt: float) -> void:
 		return
 	var vp := get_viewport().get_visible_rect().size
 	_panel.reset_size()
-	_panel.position = Vector2(vp.x - _panel.size.x - 36.0 * _s, vp.y * 0.24)
+	# (under the plates down the right when they reach lower: a team format's stack; RingRules' PercentBar.right_bottom)
+	var y := vp.y * 0.24
+	if PercentBar.right_bottom >= 0.0:
+		y = maxf(y, PercentBar.right_bottom + 14.0 * _s)
+	_panel.position = Vector2(vp.x - _panel.size.x - 36.0 * _s, minf(y, vp.y - _panel.size.y - 140.0 * _s))
 	for c in _caps:
 		if is_instance_valid(c):
 			c.queue_redraw()

@@ -62,7 +62,7 @@ func _ready() -> void:
 	list.add_child(_head("Field skills", "Trained by working: every stroke, log and piece counts."))
 	for id: String in GatherSkills.IDS:
 		list.add_child(_field_card(id))
-	list.add_child(_head("Frontier skills", "What your background taught you. Fishing trains Trapping and Fishing."))
+	list.add_child(_head("Survival skills", "What your background taught you. Fishing trains Trapping and Fishing."))
 	for s: Dictionary in _survival:
 		list.add_child(_frontier_card(s))
 	var right := _box(500)

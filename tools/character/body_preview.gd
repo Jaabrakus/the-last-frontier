@@ -35,7 +35,7 @@ func _initialize() -> void:
 	out = args.get("out", "user://body_preview")
 	DirAccess.make_dir_recursive_absolute(out)
 	# macOS throttles a window that is covered: keep it on top while rendering
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true)
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, OS.has_environment("TB_ON_TOP"))
 	await _studio()
 	for g in ["bodies", "tones", "faces", "hair", "colors", "regions", "poses"]:
 		if not _wanted(g):

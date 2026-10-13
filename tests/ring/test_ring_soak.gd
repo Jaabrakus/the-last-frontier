@@ -8,7 +8,7 @@ extends SceneTree
 ## seed= (RingMode's: the foe's rolls) seeds the player's-side bot too (seed + 1800), so a pairing's seeds are distinct runs.
 ##   the match   reaches DONE (match_over once) within the watchdog; no SCRIPT ERROR (the runner counts them)
 ##   the rules   no self ring-out (every ring-out credited to a knocker of the other side, never none or one's own)
-##   both sides  each side's bot casts (only its own element's moves, Mend and Patch)
+##   both sides  each side's bot casts (only its own element's kit: its keys' moves, its guard and its jab; round 2)
 ##   metrics     printed, not gated (balance by data: data/sway/moves.json, data/ring/rules.json, data/npc/bend_ai.json):
 ##               "METRIC pair=<a>-<b> ring_out_ratio=<ring-outs / rounds>" (the target is about 0.6: more ring-outs than
 ##               time-outs), the rounds' whys, the casts by move per side (and each move's share of all its side's casts:
@@ -20,14 +20,34 @@ extends SceneTree
 ##               windings (winded), its strikes (hits), its bolts' damage by kind (bolt_dmg, sent_back: bolts a guard of its
 ##               turned on their caster) and its held-and-hurled stones' (lift_dmg: Gust lift's, Earth Shove's, by the stone's
 ##               kind). R1-BALANCE (2026-10-05) read with these that air won on the deck's socket cannonballs (lifted, about 110
-##               a strike) more than on knocks
-## The clock: BendStatus.now() counts physics frames, so under ts 4 its timers (the bots' rests, cools, reactions and
-## opening grace; roots, slows) last 4 times as long in game time as the locks and flights do. ts=1 is the game's own pace
-## (headless with a fixed fps it runs unthrottled anyway: a match in a few seconds); read the balance there.
-## In-test watchdog LIMIT_S real seconds (under the runner's GODOT_TIMEOUT 420). Last line "RING SOAK PASSED" or "... FAILED".
+##               a strike) more than on knocks. Round 2 (KITS): per side its guards (clean catches, perfect, late, whiffs), its
+##               returns (a caught stone sent back by its guard again) and the longest rally (one stone's returns), its locks
+##               pushed back by hits (setbacks), the waves along the deck it saw and jumped, the casts held to grow (grows_by)
+##               and the kit's moves it never cast (uncast; the KITS review sums them over every run: no kit move left uncast)
+## The clock: round 4 (IMPACT) made BendStatus.now() game time (BendClock: Engine.time_scale per physics step), so under
+## ts 4 its timers (the bots' rests, cools, reactions and opening grace; roots, slows) keep pace with the locks and
+## flights. ts=1 is the game's own pace (headless with a fixed fps it runs unthrottled anyway: a match in a few
+## seconds); read the balance there.
+## ROUND 3, the % ring (rules=stock; smash_r3 spec §12): every METRIC line of §12 from RingRules' signals (ko, launched,
+## pct_changed, string_ended) and the bots' minds (NpcRingMind.stats): game_s, timeout, timeouts_level, last_life_s, life_s,
+## median_fall_pct, self_falls_per_life, water_ko_share, ko_by_move and the top finisher's share, ko_far_share (KOs whose
+## last launch came from more than 15 m), longest_true_string and the median, recover_success per side, edge_fall_share,
+## air_release_share, heal_share_of_damage, heal_pct_per_life, helpless_kos, breaks, grabs_refused, the winner's element;
+## gated per run only where the spec gates one run (the longest true string <= 6, water_ko_share 1, normal self-falls per
+## life <= 0.05); the 16 pairings x 3 seeds' table and its targets are tools/ring/r3_soak_table.py's (review/r3_bots_soak.md,
+## from tools/ring/r3_soak_run.sh). When rules=stock is asked but the ring plays another rule set (PERCENT's RingMode not
+## taking MatchSetup.rule_set() yet), the stock lines say n/a and nothing stock is gated.
+## ROUND 4 (BOTS2): the player's-side bot joins through RingMode.join (its RingMoves on, as the foe's: round 3 added it to the
+## rules only, so it had no jumps, Rise or edge and lost 42 of 48); each side's air play and shield (METRIC ... stock air:
+## hops, double jumps, air hits, Slams, air follow-ups, shields raised, held, dropped, punishes, follow-ups and those that met
+## him in time) and the strings by their hits (strings_by_hits 1, 2, 3+); a kit's air forms (the jab's air close hit, key 2's
+## Slam) count as its own.
+## In-test watchdog LIMIT_S: the timer counts frames (1/60 s each under --fixed-fps 60, unthrottled headless), so it is game
+## seconds at ts 1; round 4 raised it from 400 past the stock clock (480 s, sudden death on): a long game is no hang. The
+## runner's GODOT_TIMEOUT 420 is the real-time guard. Last line "RING SOAK PASSED" or "... FAILED".
 
 const NAME := "RING SOAK"
-const LIMIT_S := 400.0
+const LIMIT_S := 900.0
 const PARK := Vector3(0.0, 60.0, 400.0)
 
 var checks := 0
@@ -43,7 +63,11 @@ var outs: Array = []
 var matches: Array = []
 ## Per side (0 the player's, the mate bot; 1 the foe): casts by "move/mode", catches, answered, reactions, lost, walls, capped.
 var by_side: Array = [{}, {}]
-var tallies: Array = [{"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}, {"casts": 0, "hits": 0, "catches": 0, "answered": 0, "lost": 0, "walls": 0, "capped": 0, "reactions": {}}]
+var tallies: Array = [_tally(), _tally()]
+## Per side: casts held to grow by "move/mode" (round 2's ▲).
+var grows_by: Array = [{}, {}]
+## The most times one stone was sent back (NpcBending.RETURNS_META on it: every return of it, by either side).
+var longest_rally := 0
 var knocks := Vector2i.ZERO
 var _seed := 9100
 ## Per side: "move/mode" -> [knocks landed, their summed m/s as applied]; the ring-outs by the move of the last knock; the
@@ -61,6 +85,18 @@ var winds := [0, 0]
 var _hp := [-1.0, -1.0]
 var out_by: Array = [{}, {}]
 var _last_knock := {}
+## Round 3: the % ring's books (stock: the ring plays the stock rules).
+var stock := false
+var stock_asked := false
+var sk := {"kos": 0, "life_t0": {}, "life_s": [], "falls_pct": [], "self_falls": 0, "water": 0, "ko_tags": [{}, {}],
+		"ko_far": 0, "strings": [], "edge_falls": 0, "helpless_kos": 0, "healed": 0.0, "dealt": 0.0, "last_launch": {},
+		"breaks": 0, "last_life_s": 0.0, "lives_lost": [0, 0]}
+var _game_t := 0.0
+
+
+static func _tally() -> Dictionary:
+	return {"casts": 0, "hits": 0, "catches": 0, "clean": 0, "answered": 0, "perfect": 0, "late": 0, "whiff": 0, "returns": 0,
+			"lost": 0, "setbacks": 0, "walls": 0, "capped": 0, "floor_seen": 0, "floor_jumped": 0, "reactions": {}}
 
 
 ## A BendKnock listener (its group): every knock in the ring told to the soak's tally.
@@ -89,6 +125,8 @@ func _initialize() -> void:
 		quit(2))
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--")
+		if kv in ["rules=stock", "rules=lives"]:
+			stock_asked = true
 		if kv.begins_with("ts=") and kv.get_slice("=", 1).is_valid_float():
 			ts = float(kv.get_slice("=", 1))
 		elif kv.begins_with("seed=") and kv.get_slice("=", 1).is_valid_int():
@@ -204,17 +242,27 @@ func _run() -> void:
 			winds[sd] += 1)
 	if mode.phase == "COUNTDOWN":
 		_spectate()                          # (the first round's countdown began before the hooks)
+	if "force_stock=on" in OS.get_cmdline_user_args() and RingRules.current() != null:
+		# (a robustness run only: the bots' % ring minds over the classic judge, no PERCENT, no MOVE; nothing stock gated)
+		RingRules.current().rule_set = "stock"
+		print("  (force_stock=on: the gate forced on over the classic ring: the minds run, the stock books are not gated)")
+	stock = RingRules.stock_on() and not "force_stock=on" in OS.get_cmdline_user_args()
+	if stock:
+		_hook_stock()
+	elif stock_asked:
+		print("  (rules=stock asked, the ring plays the %s rules: PERCENT's RingMode does not take MatchSetup.rule_set() in this tree; the stock lines are n/a)" % [RingRules.current().rule_set if RingRules.current() != null else "?"])
 	print("  pair %s vs %s, %s, round_s %.0f, to_win %d, ts %.1f" % [mode.element, mode.foe_element, mode.difficulty, mode.round_s, mode.to_win, ts])
 	if not is_equal_approx(ts, 1.0):
-		# (BendStatus.now() counts physics frames, not scaled time: at ts 4 every clock on it (the bots' rests, cools and
-		# reactions, roots and slows) runs 4 times long in game time; the balance metrics are the game's own at ts=1)
-		print("  (note: ts %.1f stretches the bend clock's timers %.0fx in game time; read the balance at ts=1)" % [ts, ts])
+		# (round 4: BendStatus.now() is game time, so the bend clock keeps pace at any ts; the balance metrics are read at
+		# ts=1, the game's own pace)
+		print("  (note: ts %.1f; the bend clock is game time; read the balance at ts=1)" % ts)
 	Engine.time_scale = ts
 	var t0 := Time.get_ticks_msec()
 	var game_t := 0.0
 	while mode.phase != "DONE" and game_t < 1500.0:
 		await physics_frame
 		game_t += 1.0 / Engine.physics_ticks_per_second * Engine.time_scale
+		_game_t = game_t
 		if player != null and is_instance_valid(player) and player.global_position.distance_to(PARK) > 1.0 and mode.phase != "DONE":
 			_park()
 		_poll_hurt()
@@ -226,22 +274,176 @@ func _run() -> void:
 	for o in outs:
 		if int(o[1]) < 0 or bool(o[2]) or int(o[1]) == int(o[0]):
 			selfs += 1
-	_expect(selfs == 0 and mode.self_outs == 0, "no self ring-out (%d of %d ring-outs; the mode's count %d)" % [selfs, outs.size(), mode.self_outs])
+	if not stock:
+		_expect(selfs == 0 and mode.self_outs == 0, "no self ring-out (%d of %d ring-outs; the mode's count %d)" % [selfs, outs.size(), mode.self_outs])
 	var els := [mode.element, mode.foe_element]
 	for side in 2:
 		var own := {}
-		for pair in Bending.keys(String(els[side])):
-			for id: String in pair:
-				own[id] = true
+		for pr: Array in NpcBending.pairs_of(String(els[side])):
+			own["%s/%s" % pr] = true
+		# (round 4: the kit's air forms are its own too: the jab's air close hit, key 2's first move's Slam)
+		var jb := NpcBending.jab_of(String(els[side]))
+		if jb.size() >= 2:
+			own["%s/air_hit" % jb[0]] = true
+		var ks := Bending.keys(String(els[side]))
+		if ks.size() >= 2:
+			own["%s/slam" % String(Bending.first_of(ks[1]).get("id", ""))] = true
 		var foreign: Array = []
 		for k: String in by_side[side]:
-			var id := k.get_slice("/", 0)
-			if not own.has(id) and not id in ["mend", "patch"]:
+			if not own.has(k):
 				foreign.append(k)
-		_expect(int(tallies[side]["casts"]) > 0 and foreign.is_empty(), "side %d (%s) casts its own element's moves (%d casts; not its own: %s)"
+		_expect(int(tallies[side]["casts"]) > 0 and foreign.is_empty(), "side %d (%s) casts its own kit's moves (%d casts; not its own: %s)"
 				% [side, els[side], int(tallies[side]["casts"]), foreign])
 	_metrics()
+	_stock_metrics(game_t)
 	_end()
+
+
+# ---------------------------------------------------------------- round 3: the % ring's books
+func _hook_stock() -> void:
+	var r := RingRules.current()
+	r.ko.connect(_on_ko)
+	r.launched.connect(func(b: Node3D, _v: Vector3, _s: float, by: Node, tag: String) -> void:
+		if by is Node3D and is_instance_valid(by):
+			sk.last_launch[b.get_instance_id()] = {"tag": tag, "d": NpcRingMind.flat_d((by as Node3D).global_position, b.global_position)})
+	# (healing is Patch's: RingRules' tally "healed", read at the end; a negative delta is also a fall's reset to 0)
+	r.pct_changed.connect(func(_b: Node3D, _pct: float, delta: float) -> void:
+		if delta > 0.0:
+			sk.dealt = float(sk.dealt) + delta)
+	r.string_ended.connect(func(_by: Node, _victim: Node3D, hits: int, _pct: float) -> void:
+		(sk.strings as Array).append(hits))
+	r.respawned.connect(func(b: Node3D) -> void:
+		sk.life_t0[b.get_instance_id()] = _game_t)
+
+
+func _on_ko(b: Node3D, by: Node, pct: float, tag: String, _left: int) -> void:
+	var id := b.get_instance_id()
+	var life := _game_t - float(sk.life_t0.get(id, 0.0))
+	(sk.life_s as Array).append(life)
+	sk.last_life_s = life
+	sk.life_t0[id] = _game_t
+	sk.kos = int(sk.kos) + 1
+	(sk.falls_pct as Array).append(pct)
+	var vs := mode.side_of(b)
+	if vs >= 0:
+		sk.lives_lost[vs] = int(sk.lives_lost[vs]) + 1
+	var ks := mode.side_of(by) if by != null and is_instance_valid(by) else -1
+	if by == null or by == b or ks < 0 or ks == vs:
+		sk.self_falls = int(sk.self_falls) + 1
+	else:
+		var kt: Dictionary = sk.ko_tags[ks]
+		kt[tag] = int(kt.get(tag, 0)) + 1
+		var ll: Dictionary = sk.last_launch.get(id, {})
+		if float(ll.get("d", 0.0)) > 15.0:
+			sk.ko_far = int(sk.ko_far) + 1
+	# (where he fell, as the rules saw it: RingMode has already hidden him at his spout when this hears the ko)
+	var rr := RingRules.current()
+	var at: Vector3 = b.global_position
+	if rr != null and not rr.falls.is_empty() and (rr.falls.back() as Dictionary).get("who") == b:
+		at = (rr.falls.back() as Dictionary).get("pos", at)
+	if mode.ring != null and (mode.ring.is_out(at) or at.y < mode.ring.lip_y() - 1.0):
+		sk.water = int(sk.water) + 1
+	var m := RingMoves.of(b)
+	if m != null and m.helpless():
+		sk.helpless_kos = int(sk.helpless_kos) + 1
+	if b is NpcFighter and (b as NpcFighter).brain != null and (b as NpcFighter).brain.bending != null:
+		var rm: NpcRingMind = (b as NpcFighter).brain.bending.ring_mind
+		if rm != null and rm.state in [NpcRingMind.S.RECOVER, NpcRingMind.S.LEDGE]:
+			sk.edge_falls = int(sk.edge_falls) + 1
+
+
+static func _median(a: Array) -> float:
+	if a.is_empty():
+		return -1.0
+	var s := a.duplicate()
+	s.sort()
+	return float(s[s.size() / 2])
+
+
+func _stock_metrics(game_t: float) -> void:
+	var pair := "%s-%s" % [mode.element, mode.foe_element]
+	if not stock:
+		print("METRIC pair=%s stock=n/a (the ring played the %s rules)" % [pair, RingRules.current().rule_set if RingRules.current() != null else "?"])
+		return
+	var kos := maxi(int(sk.kos), 1)
+	var lives := maxi(int(sk.kos), 1)
+	var rt := RingRules.current()
+	if rt != null:
+		sk.healed = float((rt.tally[0] as Dictionary).get("healed", 0.0)) + float((rt.tally[1] as Dictionary).get("healed", 0.0))
+	var timeout := mode.round_left_s() <= 0.5
+	var level := timeout and int(sk.lives_lost[0]) == int(sk.lives_lost[1])
+	var bots: Array = [mate, mode.foe]
+	var air := 0
+	var casts := 0
+	var breaks := 0
+	var rec := ["", ""]
+	var states := ["", ""]
+	var refused: Variant = "n/a"
+	for side in 2:
+		var f: Variant = bots[side]
+		if f == null or not is_instance_valid(f) or (f as NpcFighter).brain == null or (f as NpcFighter).brain.bending == null:
+			continue
+		var rm: NpcRingMind = (f as NpcFighter).brain.bending.ring_mind
+		if rm == null:
+			continue
+		air += int(rm.stats.get("air_casts", 0))
+		casts += int(rm.stats.get("casts_all", 0))
+		breaks += int(rm.stats.get("techs", 0))
+		rec[side] = "%.2f" % (float(rm.stats.recover_ok) / maxf(float(rm.stats.recovers), 1.0)) if int(rm.stats.recovers) > 0 else "n/a"
+		var tot := 0.0
+		for k: String in rm.time_in:
+			tot += float(rm.time_in[k])
+		var sh := {}
+		for k: String in rm.time_in:
+			if float(rm.time_in[k]) > 0.0:
+				sh[k] = snappedf(float(rm.time_in[k]) / maxf(tot, 0.01), 0.01)
+		states[side] = str(sh)
+		var mv := RingMoves.of(f as Node3D)
+		if mv != null and mv.get(&"grabs_refused") != null:
+			refused = int(refused if refused is int else 0) + int(mv.get(&"grabs_refused"))
+	var strs: Array = sk.strings
+	var longest := 0
+	for h in strs:
+		longest = maxi(longest, int(h))
+	var by_len := [0, 0, 0]
+	for h in strs:
+		by_len[clampi(int(h), 1, 3) - 1] += 1
+	print("METRIC pair=%s stock strings_by_hits 1=%d 2=%d 3+=%d" % [pair, by_len[0], by_len[1], by_len[2]])
+	var winner_el := "-"
+	if mode.winner >= 0 and mode.winner <= 1:
+		winner_el = [mode.element, mode.foe_element][mode.winner]
+	print("METRIC pair=%s stock game_s=%.0f timeout=%d timeouts_level=%d last_life_s=%.1f life_s=%.1f median_fall_pct=%.0f self_falls_per_life=%.3f water_ko_share=%.2f ko_far_share=%.2f"
+			% [pair, game_t, 1 if timeout else 0, 1 if level else 0, float(sk.last_life_s), _median(sk.life_s), _median(sk.falls_pct),
+			float(sk.self_falls) / lives, float(sk.water) / kos, float(sk.ko_far) / kos])
+	print("METRIC pair=%s stock longest_true_string=%d median_string=%.1f edge_fall_share=%.2f air_release_share=%.2f heal_share_of_damage=%.3f heal_pct_per_life=%.1f helpless_kos=%d breaks=%d grabs_refused=%s winner=%d winner_el=%s"
+			% [pair, longest, _median(strs), float(sk.edge_falls) / kos, float(air) / maxf(float(casts), 1.0),
+			float(sk.healed) / maxf(float(sk.dealt), 1.0), float(sk.healed) / lives, int(sk.helpless_kos), breaks, refused,
+			mode.winner, winner_el])
+	for side in 2:
+		var kt: Dictionary = sk.ko_tags[side]
+		var top := 0
+		var n := 0
+		for k: String in kt:
+			n += int(kt[k])
+			top = maxi(top, int(kt[k]))
+		print("METRIC pair=%s side=%d stock el=%s ko_by_move=%s top_finisher_share=%.2f recover_success=%s states=%s"
+				% [pair, side, [mode.element, mode.foe_element][side], kt, float(top) / maxf(float(n), 1.0), rec[side], states[side]])
+		# (round 4, BOTS2: the air play and the shield)
+		var f2: Variant = bots[side]
+		if f2 != null and is_instance_valid(f2) and (f2 as NpcFighter).brain != null and (f2 as NpcFighter).brain.bending != null \
+				and (f2 as NpcFighter).brain.bending.ring_mind != null:
+			var st2: Dictionary = (f2 as NpcFighter).brain.bending.ring_mind.stats
+			print("METRIC pair=%s side=%d stock air hops=%d double_jumps=%d air_hits=%d slams=%d slam_hops=%d air_follows=%d shield_raises=%d shield_holds=%d shield_held_long=%d shield_drops=%d punishes=%d follow_ups=%d follow_hits=%d follow_in_time=%d"
+					% [pair, side, int(st2.get("hops", 0)), int(st2.get("double_jumps", 0)), int(st2.get("air_hits", 0)),
+					int(st2.get("slams", 0)), int(st2.get("slam_hops", 0)), int(st2.get("air_follows", 0)),
+					int(st2.get("shield_raises", 0)), int(st2.get("shield_holds", 0)), int(st2.get("shield_held_long", 0)),
+					int(st2.get("shield_drops", 0)), int(st2.get("punishes", 0)), int(st2.get("follow_ups", 0)),
+					int(st2.get("follow_hits", 0)), int(st2.get("follow_in_time", 0))])
+	_expect(longest <= 6, "the %% ring: the longest true string %d (<= 6)" % longest)
+	_expect(int(sk.kos) == 0 or int(sk.water) == int(sk.kos), "the %% ring: every fall into the water (%d of %d)" % [int(sk.water), int(sk.kos)])
+	if mode.difficulty == "normal":
+		_expect(float(sk.self_falls) / lives <= 0.05 + 1e-6 or int(sk.kos) < 4,
+				"the %% ring: self-falls per life %.3f (<= 0.05)" % (float(sk.self_falls) / lives))
 
 
 # ---------------------------------------------------------------- spectate
@@ -288,7 +490,9 @@ func _spectate() -> void:
 	mate.no_death = true
 	mate.set(&"element", mode.element)
 	Bending.of(mate).element = mode.element
-	rules.add(mate, 0)
+	# (round 4: RingMode.join, not rules.add: its RingMoves on as the foe's; round 3's mate had none, so it could not jump
+	# back and the soak was one-sided: the foe won 42 of 48)
+	mode.join(mate, 0)
 	var bend := mate.brain.bending
 	if bend != null:
 		bend.bounds_fn = rules.bounds_fn_for(mate)
@@ -354,15 +558,27 @@ func _on_round_over(r: String, why: String) -> void:
 		if f == null or not is_instance_valid(f) or (f as NpcFighter).brain == null or (f as NpcFighter).brain.bending == null:
 			continue
 		var b := (f as NpcFighter).brain.bending
-		tallies[side]["casts"] = int(tallies[side]["casts"]) + b.casts
-		tallies[side]["hits"] = int(tallies[side]["hits"]) + b.hits
-		tallies[side]["catches"] = int(tallies[side]["catches"]) + b.catches
-		tallies[side]["answered"] = int(tallies[side]["answered"]) + b.answered
-		tallies[side]["lost"] = int(tallies[side]["lost"]) + b.lost
+		# (the same bot is kept across rounds (RingMode._keep_foe): its counts run on, so each round adds what is new)
+		var was: Dictionary = b.get_meta(&"soak_counted", {})
+		var now := {"casts": b.casts, "hits": b.hits, "catches": b.catches, "clean": b.clean_catches, "answered": b.answered,
+				"perfect": b.perfects, "late": b.lates, "whiff": b.whiffs, "returns": b.returns, "lost": b.lost,
+				"setbacks": b.setbacks, "floor_seen": b.floor_seen, "floor_jumped": b.floor_jumped}
+		for k: String in now:
+			tallies[side][k] = int(tallies[side][k]) + int(now[k]) - int(was.get(k, 0))
+		var was_r: Dictionary = was.get("reactions", {})
 		for k: String in b.reactions_by:
-			tallies[side]["reactions"][k] = int(tallies[side]["reactions"].get(k, 0)) + int(b.reactions_by[k])
+			tallies[side]["reactions"][k] = int(tallies[side]["reactions"].get(k, 0)) + int(b.reactions_by[k]) - int(was_r.get(k, 0))
+		var was_c: Dictionary = was.get("casts_by", {})
 		for k: String in b.casts_by:
-			by_side[side][k] = int(by_side[side].get(k, 0)) + int(b.casts_by[k])
+			by_side[side][k] = int(by_side[side].get(k, 0)) + int(b.casts_by[k]) - int(was_c.get(k, 0))
+		var was_g: Dictionary = was.get("grows_by", {})
+		for k: String in b.grows_by:
+			grows_by[side][k] = int(grows_by[side].get(k, 0)) + int(b.grows_by[k]) - int(was_g.get(k, 0))
+		now["reactions"] = b.reactions_by.duplicate()
+		now["casts_by"] = b.casts_by.duplicate()
+		now["grows_by"] = b.grows_by.duplicate()
+		b.set_meta(&"soak_counted", now)
+		longest_rally = maxi(longest_rally, b.longest_rally)
 	print("  round %d: %s by %s (%.0f s left, score %s, knocks %s)" % [mode.round, r, why, mode.round_left_s(), mode.score, mode.rules.knocks])
 
 
@@ -379,7 +595,7 @@ func _metrics() -> void:
 			timeouts += 1
 	print("METRIC pair=%s ring_out_ratio=%.2f (%d of %d rounds; time-outs %d) score=%s winner=%d" % [pair, ratio, mode.ringouts,
 			mode.rounds_played, timeouts, mode.score, mode.winner])
-	print("METRIC pair=%s whys=%s knocks=%s" % [pair, whys, knocks])
+	print("METRIC pair=%s whys=%s knocks=%s longest_rally=%d" % [pair, whys, knocks, longest_rally])
 	for side in 2:
 		var tl: Dictionary = tallies[side]
 		var top := ""
@@ -392,7 +608,15 @@ func _metrics() -> void:
 		print("METRIC pair=%s side=%d el=%s casts=%d catches=%d answered=%d lost=%d walls=%d capped=%d top=%s share=%.2f reactions=%s"
 				% [pair, side, [mode.element, mode.foe_element][side], int(tl.casts), int(tl.catches), int(tl.answered), int(tl.lost),
 				int(tl.walls), int(tl.capped), top, share, tl.reactions])
+		print("METRIC pair=%s side=%d guards clean=%d perfect=%d late=%d whiff=%d returns=%d setbacks=%d floor_seen=%d floor_jumped=%d"
+				% [pair, side, int(tl.clean), int(tl.perfect), int(tl.late), int(tl.whiff), int(tl.returns), int(tl.setbacks),
+				int(tl.floor_seen), int(tl.floor_jumped)])
+		var uncast: Array = []
+		for pr: Array in NpcBending.pairs_of(String([mode.element, mode.foe_element][side])):
+			if not by_side[side].has("%s/%s" % pr):
+				uncast.append("%s/%s" % pr)
 		print("METRIC pair=%s side=%d by_move=%s" % [pair, side, by_side[side]])
+		print("METRIC pair=%s side=%d grows_by=%s uncast=%s" % [pair, side, grows_by[side], uncast])
 		var kb := {}
 		for k: String in knock_by[side]:
 			kb[k] = "%d:%.0f" % [int(knock_by[side][k][0]), float(knock_by[side][k][1])]

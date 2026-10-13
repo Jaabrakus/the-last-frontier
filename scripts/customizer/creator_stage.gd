@@ -30,10 +30,14 @@ const FRAMES := {
 	# the Tattoos row (TattooPanel): the arms from the shoulders to the hands, and the hands
 	"arms": [Vector3(0.0, -0.56, 0.0), 1.75, 26.0, null],
 	"hands": [Vector3(0.0, -0.76, 0.0), 1.3, 26.0, null],
+	# the Face picker's portraits (FaceThumbs): the head and the neck
+	"portrait": [Vector3(0.0, 0.0, 0.0), 1.0, 20.0, null],
 }
 ## Screen offset of the figure (camera h_offset, m at the target's distance): the side panels
 ## are wider on the right.
 const SIDE_SHIFT := 0.1
+## The shift this stage uses (0: the figure centred, the Face picker's portraits, FaceThumbs).
+var side_shift := SIDE_SHIFT
 
 var body: CharacterBodyMesh
 var skeleton: Skeleton3D
@@ -57,6 +61,9 @@ var reveal: Array = []
 var bare_top := false
 ## The slots `bare_top` leaves on.
 const TOP_KEEP := ["legs.lower", "legs.over", "feet", "head", "accessories.waist"]
+## Garment slots taken off for a view (the creator's tattoo editor on an arm or a hand: the sash's hanging tail in front
+## of the forearm); empty: dressed as worn.
+var hide_slots: Array = []
 ## A close view of a point of the skin (focus_skin: the tattoo being edited) instead of a named framing: {bone, at,
 ## dist, fov}. Empty: the named framings.
 var _focus := {}
@@ -218,8 +225,8 @@ func _build_figure() -> void:
 
 
 ## Dresses the figure. With `hat_off` (the face and hair rows) the hat is taken off first, as
-## a creator shows the hair (dress() then leaves the hair unpressed): the legacy tricorn is
-## hidden and a garment outfit's head slot is set to bare ("-", PlayerOutfit); the clothing
+## a creator shows the hair (dress() then leaves the hair unpressed): a hat part is hidden and
+## a garment outfit's head slot is set to bare ("-", PlayerOutfit); the clothing
 ## view shows the outfit as worn.
 func show_look(look: Dictionary, hat_off := true) -> void:
 	if body == null:
@@ -241,6 +248,13 @@ func show_look(look: Dictionary, hat_off := true) -> void:
 			if not slot in TOP_KEEP:
 				ob[slot] = {"id": "-"}
 		lk["outfit"] = ob
+	if not hide_slots.is_empty():
+		if is_same(lk, look):
+			lk = look.duplicate(true)
+		var oh: Dictionary = (lk.get("outfit", {}) as Dictionary).duplicate(true) if lk.get("outfit") is Dictionary else {}
+		for slot: String in hide_slots:
+			oh[slot] = {"id": "-"}
+		lk["outfit"] = oh
 	var fit := PlayerAppearance.dress(body, lk)
 	_dressed = PlayerAppearance.dressed_look(lk, fit)
 	if not reveal.is_empty():
@@ -367,7 +381,7 @@ func _place() -> void:
 	camera.fov = _cam_fov
 	camera.position = _cam_target + dir * _cam_dist
 	camera.look_at(_cam_target)
-	camera.h_offset = SIDE_SHIFT * _cam_dist * 0.35
+	camera.h_offset = side_shift * _cam_dist * 0.35
 
 
 func _process(delta: float) -> void:

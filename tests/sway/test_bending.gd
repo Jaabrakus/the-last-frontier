@@ -1,12 +1,13 @@
 extends SceneTree
 ## Bending (docs/bending_design.md; BendEffects, BendBolt, BendZone, Bending; the user, 2026-10-04) on the real level, in the
 ## duel against the earthbender held still before the player:
-##   keys       each element's bar (Bending.bar: the first skill of 1-4, Mend on 5); the readied key again switches to its
-##              other skill; the wheel steps the skill's variations (SwayCaster.step_mode)
+##   keys       each element's bar (Bending.bar: the first skill of 1-4, Mend on 5); round 2's keys (no memory): a double
+##              tap readies the key's other skill, a tap later its first again; the wheel turns the key to its other move
 ##   every move every element's every skill's every variation cast (FormEffects.apply, as a release does): it does what its
 ##              spec says (a bolt flies, a cone or ring reaches him, a zone stands, the caster moves, ...) and nothing errs
 ##   meeting    water + fire bolts: steam, both gone; a stone goes on through fire; the water jet wears an earth wall more than
-##              fire does; fire melts an ice wall; a bubble stops fire and lets stone through; an air shield sends fire back;
+##              fire does; fire melts an ice wall; a bubble stops fire and lets stone through; the Wind Guard (round 2's air shield with an element)
+##              lets fire through and bounces air back on the beat;
 ##              a catch takes the bender's spike out of the air
 ##   only=<element> (earth, water, fire, air): every move of that element only (the keys and the meetings as ever); the count
 ##   cast and the time it took printed
@@ -128,6 +129,8 @@ func _keys() -> void:
 			ok = ok and String(bar.entry(i).get("id", "")) == String(want[i])
 		_expect(ok, "%s: the bar %s" % [el, str(want)])
 	DuelMode.element = "fire"
+	var keep_el := Bending.of(p).element
+	Bending.of(p).element = "fire"            # (round 2's keys read the player's own element: his Bending's first)
 	duel.lay_bar()
 	await physics_frame
 	bar.take(0)
@@ -135,17 +138,20 @@ func _keys() -> void:
 	_expect(c.readied_spell == "fire_blast", "key 1: Fire Blast readied (%s)" % c.readied_spell)
 	bar.select(0)
 	await physics_frame
-	_expect(c.readied_spell == "fire_jab" and String(bar.entry(0).id) == "fire_jab", "key 1 again: its other skill, Fire Jab (%s)" % c.readied_spell)
 	bar.select(0)
 	await physics_frame
-	_expect(c.readied_spell == "fire_blast", "and again: back to Fire Blast")
-	var m0 := c.mode_of("fire_blast")
+	_expect(c.readied_spell == "fire_arc" and String(bar.entry(0).id) == "fire_arc", "key 1 tapped twice: its other move, Lightning (%s)" % c.readied_spell)
+	await _secs(0.4)
+	bar.select(0)
+	await physics_frame
+	_expect(c.readied_spell == "fire_blast", "a tap later: its first again, Fire Blast (no memory)")
 	var wheel := InputEventMouseButton.new()
 	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 	wheel.pressed = true
-	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar._step_mode(1)
-	_expect(used and c.mode_of("fire_blast") != m0 and c.readied_spell == "fire_blast",
-			"the wheel: the next variation (%s to %s), the same skill" % [m0, c.mode_of("fire_blast")])
+	var used := bar.handle_input(wheel) if InputMap.has_action(&"weapon_next") and wheel.is_action_pressed(&"weapon_next") else bar.step_other()
+	await physics_frame
+	_expect(used and c.readied_spell == "fire_arc", "the wheel: the key's other move, Lightning (%s)" % c.readied_spell)
+	Bending.of(p).element = keep_el
 
 
 # ---------------------------------------------------------------- every move
@@ -171,7 +177,7 @@ func _every_move() -> void:
 					_stage(5.0 if float(sp.get("spread_deg", 0.0)) > 0.0 and int(sp.get("count", 1)) > 1 else 9.0)
 					await _secs(0.1)
 					c.set_mode(id, mode)
-					Bending.of(p).water = 100.0
+					Bending.of(p)                         # (its Bending node made; the water meter retired 2026-10-06)
 					var why := await _cast(id, mode)
 					count += 1
 					if why != "":
@@ -218,10 +224,10 @@ func _cast(id: String, mode: String) -> String:
 
 
 # ---------------------------------------------------------------- earth's side-steps
-## Earth Skate (the owner, 2026-10-05: "for earth bending we need the side steps, burrow steps to be on the side"): slide and
-## burrow-step go across the facing, to the side held (move_left / move_right), the right with neither; skate goes forward.
-## The player faces +x, so his right is +z. The key is held only over the cast (held_side is read as the dash starts), so
-## the walk adds nothing.
+## Burrow (round 2's earth dash, once Earth Skate; the owner, 2026-10-05: "for earth bending we need the side steps, burrow
+## steps to be on the side"): it goes the way the keys held say at the release (dir "held"): to the side held (move_left /
+## move_right), forward with move_forward, and back with none (never a random side). The player faces +x, so his right is
+## +z. The key is held only over the cast, so the walk adds nothing.
 func _earth_sides() -> void:
 	if only != "" and only != "earth":
 		return
@@ -229,8 +235,8 @@ func _earth_sides() -> void:
 	duel.lay_bar()
 	await physics_frame
 	var bad: Array[String] = []
-	for row in [["slide", &"move_right", 1.0], ["slide", &"move_left", -1.0], ["slide", &"", 1.0],
-			["burrow", &"move_right", 1.0], ["burrow", &"move_left", -1.0], ["burrow", &"", 1.0], ["skate", &"", 0.0]]:
+	for row in [["burrow", &"move_right", 1.0], ["burrow", &"move_left", -1.0], ["burrow", &"move_forward", 0.0],
+			["burrow", &"", -2.0]]:
 		var mode := String(row[0])
 		var key: StringName = row[1]
 		var want := float(row[2])
@@ -252,13 +258,15 @@ func _earth_sides() -> void:
 		var ok := false
 		if want == 0.0:
 			ok = along > 0.8 and absf(along) > 2.0 * absf(across)
+		elif want == -2.0:
+			ok = along < -0.8 and absf(along) > 2.0 * absf(across)       # (nothing held: back)
 		else:
 			ok = across * want > 0.8 and absf(across) > 2.0 * absf(along)
 		var what := "%s%s: across %.2f m, along %.2f m" % [mode, " (%s)" % key if key != &"" else " (no side held)", across, along]
 		print("  earth skate %s" % what)
 		if not ok:
 			bad.append(what)
-	_expect(bad.is_empty(), "Earth Skate: slide and burrow-step to the side held (the right with none), skate forward%s"
+	_expect(bad.is_empty(), "Burrow: to the side held, forward with W, back with nothing held%s"
 			% ("" if bad.is_empty() else ": " + ", ".join(bad)))
 
 
@@ -331,9 +339,11 @@ func _meetings() -> void:
 	await physics_frame
 	_stage(20.0)
 	BendZone.make(p, "air_shield", p.global_position, {"radius_m": 2.2, "life_s": 3.0})
-	var back := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 0), Vector3.LEFT, {"kind": "fire", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
+	var fire_by := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 1.5), Vector3.LEFT, {"kind": "fire", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
+	var back := BendBolt.launch(n, p.global_position + Vector3(6, 1.2, 0), Vector3.LEFT, {"kind": "air", "mps": 20.0, "radius_m": 0.2, "range_m": 40.0})
 	await _secs(0.4)
-	_expect(is_instance_valid(back) and back.caster == p and back.velocity.x > 0.0, "an air shield sends fire back at its sender")
+	_expect(is_instance_valid(back) and back.caster == p and back.velocity.x > 0.0, "the Wind Guard bounces air back on the beat")
+	_expect(not is_instance_valid(fire_by) or fire_by.caster == n, "and lets fire through")
 	_clear()
 	await physics_frame
 	# a catch takes the bender's spike out of the air

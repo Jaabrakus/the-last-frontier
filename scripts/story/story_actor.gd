@@ -2,8 +2,8 @@ class_name StoryActor
 extends NpcFighter
 ## A fighter the story plays, not his brain (docs/main_story.md 10.1, missions 9 and 10; 15 item 1: "a staged capture", "the
 ## march behind a scripted Leclerc with two guards ... sight cones, no brain"): an NpcFighter (his body in his faction's
-## garments, his musket carried low, his hit parts, his barks) whose NpcBrain does not think while `scripted`. RaidStage's
-## capturing party and MarchStage's Leclerc and guards are these.
+## garments, his musket carried low, his hit parts, his barks) whose NpcBrain does not think while `scripted` (the retired
+## Two Fires stages' capturing party and guards were these; Captivity's captor can be one).
 ##
 ##   var a := StoryActor.make(level, "canadian_militia", at, {"name": "Toussaint Leclerc", "tag": "leclerc", "face": p})
 ##   a.walk_to(p, StoryActor.JOG)      walks (or runs, by the pace) there on the walk grid; a.arrived()
@@ -53,7 +53,7 @@ var sees := false
 var alerted := false
 var torch_model: Node3D
 var torch_fire: TorchFire
-## Captivity's captor standing looks here instead of at the captive while set (MarchStage.look_at_point: the second fire).
+## Captivity's captor standing looks here instead of at the captive while set.
 var look_over := Vector3.INF
 ## Where it gazes up (gaze()), INF none; with its musket levelled there (gaze_gun) or its chest turned up to it.
 var gaze_at := Vector3.INF

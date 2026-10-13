@@ -32,8 +32,8 @@ const SLOT_NAMES := {"shirt": "Shirt", "vest": "Waistcoat", "outer": "Coat", "le
 		"legs.over": "Leggings", "feet": "Shoes", "head": "Hat", "accessories.neck": "Neckwear",
 		"accessories.waist": "Belt / sash", "accessories.shoulder": "Harness / bandolier",
 		"accessories.wrap": "Cloak / blanket", "accessories.arms": "Bracers / arm bands", "accessories.hands": "Gloves"}
-## Alternative slots a garment was given only while its own slot was not one of SLOTS (cloth2's rigging_harness: offered
-## as a wrap until the shoulder slot came): own slot -> the stand-in. It is not offered there any more, and a look that
+## Alternative slots a garment was given only while its own slot was not one of SLOTS (the retired rigging_harness was
+## offered as a wrap until the shoulder slot came): own slot -> the stand-in. It is not offered there any more, and a look that
 ## has it there moves it to its own slot (validate).
 const STAND_IN_SLOTS := {"accessories.shoulder": "accessories.wrap"}
 ## The basic dress: what a body wears when the look chooses nothing (the user, 2026-09-28: "the most basic clothes
@@ -50,11 +50,15 @@ const BASIC := {
 ## under any garment over the pelvis (its catalog occupies_regions has pelvis_center, or it is worn on the legs).
 ## "pelvis_center" in hide_regions is what hides them (the body's region, the pubic hair, BodyMaterials.apply_look's
 ## genital_swing), so the rule decides whether a garment's pelvis_center counts.
-const CLOSED_IDS := ["breeches", "slops"]
+const CLOSED_IDS := ["breeches"]
 const CLOSED_TAGS := ["underwear", "pants"]
 const GENITALS := "pelvis_center"
 ## Colours used when the look does not choose them (over the catalog's zone defaults).
 const DEFAULT_COLORS := {}
+## A garment over these regions has its cloth over the breasts' apex smoothed as it is put on (garment_chest.gd: tight tops
+## cut on the female body followed the nipples).
+const CHEST := ["chest_front", "chest_side"]
+const GarmentChest := preload("res://scripts/customizer/garment_chest.gd")
 
 static var _catalog := {}
 ## The catalog's sets: id -> label, in the catalog's order; their tooltips.
@@ -332,8 +336,12 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 			var glb := String(e.get("glb", ""))
 			var sc := scene_of(glb)
 			var added := body.add_part(tag, sc if sc != null else glb)
+			var over_breasts := (e.get("occupies_regions", []) as Array).any(func(r: String) -> bool: return r in CHEST)
 			for mi: MeshInstance3D in added:
 				mi.set_meta("garment", id)
+				# (the cloth over the nipples smoothed: body type 2 showed them through a tight top; GarmentChest)
+				if over_breasts:
+					mi.mesh = GarmentChest.smoothed(mi.mesh)
 		var colors: Dictionary = (DEFAULT_COLORS.get(id, {}) as Dictionary).duplicate()
 		if v is Dictionary and v.get("colors") is Dictionary:
 			colors.merge(v.colors, true)
@@ -361,6 +369,26 @@ static func dress(body: CharacterBodyMesh, outfit: Dictionary, sex := 0.0) -> Di
 	body.set_skirt_closed(not skirt.is_empty(), hems)
 	res.bulk_slots = worn if not worn.is_empty() else {"bare": true}
 	return res
+
+
+## The outfit's garments over the chest smoothed ahead (GarmentChest makes each mesh once and keeps it): a figure dressed in steps
+## (FighterWorld, the menus) does this a frame before its dress, so the dress finds them made. Changes nothing a dress does.
+static func warm_chest(outfit: Dictionary, sex := 0.0) -> void:
+	var eff := effective(outfit, sex)
+	for slot: String in SLOTS:
+		var v = eff.get(slot, {})
+		var id := String(v.get("id", "")) if v is Dictionary else ""
+		var e := entry(id) if id != "" else {}
+		if e.is_empty() or not (e.get("occupies_regions", []) as Array).any(func(r: String) -> bool: return r in CHEST):
+			continue
+		var sc := scene_of(String(e.get("glb", "")))
+		if sc == null:
+			continue
+		var tmp := sc.instantiate()
+		for mi: MeshInstance3D in tmp.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh != null:
+				GarmentChest.smoothed(mi.mesh)
+		tmp.free()
 
 
 ## Whether garment `id`, worn in `slot`, hides the genitals of a body of `sex` (see CLOSED_IDS).
