@@ -36,3 +36,9 @@
 
 5. **Thunder: WIND.** Fire's Lightning becomes Thunder and moves to the WIND art as a mountain-pass storm (a strike that
    falls from above), mechanics unchanged.
+
+7. **LIGHTING: A DAY CYCLE OF ALL THREE (2026-10-06).** Shown the three lighting directions side by side, the owner
+   chose "Day cycle, all three": jade mist in the morning, bright saturated noon through the day, golden lantern dusk
+   at evening, blending as the clock moves (ThuyVanLook driven by the world clock, not one fixed direction). Night
+   follows dusk. The session continuing the work moved into the thuyvan worktree itself (the owner said "continue
+   building"); the NEW SESSION note in item 6 is superseded.
