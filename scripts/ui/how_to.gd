@@ -108,7 +108,7 @@ const TOPICS := {
 	# (round 3, the % ring: the movement and the edge, in the player's words)
 	"ring_stock": {"title": "Jumps, the edge, the water", "steps": [
 			"[Space]  Jumps; again in the air; off the deck once more: your Rise",
-			"[3]  In the air: dodge",
+			"[3]  In the air too: your movement spell, once a jump",
 			"Guard up + tap a direction: roll; + [C]: duck",
 			"[C]  Down",
 			"[E]  Just as you land: back on your feet",

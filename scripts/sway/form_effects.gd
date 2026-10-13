@@ -834,14 +834,24 @@ class Throw:
 		var mps: Array = hd.get("mps", [30.0, 30.0])
 		return maxf(float(mps[mps.size() - 1]), 0.1)
 
-	## `p` raised by the drop the flight's gravity gives it on the way there (so it arrives at `p`).
+	## `p` raised by the drop the flight's gravity gives it on the way there (so it arrives at `p`), worked out to ARC_REACH_M at
+	## most (the ring's length: a spike across it still meets the line) and never more than ARC_MAX_RISE of the way above the line (the owner, 2026-10-13: "for a boulder it shoots to
+	## high": with the crosshair on nothing near, `p` lies far down the aim and its drop over that flight sent the stone up
+	## into the sky; past the reach it flies along the aim and falls as it will).
+	const ARC_REACH_M := 40.0
+	const ARC_MAX_RISE := 0.27
 	func _arced(p: Vector3) -> Vector3:
 		if p == Vector3.INF:
 			return p
 		var hd: Dictionary = lift._hurl_d()
 		var mps: Array = hd.get("mps", [20.0, 20.0])
-		var tf := stone.global_position.distance_to(p) / maxf(float(mps[mps.size() - 1]), 0.1)
-		return p + Vector3.UP * 0.5 * float(hd.get("gravity", 6.0)) * tf * tf
+		var from := stone.global_position
+		var d := from.distance_to(p)
+		if d > ARC_REACH_M:
+			p = from + (p - from) / d * ARC_REACH_M
+			d = ARC_REACH_M
+		var tf := d / maxf(float(mps[mps.size() - 1]), 0.1)
+		return p + Vector3.UP * minf(0.5 * float(hd.get("gravity", 6.0)) * tf * tf, d * ARC_MAX_RISE)
 
 	## It met the world at `at`: what is in the physics there is knocked on along its flight (and struck when it takes hits);
 	## a man or a fighter there it did not strike on the way knocked too (BendStatus.knock, by its caster).

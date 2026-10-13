@@ -414,12 +414,22 @@ func _recovery_control() -> void:
 			var drift := RingMoves.drift_of(el).x
 			_expect(flat >= drift * 0.95 and flat <= drift + 0.02,
 					"%s regains ordinary air steering (%.3f / %.3f m/s)" % [el, flat, drift])
+			# (key 3 in the air: the element's movement spell as on the deck, the dodge only where it can't start; once a time
+			# in the air either way: the owner, 2026-10-13)
 			var dodge_count := moves_seen.count("dodge")
-			SwayCaster.of(p).key3_press()
+			var sc3 := SwayCaster.of(p)
+			sc3.key3_press()
 			await rig.ticks(1)
-			_expect((rm.mode == "dodge" and moves_seen.count("dodge") == dodge_count + 1) if not dodge_spent
-					else (rm.mode == "" and moves_seen.count("dodge") == dodge_count),
-					"%s key 3 %s after recovery" % [el, "uses the remaining dodge" if not dodge_spent else "cannot reuse the spent dodge"])
+			var air_move := sc3.last_key3 == "dash" and sc3.state != SwayCaster.State.IDLE
+			var dodged := rm.mode == "dodge" and moves_seen.count("dodge") == dodge_count + 1
+			_expect(((air_move or dodged) and not rm.dodge_ready) if not dodge_spent
+					else (rm.mode == "" and moves_seen.count("dodge") == dodge_count and not air_move),
+					"%s key 3 %s after recovery" % [el, "casts its movement spell (or dodges) once" if not dodge_spent
+							else "cannot spend the air's move again"])
+			# (a spell takes its lock and its travel where the dodge was at once; then down on the deck, the airtime's moves back,
+			# before the next case: fire's Step and air's Slip end in the air, earth's Burrow and water's Skate on the deck)
+			await rig.until(func() -> bool: return sc3.state == SwayCaster.State.IDLE and rm.mode == "", 2.0)
+			await _ground()
 	# Return naturally to the deck after a Water Rise; control in the air must not bypass the existing landing recovery.
 	await _el("water")
 	await _air_at(0.8, 0.5, true)

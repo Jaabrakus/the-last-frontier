@@ -471,6 +471,7 @@ func _ready() -> void:
 		add_child(hud)
 		if arena:
 			TouchControls.attach(self)         # (the web build on a phone or a tablet: the thumbs' controls; else nothing)
+			WebPerf.attach(self)               # (the web build with ?perf=1: the frame's numbers in the console)
 		var arc := TrajectoryPreview.new()
 		arc.name = "TrajectoryPreview"
 		arc.player = self

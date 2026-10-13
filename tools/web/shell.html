@@ -251,21 +251,39 @@ const engine = new Engine(GODOT_CONFIG);
 			mouse.edge = 0;
 		}
 	}
-	function onRefused() {
-		// (Godot's own ask, outside a click, is refused anywhere: only a refusal of ours counts)
-		if (performance.now() - askedAt < 1500) {
+	// A refusal of ours counts only when it means this page cannot lock (2026-10-13: in Chrome the game's own ask could
+	// meet ours on the same click and be turned down, and one refusal kept the stand-in for good: the mouse never locked
+	// again): a SecurityError (an embedded page that may not lock), or a second refusal in a click while no lock has ever
+	// held here. Godot's own ask outside a click is refused anywhere and never counts. A lock that holds clears it.
+	let everLocked = false;
+	let misses = 0;
+	let pending = false;
+	function onRefused(err) {
+		pending = false;
+		if (everLocked || performance.now() - askedAt >= 1500) {
+			return;
+		}
+		misses += 1;
+		if ((err && err.name === 'SecurityError') || misses >= 2) {
 			refused = true;
 			standIn();
 		}
 	}
 	function lock() {
+		if (pending) {
+			return;                           // (one ask at a time: a second on the same click is turned down)
+		}
+		pending = true;
+		setTimeout(function () {
+			pending = false;
+		}, 1000);
 		try {
 			const p = lockNow.call(canvasEl);
 			if (p && p.catch) {
 				p.catch(onRefused);
 			}
 		} catch (err) {
-			onRefused();
+			onRefused(err);
 		}
 	}
 	if (lockNow && exitNow && lockedGet && lockedGet.get) {
@@ -275,7 +293,9 @@ const engine = new Engine(GODOT_CONFIG);
 				return mouse.stand_in ? canvasEl : lockedGet.get.call(document);
 			},
 		});
-		document.addEventListener('pointerlockerror', onRefused);
+		document.addEventListener('pointerlockerror', function () {
+			onRefused(null);
+		});
 		canvasEl.requestPointerLock = function () {
 			wantLock = true;
 			if (refused) {
@@ -302,7 +322,12 @@ const engine = new Engine(GODOT_CONFIG);
 		canvasEl.addEventListener('mousedown', again, true);
 		document.addEventListener('keydown', again, true);
 		document.addEventListener('pointerlockchange', function () {
-			if (!realLocked() && !gameExit) {
+			pending = false;
+			if (realLocked()) {
+				everLocked = true;
+				misses = 0;
+				refused = false;
+			} else if (!gameExit) {
 				wantLock = false;               // (Esc: the browser let go; the game's own click asks again)
 			}
 			gameExit = false;

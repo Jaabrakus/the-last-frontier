@@ -810,11 +810,11 @@ func key3_press() -> bool:
 		_buf3 = true                              # (waits: it acts on the first free frame)
 		return true
 	_drop_guard()
-	if airborne():
-		_drop_for("dodge")
-		last_key3 = "dodge"
-		if rm != null:
-			rm.dodge(held_world())
+	# (in the air too it is the element's movement spell, as on the deck (the owner, 2026-10-13: "the air dodge is lame i want
+	# it to use the shift spell like it is on the ground"), once a time in the air as the dodge was (RingMoves.dodge_ready, spent
+	# as it starts: no chain of them for an endless recovery); the air dodge only where that spell can't start: _air_dodge)
+	var air := airborne()
+	if air and rm != null and not rm.dodge_ready and not (lock_src == SRC_DASH and state != State.IDLE):
 		return true
 	if lock_src == SRC_DASH and state != State.IDLE:
 		if now - float(_dash.get("at", -INF)) <= BendR3.num("key3_min_s", 0.22) and not bool(_dash.get("switched", false)):
@@ -823,7 +823,7 @@ func key3_press() -> bool:
 	_drop_for("dash")
 	var first := Bending.first_of(ks[2] as Array)
 	if first.is_empty():
-		return true
+		return _air_dodge(rm)
 	_dash = {"id": String(first.id), "mode": String(first.mode), "at": now}
 	lock_src = SRC_DASH
 	_pin_id = String(first.id)
@@ -835,10 +835,23 @@ func key3_press() -> bool:
 		_queued = true                            # (no button: it goes as soon as it may)
 		_switch_hold_until = now + BendR3.num("key3_min_s", 0.22)
 		last_key3 = "dash"
+		if air and rm != null:
+			rm.dodge_ready = false                # (the air's one move: spent)
 	else:
 		_dash = {}
 		lock_src = SRC_AIM
 		_pin_on = false
+		return _air_dodge(rm)
+	return true
+
+
+## Key 3 in the air when the movement spell could not start there: the air dodge, as key 3 was in the air before. True.
+func _air_dodge(rm: RingMoves) -> bool:
+	if airborne():
+		_drop_for("dodge")
+		last_key3 = "dodge"
+		if rm != null:
+			rm.dodge(held_world())
 	return true
 
 
