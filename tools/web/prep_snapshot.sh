@@ -27,7 +27,9 @@ for run in {1..60}; do
   echo $last >> $SKIP
 done
 
-# 2. Lighter textures (tools/web/prep_imports.py), then the re-import.
+# 2. The Spellbreak effects cut to the moves a public build plays (tools/web/prep_sbfx.py: the owner's moves_on picks), lighter
+#    textures (tools/web/prep_imports.py), then the re-import.
+python3 -I ${0:A:h}/prep_sbfx.py $SNAP || exit 1
 python3 -I ${0:A:h}/prep_imports.py $SNAP || exit 1
 $GODOT --headless --path . --import > $LOG/import.log 2>&1
 echo "import exit $?"

@@ -20,6 +20,8 @@ SIZE_LIMIT = {
     'assets/environment/sky/qwantani_late_afternoon_nosun_2k.exr': 1024,
     'assets/character/body/body_detail.png': 1024,
 }
+# Textures under these folders capped at this size (the effects' particle textures: small on the screen).
+SIZE_LIMIT_DIRS = {'assets/fx/spellbreak/': 512}
 # Lossless pictures under these folders (2D, never in 3D: no VRAM compression) made lossy at this quality.
 LOSSY_DIRS = ['assets/ui/']
 LOSSY_QUALITY = 0.85
@@ -38,6 +40,17 @@ def main(snap: str) -> int:
         if t2 != t:
             open(p, 'w').write(t2)
             print('size_limit %d: %s' % (px, rel))
+    for d, px in SIZE_LIMIT_DIRS.items():
+        for dirpath, _, files in os.walk(os.path.join(snap, d)):
+            for fn in files:
+                p = os.path.join(dirpath, fn)
+                if not fn.endswith('.import') or 'importer="texture"' not in open(p).read():
+                    continue
+                t = open(p).read()
+                t2 = re.sub(r'^process/size_limit=\d+$', 'process/size_limit=%d' % px, t, flags=re.M)
+                if t2 != t:
+                    open(p, 'w').write(t2)
+                    print('size_limit %d: %s' % (px, os.path.relpath(p, snap)[:-7]))
     for d in LOSSY_DIRS:
         for dirpath, _, files in os.walk(os.path.join(snap, d)):
             for fn in files:

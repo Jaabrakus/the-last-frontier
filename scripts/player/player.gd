@@ -209,8 +209,6 @@ const STOP_CREEP_MPS := 0.25
 
 ## Headless tests and screenshots: accept fire input without a captured mouse.
 var ignore_mouse_capture := false
-## The web build's free look on (WebMouse: the browser would not hold the mouse), as last seen by _web_mouse.
-var _web_free := false
 ## This machine's player (the default): its camera is the view, the mouse turns it, and it has the HUD, the E prompts,
 ## the equip wheel, building and the debug keys. False (set before it enters the tree): another player on the map,
 ## driven through `controls` (an AI's, later the network's): none of those (user 2026-09-27, AI duels).
@@ -839,23 +837,17 @@ func _anim_key(key: String) -> String:
 	return g if g != "" else key
 
 
-## The web build, every physics frame: while the browser will not hold the mouse (WebMouse.free_look) the casts take the
-## mouse as if it were held (ignore_mouse_capture, set and cleared only as free look starts and ends), and the cursor held at
-## the left or right edge keeps turning.
+## The web build, every physics frame: on a page that cannot lock the mouse (its stand-in, WebMouse), the cursor held at the
+## left or right edge keeps turning.
 func _web_mouse(delta: float) -> void:
-	var free := WebMouse.free_look()
-	if free != _web_free:
-		_web_free = free
-		ignore_mouse_capture = free
-	if free and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN  # (so a menu's VISIBLE is a change the page hears: free look ends)
-	yaw += WebMouse.edge_turn(get_viewport()) * delta
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		yaw += WebMouse.edge_turn() * delta
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local:
 		return
-	if event is InputEventMouseMotion and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or WebMouse.free_look()):
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var k := deg_to_rad(cs_sensitivity * 0.022)
 		# Zoomed steady aim turns proportionally slower.
 		k *= camera.fov / fov
@@ -868,8 +860,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		if not WebMouse.free_look():              # (a browser that won't hold the mouse: the click is the game's)
-			get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 	elif arena:
 		# (the arena: the hotbar's keys 1-5 and the wheel, nothing else of the world's: no hands free, no character screen)
 		if hotbar != null:

@@ -4,7 +4,8 @@
 # 1. the snapshot made like this checkout's tracked files (a first run: a clone of them, `cp -c`; then rsync), never its
 #    Spellbreak extracts, artifacts or services. The animation libraries the snapshot holds compressed are copied again only
 #    when this checkout's file changed (tools/web/source_hashes.txt in the snapshot)
-# 2. tools/web/prep_snapshot.sh: the libraries compressed, lighter textures, the re-import
+# 2. tools/web/prep_snapshot.sh: the libraries compressed, the Spellbreak effects cut to the owner's picks (the Web Public
+#    preset packs assets/fx/spellbreak/: export it only through here), lighter textures, the re-import
 # 3. the export (the standard 4.7.1 editor: the .NET one has no Web export), then tools/web/pack_compress.py (the pack's
 #    resources deflated) and tools/web/split_pck.py (the pack in parts for Reddit's 100 MB file limit)
 # Serve <out dir> and open index.html (.claude/launch.json "tidebreak-web").

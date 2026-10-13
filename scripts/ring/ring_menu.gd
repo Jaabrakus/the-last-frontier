@@ -181,7 +181,8 @@ func _ready() -> void:
 	var st := _row(w("settings"), _settings)
 	st.name = "Settings"
 	_row(w("main_menu"), to_menu)
-	_row(w("quit"), _quit)
+	if not OS.has_feature("web"):                 # (a browser tab is closed by the browser)
+		_row(w("quit"), _quit)
 	# the panel at the right in a plate, and the score bug across the top
 	_panel_plate = Control.new()
 	_panel_plate.name = "PanelPlate"

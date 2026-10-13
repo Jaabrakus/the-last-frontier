@@ -198,75 +198,97 @@ const engine = new Engine(GODOT_CONFIG);
 		return out;
 	}
 
-	// The mouse held by the game (Input.MOUSE_MODE_CAPTURED): a browser locks the pointer only while it handles a click or a
+	// The mouse held by the game (Input.MOUSE_MODE_CAPTURED). A browser locks the pointer only while it handles a click or a
 	// key, and Godot asks once, when the game says so (a match starting: no click then), so the ask is kept here and made
-	// again at the next click or key. Esc (the browser's own key out of the lock) and the game letting go drop it.
-	// A browser that refuses the lock outright (an embedded page: the app's own browser, maybe Reddit's frame): the game
-	// reads window.tidebreakMouse (WebMouse.free_look: the mouse aims and casts without the lock) and the cursor is hidden
-	// over the game while the game wants it held.
+	// again at the next click or key. Esc (the browser's own way out of a lock) drops it; the game's own click asks again.
+	// A page that cannot lock at all (an ask made in a click refused: an embedded page such as the app's own browser, maybe
+	// Reddit's frame) gets a stand-in: document.pointerLockElement answers the canvas while the game wants the mouse, so
+	// Godot's Input.mouse_mode reads CAPTURED and the game runs as under a lock (every move's movementX/Y turns the camera,
+	// clicks and the wheel are the game's), the cursor hidden over the game; window.tidebreakMouse.edge (-1 left, 1 right)
+	// says it is held against an edge, where it stops (WebMouse.edge_turn keeps turning). The game letting go (a menu) ends it.
 	const canvasEl = document.getElementById('canvas');
-	const mouse = { want: false, refused: false };
+	const mouse = { stand_in: false, edge: 0 };
 	window.tidebreakMouse = mouse;
-	let wantLock = false;
-	let gameExit = false;
 	const lockNow = HTMLCanvasElement.prototype.requestPointerLock;
 	const exitNow = Document.prototype.exitPointerLock;
-	function showFree() {
-		mouse.want = wantLock;
-		canvasEl.classList.toggle('free-look', wantLock && mouse.refused);
+	const lockedGet = Object.getOwnPropertyDescriptor(Document.prototype, 'pointerLockElement');
+	let wantLock = false;     // the game wants the mouse held
+	let refused = false;      // an ask made in a click or key was refused: this page cannot lock
+	let askedAt = -1e9;       // when the last ask made in a click or key went out
+	let gameExit = false;
+	function realLocked() {
+		return lockedGet.get.call(document) === canvasEl;
+	}
+	function standIn() {
+		mouse.stand_in = wantLock && refused;
+		canvasEl.classList.toggle('free-look', mouse.stand_in);
+		if (!mouse.stand_in) {
+			mouse.edge = 0;
+		}
+	}
+	function onRefused() {
+		// (Godot's own ask, outside a click, is refused anywhere: only a refusal of ours counts)
+		if (performance.now() - askedAt < 1500) {
+			refused = true;
+			standIn();
+		}
 	}
 	function lock() {
 		try {
 			const p = lockNow.call(canvasEl);
 			if (p && p.catch) {
-				p.catch(() => {
-					mouse.refused = true;
-					showFree();
-				});
+				p.catch(onRefused);
 			}
 		} catch (err) {
-			mouse.refused = true;          // (no lock now: the next click asks again)
+			onRefused();
 		}
-		showFree();
 	}
-	document.addEventListener('pointerlockerror', function () {
-		mouse.refused = true;
-		showFree();
-	});
-	if (lockNow && exitNow) {
+	if (lockNow && exitNow && lockedGet && lockedGet.get) {
+		Object.defineProperty(document, 'pointerLockElement', {
+			configurable: true,
+			get: function () {
+				return mouse.stand_in ? canvasEl : lockedGet.get.call(document);
+			},
+		});
+		document.addEventListener('pointerlockerror', onRefused);
 		canvasEl.requestPointerLock = function () {
 			wantLock = true;
+			if (refused) {
+				standIn();
+				return;
+			}
 			lock();
 		};
 		document.exitPointerLock = function () {
-			// (Godot lets go both for a visible cursor, a menu's, and for a hidden one, the game's free look: only the
-			// visible one ends the want)
-			if (canvasEl.style.cursor !== 'none') {
-				wantLock = false;
+			wantLock = false;
+			standIn();
+			if (realLocked()) {
+				gameExit = true;
+				exitNow.call(document);
 			}
-			gameExit = true;
-			showFree();
-			exitNow.call(document);
 		};
 		const again = function (e) {
-			if (e.key === 'Escape') {
+			if (e.key === 'Escape' || !wantLock || refused || realLocked()) {
 				return;
 			}
-			if (wantLock && document.pointerLockElement !== canvasEl) {
-				lock();
-			}
+			askedAt = performance.now();
+			lock();
 		};
 		canvasEl.addEventListener('mousedown', again, true);
 		document.addEventListener('keydown', again, true);
 		document.addEventListener('pointerlockchange', function () {
-			if (document.pointerLockElement === canvasEl) {
-				mouse.refused = false;
-			} else if (!gameExit) {
+			if (!realLocked() && !gameExit) {
 				wantLock = false;               // (Esc: the browser let go; the game's own click asks again)
 			}
 			gameExit = false;
-			showFree();
+			standIn();
 		});
+		window.addEventListener('pointermove', function (e) {
+			if (mouse.stand_in) {
+				const w = window.innerWidth;
+				mouse.edge = e.clientX <= w * 0.03 ? -1 : (e.clientX >= w * 0.97 ? 1 : 0);
+			}
+		}, true);
 	}
 
 	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });

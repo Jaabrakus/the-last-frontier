@@ -104,8 +104,8 @@ static func table(el: String) -> Dictionary:
 static func on(el: String) -> bool:
 	if not _master():
 		return false
-	if not (el in ELEMENTS):
-		return false
+	if not (el in ELEMENTS) or OS.has_feature("public"):
+		return false                          # (a public build: only the single moves the owner picked, moves_on)
 	if force_elements.has(el):
 		return bool(force_elements[el])
 	return bool((_cfg.get("elements", {}) as Dictionary).get(el, false))
@@ -114,8 +114,6 @@ static func on(el: String) -> bool:
 ## The master switch (a run's force_on over config.json's enabled); headless always off (today's looks, as the tests that
 ## count them build them).
 static func _master() -> bool:
-	if OS.has_feature("public"):
-		return false                          # (a public build (the export's "public" feature: the Reddit web build): our own looks)
 	_load()
 	if not allow_headless and DisplayServer.get_name() == "headless":
 		return false

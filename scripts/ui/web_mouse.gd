@@ -1,40 +1,23 @@
 class_name WebMouse
-## The mouse in the web build when the browser will not hold it (2026-10-13: the pointer lock refused in an embedded page,
-## the app's own browser, maybe Reddit's frame: the camera never turned and every click went on asking for the lock).
-## tools/web/shell.html keeps window.tidebreakMouse = {want, refused}: the game asked for the lock and the browser said no.
-## Then the mouse is the game's all the same (free_look: FrontierPlayer turns by its moves and lets its clicks through, the
-## casts take them: ignore_mouse_capture), the page hides the cursor over the game, and the cursor held against the left or
-## right edge keeps turning (edge_turn: an unheld cursor stops at the screen's edge). Off the web: always false, 0.
+## The mouse in the web build on a page that cannot lock it (2026-10-13: the pointer lock refused in an embedded page, the
+## app's own browser, maybe Reddit's frame). tools/web/shell.html stands in for the lock there (Input.mouse_mode reads
+## CAPTURED while the game wants the mouse, so it plays as under a lock), but an unheld cursor stops at the screen's edge:
+## held there, the page says so (window.tidebreakMouse.edge: -1 left, 1 right) and the view keeps turning (edge_turn).
+## Off the web, or under a real lock: 0.
 
-## The turn at the edge (rad/s) and how near the edge it starts (of the width).
+## The turn while the cursor is held at an edge (rad/s).
 const EDGE_TURN := 2.2
-const EDGE_SHARE := 0.03
 
 static var _frame := -1
-static var _free := false
+static var _edge := 0
 
 
-static func free_look() -> bool:
+## The yaw (rad/s, + left) the cursor held at the left or right edge asks for.
+static func edge_turn() -> float:
 	if not OS.has_feature("web"):
-		return false
+		return 0.0
 	var f := Engine.get_process_frames()
 	if f != _frame:
 		_frame = f
-		_free = bool(JavaScriptBridge.eval(
-				"!!(window.tidebreakMouse && window.tidebreakMouse.want && window.tidebreakMouse.refused)", true))
-	return _free
-
-
-## The yaw (rad/s, + left) from the cursor held at the edge of `vp` in free look; 0 otherwise.
-static func edge_turn(vp: Viewport) -> float:
-	if vp == null or not free_look():
-		return 0.0
-	var w := vp.get_visible_rect().size.x
-	var x := vp.get_mouse_position().x
-	if w <= 0.0:
-		return 0.0
-	if x <= w * EDGE_SHARE:
-		return EDGE_TURN
-	if x >= w * (1.0 - EDGE_SHARE):
-		return -EDGE_TURN
-	return 0.0
+		_edge = int(JavaScriptBridge.eval("window.tidebreakMouse ? window.tidebreakMouse.edge : 0", true))
+	return -_edge * EDGE_TURN
