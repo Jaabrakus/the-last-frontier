@@ -597,7 +597,7 @@ static func trail(parent: Node3D, kind: String, r: float) -> GPUParticles3D:
 	var pool := _pool()
 	if pool == null:
 		return null
-	var k := kind if kind in KINDS or kind == "mud" else "air"
+	var k := kind if kind in KINDS or kind in ["mud", "surf"] else "air"
 	var g := pool.trail_take(k, func() -> GPUParticles3D: return _make_trail(k))
 	if g == null:
 		return null
@@ -659,6 +659,13 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 			rb.main_mat = wm
 			rb.coil_mat = wm
 			rb.coils = 2
+		"surf":
+			# (water's movement (Skate, Surf: BendMotion) keeps water's first trail, the owner, 2026-10-12: "the orignal surf
+			# or wave skill was better"; the Lash's is the charge's wisps and mist)
+			g = _stream("drop", 22, 0.55)
+			rb.main_mat = ToonFx.mat("water_strip")
+			rb.coil_mat = ToonFx.mat("water_strip")
+			rb.coils = 2
 		"mud":
 			# (mud's: muddy water coiling round it, drops of mud falling off; the owner, 2026-10-12)
 			g = _stream("drop_mud", 22, 0.6)
@@ -714,8 +721,8 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 			rb.coil_r = r * 1.6
 			rb.coil_w = 0.04 + r * 0.16
 			rb.coil_spin = 18.0
-		"mud":
-			# (mud keeps water's old trail: drops and a coiled strip, no mist and no wisps)
+		"mud", "surf":
+			# (mud and water's movement keep water's old trail: drops and a coiled strip, no mist and no wisps)
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)
 			_ribbon(rb, r * 1.05, 0.45, 0.13)
 			rb.coil_r = r * 1.5
@@ -1141,11 +1148,8 @@ static func _patch_ring(body: Node3D, el: String, y: float, cols: Array) -> void
 
 
 ## The Wave's water going out from `at` (the caster's chest) along `dir`, `deg` wide, to `reach` m at `mps` (BendEffects.cone's
-## travel_mps: its hits land as this front reaches them, the move review 2026-10-12: he flew before the foam got there). As the
-## water's charge (the owner, 2026-10-12: "reeffect our water moves now with the new water charge"): WAVE_WISPS wisps of water
-## fanned across the cone surge out with the front, rising to `tall` m and breaking at its end, a blue mist rolling along it
-## and drops thrown off its top (it was a run of blue crown bands).
-const WAVE_WISPS := 7
+## travel_mps: its hits land as this front reaches them, the move review 2026-10-12: he flew before the foam got there): a blue
+## curl of water, `tall` m, risen afresh every step along the way, spray thrown off its lip and drops left on the deck.
 static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps: float, tall := 1.2) -> void:
 	if not live():
 		return
@@ -1160,66 +1164,29 @@ static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps:
 		return
 	var foot := FormEffects.ground_at(pool, at)
 	var span := deg_to_rad(clampf(deg, 20.0, 160.0))
-	var side := d.cross(Vector3.UP).normalized()
+	var mesh := ToonFx.band_arc_mesh(1.0, 1.12, 1.0, span)
+	var look := Basis.looking_at(d, Vector3.UP)
 	pool.shoot("drop", at, 16, d, deg * 0.4, Vector2(4.0, 8.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -10, 0), 0.0)
-	pool.shoot("puff_frost", foot + d * 0.6 + Vector3.UP * 0.4, 10, d + Vector3.UP * 0.3, deg * 0.5, Vector2(1.5, 3.0),
-			Vector2(0.4, 0.8), 0.5, Vector3(0, 0.5, 0), 2.0, {"r": 0.4})
-	# (the wisps: each its own way across the cone and its own height, weaving a little as it surges)
-	var dur := maxf(reach - 0.7, 0.5) / maxf(mps, 1.0)
-	var wm := water_wisp_mat()
-	for i in WAVE_WISPS:
-		var u := (float(i) + 0.5) / float(WAVE_WISPS)
-		var wd := d.rotated(Vector3.UP, lerpf(-span * 0.45, span * 0.45, u))
-		var h0 := tall * lerpf(0.35, 0.95, fposmod(u * 2.7, 1.0))
-		var ph := u * TAU * 1.3
-		var head := Node3D.new()
-		head.top_level = true
-		pool.add_child(head)
-		head.global_position = foot + wd * 0.7 + Vector3.UP * 0.15
-		var rb := ToonRibbon.new()
-		rb.main_mat = wm
-		rb.width = 0.09
-		rb.tail_w = 0.2
-		rb.life = 0.3
-		rb.coils = 1
-		rb.coil_mat = wm
-		rb.coil_r = 0.13
-		rb.coil_w = 0.035
-		rb.coil_spin = 20.0
-		pool.add_child(rb)
-		rb.follow(head)
-		var tw := head.create_tween()
-		tw.tween_method(func(k: float) -> void:
-			var r := 0.7 + (reach - 0.7) * k
-			var h := 0.15 + h0 * sin(PI * minf(k * 1.1, 1.0)) * (1.0 if k < 0.85 else 1.0 - (k - 0.85) / 0.15 * 0.6)
-			head.global_position = foot + wd * r + Vector3.UP * h + side * 0.12 * sin(k * TAU * 1.5 + ph), 0.0, 1.0, dur)
-		tw.tween_callback(func() -> void:
-			rb.stop()
-			tree.create_timer(rb.life + 0.1, false).timeout.connect(func() -> void:
-				if is_instance_valid(rb):
-					rb.queue_free()
-				if is_instance_valid(head):
-					head.queue_free()))
-	# (the mist along its front and the drops off its top, as it goes)
-	var steps := clampi(int(ceil(reach / 0.7)), 5, 18)
+	var steps := clampi(int(ceil(reach / 0.55)), 6, 24)
 	for i in steps:
 		var r := 0.7 + (reach - 0.7) * float(i + 1) / steps
-		var h := tall * lerpf(0.6, 1.0, sin(PI * float(i + 1) / (steps + 1)))
+		var h := tall * lerpf(0.75, 1.0, sin(PI * float(i + 1) / (steps + 1)))   # (it swells, then breaks at its end)
 		var wait := r / maxf(mps, 1.0)
 		var last := i == steps - 1
 		tree.create_timer(maxf(wait - 0.04, 0.0), false).timeout.connect(func() -> void:
 			var p2 := _pool()
 			if p2 == null:
 				return
-			var lip := foot + d * r + Vector3.UP * h * 0.6
-			var w := r * sin(span * 0.5) * 0.8
-			p2.shoot("puff_frost", lip, 4, d + Vector3.UP * 0.5, 40.0, Vector2(0.8, 2.0), Vector2(0.35, 0.7), 0.45,
-					Vector3(0, 0.4, 0), 1.8, {"r": w})
-			p2.shoot("drop", lip, 4, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0),
-					0.0, {"r": w})
+			var xf := Transform3D(look * Basis.from_scale(Vector3(r, h, r)), foot + Vector3.UP * 0.02)
+			p2.play("crown", xf, 0.32, 1.0, 1.06, WATER, FOAM, mesh)
+			var lip := foot + d * r + Vector3.UP * h
+			p2.shoot("foam", lip, 3, d + Vector3.UP * 0.6, 50.0, Vector2(1.0, 2.5), Vector2(0.25, 0.45), 0.4, Vector3(0, -3, 0), 1.5,
+					{"r": r * sin(span * 0.5) * 0.8})
+			p2.shoot("drop", lip, 5, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0), 0.0,
+					{"r": r * sin(span * 0.5) * 0.8})
 			if last:
-				p2.shoot("puff_frost", foot + d * r + Vector3.UP * 0.4, 12, d + Vector3.UP, 70.0, Vector2(1.0, 3.0),
-						Vector2(0.4, 0.8), 0.6, Vector3(0, 0.3, 0), 1.5, {"r": w}))
+				p2.shoot("foam", foot + d * r + Vector3.UP * 0.3, 10, d + Vector3.UP, 70.0, Vector2(1.0, 3.0), Vector2(0.3, 0.6), 0.6,
+						Vector3(0, -2, 0), 1.0, {"r": r * sin(span * 0.5)}))
 
 
 ## Water's Downpour (its Slam) as the water's charge (the owner, 2026-10-12: "reeffect our water moves now with the new water
