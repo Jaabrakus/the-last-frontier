@@ -433,6 +433,7 @@ func _make_bot(team: int, slot: int, el: String, dice_seed: int) -> Dictionary:
 	Bending.of(b).element = el
 	_name_bot(b, team, slot, el)
 	_ring_aware(b)
+	RingSteps.attach(b)                       # (his steps, jumps and landings heard, as the player's are: the sound audit)
 	return {"bot": b, "squad": sq, "team": team, "slot": slot, "element": el}
 
 

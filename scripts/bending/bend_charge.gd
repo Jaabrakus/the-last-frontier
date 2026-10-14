@@ -86,6 +86,12 @@ var _t := 0.0
 var _flash := 0.0
 var _end_t := 0.0
 var _visual := false
+## Its sound while it gathers (the sound audit, 2026-10-13: a foe's wind-up was silent, his first sound its release): a
+## quiet loop of its element on him (CHARGE_SOUNDS), CHARGE_DB rising with the fill and a little higher, faded at its end.
+## Not on the listener's own body: his lock has its own tone (SwayTone).
+const CHARGE_SOUNDS := {"earth": &"earth_grind", "water": &"water_slosh", "fire": &"fire_crackle", "air": &"air_swirl"}
+const CHARGE_DB := Vector2(-22.0, -11.0)
+var _hum: AudioStreamPlayer3D
 var _skel: Skeleton3D
 var _bones := {}
 ## The moving heads the ribbons follow: {head: Node3D, rb: ToonRibbon, phase, vel, w, stopped, drops}
@@ -145,6 +151,7 @@ func _ready() -> void:
 				m.global_transform = xf
 	if not _visual:
 		return
+	_hum_on()
 	if body != null:
 		var sk := body.find_children("*", "Skeleton3D", true, false)
 		if not sk.is_empty():
@@ -204,6 +211,10 @@ func end(kind: String) -> void:
 		return
 	ending = kind if END_S.has(kind) else "break"
 	_end_t = 0.0
+	if _hum != null and is_instance_valid(_hum):
+		var tw := _hum.create_tween()
+		tw.tween_property(_hum, "volume_db", -60.0, 0.15)
+		tw.tween_callback(_hum.stop)
 	_stone_finish()
 	for e in _emit:
 		if is_instance_valid(e):
@@ -239,9 +250,26 @@ func end(kind: String) -> void:
 				_dust_puff(_tip(limb()), 6, 3.0, 0.4, "puff_air")
 
 
+## Its loop begun (a fighter's not the listener's): CHARGE_SOUNDS of its element, at CHARGE_DB's quiet end.
+func _hum_on() -> void:
+	if body == null or not is_instance_valid(body) or not CHARGE_SOUNDS.has(element) or not BendSounds.arena_on(get_tree()):
+		return
+	if body is FrontierPlayer and (body as FrontierPlayer).camera != null \
+			and (body as FrontierPlayer).camera == get_viewport().get_camera_3d():
+		return
+	_hum = BendSounds.loop_player(CHARGE_SOUNDS[element], self, absi(body.get_instance_id()) % 4)
+	if _hum != null:
+		_hum.volume_db = CHARGE_DB.x
+		_hum.position = Vector3.UP * 1.0
+		_hum.play(float(absi(body.get_instance_id()) % 50) / 100.0)     # (never the game's dice for a sound)
+
+
 func _process(dt: float) -> void:
 	_t += dt
 	_flash = maxf(0.0, _flash - dt / FLASH_S)
+	if _hum != null and is_instance_valid(_hum) and ending == "":
+		_hum.volume_db = lerpf(CHARGE_DB.x, CHARGE_DB.y, clampf(fill, 0.0, 1.0))
+		_hum.pitch_scale = lerpf(0.92, 1.12, clampf(fill, 0.0, 1.0))
 	if body == null or not is_instance_valid(body):
 		queue_free()
 		return
