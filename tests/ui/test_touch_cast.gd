@@ -1,8 +1,11 @@
 extends SceneTree
-## The touch layer under the tap style (TouchControls; the owner, 2026-10-13: tap casts, drag aims, hold grows, the tag
-## changes the skill, "for touch it should be hold and release right?": press, hold, let go casts). In the ring (fire, a
+## The touch layer under the tap style (TouchControls; the owner, 2026-10-13: drag aims, hold grows, the tag changes the
+## skill, "for touch it should be hold and release right?"; 2026-10-14: "only hold and release cast"). In the ring (fire, a
 ## practice, the standing dummy), the layer made by hand and forced up (force_up), its touches fed straight in:
-##   tap        key 1 tapped (down, up two frames on): the Punch casts after its wind-up; its cooldown runs
+##   tap        key 1 tapped (down, up two frames on): nothing cast, no cooldown, the caster idle, the Punch readied
+##   firm       key 1 held 0.2 s (inside TAP_S, past the Punch's 0.15 s wind-up: its ring full) and let go: it casts; its
+##              cooldown runs
+##   short      Lightning on key 1 held 0.3 s (past TAP_S, inside its 0.5 s wind-up) and let go: it casts as the wind-up ends
 ##   hold       key 1 held still past its wind-up: it grows (the Fireball); let go: it casts
 ##   drag       key 1 held and the finger dragged past DRAG_PX: the view turns; let go away from it: it casts
 ##   back       dragged out and back onto key 1, let go there: called off, nothing cast, no cooldown
@@ -90,6 +93,11 @@ func _jab_b() -> Dictionary:
 	return {}
 
 
+## `s` seconds of physics frames (the project's physics_ticks_per_second).
+func _secs(s: float) -> void:
+	await _ticks(int(ceil(s * Engine.physics_ticks_per_second)))
+
+
 func _ready_for_next() -> void:
 	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE and c.cooldown_left("fire_blast", "punch") <= 0.0, 4.0)
 	await _ticks(5)
@@ -124,15 +132,51 @@ func _run() -> void:
 	var at: Vector2 = k1.at
 	var drag := t._pad.size.y * TouchControls.DRAG_PX * 4.0
 
-	# ---- tap
+	# ---- tap: nothing cast (only a hold and let go casts)
 	released = []
+	var col1 := t._key_column(1)
+	p.hotbar.ready_move(1, String(col1.get("id", "")), String(col1.get("mode", "")))   # (key 2 first: the tap readies key 1)
+	await _ticks(3)
+	var before := bool(t._key_column(0).get("readied", false))
 	t._down(0, at)
 	await _ticks(2)
 	t._up(0, at)
+	await _ticks(60)
+	var col0 := t._key_column(0)
+	_expect(released.is_empty() and c.state == SwayCaster.State.IDLE and is_zero_approx(c.cooldown_left("fire_blast", "punch"))
+			and not before and bool(col0.get("readied", false)) and String(col0.get("id", "")) == "fire_blast",
+			"a tap on key 1: nothing cast (%d), no cooldown (%.2f s), the caster idle (%s), the Punch readied (%s, was %s)" % [
+			released.size(), c.cooldown_left("fire_blast", "punch"), SwayCaster.State.keys()[c.state], col0.get("readied", false),
+			before])
+
+	# ---- a firm press: inside TAP_S but past the Punch's wind-up (its ring full): it casts
+	await _ready_for_next()
+	released = []
+	t._down(0, at)
+	await _secs(0.2)
+	var was_full := c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]
+	t._up(0, at)
 	await _until(func() -> bool: return not released.is_empty(), 1.5)
-	_expect(not released.is_empty() and String(released[0][0]) == "fire_blast",
-			"a tap on key 1 casts the Punch (%s)" % [released[0] if not released.is_empty() else "-"])
+	_expect(was_full and not released.is_empty() and String(released[0][0]) == "fire_blast",
+			"key 1 held 0.2 s, its ring full (%s), let go: the Punch casts (%s)" % [was_full,
+			released[0] if not released.is_empty() else "-"])
 	_expect(c.cooldown_left("fire_blast", "punch") > 0.5, "its cooldown runs (%.2f s)" % c.cooldown_left("fire_blast", "punch"))
+
+	# ---- held past a tap, let go before its wind-up is full (Lightning's 0.5 s): it runs on and casts
+	await _ready_for_next()
+	p.hotbar.ready_move(0, "fire_arc", "lightning")
+	await _ticks(3)
+	released = []
+	t._down(0, at)
+	await _secs(0.3)
+	var mid := c.state == SwayCaster.State.LOCKING and c.move == "fire_arc"
+	t._up(0, at)
+	await _until(func() -> bool: return not released.is_empty(), 1.5)
+	_expect(mid and not released.is_empty() and String(released[0][0]) == "fire_arc",
+			"Lightning held 0.3 s, let go mid wind-up (%s): it casts as the wind-up ends (%s)" % [mid,
+			released[0] if not released.is_empty() else "-"])
+	p.hotbar.ready_move(0, "fire_blast", "punch")
+	await _ticks(3)
 
 	# ---- hold and let go
 	await _ready_for_next()
@@ -193,7 +237,7 @@ func _run() -> void:
 	released = []
 	var jb := _jab_b()
 	t._down(2, jb.at)
-	await _ticks(90)
+	await _secs(1.5)
 	t._up(2, jb.at)
 	await _ticks(30)
 	var jabs := released.filter(func(r: Array) -> bool: return String(r[0]) == "fire_jab").size()
@@ -204,7 +248,7 @@ func _run() -> void:
 	for n in root.find_children("*", "BendStrip", true, false):
 		strip = n as BendStrip
 	var hl := strip.help_line() if strip != null else "-"
-	var want := String((KitWords.words().get("help_strip_touch", {}) as Dictionary).get("tap", "?"))
+	var want := String(KitWords.words().get("help_strip_touch", "?"))
 	strip._paint_hint()
 	_expect(strip != null and hl == want and not hl.contains("(no key)") and strip._hint.text == "",
 			"the strip on touch: '%s', no Q line ('%s')" % [hl, strip._hint.text if strip != null else "-"])

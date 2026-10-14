@@ -708,8 +708,7 @@ func quick_line() -> String:
 func help_line() -> String:
 	if TouchControls.up(player):
 		# (the touch layer up: the thumbs' words, not the keys' (its mouse buttons are taken off: "(no key)"))
-		var ht: Dictionary = KitWords.words().get("help_strip_touch", {})
-		return String(ht.get("tap" if MatchSetup.tap_cast() else "hold", ""))
+		return String(KitWords.words().get("help_strip_touch", ""))    # (a hold and let go casts, in either cast style)
 	if basic_strip():
 		# (round 4's merge: Basic's line held to HUD's rule, one line of help_max_chars or fewer, its first letter a capital)
 		var t := KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))

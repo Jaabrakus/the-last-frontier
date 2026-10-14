@@ -161,7 +161,7 @@
 		},
 		"_help_strip": "round 4 (HUD): the strip's one help line per scheme, ONE line of 64 characters or fewer with the keys as bound (KitWords.strip_help; the first letter made a capital); shown in the first match and in Practice until 20 casts",
 		"help_strip_tap": {"keys": "{aim}: click to cast  \u00b7  hold for the bigger one", "first_moves": "1-4 your moves  \u00b7  {aim}: click to cast", "direction": "Hold W, A, S or D with {aim}: strike, dash or wall", "radial": "Hold {wheel} for the wheel  \u00b7  {aim}: click to cast"},
-		"help_strip_touch": {"tap": "Tap a key to cast  \u00b7  hold for the bigger one  \u00b7  drag to aim", "hold": "Hold a key, let go to cast  \u00b7  drag to aim"},
+		"help_strip_touch": "Hold a key, let go to cast  \u00b7  drag to aim  \u00b7  hold on: it grows",
 		"rules_tap": {"lock": "Click: it casts after a short wind-up, then waits its cooldown (the key shows it). Hold 1 or 2 on: \u25b2 it grows."},
 		"help_strip": {
 			"keys": "{aim}: hold to aim, let go to cast",

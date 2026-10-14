@@ -6,9 +6,12 @@ extends CanvasLayer
 ##   left thumb   a stick where it lands on the left of the screen: move_forward / back / left / right, by how far it is pushed
 ##   right thumb  dragged anywhere free: the look (the player's yaw and pitch, as the mouse turns them)
 ##   1-5          (the owner, 2026-10-13, with the tap style: "that is nice for drag to cast ... how are we changing the
-##                spells on touch", then "lets implement"): each key's button casts its own skill, no readying first:
-##                  tap          its skill readied and cast, after its wind-up (MatchSetup.cast_style "tap": the aim let go
-##                               early runs on); its cooldown's sweep over the button (SwayCaster.cooldown_share)
+##                spells on touch", then "lets implement"; 2026-10-14: "only hold and release cast"): each key's button
+##                casts its own skill, no readying first, held and let go:
+##                  hold, let go its skill cast; let go before its wind-up is full, it runs on to it (MatchSetup.cast_style
+##                               "tap"); its cooldown's sweep over the button (SwayCaster.cooldown_share)
+##                  tap          (let go within TAP_S, not dragged, its ring not yet full) nothing cast, nothing spent: its
+##                               skill left readied
 ##                  drag         past DRAG_PX the finger aims (the look) while it winds up and while it is held; let go: cast.
 ##                               Dragged back onto its button and let go there: called off (SwayCaster.cancel_lock)
 ##                  hold still   a skill that grows grows (the Fireball, a grown Spike or Boulder; the stone held before him
@@ -37,9 +40,9 @@ const LOOK_W_DEG := 170.0
 const LOOK_H_DEG := 80.0
 ## A touch this far outside a button's circle (of its radius) still takes it.
 const HIT_SLACK := 1.2
-## A key's touch let go within this (s) and moved less than TAP_PX (of the screen's height) is a tap, not a cast.
+## A key's touch let go within this (s), not dragged (DRAG_PX) and before its lock is full is a tap: nothing cast (only a hold
+## and let go casts; a ring already full casts, as it shows).
 const TAP_S := 0.25
-const TAP_PX := 0.03
 ## A key's finger moved this far (of the screen's height) aims (the look); less is a tap's wobble.
 const DRAG_PX := 0.02
 ## A key's tag (its other skill): its place off the button's corner (of the button's radius) and its size.
@@ -143,8 +146,10 @@ func _set_active(on: bool) -> void:
 		_unbound.clear()
 
 
+## The game's clock (s): its physics frames, so that a tap's TAP_S is the frames the caster saw (the tests run them faster than
+## the wall's clock).
 func _now() -> float:
-	return Time.get_ticks_msec() / 1000.0
+	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
 
 
 # ---------------------------------------------------------------- the buttons
@@ -396,16 +401,20 @@ func _up(i: int, pos := Vector2.ZERO) -> void:
 			if _acts_at_once(k):
 				_send(StringName("weapon_%d" % (k + 1)), false)
 				return
-			var back := float(t.moved) >= _pad.size.y * DRAG_PX and pos.distance_to(b.at) <= float(b.r) * HIT_SLACK
-			if back:
-				# (dragged out and back onto its button: called off, nothing spent)
+			var c := SwayCaster.of(player) if is_instance_valid(player) else null
+			var full := c != null and c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]
+			var dragged := float(t.moved) >= _pad.size.y * DRAG_PX
+			var tap := not dragged and not full and _now() - float(t.t0) < TAP_S
+			var back := dragged and pos.distance_to(b.at) <= float(b.r) * HIT_SLACK
+			if tap or back:
+				# (a tap: only a hold and let go casts (the owner, 2026-10-14), its skill left readied; dragged out and back
+				# onto its button: called off. Nothing spent either way)
 				_send(&"aim", false, 1.0, false)
-				var c := SwayCaster.of(player) if is_instance_valid(player) else null
 				if c != null:
 					c.cancel_lock()
 				_send(&"aim", false)
 			else:
-				_send(&"aim", false)                # (let go: cast; the tap style's early let go runs on to its wind-up)
+				_send(&"aim", false)                # (held and let go: cast; let go before its wind-up is full, it runs on)
 			_send(StringName("weapon_%d" % (k + 1)), false, 1.0, false)
 
 
