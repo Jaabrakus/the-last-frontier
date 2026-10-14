@@ -8,7 +8,8 @@ extends SceneTree
 ##   the score    the go starts the ring score (the go struck, the base heard, drive and peak silent), never giant_battle
 ##                (play_story("giant_battle") in the ring changes nothing)
 ##   levels       stock: 0 at the start; 1 at 60 %, at 2:00 left, after 2 falls; 2 on a last life at 80 %, at 0:30 left, in
-##                sudden death; each change on a bar line (the level asked for waits for it), down one step at a time
+##                sudden death; each change on a bar line (the level asked for waits for it), down one step at a time;
+##                every heard stem at its level's layer_db (each layer under the last), the score at ring_db under LEVEL_DB
 ##   stingers     a KO dealt and a KO taken each play their stinger and duck the loop 9 dB, back after; a bigger one cuts
 ##                in within 1.5 s, a smaller one is dropped; a side's last life starting plays last_life
 ##   Practice     the base at -6 dB, the level held at 0, no stingers
@@ -244,6 +245,18 @@ func _levels() -> void:
 	_expect(rm.compute_level() == 2, "a last life at 84 %%: level 2 (%d)" % rm.compute_level(), "levels_ok")
 	l = await _lands(2, bar_s * 2.0 + 1.0)
 	_expect(float(l[0]) < 0.2, "level 2 landed on a bar line (%.3f s into its bar)" % float(l[0]), "levels_ok")
+	# every heard stem at level 2's layer_db once its fade is done: the peak adds intensity, not loudness
+	await _real(60.0 / MusicDirector.ring_bpm() * (MusicDirector.ring_num("layer_out_beats", 1.0) + 0.5))
+	var l2 := MusicDirector.layer_db(2)
+	_expect(absf(md.ring_stem_db(0) - l2) < 0.6 and absf(md.ring_stem_db(1) - l2) < 0.6 and absf(md.ring_stem_db(2) - l2) < 0.6,
+			"level 2: every stem at %.1f dB (%.1f / %.1f / %.1f)" % [l2, md.ring_stem_db(0), md.ring_stem_db(1), md.ring_stem_db(2)],
+			"levels_ok")
+	_expect(MusicDirector.layer_db(2) < MusicDirector.layer_db(1) and MusicDirector.layer_db(1) < MusicDirector.layer_db(0),
+			"each layer under the last (%.1f / %.1f / %.1f dB)" % [MusicDirector.layer_db(0), MusicDirector.layer_db(1), l2], "levels_ok")
+	var rdb := MusicDirector.ring_num("ring_db", MusicDirector.LEVEL_DB)
+	_expect(absf(md._ring_db() - rdb) < 0.01 and md._ring.volume_db < rdb + 0.6 and rdb < MusicDirector.LEVEL_DB,
+			"the score at ring_db %.1f dB (a stinger's duck under it), under the open world's cues (%.1f dB)" % [rdb, md._ring.volume_db],
+			"levels_ok")
 	# back to nothing: down one step on a bar line, the next not within 8 bars
 	_reset_books()
 	await _real(0.3)
@@ -319,7 +332,7 @@ func _practice() -> void:
 	await _until(func() -> bool: return md.ring_playing(), 3.0)
 	_expect(mode.practice and md.ring_playing() and md.ring_practice, "Practice: the ring score plays", "levels_ok")
 	var lv := int(MusicDirector.ring_num("practice_level", 0.0))
-	var db := MusicDirector.LEVEL_DB + MusicDirector.ring_num("practice_base_db", -6.0)
+	var db := MusicDirector.ring_num("ring_db", MusicDirector.LEVEL_DB) + MusicDirector.ring_num("practice_base_db", -6.0)
 	_expect(absf(md._ring.volume_db - db) < 0.6, "Practice: the base at %.1f dB (%.1f)" % [db, md._ring.volume_db], "levels_ok")
 	md.set_ring_level(2)
 	await _real(60.0 / MusicDirector.ring_bpm() * 4.0 + 0.5)

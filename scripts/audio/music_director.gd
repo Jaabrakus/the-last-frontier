@@ -40,7 +40,9 @@ extends Node
 ##                              downbeat) struck once, the stems from their top, the base heard, drive and peak silent;
 ##                              mode STORY, cue "ring_fight", so RingMode._music(false) -> play_story("") ends it as before
 ##   set_ring_level(0..2)       the layers: 0 the base, 1 + drive, 2 + peak. A change lands on the next bar line; it never
-##                              steps down more than once in down_every_bars bars
+##                              steps down more than once in down_every_bars bars. Every heard stem sits at the level's
+##                              layer_db, so a layer adds intensity, not loudness; the score at ring_db on the bus, its go
+##                              and stingers at stings_db (2026-10-13: under the fight's sounds, music.json)
 ##   ring_sting(id)             a stinger (music.json stings) over the score, the loop ducked duck_db and brought back over
 ##                              a beat after it; never two within sting_gap_s (a bigger rank wins a collision)
 ##   start_ring(practice)       also Practice's own start (RingMode asks for no music there): the base at practice_base_db,
@@ -612,7 +614,7 @@ func start_ring(practice := false) -> void:
 	var p := _ring_player
 	var sync := p.stream as AudioStreamSynchronized
 	for i in 3:
-		sync.set_sync_stream_volume(i, 0.0 if i == 0 else SILENT_DB)
+		sync.set_sync_stream_volume(i, layer_db(0) if i == 0 else SILENT_DB)
 	ring_practice = practice
 	ring_level = 0
 	_ring_want = int(ring_num("practice_level", 0.0)) if practice else 0
@@ -636,9 +638,15 @@ func start_ring(practice := false) -> void:
 	_apply_level(true)
 
 
-## The ring's player's level: LEVEL_DB, Practice's practice_base_db under it.
+## The ring's player's level: ring_db (LEVEL_DB without it), Practice's practice_base_db under it.
 func _ring_db() -> float:
-	return LEVEL_DB + (ring_num("practice_base_db", -6.0) if ring_practice else 0.0)
+	return ring_num("ring_db", LEVEL_DB) + (ring_num("practice_base_db", -6.0) if ring_practice else 0.0)
+
+
+## Each heard stem's volume at level `n` (music.json layer_db; 0 dB without it).
+static func layer_db(n: int) -> float:
+	var l: Variant = ring_data().get("layer_db", [])
+	return float(l[n]) if l is Array and n >= 0 and n < (l as Array).size() else 0.0
 
 
 ## The layers to `n` (0..2) from the next bar line (Practice: held at practice_level).
@@ -701,7 +709,7 @@ func _apply_level(instant: bool) -> void:
 		return
 	var beat := 60.0 / ring_bpm()
 	for i in 3:
-		var to := 0.0 if i <= ring_level else SILENT_DB
+		var to := layer_db(ring_level) if i <= ring_level else SILENT_DB
 		if _ring_tw[i] != null and _ring_tw[i].is_valid():
 			_ring_tw[i].kill()
 		var from := _ring_sync.get_sync_stream_volume(i)
@@ -760,7 +768,7 @@ func ring_duck_db() -> float:
 	return _ring.volume_db - _ring_db() if ring_playing() else 0.0
 
 
-## A cue once over whatever plays (not the current cue): the go, the stingers. Frees itself when done.
+## A cue once over whatever plays (not the current cue): the go, the stingers, at stings_db. Frees itself when done.
 func _one_shot(id: String, db: float) -> AudioStreamPlayer:
 	var c: Dictionary = M.CUES.get(id, {})
 	var s := load(String(c.get("path", ""))) as AudioStream if not c.is_empty() else null
@@ -771,7 +779,7 @@ func _one_shot(id: String, db: float) -> AudioStreamPlayer:
 	p.bus = BUS
 	p.process_mode = Node.PROCESS_MODE_ALWAYS
 	p.stream = s
-	p.volume_db = LEVEL_DB + db
+	p.volume_db = ring_num("stings_db", LEVEL_DB) + db
 	add_child(p)
 	p.play()
 	p.finished.connect(p.queue_free)
