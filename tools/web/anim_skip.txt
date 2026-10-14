@@ -1,0 +1,11 @@
+actor_b-facial-idle-ambi-02
+actor_b-facial-idle-ambi-02_55bdfb03c3
+actor_b-facial-idle-caut-01
+actor_b-facial-idle-caut-01_d528d80829
+actor_b-horse-dismount-left
+actor_b-p-ladder-dismount--top-end
+ambi-open-push-r-actor_b
+def-inf-v-actor_b-standing-struggle
+out2a-7-stairwell-sidle--actor_b
+out4-actor_b-jump-gap--actor_b
+out4b-actor_b-drops-ladder--actor_b

@@ -12,9 +12,13 @@ cd $SNAP || exit 1
 mkdir -p tools/web && cp ${0:A:h}/compress_anims.gd ${0:A:h}/shell.html tools/web/
 
 # 1. Animations compressed (tools/web/compress_anims.gd), a batch of clips a run (exit 3: more to do); a run the system
-#    kills puts its last clip on the skip list for the next.
+#    kills puts its last clip on the skip list for the next. The clips known to run compress() away are kept in the repo
+#    (tools/web/anim_skip.txt) and skipped from the first run: a new snapshot (a restart emptied the temp folder once)
+#    no longer finds them again one killed run at a time; each new one found is added there.
 SKIP=$LOG/anim_skip.txt
-touch $SKIP
+KNOWN=${0:A:h}/anim_skip.txt
+touch $SKIP $KNOWN
+sort -u $KNOWN $SKIP -o $SKIP
 for run in {1..60}; do
   WEB_SNAPSHOT=1 SKIP_FILE=$SKIP $GODOT --headless --path . -s res://tools/web/compress_anims.gd > $LOG/compress_$run.log 2>&1
   code=$?
@@ -26,6 +30,8 @@ for run in {1..60}; do
   echo "compress run $run lost on '$last' (exit $code): skipped from now on"
   echo $last >> $SKIP
 done
+sort -u $SKIP -o $SKIP
+cmp -s $SKIP $KNOWN || { cp $SKIP $KNOWN; echo "tools/web/anim_skip.txt: $(wc -l < $KNOWN | tr -d ' ') clips known to run away (commit it)" }
 
 # 2. The Spellbreak effects cut to the moves a public build plays (tools/web/prep_sbfx.py: the owner's moves_on picks), lighter
 #    textures (tools/web/prep_imports.py), then the re-import.
