@@ -38,7 +38,8 @@ extends Node3D
 ##               (one tight shot), fire a magma ball (it burns: heated, fire to the guards), water and ice turned to mud as
 ##               they circle and slapped down at the swing's end as a wave of mud along the deck, the Fissure's in mud, that
 ##               drenches whom it hits ("earth catching water should be the fissure mud": BendBolt.to_floor_wave, MUD_WAVE,
-##               MUD_S); late, half through. A wave along the deck and lightning pass. A held stone
+##               MUD_S); late, half through. Fire's wave along the deck (the Kick's) swirls round him as magma and goes back down
+##               the deck as the Fissure in magma, burning (MAGMA_WAVE, 2026-10-13); any other wave along the deck and lightning pass. A held stone
 ##               packed by another's guard (a Boulder a Turn sent back as mud: _lift_swing) is thrown as it is; mud thrown
 ##               with E is a mud wave along the deck (_mud_wave)
 ##   Turn        water or ice: perfect, it swings once round the guard's waist (SWING_S) and leaves along his aim x
@@ -113,6 +114,10 @@ const MUD_S := 1.5
 ## over, stopped by walls), at least these numbers.
 const MUD_WAVE := {"do": "floor_wave", "kind": "stone", "shape": "mud", "mps": 16.0, "range_m": 16.0, "width_m": 2.4,
 		"height_m": 0.8, "miss_above_m": 0.6, "damage": 16.0, "knock_mps": 7.0, "up_mps": 1.2}
+## Earth's magma wave (its Catch on the beat of fire's floor wave, the Kick's: _earth_flow; the owner, 2026-10-13: "a perfect
+## parry on fire fissure should result in a spin fire ... fissure"): the mud wave's numbers, in magma, burning.
+const MAGMA_WAVE := {"do": "floor_wave", "kind": "stone", "shape": "magma", "mps": 16.0, "range_m": 16.0, "width_m": 2.4,
+		"height_m": 0.8, "miss_above_m": 0.6, "damage": 16.0, "knock_mps": 7.0, "up_mps": 1.2, "heat": true}
 ## A body walking into a wind wall is pushed back at this (m/s), once each PUSH_EVERY_S.
 const WIND_WALL_KNOCK := 4.0
 const PUSH_EVERY_S := 0.5
@@ -1004,8 +1009,8 @@ func _guard_bolt(b: BendBolt) -> bool:
 			if what != "stone":
 				# (the owner, 2026-10-12: earth answers the other elements too, but "the only catch and press e is when its a
 				# earth on earth everything else is flow": round him and back on its own, made of both; _earth_flow)
-				if not EARTH_FLOWS.has(what) or b.floor_wave:
-					return _shield_bolt(b, perfect, what)
+				if not EARTH_FLOWS.has(what) or (b.floor_wave and what != "fire"):
+					return _shield_bolt(b, perfect, what)     # (fire's floor wave flows: a magma wave, _earth_flow)
 				if perfect:
 					_earth_flow(b, what)
 				else:
@@ -1226,6 +1231,15 @@ func _turn_back(b: BendBolt, what: String) -> void:
 ## BendBolt.to_floor_wave). One along the ground goes straight back along it, already what it becomes.
 func _earth_flow(b: BendBolt, what: String) -> void:
 	var shape := String(EARTH_FLOWS[what])
+	if b.floor_wave and what == "fire":
+		# (fire's floor wave, the Kick's, on the beat: lifted off the deck, swirled once round his feet as magma (his body
+		# turning with it, GuardSpin), then slapped back down along the deck toward his aim as the Fissure in magma, burning:
+		# MAGMA_WAVE; the owner, 2026-10-13, "a perfect parry on fire fissure should result in a spin fire ... fissure")
+		var km := BendLoadout.tune_f(owner_node, "rules:guard_rules.perfect_mult", Bending.rule("perfect_mult", 1.2))
+		b.off_floor()
+		b.begin_swing(owner_node, MOON_S, MOON_R, km, "stone", 0.0, "magma", "magma_wave")
+		b.heat()
+		return
 	if shape == "mud_wave":
 		b.info["mud_s"] = MUD_S
 		b.sheath("mud")
