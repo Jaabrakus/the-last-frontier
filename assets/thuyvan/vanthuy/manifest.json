@@ -1,0 +1,2151 @@
+{
+ "_about": "Thủy Vân Vạn Thủy kit (VANTHUY: vt_* pieces; lock_* = the first block-in pieces of the ONE shared lock kit for Phase 3 M2, at the Fifth Lock's scale; Vạn Thủy places them x1.6). Units metres; Blender Z up exported glTF +Y up; a piece's front faces Blender -Y = Godot +Z. COLOR_0 = baked AO x top light (multiply into albedo; silt lines darken it under the water line); COLOR_0.a = cloth pin weight on cloth, 1 elsewhere. Materials tvvt_<key>: see tools/thuyvan_art/vanthuy/materials.json. Emission keys (paper, oil_glass) are off by day.",
+ "vt_scale_for_lock_pieces": 1.6,
+ "materials": {
+  "tvvt_ashlar": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/ashlar.png",
+   "uv_tile_m": 6.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_ashlar_old": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/ashlar_old.png",
+   "uv_tile_m": 8.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_ashlar_new": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/ashlar_new.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_paving": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/paving.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_plaster": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/plaster.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_tile": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/tile.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.85,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_timber": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/timber.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.92,
+   "specular": 0.15,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_plank": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/plank.png",
+   "uv_tile_m": 4.0,
+   "roughness": 0.95,
+   "specular": 0.12,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_lacquer": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/lacquer.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.55,
+   "specular": 0.35,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_gilt": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/gilt.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.5,
+   "specular": 0.4,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_bronze": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/bronze.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.7,
+   "specular": 0.3,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_iron": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/iron.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.8,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_rope": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/rope.png",
+   "uv_tile_m": 1.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_bamboo": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/bamboo.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.85,
+   "specular": 0.15,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_thatch": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/thatch.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_weave": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/weave.png",
+   "uv_tile_m": 2.0,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvvt_jar": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/jar.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.8,
+   "specular": 0.2,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_paper": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/paper.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.9,
+   "specular": 0.1,
+   "emission": "#ffb45a",
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvvt_oil_glass": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/oil_glass.png",
+   "uv_tile_m": 1.0,
+   "roughness": 0.6,
+   "specular": 0.2,
+   "emission": "#8fc8ff",
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvvt_sail": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/sail.png",
+   "uv_tile_m": 4.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_hessian": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/hessian.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  },
+  "tvvt_cloth_madder": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/cloth_madder.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_cloth_ochre": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/cloth_ochre.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_cloth_indigo": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/cloth_indigo.png",
+   "uv_tile_m": 2.0,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_notice": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/notice.png",
+   "uv_tile_m": null,
+   "roughness": 0.95,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": false
+  },
+  "tvvt_banner_court": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_court.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_banner_jade": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_jade.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_banner_ochre": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_ochre.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_banner_indigo": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_indigo.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_banner_bone": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_bone.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_banner_madder": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/banner_madder.png",
+   "uv_tile_m": null,
+   "roughness": 1.0,
+   "specular": 0.1,
+   "emission": null,
+   "double_sided": true,
+   "cloth": true
+  },
+  "tvvt_gate_mark": {
+   "texture": "res://assets/thuyvan/vanthuy/textures/gate_mark.png",
+   "uv_tile_m": null,
+   "roughness": 0.6,
+   "specular": 0.3,
+   "emission": null,
+   "double_sided": false,
+   "cloth": false
+  }
+ },
+ "pieces": {
+  "lock_chamber_wall": {
+   "height": 7.25,
+   "budget": "1-2k / 500 (shared lock kit block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 500,
+   "tris": 578,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_iron",
+    "tvvt_paving"
+   ],
+   "size_m_xyz_blender": [
+    20.0,
+    11.6,
+    11.8
+   ],
+   "anchors": {
+    "anchor_mooring_a": [
+     -5.0,
+     -1.3,
+     1.6
+    ],
+    "anchor_mooring_b": [
+     5.0,
+     -1.3,
+     1.6
+    ]
+   },
+   "colliders": [
+    "deck-colonly"
+   ],
+   "glb": "lock_chamber_wall.glb",
+   "tris_lod1": 500,
+   "lod1": "lock_chamber_wall_lod1.glb"
+  },
+  "lock_gate_gallery": {
+   "height": 4.5,
+   "budget": "1.5-2.5k / 500 (block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 500,
+   "tris": 1776,
+   "materials": [
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    39.4,
+    5.9,
+    6.96
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly.001"
+   ],
+   "glb": "lock_gate_gallery.glb",
+   "tris_lod1": 500,
+   "lod1": "lock_gate_gallery_lod1.glb"
+  },
+  "lock_gate_leaf_pair": {
+   "height": 12.4,
+   "budget": "2-3k / 800 (block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 800,
+   "tris": 1176,
+   "materials": [
+    "tvvt_bronze",
+    "tvvt_iron",
+    "tvvt_plank",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    37.92,
+    5.2,
+    15.36
+   ],
+   "anchors": {
+    "anchor_sluice_e": [
+     9.234,
+     0.596,
+     -0.4
+    ],
+    "anchor_sluice_w": [
+     -9.234,
+     0.596,
+     -0.4
+    ]
+   },
+   "colliders": [
+    "catwalk-colonly"
+   ],
+   "glb": "lock_gate_leaf_pair.glb",
+   "tris_lod1": 800,
+   "lod1": "lock_gate_leaf_pair_lod1.glb"
+  },
+  "lock_gate_leaf_pair_open": {
+   "height": 12.4,
+   "budget": "2-3k / 800 (block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 800,
+   "tris": 1176,
+   "materials": [
+    "tvvt_bronze",
+    "tvvt_iron",
+    "tvvt_plank",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    39.73,
+    19.24,
+    15.36
+   ],
+   "anchors": {
+    "anchor_sluice_e.001": [
+     17.096,
+     9.39,
+     -0.4
+    ],
+    "anchor_sluice_w.001": [
+     -17.096,
+     9.39,
+     -0.4
+    ]
+   },
+   "colliders": [],
+   "glb": "lock_gate_leaf_pair_open.glb",
+   "tris_lod1": 800,
+   "lod1": "lock_gate_leaf_pair_open_lod1.glb"
+  },
+  "lock_gate_tower": {
+   "height": 32.6,
+   "budget": "4-6k / 1.2k",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 1200,
+   "tris": 4856,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_cloth_madder",
+    "tvvt_gate_mark",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_plank",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    17.09,
+    17.09,
+    35.6
+   ],
+   "anchors": {
+    "anchor_banner": [
+     0.0,
+     -4.7,
+     17.5
+    ],
+    "anchor_lantern_en": [
+     5.8,
+     5.8,
+     21.6
+    ],
+    "anchor_lantern_es": [
+     5.8,
+     -5.8,
+     21.6
+    ],
+    "anchor_lantern_wn": [
+     -5.8,
+     5.8,
+     21.6
+    ],
+    "anchor_lantern_ws": [
+     -5.8,
+     -5.8,
+     21.6
+    ],
+    "anchor_winch": [
+     -4.2,
+     0.0,
+     9.0
+    ]
+   },
+   "colliders": [
+    "gallery-colonly"
+   ],
+   "glb": "lock_gate_tower.glb",
+   "tris_lod1": 1153,
+   "lod1": "lock_gate_tower_lod1.glb"
+  },
+  "lock_sluice_port": {
+   "height": 3.6,
+   "budget": "300-600 (block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": null,
+   "tris": 250,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_bronze",
+    "tvvt_iron"
+   ],
+   "size_m_xyz_blender": [
+    4.8,
+    1.87,
+    5.45
+   ],
+   "anchors": {
+    "anchor_spout": [
+     0.0,
+     -0.6,
+     -0.3
+    ]
+   },
+   "colliders": [],
+   "glb": "lock_sluice_port.glb"
+  },
+  "lock_winch_wheel": {
+   "height": 5.7,
+   "budget": "1-1.5k / 400 (block-in)",
+   "group": "lock",
+   "export": true,
+   "lod1_target": 400,
+   "tris": 960,
+   "materials": [
+    "tvvt_bronze",
+    "tvvt_iron",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    2.1,
+    5.61,
+    12.01
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "lock_winch_wheel.glb",
+   "tris_lod1": 391,
+   "lod1": "lock_winch_wheel_lod1.glb"
+  },
+  "vt_archive_wall": {
+   "gauge": false,
+   "height": 13.2,
+   "budget": "1-2k per 10 m",
+   "group": "archive",
+   "export": true,
+   "lod1_target": null,
+   "tris": 1116,
+   "materials": [
+    "tvvt_ashlar_old",
+    "tvvt_bamboo",
+    "tvvt_iron",
+    "tvvt_plaster",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    11.18,
+    4.79,
+    15.25
+   ],
+   "anchors": {
+    "anchor_lamp": [
+     4.2,
+     -0.6,
+     8.6
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_archive_wall.glb"
+  },
+  "vt_archive_wall_gauge": {
+   "gauge": true,
+   "height": 13.2,
+   "budget": "1-2k per 10 m",
+   "group": "archive",
+   "export": true,
+   "lod1_target": null,
+   "tris": 1344,
+   "materials": [
+    "tvvt_ashlar_old",
+    "tvvt_bamboo",
+    "tvvt_bronze",
+    "tvvt_iron",
+    "tvvt_plaster",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    11.18,
+    4.79,
+    15.25
+   ],
+   "anchors": {
+    "anchor_lamp.001": [
+     4.2,
+     -0.6,
+     8.6
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_archive_wall_gauge.glb"
+  },
+  "vt_awning_madder": {
+   "cloth": "cloth_madder",
+   "height": 4.2,
+   "budget": "1.5-2.5k (with barge)",
+   "group": "boats",
+   "export": true,
+   "lod1_target": null,
+   "tris": 212,
+   "materials": [
+    "tvvt_bamboo",
+    "tvvt_cloth_madder",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    8.83,
+    6.32,
+    4.01
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_awning_madder.glb"
+  },
+  "vt_awning_ochre": {
+   "cloth": "cloth_ochre",
+   "height": 4.2,
+   "budget": "1.5-2.5k (with barge)",
+   "group": "boats",
+   "export": true,
+   "lod1_target": null,
+   "tris": 212,
+   "materials": [
+    "tvvt_bamboo",
+    "tvvt_cloth_ochre",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    8.83,
+    6.32,
+    4.01
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_awning_ochre.glb"
+  },
+  "vt_court_banner": {
+   "cloth_m": [
+    3.6,
+    16.0
+   ],
+   "mark": "banner_court",
+   "height": 1.5,
+   "budget": "300 / 80",
+   "group": "court",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 348,
+   "materials": [
+    "tvvt_banner_court",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    6.0,
+    0.73,
+    17.6
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_court_banner.glb",
+   "tris_lod1": 79,
+   "lod1": "vt_court_banner_lod1.glb"
+  },
+  "vt_court_banner_b": {
+   "cloth_m": [
+    3.6,
+    16.0
+   ],
+   "mark": "banner_court_b",
+   "height": 1.5,
+   "budget": "variant (review only)",
+   "group": "court",
+   "export": false,
+   "lod1_target": null,
+   "tris": 348,
+   "materials": [
+    "tvvt_banner_court_b",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    6.0,
+    0.73,
+    17.6
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "vt_court_banner_c": {
+   "cloth_m": [
+    3.6,
+    16.0
+   ],
+   "mark": "banner_court_c",
+   "height": 1.5,
+   "budget": "variant (review only)",
+   "group": "court",
+   "export": false,
+   "lod1_target": null,
+   "tris": 348,
+   "materials": [
+    "tvvt_banner_court_c",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    6.0,
+    0.73,
+    17.6
+   ],
+   "anchors": {},
+   "colliders": []
+  },
+  "vt_court_terrace_1": {
+   "footprint_m": [
+    96.0,
+    76.0
+   ],
+   "deck_m": 11.0,
+   "height": 20.0,
+   "budget": "3-5k / 1k each",
+   "group": "court",
+   "export": true,
+   "lod1_target": 1000,
+   "tris": 5438,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_bronze",
+    "tvvt_cloth_madder",
+    "tvvt_gate_mark",
+    "tvvt_gilt",
+    "tvvt_iron",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    96.0,
+    80.11,
+    20.0
+   ],
+   "anchors": {
+    "anchor_banner_e": [
+     36.48,
+     0.6,
+     10.4
+    ],
+    "anchor_banner_w": [
+     -36.48,
+     0.6,
+     10.4
+    ],
+    "anchor_gate": [
+     0.0,
+     -2.5,
+     0.0
+    ],
+    "anchor_lantern_0": [
+     -32.56,
+     1.8,
+     14.6
+    ],
+    "anchor_lantern_1": [
+     -16.28,
+     1.8,
+     14.6
+    ],
+    "anchor_lantern_2": [
+     0.0,
+     1.8,
+     14.6
+    ],
+    "anchor_lantern_3": [
+     16.28,
+     1.8,
+     14.6
+    ],
+    "anchor_lantern_4": [
+     32.56,
+     1.8,
+     14.6
+    ]
+   },
+   "colliders": [
+    "deck-colonly.002"
+   ],
+   "glb": "vt_court_terrace_1.glb",
+   "tris_lod1": 952,
+   "lod1": "vt_court_terrace_1_lod1.glb"
+  },
+  "vt_court_terrace_2": {
+   "footprint_m": [
+    74.0,
+    58.0
+   ],
+   "deck_m": 10.0,
+   "height": 19.0,
+   "budget": "3-5k / 1k each",
+   "group": "court",
+   "export": true,
+   "lod1_target": 1000,
+   "tris": 3234,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    74.0,
+    58.0,
+    18.95
+   ],
+   "anchors": {
+    "anchor_banner_e.001": [
+     28.12,
+     0.6,
+     9.4
+    ],
+    "anchor_banner_w.001": [
+     -28.12,
+     0.6,
+     9.4
+    ],
+    "anchor_lantern_0.001": [
+     -24.64,
+     1.8,
+     13.6
+    ],
+    "anchor_lantern_1.001": [
+     -12.32,
+     1.8,
+     13.6
+    ],
+    "anchor_lantern_2.001": [
+     0.0,
+     1.8,
+     13.6
+    ],
+    "anchor_lantern_3.001": [
+     12.32,
+     1.8,
+     13.6
+    ],
+    "anchor_lantern_4.001": [
+     24.64,
+     1.8,
+     13.6
+    ]
+   },
+   "colliders": [
+    "deck-colonly.003"
+   ],
+   "glb": "vt_court_terrace_2.glb",
+   "tris_lod1": 996,
+   "lod1": "vt_court_terrace_2_lod1.glb"
+  },
+  "vt_court_terrace_3": {
+   "footprint_m": [
+    52.0,
+    44.0
+   ],
+   "deck_m": 9.0,
+   "height": 18.0,
+   "budget": "3-5k / 1k each",
+   "group": "court",
+   "export": true,
+   "lod1_target": 1000,
+   "tris": 3014,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    52.0,
+    44.0,
+    17.91
+   ],
+   "anchors": {
+    "anchor_banner_e.002": [
+     19.76,
+     0.6,
+     8.4
+    ],
+    "anchor_banner_w.002": [
+     -19.76,
+     0.6,
+     8.4
+    ],
+    "anchor_lantern_0.002": [
+     -16.72,
+     1.8,
+     12.6
+    ],
+    "anchor_lantern_1.002": [
+     -8.36,
+     1.8,
+     12.6
+    ],
+    "anchor_lantern_2.002": [
+     0.0,
+     1.8,
+     12.6
+    ],
+    "anchor_lantern_3.002": [
+     8.36,
+     1.8,
+     12.6
+    ],
+    "anchor_lantern_4.002": [
+     16.72,
+     1.8,
+     12.6
+    ]
+   },
+   "colliders": [
+    "deck-colonly.004"
+   ],
+   "glb": "vt_court_terrace_3.glb",
+   "tris_lod1": 996,
+   "lod1": "vt_court_terrace_3_lod1.glb"
+  },
+  "vt_court_tower": {
+   "variant": "A",
+   "height": 61.37,
+   "budget": "10-14k / 3k / card",
+   "group": "court",
+   "export": true,
+   "lod1_target": 3000,
+   "tris": 12458,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    36.84,
+    36.84,
+    61.37
+   ],
+   "anchors": {
+    "anchor_banner_00": [
+     -16.0,
+     -16.0,
+     3.0
+    ],
+    "anchor_banner_01": [
+     -16.0,
+     16.0,
+     3.0
+    ],
+    "anchor_banner_10": [
+     16.0,
+     -16.0,
+     3.0
+    ],
+    "anchor_banner_11": [
+     16.0,
+     16.0,
+     3.0
+    ],
+    "anchor_lantern_00": [
+     -15.4,
+     -15.4,
+     12.5
+    ],
+    "anchor_lantern_01": [
+     -15.4,
+     15.4,
+     12.5
+    ],
+    "anchor_lantern_10": [
+     15.4,
+     -15.4,
+     12.5
+    ],
+    "anchor_lantern_11": [
+     15.4,
+     15.4,
+     12.5
+    ],
+    "anchor_smoke": [
+     0.0,
+     0.0,
+     9.0
+    ]
+   },
+   "colliders": [
+    "podium-colonly"
+   ],
+   "glb": "vt_court_tower.glb",
+   "tris_lod1": 2818,
+   "lod1": "vt_court_tower_lod1.glb"
+  },
+  "vt_court_tower_B": {
+   "variant": "B",
+   "height": 50.6,
+   "budget": "variant (review only)",
+   "group": "court",
+   "export": false,
+   "lod1_target": null,
+   "tris": 11452,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    49.06,
+    49.06,
+    50.6
+   ],
+   "anchors": {
+    "anchor_banner_00.001": [
+     -20.0,
+     -20.0,
+     3.0
+    ],
+    "anchor_banner_01.001": [
+     -20.0,
+     20.0,
+     3.0
+    ],
+    "anchor_banner_10.001": [
+     20.0,
+     -20.0,
+     3.0
+    ],
+    "anchor_banner_11.001": [
+     20.0,
+     20.0,
+     3.0
+    ],
+    "anchor_lantern_00.001": [
+     -20.9,
+     -20.9,
+     12.5
+    ],
+    "anchor_lantern_01.001": [
+     -20.9,
+     20.9,
+     12.5
+    ],
+    "anchor_lantern_10.001": [
+     20.9,
+     -20.9,
+     12.5
+    ],
+    "anchor_lantern_11.001": [
+     20.9,
+     20.9,
+     12.5
+    ],
+    "anchor_smoke.001": [
+     0.0,
+     0.0,
+     9.0
+    ]
+   },
+   "colliders": [
+    "podium-colonly.001"
+   ]
+  },
+  "vt_court_tower_C": {
+   "variant": "C",
+   "height": 78.34,
+   "budget": "variant (review only)",
+   "group": "court",
+   "export": false,
+   "lod1_target": null,
+   "tris": 14372,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    37.74,
+    37.74,
+    78.34
+   ],
+   "anchors": {
+    "anchor_banner_00.002": [
+     -15.0,
+     -15.0,
+     3.0
+    ],
+    "anchor_banner_01.002": [
+     -15.0,
+     15.0,
+     3.0
+    ],
+    "anchor_banner_10.002": [
+     15.0,
+     -15.0,
+     3.0
+    ],
+    "anchor_banner_11.002": [
+     15.0,
+     15.0,
+     3.0
+    ],
+    "anchor_lantern_00.002": [
+     -15.4,
+     -15.4,
+     13.5
+    ],
+    "anchor_lantern_01.002": [
+     -15.4,
+     15.4,
+     13.5
+    ],
+    "anchor_lantern_10.002": [
+     15.4,
+     -15.4,
+     13.5
+    ],
+    "anchor_lantern_11.002": [
+     15.4,
+     15.4,
+     13.5
+    ],
+    "anchor_smoke.002": [
+     0.0,
+     0.0,
+     9.0
+    ]
+   },
+   "colliders": [
+    "podium-colonly.002"
+   ]
+  },
+  "vt_crates_stack": {
+   "height": 2.4,
+   "budget": "500-1.5k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": null,
+   "tris": 284,
+   "materials": [
+    "tvvt_iron",
+    "tvvt_rope",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    3.87,
+    2.61,
+    2.32
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_crates_stack.glb"
+  },
+  "vt_district_banner_archive": {
+   "district": "archive",
+   "colour": "bone",
+   "height": 10.5,
+   "budget": "200-400 / 80",
+   "group": "district",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 258,
+   "materials": [
+    "tvvt_banner_bone",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    2.42,
+    0.54,
+    10.5
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_district_banner_archive.glb",
+   "tris_lod1": 80,
+   "lod1": "vt_district_banner_archive_lod1.glb"
+  },
+  "vt_district_banner_grain_piers": {
+   "district": "grain_piers",
+   "colour": "ochre",
+   "height": 10.5,
+   "budget": "200-400 / 80",
+   "group": "district",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 258,
+   "materials": [
+    "tvvt_banner_ochre",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    2.42,
+    0.54,
+    10.5
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_district_banner_grain_piers.glb",
+   "tris_lod1": 80,
+   "lod1": "vt_district_banner_grain_piers_lod1.glb"
+  },
+  "vt_district_banner_lantern_ward": {
+   "district": "lantern_ward",
+   "colour": "jade",
+   "height": 10.5,
+   "budget": "200-400 / 80",
+   "group": "district",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 258,
+   "materials": [
+    "tvvt_banner_jade",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    2.42,
+    0.54,
+    10.5
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_district_banner_lantern_ward.glb",
+   "tris_lod1": 80,
+   "lod1": "vt_district_banner_lantern_ward_lod1.glb"
+  },
+  "vt_district_banner_naval_basin": {
+   "district": "naval_basin",
+   "colour": "indigo",
+   "height": 10.5,
+   "budget": "200-400 / 80",
+   "group": "district",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 258,
+   "materials": [
+    "tvvt_banner_indigo",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    2.42,
+    0.54,
+    10.5
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_district_banner_naval_basin.glb",
+   "tris_lod1": 80,
+   "lod1": "vt_district_banner_naval_basin_lod1.glb"
+  },
+  "vt_district_banner_rain_market": {
+   "district": "rain_market",
+   "colour": "madder",
+   "height": 10.5,
+   "budget": "200-400 / 80",
+   "group": "district",
+   "export": true,
+   "lod1_target": 80,
+   "tris": 258,
+   "materials": [
+    "tvvt_banner_madder",
+    "tvvt_cloth_ochre",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    2.42,
+    0.54,
+    10.5
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_district_banner_rain_market.glb",
+   "tris_lod1": 80,
+   "lod1": "vt_district_banner_rain_market_lod1.glb"
+  },
+  "vt_door_lamp": {
+   "emission_key": "oil_glass",
+   "height": 0.5,
+   "budget": "150",
+   "group": "night",
+   "export": true,
+   "lod1_target": null,
+   "tris": 76,
+   "materials": [
+    "tvvt_bronze",
+    "tvvt_iron",
+    "tvvt_oil_glass"
+   ],
+   "size_m_xyz_blender": [
+    0.48,
+    0.84,
+    0.72
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_door_lamp.glb"
+  },
+  "vt_drain_mouth": {
+   "height": 3.3,
+   "budget": "300",
+   "group": "quay",
+   "export": true,
+   "lod1_target": null,
+   "tris": 292,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_iron",
+    "tvvt_paving",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_weave"
+   ],
+   "size_m_xyz_blender": [
+    4.0,
+    1.92,
+    4.8
+   ],
+   "anchors": {
+    "anchor_outflow": [
+     0.0,
+     -0.3,
+     0.4
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_drain_mouth.glb"
+  },
+  "vt_granary_hall": {
+   "footprint_m": [
+    40.0,
+    18.0
+   ],
+   "roof_share": 0.53,
+   "height": 19.0,
+   "budget": "4-6k / 1.2k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": 1200,
+   "tris": 3742,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_bamboo",
+    "tvvt_iron",
+    "tvvt_paving",
+    "tvvt_plank",
+    "tvvt_plaster",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    47.93,
+    25.93,
+    20.08
+   ],
+   "anchors": {
+    "anchor_banner.002": [
+     -19.0,
+     -11.5,
+     0.0
+    ],
+    "anchor_door_a": [
+     -8.0,
+     -12.0,
+     0.0
+    ],
+    "anchor_door_b": [
+     8.0,
+     -12.0,
+     0.0
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_granary_hall.glb",
+   "tris_lod1": 1191,
+   "lod1": "vt_granary_hall_lod1.glb"
+  },
+  "vt_high_bridge": {
+   "span_m": 38.0,
+   "clear_m": 15.0,
+   "length_m": 72.1,
+   "gate": "open",
+   "height": 24.9,
+   "budget": "5-8k / 1.5k",
+   "group": "bridge",
+   "export": true,
+   "lod1_target": 1500,
+   "tris": 3586,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_cloth_madder",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    72.08,
+    7.9,
+    26.96
+   ],
+   "anchors": {
+    "anchor_lantern.003": [
+     0.0,
+     -4.0,
+     21.0
+    ]
+   },
+   "colliders": [
+    "deck-colonly.006"
+   ],
+   "glb": "vt_high_bridge.glb",
+   "tris_lod1": 1498,
+   "lod1": "vt_high_bridge_lod1.glb"
+  },
+  "vt_high_bridge_closed": {
+   "span_m": 38.0,
+   "clear_m": 15.0,
+   "length_m": 72.1,
+   "gate": "closed",
+   "height": 24.9,
+   "budget": "5-8k / 1.5k",
+   "group": "bridge",
+   "export": true,
+   "lod1_target": 1500,
+   "tris": 3658,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_cloth_madder",
+    "tvvt_iron",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    72.08,
+    7.9,
+    26.96
+   ],
+   "anchors": {
+    "anchor_lantern.004": [
+     0.0,
+     -4.0,
+     21.0
+    ]
+   },
+   "colliders": [
+    "deck-colonly.007"
+   ],
+   "glb": "vt_high_bridge_closed.glb",
+   "tris_lod1": 1492,
+   "lod1": "vt_high_bridge_closed_lod1.glb"
+  },
+  "vt_jars_cluster": {
+   "height": 1.4,
+   "budget": "500-1.5k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": null,
+   "tris": 882,
+   "materials": [
+    "tvvt_jar",
+    "tvvt_weave"
+   ],
+   "size_m_xyz_blender": [
+    3.26,
+    3.82,
+    1.32
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_jars_cluster.glb"
+  },
+  "vt_junk_river": {
+   "sails_child": "vt_junk_river_sails",
+   "sails_tris": 322,
+   "height": 20.24,
+   "budget": "5-8k / 1.5k / card",
+   "group": "boats",
+   "export": true,
+   "lod1_target": 1500,
+   "tris": 1794,
+   "materials": [
+    "tvvt_lacquer",
+    "tvvt_plank",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    23.58,
+    6.57,
+    19.1
+   ],
+   "anchors": {
+    "anchor_mooring_bow": [
+     11.0,
+     0.0,
+     2.2
+    ],
+    "anchor_mooring_stern": [
+     -11.0,
+     0.0,
+     5.6
+    ]
+   },
+   "colliders": [
+    "deck-colonly.010"
+   ],
+   "glb": "vt_junk_river.glb",
+   "tris_lod1": 1500,
+   "lod1": "vt_junk_river_lod1.glb"
+  },
+  "vt_junk_sea": {
+   "sails_child": "vt_junk_sea_sails",
+   "sails_tris": 548,
+   "height": 30.49,
+   "budget": "5-8k / 1.5k / card",
+   "group": "boats",
+   "export": true,
+   "lod1_target": 1500,
+   "tris": 1828,
+   "materials": [
+    "tvvt_lacquer",
+    "tvvt_plank",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    31.58,
+    8.57,
+    29.3
+   ],
+   "anchors": {
+    "anchor_mooring_bow.001": [
+     15.0,
+     0.0,
+     3.0
+    ],
+    "anchor_mooring_stern.001": [
+     -15.0,
+     0.0,
+     8.2
+    ]
+   },
+   "colliders": [
+    "deck-colonly.011"
+   ],
+   "glb": "vt_junk_sea.glb",
+   "tris_lod1": 1500,
+   "lod1": "vt_junk_sea_lod1.glb"
+  },
+  "vt_lacquer_tower": {
+   "height": 33.59,
+   "budget": "5-7k / 1.5k / 300",
+   "group": "district",
+   "export": true,
+   "lod1_target": 1500,
+   "tris": 8218,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_bronze",
+    "tvvt_cloth_madder",
+    "tvvt_gilt",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_paving",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    15.31,
+    15.45,
+    33.59
+   ],
+   "anchors": {
+    "anchor_banner.001": [
+     4.8,
+     -4.8,
+     4.35
+    ],
+    "anchor_bell": [
+     0.0,
+     0.0,
+     24.09
+    ],
+    "anchor_lantern_e": [
+     6.1,
+     -6.1,
+     8.95
+    ],
+    "anchor_lantern_w": [
+     -6.1,
+     -6.1,
+     8.95
+    ]
+   },
+   "colliders": [
+    "plinth-colonly"
+   ],
+   "glb": "vt_lacquer_tower.glb",
+   "tris_lod1": 1426,
+   "lod1": "vt_lacquer_tower_lod1.glb"
+  },
+  "vt_lantern_net": {
+   "span_m": 10.0,
+   "lanterns": 10,
+   "emission_key": "paper",
+   "height": 0.2,
+   "budget": "200 per 10 lanterns",
+   "group": "night",
+   "export": true,
+   "lod1_target": null,
+   "tris": 368,
+   "materials": [
+    "tvvt_paper",
+    "tvvt_rope"
+   ],
+   "size_m_xyz_blender": [
+    10.02,
+    0.68,
+    1.81
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_lantern_net.glb"
+  },
+  "vt_market_barge": {
+   "height": 2.5,
+   "budget": "1.5-2.5k",
+   "group": "boats",
+   "export": true,
+   "lod1_target": null,
+   "tris": 1230,
+   "materials": [
+    "tvvt_cloth_ochre",
+    "tvvt_jar",
+    "tvvt_plank",
+    "tvvt_timber",
+    "tvvt_weave"
+   ],
+   "size_m_xyz_blender": [
+    14.0,
+    5.0,
+    3.1
+   ],
+   "anchors": {
+    "anchor_awning": [
+     0.0,
+     0.0,
+     0.9
+    ],
+    "anchor_lantern.005": [
+     5.5,
+     0.0,
+     3.0
+    ]
+   },
+   "colliders": [
+    "deck-colonly.012"
+   ],
+   "glb": "vt_market_barge.glb"
+  },
+  "vt_notice_board": {
+   "height": 3.4,
+   "budget": "300",
+   "group": "quay",
+   "export": true,
+   "lod1_target": null,
+   "tris": 410,
+   "materials": [
+    "tvvt_notice",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    4.13,
+    1.33,
+    3.49
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_notice_board.glb"
+  },
+  "vt_pier_finger": {
+   "deck_m": 7.0,
+   "module_m": 20.0,
+   "height": 7.8,
+   "budget": "1-2k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": null,
+   "tris": 996,
+   "materials": [
+    "tvvt_plank",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    20.0,
+    8.3,
+    9.79
+   ],
+   "anchors": {
+    "anchor_mooring_-7": [
+     -7.0,
+     -4.5,
+     7.0
+    ],
+    "anchor_mooring_7": [
+     7.0,
+     -4.5,
+     7.0
+    ]
+   },
+   "colliders": [
+    "deck-colonly.008"
+   ],
+   "glb": "vt_pier_finger.glb"
+  },
+  "vt_pier_finger_end": {
+   "deck_m": 7.0,
+   "module_m": 20.0,
+   "height": 7.8,
+   "budget": "1-2k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": null,
+   "tris": 1324,
+   "materials": [
+    "tvvt_plank",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    30.62,
+    8.55,
+    9.79
+   ],
+   "anchors": {
+    "anchor_mooring_-7.001": [
+     -7.0,
+     -4.5,
+     7.0
+    ],
+    "anchor_mooring_7.001": [
+     7.0,
+     -4.5,
+     7.0
+    ]
+   },
+   "colliders": [
+    "deck-colonly.009"
+   ],
+   "glb": "vt_pier_finger_end.glb"
+  },
+  "vt_quay_house_a": {
+   "footprint_m": [
+    8.0,
+    7.0
+   ],
+   "roof_share": 0.46,
+   "height": 14.3,
+   "budget": "3-5k / 900 / 150",
+   "group": "quay",
+   "export": true,
+   "lod1_target": 900,
+   "tris": 4032,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_bamboo",
+    "tvvt_cloth_madder",
+    "tvvt_iron",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_plank",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    12.43,
+    11.43,
+    14.5
+   ],
+   "anchors": {
+    "anchor_door": [
+     2.88,
+     -3.8,
+     0.8
+    ],
+    "anchor_door_lamp": [
+     1.98,
+     -3.7,
+     2.8
+    ],
+    "anchor_lantern": [
+     2.4,
+     -4.41,
+     6.4
+    ],
+    "anchor_smoke.003": [
+     0.0,
+     3.5,
+     7.0
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_quay_house_a.glb",
+   "tris_lod1": 831,
+   "lod1": "vt_quay_house_a_lod1.glb"
+  },
+  "vt_quay_house_b": {
+   "footprint_m": [
+    9.0,
+    8.0
+   ],
+   "roof_share": 0.42,
+   "height": 18.0,
+   "budget": "3-5k / 900 / 150",
+   "group": "quay",
+   "export": true,
+   "lod1_target": 900,
+   "tris": 4888,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_bamboo",
+    "tvvt_cloth_madder",
+    "tvvt_iron",
+    "tvvt_lacquer",
+    "tvvt_paper",
+    "tvvt_plank",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    13.82,
+    12.82,
+    18.3
+   ],
+   "anchors": {
+    "anchor_door.001": [
+     0.0,
+     -4.3,
+     0.8
+    ],
+    "anchor_door_lamp.001": [
+     2.34,
+     -4.2,
+     2.8
+    ],
+    "anchor_lantern.001": [
+     2.7,
+     -4.98,
+     9.1
+    ],
+    "anchor_smoke.004": [
+     0.0,
+     4.0,
+     9.7
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_quay_house_b.glb",
+   "tris_lod1": 758,
+   "lod1": "vt_quay_house_b_lod1.glb"
+  },
+  "vt_quay_house_c": {
+   "footprint_m": [
+    4.6,
+    9.0
+   ],
+   "roof_share": 0.47,
+   "height": 15.6,
+   "budget": "3-5k / 900 / 150",
+   "group": "quay",
+   "export": true,
+   "lod1_target": 900,
+   "tris": 3976,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_bamboo",
+    "tvvt_cloth_madder",
+    "tvvt_iron",
+    "tvvt_paper",
+    "tvvt_plank",
+    "tvvt_plaster",
+    "tvvt_rope",
+    "tvvt_tile",
+    "tvvt_timber"
+   ],
+   "size_m_xyz_blender": [
+    8.31,
+    12.71,
+    17.05
+   ],
+   "anchors": {
+    "anchor_door.002": [
+     0.0,
+     -4.8,
+     3.1
+    ],
+    "anchor_door_lamp.002": [
+     0.756,
+     -4.7,
+     5.1
+    ],
+    "anchor_lantern.002": [
+     1.38,
+     -5.27,
+     8.1
+    ],
+    "anchor_smoke.005": [
+     0.0,
+     4.5,
+     8.7
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_quay_house_c.glb",
+   "tris_lod1": 827,
+   "lod1": "vt_quay_house_c_lod1.glb"
+  },
+  "vt_quay_steps": {
+   "risers_m": 0.3,
+   "patched": false,
+   "height": 3.6,
+   "budget": "400-800",
+   "group": "quay",
+   "export": true,
+   "lod1_target": null,
+   "tris": 278,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_paving"
+   ],
+   "size_m_xyz_blender": [
+    8.5,
+    9.33,
+    5.6
+   ],
+   "anchors": {
+    "anchor_mooring": [
+     3.6,
+     -2.18,
+     0.8
+    ]
+   },
+   "colliders": [
+    "steps-colonly"
+   ],
+   "glb": "vt_quay_steps.glb"
+  },
+  "vt_quay_steps_patched": {
+   "risers_m": 0.3,
+   "patched": true,
+   "height": 3.6,
+   "budget": "400-800",
+   "group": "quay",
+   "export": true,
+   "lod1_target": null,
+   "tris": 302,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_ashlar_new",
+    "tvvt_paving"
+   ],
+   "size_m_xyz_blender": [
+    8.5,
+    9.33,
+    5.6
+   ],
+   "anchors": {
+    "anchor_mooring.001": [
+     3.6,
+     -2.18,
+     0.8
+    ]
+   },
+   "colliders": [
+    "steps-colonly.001"
+   ],
+   "glb": "vt_quay_steps_patched.glb"
+  },
+  "vt_quay_wall_20m": {
+   "height": 3.3,
+   "budget": "400-800",
+   "group": "quay",
+   "export": true,
+   "lod1_target": null,
+   "tris": 292,
+   "materials": [
+    "tvvt_ashlar",
+    "tvvt_iron",
+    "tvvt_paving"
+   ],
+   "size_m_xyz_blender": [
+    20.0,
+    6.7,
+    6.5
+   ],
+   "anchors": {},
+   "colliders": [
+    "deck-colonly.005"
+   ],
+   "glb": "vt_quay_wall_20m.glb"
+  },
+  "vt_sacks_heap": {
+   "sacks": 46,
+   "height": 1.42,
+   "budget": "500-1.5k",
+   "group": "piers",
+   "export": true,
+   "lod1_target": null,
+   "tris": 1104,
+   "materials": [
+    "tvvt_hessian"
+   ],
+   "size_m_xyz_blender": [
+    6.03,
+    3.82,
+    1.26
+   ],
+   "anchors": {},
+   "colliders": [],
+   "glb": "vt_sacks_heap.glb"
+  },
+  "vt_treadwheel_crane": {
+   "height": 16.6,
+   "budget": "3-4k / 900",
+   "group": "piers",
+   "export": true,
+   "lod1_target": 900,
+   "tris": 1158,
+   "materials": [
+    "tvvt_hessian",
+    "tvvt_iron",
+    "tvvt_plank",
+    "tvvt_rope",
+    "tvvt_timber",
+    "tvvt_weave"
+   ],
+   "size_m_xyz_blender": [
+    8.25,
+    15.61,
+    16.56
+   ],
+   "anchors": {
+    "anchor_hoist": [
+     0.0,
+     -11.0,
+     6.5
+    ]
+   },
+   "colliders": [],
+   "glb": "vt_treadwheel_crane.glb",
+   "tris_lod1": 899,
+   "lod1": "vt_treadwheel_crane_lod1.glb"
+  }
+ }
+}

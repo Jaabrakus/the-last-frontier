@@ -1,0 +1,4425 @@
+{
+ "_about": "Đá Trắng white stones in C1 (tools/thuyvan_art/rock/scatter_white_stones.py, seed 1603). Godot world frame; pos = the stone's origin on the ground; node = a mesh in white_stones.glb (or its _lod1); under = the top sits 0.1-0.6 m below the water (kept visible by the river shader's depth alpha).",
+ "z_range": [
+  -1500.0,
+  -1000.0
+ ],
+ "count": 400,
+ "under": 80,
+ "by_node": {
+  "white_stone_00": 45,
+  "white_stone_01": 44,
+  "white_stone_02": 55,
+  "white_stone_03": 49,
+  "white_stone_04": 44,
+  "white_stone_05": 55,
+  "white_stone_06": 19,
+  "white_stone_07": 12,
+  "white_stone_08": 19,
+  "white_stone_09": 16,
+  "white_stone_10": 18,
+  "white_stone_11": 24
+ },
+ "stones": [
+  {
+   "node": "white_stone_06",
+   "pos": [
+    812.67,
+    134.34,
+    -1277.46
+   ],
+   "yaw_deg": -8.7,
+   "scale": 1.201,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    838.67,
+    135.95,
+    -1378.69
+   ],
+   "yaw_deg": 17.2,
+   "scale": 1.218,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    839.32,
+    136.16,
+    -1377.13
+   ],
+   "yaw_deg": 25.3,
+   "scale": 0.943,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    838.64,
+    136.08,
+    -1374.28
+   ],
+   "yaw_deg": -32.9,
+   "scale": 0.913,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    808.93,
+    137.29,
+    -1320.26
+   ],
+   "yaw_deg": -28.8,
+   "scale": 1.157,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    808.87,
+    137.24,
+    -1318.22
+   ],
+   "yaw_deg": -12.6,
+   "scale": 1.083,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    810.09,
+    136.15,
+    -1312.97
+   ],
+   "yaw_deg": 0.3,
+   "scale": 1.181,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    808.44,
+    137.04,
+    -1310.91
+   ],
+   "yaw_deg": -14.5,
+   "scale": 0.945,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    831.69,
+    133.75,
+    -1168.22
+   ],
+   "yaw_deg": 2.3,
+   "scale": 0.88,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    830.35,
+    134.93,
+    -1165.54
+   ],
+   "yaw_deg": 4.3,
+   "scale": 1.066,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    829.64,
+    134.99,
+    -1163.34
+   ],
+   "yaw_deg": 21.0,
+   "scale": 1.182,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    833.82,
+    133.0,
+    -1163.95
+   ],
+   "yaw_deg": 6.1,
+   "scale": 1.114,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    828.37,
+    134.97,
+    -1161.45
+   ],
+   "yaw_deg": -13.1,
+   "scale": 1.24,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    833.17,
+    134.72,
+    -1152.23
+   ],
+   "yaw_deg": 18.3,
+   "scale": 1.09,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    831.44,
+    134.89,
+    -1157.3
+   ],
+   "yaw_deg": -4.5,
+   "scale": 0.897,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    830.39,
+    134.8,
+    -1150.87
+   ],
+   "yaw_deg": -6.1,
+   "scale": 1.191,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    831.8,
+    134.84,
+    -1153.64
+   ],
+   "yaw_deg": 6.9,
+   "scale": 0.899,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    847.2,
+    137.34,
+    -1479.98
+   ],
+   "yaw_deg": -32.9,
+   "scale": 1.006,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    844.31,
+    138.44,
+    -1478.35
+   ],
+   "yaw_deg": -11.6,
+   "scale": 1.224,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    844.12,
+    138.09,
+    -1475.97
+   ],
+   "yaw_deg": -17.8,
+   "scale": 0.867,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    844.22,
+    137.48,
+    -1471.83
+   ],
+   "yaw_deg": -7.0,
+   "scale": 0.984,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    840.07,
+    139.53,
+    -1471.66
+   ],
+   "yaw_deg": -2.0,
+   "scale": 0.944,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    842.93,
+    137.79,
+    -1470.08
+   ],
+   "yaw_deg": 28.5,
+   "scale": 0.959,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    841.07,
+    138.67,
+    -1466.95
+   ],
+   "yaw_deg": -4.7,
+   "scale": 0.959,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    841.72,
+    138.62,
+    -1469.33
+   ],
+   "yaw_deg": 13.6,
+   "scale": 1.063,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    839.33,
+    139.52,
+    -1471.08
+   ],
+   "yaw_deg": -6.4,
+   "scale": 1.138,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    838.97,
+    137.26,
+    -1451.92
+   ],
+   "yaw_deg": -24.7,
+   "scale": 1.136,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    824.95,
+    134.01,
+    -1305.95
+   ],
+   "yaw_deg": -9.9,
+   "scale": 0.979,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    848.39,
+    136.29,
+    -1424.58
+   ],
+   "yaw_deg": -12.4,
+   "scale": 1.155,
+   "under": true
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    847.18,
+    136.15,
+    -1421.16
+   ],
+   "yaw_deg": -11.4,
+   "scale": 1.155,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    846.81,
+    136.4,
+    -1414.47
+   ],
+   "yaw_deg": 3.9,
+   "scale": 1.116,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    845.93,
+    136.0,
+    -1418.0
+   ],
+   "yaw_deg": -5.3,
+   "scale": 1.14,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    847.29,
+    136.59,
+    -1413.15
+   ],
+   "yaw_deg": -26.5,
+   "scale": 1.161,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    836.21,
+    129.29,
+    -1033.47
+   ],
+   "yaw_deg": -22.8,
+   "scale": 1.232,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    834.08,
+    133.19,
+    -1068.65
+   ],
+   "yaw_deg": -7.7,
+   "scale": 1.079,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    832.77,
+    133.23,
+    -1067.18
+   ],
+   "yaw_deg": -12.3,
+   "scale": 1.213,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    831.7,
+    133.17,
+    -1064.86
+   ],
+   "yaw_deg": -0.3,
+   "scale": 1.137,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    833.72,
+    132.12,
+    -1058.16
+   ],
+   "yaw_deg": -9.5,
+   "scale": 1.095,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    842.43,
+    131.58,
+    -1115.97
+   ],
+   "yaw_deg": -8.8,
+   "scale": 1.081,
+   "under": true
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    835.83,
+    134.44,
+    -1128.0
+   ],
+   "yaw_deg": 4.8,
+   "scale": 1.108,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    837.08,
+    134.15,
+    -1126.84
+   ],
+   "yaw_deg": 26.8,
+   "scale": 0.878,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    838.57,
+    133.02,
+    -1123.55
+   ],
+   "yaw_deg": 1.2,
+   "scale": 1.022,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    837.51,
+    134.0,
+    -1119.97
+   ],
+   "yaw_deg": -4.4,
+   "scale": 0.855,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    836.02,
+    134.33,
+    -1121.59
+   ],
+   "yaw_deg": 2.4,
+   "scale": 1.101,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    838.52,
+    133.37,
+    -1110.88
+   ],
+   "yaw_deg": -10.2,
+   "scale": 1.012,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    835.79,
+    134.18,
+    -1111.86
+   ],
+   "yaw_deg": 1.6,
+   "scale": 0.927,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    839.53,
+    132.52,
+    -1112.78
+   ],
+   "yaw_deg": 5.9,
+   "scale": 1.15,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    836.2,
+    134.09,
+    -1240.41
+   ],
+   "yaw_deg": 27.3,
+   "scale": 1.12,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    833.72,
+    133.33,
+    -1237.67
+   ],
+   "yaw_deg": -17.5,
+   "scale": 1.102,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    836.62,
+    133.97,
+    -1236.67
+   ],
+   "yaw_deg": 5.9,
+   "scale": 1.178,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    837.64,
+    133.54,
+    -1226.62
+   ],
+   "yaw_deg": -3.5,
+   "scale": 1.071,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    837.74,
+    133.61,
+    -1227.21
+   ],
+   "yaw_deg": 1.9,
+   "scale": 1.096,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    839.3,
+    133.87,
+    -1225.95
+   ],
+   "yaw_deg": 20.0,
+   "scale": 1.211,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    850.23,
+    136.43,
+    -1430.92
+   ],
+   "yaw_deg": -11.8,
+   "scale": 1.215,
+   "under": true
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    849.38,
+    136.46,
+    -1426.21
+   ],
+   "yaw_deg": -16.5,
+   "scale": 1.099,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    858.76,
+    131.68,
+    -1104.26
+   ],
+   "yaw_deg": 11.1,
+   "scale": 1.049,
+   "under": true
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    857.3,
+    131.26,
+    -1099.65
+   ],
+   "yaw_deg": 38.7,
+   "scale": 1.031,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    855.17,
+    136.89,
+    -1447.0
+   ],
+   "yaw_deg": -2.9,
+   "scale": 1.12,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    851.91,
+    136.31,
+    -1442.13
+   ],
+   "yaw_deg": -31.5,
+   "scale": 0.94,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    852.45,
+    136.42,
+    -1442.41
+   ],
+   "yaw_deg": 10.0,
+   "scale": 1.172,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    852.06,
+    136.53,
+    -1438.12
+   ],
+   "yaw_deg": -7.4,
+   "scale": 1.042,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    837.46,
+    134.02,
+    -1121.38
+   ],
+   "yaw_deg": 15.3,
+   "scale": 1.161,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    836.39,
+    134.28,
+    -1117.84
+   ],
+   "yaw_deg": 25.3,
+   "scale": 0.877,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    836.26,
+    134.28,
+    -1118.17
+   ],
+   "yaw_deg": 27.8,
+   "scale": 0.886,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    839.53,
+    132.52,
+    -1113.52
+   ],
+   "yaw_deg": -0.3,
+   "scale": 0.999,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    859.42,
+    137.41,
+    -1456.69
+   ],
+   "yaw_deg": -1.0,
+   "scale": 1.028,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    859.98,
+    137.44,
+    -1455.39
+   ],
+   "yaw_deg": 2.1,
+   "scale": 1.156,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    857.48,
+    138.07,
+    -1445.53
+   ],
+   "yaw_deg": -26.8,
+   "scale": 0.965,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    856.24,
+    137.22,
+    -1443.77
+   ],
+   "yaw_deg": -30.8,
+   "scale": 0.964,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    859.07,
+    137.79,
+    -1451.02
+   ],
+   "yaw_deg": -14.6,
+   "scale": 1.196,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    857.9,
+    137.36,
+    -1446.95
+   ],
+   "yaw_deg": -27.8,
+   "scale": 0.988,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    856.4,
+    137.23,
+    -1445.95
+   ],
+   "yaw_deg": -6.1,
+   "scale": 1.109,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    825.9,
+    132.32,
+    -1027.57
+   ],
+   "yaw_deg": -63.3,
+   "scale": 1.002,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    825.96,
+    132.27,
+    -1025.34
+   ],
+   "yaw_deg": -18.8,
+   "scale": 0.948,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    826.12,
+    132.22,
+    -1024.72
+   ],
+   "yaw_deg": -10.7,
+   "scale": 1.148,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    853.19,
+    130.68,
+    -1022.63
+   ],
+   "yaw_deg": -16.5,
+   "scale": 1.172,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    853.44,
+    132.19,
+    -1019.9
+   ],
+   "yaw_deg": -17.7,
+   "scale": 1.138,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    851.61,
+    130.22,
+    -1013.9
+   ],
+   "yaw_deg": 15.7,
+   "scale": 0.896,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    848.0,
+    129.67,
+    -1009.86
+   ],
+   "yaw_deg": 10.0,
+   "scale": 1.2,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    834.34,
+    133.31,
+    -1073.31
+   ],
+   "yaw_deg": -6.6,
+   "scale": 1.158,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    835.69,
+    132.15,
+    -1069.82
+   ],
+   "yaw_deg": -16.3,
+   "scale": 0.953,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    832.06,
+    133.28,
+    -1069.95
+   ],
+   "yaw_deg": -16.5,
+   "scale": 0.924,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    835.84,
+    131.34,
+    -1064.23
+   ],
+   "yaw_deg": -22.4,
+   "scale": 1.135,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    826.66,
+    135.18,
+    -1175.27
+   ],
+   "yaw_deg": -6.5,
+   "scale": 1.079,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    824.85,
+    135.15,
+    -1173.41
+   ],
+   "yaw_deg": 3.2,
+   "scale": 1.199,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    824.19,
+    135.11,
+    -1170.37
+   ],
+   "yaw_deg": -3.0,
+   "scale": 0.952,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    827.52,
+    135.02,
+    -1165.04
+   ],
+   "yaw_deg": -1.2,
+   "scale": 1.013,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    826.16,
+    135.1,
+    -1169.99
+   ],
+   "yaw_deg": -1.8,
+   "scale": 0.994,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    825.86,
+    134.98,
+    -1161.54
+   ],
+   "yaw_deg": -1.3,
+   "scale": 1.246,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    843.92,
+    128.85,
+    -1003.67
+   ],
+   "yaw_deg": -12.8,
+   "scale": 0.885,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    844.94,
+    129.19,
+    -998.88
+   ],
+   "yaw_deg": -20.8,
+   "scale": 0.938,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    810.89,
+    135.17,
+    -1305.49
+   ],
+   "yaw_deg": -58.6,
+   "scale": 1.13,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    810.97,
+    135.05,
+    -1302.56
+   ],
+   "yaw_deg": 35.7,
+   "scale": 0.897,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    810.07,
+    135.43,
+    -1299.3
+   ],
+   "yaw_deg": 3.6,
+   "scale": 0.984,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    851.64,
+    136.4,
+    -1438.83
+   ],
+   "yaw_deg": 5.4,
+   "scale": 1.092,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    851.76,
+    136.73,
+    -1433.15
+   ],
+   "yaw_deg": 22.1,
+   "scale": 0.946,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    850.11,
+    136.27,
+    -1433.67
+   ],
+   "yaw_deg": -28.3,
+   "scale": 1.08,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    831.6,
+    134.55,
+    -1134.99
+   ],
+   "yaw_deg": 21.6,
+   "scale": 1.189,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    832.9,
+    134.53,
+    -1133.78
+   ],
+   "yaw_deg": -19.0,
+   "scale": 0.972,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    829.69,
+    134.51,
+    -1131.72
+   ],
+   "yaw_deg": 15.4,
+   "scale": 1.065,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    835.88,
+    134.44,
+    -1128.4
+   ],
+   "yaw_deg": -17.1,
+   "scale": 1.037,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    828.17,
+    134.57,
+    -1334.86
+   ],
+   "yaw_deg": 13.8,
+   "scale": 1.002,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    826.75,
+    129.38,
+    -1005.46
+   ],
+   "yaw_deg": -6.7,
+   "scale": 1.126,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    825.89,
+    129.37,
+    -1002.6
+   ],
+   "yaw_deg": 4.6,
+   "scale": 1.064,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    825.76,
+    129.07,
+    -998.48
+   ],
+   "yaw_deg": -11.2,
+   "scale": 0.94,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    852.5,
+    132.14,
+    -1156.62
+   ],
+   "yaw_deg": -0.4,
+   "scale": 1.207,
+   "under": true
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    854.55,
+    132.47,
+    -1153.31
+   ],
+   "yaw_deg": -2.4,
+   "scale": 1.095,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    844.25,
+    136.89,
+    -1392.24
+   ],
+   "yaw_deg": -4.7,
+   "scale": 1.189,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    812.67,
+    136.48,
+    -1338.92
+   ],
+   "yaw_deg": -10.8,
+   "scale": 1.218,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    812.35,
+    136.49,
+    -1336.45
+   ],
+   "yaw_deg": -35.0,
+   "scale": 1.203,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    814.8,
+    135.24,
+    -1336.48
+   ],
+   "yaw_deg": -25.4,
+   "scale": 1.249,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    812.4,
+    136.18,
+    -1334.14
+   ],
+   "yaw_deg": -17.3,
+   "scale": 1.208,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    811.14,
+    136.99,
+    -1331.8
+   ],
+   "yaw_deg": -15.9,
+   "scale": 1.113,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    810.09,
+    136.95,
+    -1322.68
+   ],
+   "yaw_deg": -16.2,
+   "scale": 0.982,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    847.34,
+    136.2,
+    -1420.98
+   ],
+   "yaw_deg": -62.6,
+   "scale": 0.931,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    838.71,
+    130.51,
+    -1064.12
+   ],
+   "yaw_deg": -7.3,
+   "scale": 0.92,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    834.94,
+    131.66,
+    -1062.01
+   ],
+   "yaw_deg": -25.8,
+   "scale": 0.863,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    833.8,
+    132.58,
+    -1061.68
+   ],
+   "yaw_deg": 17.6,
+   "scale": 1.039,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    834.87,
+    131.18,
+    -1057.64
+   ],
+   "yaw_deg": 0.4,
+   "scale": 1.153,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    833.25,
+    132.58,
+    -1058.56
+   ],
+   "yaw_deg": -27.3,
+   "scale": 1.226,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    834.07,
+    131.15,
+    -1053.59
+   ],
+   "yaw_deg": -23.0,
+   "scale": 1.151,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    833.48,
+    131.17,
+    -1050.25
+   ],
+   "yaw_deg": -3.3,
+   "scale": 1.245,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    836.23,
+    130.49,
+    -1053.51
+   ],
+   "yaw_deg": 5.5,
+   "scale": 1.013,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    832.17,
+    131.28,
+    -1044.8
+   ],
+   "yaw_deg": -6.5,
+   "scale": 1.156,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    811.77,
+    134.67,
+    -1295.06
+   ],
+   "yaw_deg": 22.6,
+   "scale": 0.99,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    809.77,
+    135.49,
+    -1292.06
+   ],
+   "yaw_deg": -0.2,
+   "scale": 1.172,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    810.59,
+    135.03,
+    -1287.21
+   ],
+   "yaw_deg": 20.7,
+   "scale": 0.91,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    810.89,
+    134.87,
+    -1281.26
+   ],
+   "yaw_deg": -8.3,
+   "scale": 1.092,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    811.41,
+    134.71,
+    -1279.04
+   ],
+   "yaw_deg": -6.7,
+   "scale": 1.126,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    811.7,
+    134.59,
+    -1285.26
+   ],
+   "yaw_deg": -7.2,
+   "scale": 0.884,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    812.94,
+    134.27,
+    -1275.51
+   ],
+   "yaw_deg": -10.4,
+   "scale": 1.102,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    811.59,
+    134.71,
+    -1275.23
+   ],
+   "yaw_deg": 18.1,
+   "scale": 1.07,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    813.79,
+    134.07,
+    -1289.65
+   ],
+   "yaw_deg": 11.2,
+   "scale": 1.061,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    816.94,
+    133.49,
+    -1287.14
+   ],
+   "yaw_deg": 15.8,
+   "scale": 0.942,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    829.86,
+    134.87,
+    -1155.3
+   ],
+   "yaw_deg": 22.8,
+   "scale": 0.965,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    829.81,
+    134.84,
+    -1153.2
+   ],
+   "yaw_deg": 18.9,
+   "scale": 0.885,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    827.78,
+    134.82,
+    -1151.5
+   ],
+   "yaw_deg": 3.2,
+   "scale": 1.249,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    831.13,
+    134.6,
+    -1272.47
+   ],
+   "yaw_deg": -0.9,
+   "scale": 0.988,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    829.94,
+    134.33,
+    -1270.41
+   ],
+   "yaw_deg": 10.4,
+   "scale": 0.987,
+   "under": true
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    829.52,
+    133.97,
+    -1265.84
+   ],
+   "yaw_deg": 21.1,
+   "scale": 0.858,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    829.63,
+    133.72,
+    -1260.4
+   ],
+   "yaw_deg": -2.2,
+   "scale": 1.221,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    833.71,
+    136.21,
+    -1264.02
+   ],
+   "yaw_deg": 7.7,
+   "scale": 1.245,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    831.28,
+    133.81,
+    -1254.77
+   ],
+   "yaw_deg": 12.0,
+   "scale": 1.045,
+   "under": true
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    830.36,
+    134.0,
+    -1262.13
+   ],
+   "yaw_deg": -27.6,
+   "scale": 1.187,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    830.39,
+    133.91,
+    -1260.34
+   ],
+   "yaw_deg": 22.1,
+   "scale": 1.189,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    831.95,
+    134.04,
+    -1255.46
+   ],
+   "yaw_deg": 17.0,
+   "scale": 1.09,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    827.64,
+    134.96,
+    -1160.97
+   ],
+   "yaw_deg": 8.1,
+   "scale": 1.005,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    830.24,
+    134.93,
+    -1159.35
+   ],
+   "yaw_deg": 22.3,
+   "scale": 1.078,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    829.68,
+    134.87,
+    -1155.16
+   ],
+   "yaw_deg": 18.9,
+   "scale": 0.874,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    840.99,
+    133.8,
+    -1220.69
+   ],
+   "yaw_deg": 0.5,
+   "scale": 1.056,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    840.72,
+    133.66,
+    -1217.91
+   ],
+   "yaw_deg": -20.8,
+   "scale": 0.935,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    834.37,
+    130.13,
+    -1041.09
+   ],
+   "yaw_deg": 2.6,
+   "scale": 0.965,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    832.95,
+    129.88,
+    -1032.38
+   ],
+   "yaw_deg": -21.6,
+   "scale": 0.876,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    824.38,
+    133.15,
+    -1214.61
+   ],
+   "yaw_deg": 15.7,
+   "scale": 1.12,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    825.62,
+    133.03,
+    -1210.0
+   ],
+   "yaw_deg": 31.0,
+   "scale": 1.233,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    829.47,
+    132.79,
+    -1193.79
+   ],
+   "yaw_deg": -6.9,
+   "scale": 0.984,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    828.15,
+    134.25,
+    -1280.6
+   ],
+   "yaw_deg": 18.2,
+   "scale": 1.062,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    827.39,
+    133.98,
+    -1278.23
+   ],
+   "yaw_deg": 18.3,
+   "scale": 0.938,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    814.46,
+    134.93,
+    -1327.8
+   ],
+   "yaw_deg": -14.4,
+   "scale": 1.012,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    813.55,
+    135.1,
+    -1325.89
+   ],
+   "yaw_deg": -50.0,
+   "scale": 1.043,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    814.2,
+    134.77,
+    -1322.37
+   ],
+   "yaw_deg": -3.2,
+   "scale": 1.083,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    809.63,
+    137.06,
+    -1321.17
+   ],
+   "yaw_deg": -20.7,
+   "scale": 1.122,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    811.03,
+    135.51,
+    -1315.22
+   ],
+   "yaw_deg": -21.2,
+   "scale": 1.001,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    810.28,
+    136.03,
+    -1313.55
+   ],
+   "yaw_deg": -22.1,
+   "scale": 1.023,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    811.81,
+    135.25,
+    -1316.3
+   ],
+   "yaw_deg": -3.9,
+   "scale": 1.128,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    833.15,
+    135.0,
+    -1367.53
+   ],
+   "yaw_deg": -7.0,
+   "scale": 0.886,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    860.22,
+    132.03,
+    -1102.06
+   ],
+   "yaw_deg": 6.5,
+   "scale": 1.246,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    858.01,
+    131.42,
+    -1098.69
+   ],
+   "yaw_deg": -15.1,
+   "scale": 0.903,
+   "under": true
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    860.91,
+    131.92,
+    -1093.59
+   ],
+   "yaw_deg": 14.9,
+   "scale": 1.153,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    861.43,
+    133.91,
+    -1084.64
+   ],
+   "yaw_deg": 2.1,
+   "scale": 0.865,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    808.29,
+    136.55,
+    -1282.23
+   ],
+   "yaw_deg": 4.4,
+   "scale": 1.206,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    810.38,
+    135.28,
+    -1279.08
+   ],
+   "yaw_deg": 16.7,
+   "scale": 0.933,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    808.27,
+    136.59,
+    -1277.22
+   ],
+   "yaw_deg": 2.0,
+   "scale": 1.0,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    857.27,
+    131.69,
+    -1122.53
+   ],
+   "yaw_deg": 23.1,
+   "scale": 1.212,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    858.84,
+    132.01,
+    -1119.31
+   ],
+   "yaw_deg": 2.7,
+   "scale": 1.094,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    858.05,
+    131.74,
+    -1117.79
+   ],
+   "yaw_deg": -9.2,
+   "scale": 1.086,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    860.23,
+    132.17,
+    -1111.44
+   ],
+   "yaw_deg": -15.8,
+   "scale": 0.886,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    845.88,
+    130.6,
+    -1097.97
+   ],
+   "yaw_deg": -3.1,
+   "scale": 1.171,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    823.81,
+    132.7,
+    -1236.74
+   ],
+   "yaw_deg": 3.1,
+   "scale": 1.211,
+   "under": true
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    845.8,
+    136.52,
+    -1407.43
+   ],
+   "yaw_deg": -28.1,
+   "scale": 1.105,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    845.55,
+    136.47,
+    -1406.97
+   ],
+   "yaw_deg": -7.5,
+   "scale": 1.219,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    844.09,
+    136.44,
+    -1399.67
+   ],
+   "yaw_deg": -28.5,
+   "scale": 1.081,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    846.07,
+    136.94,
+    -1399.33
+   ],
+   "yaw_deg": -26.6,
+   "scale": 0.903,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    845.18,
+    137.65,
+    -1393.82
+   ],
+   "yaw_deg": 20.9,
+   "scale": 0.977,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    842.19,
+    136.01,
+    -1397.65
+   ],
+   "yaw_deg": -53.1,
+   "scale": 1.124,
+   "under": true
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    838.47,
+    135.39,
+    -1391.65
+   ],
+   "yaw_deg": -2.0,
+   "scale": 0.953,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    835.54,
+    135.06,
+    -1384.57
+   ],
+   "yaw_deg": -7.3,
+   "scale": 0.991,
+   "under": true
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    839.5,
+    135.83,
+    -1386.2
+   ],
+   "yaw_deg": -14.9,
+   "scale": 0.902,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    831.12,
+    135.5,
+    -1289.43
+   ],
+   "yaw_deg": -3.9,
+   "scale": 1.234,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    826.92,
+    134.11,
+    -1286.02
+   ],
+   "yaw_deg": 31.4,
+   "scale": 1.034,
+   "under": true
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    830.63,
+    134.81,
+    -1284.03
+   ],
+   "yaw_deg": -15.3,
+   "scale": 1.149,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    827.8,
+    134.14,
+    -1280.11
+   ],
+   "yaw_deg": -0.6,
+   "scale": 0.97,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    827.23,
+    134.07,
+    -1282.37
+   ],
+   "yaw_deg": 19.0,
+   "scale": 1.175,
+   "under": true
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    830.4,
+    134.73,
+    -1280.61
+   ],
+   "yaw_deg": 10.3,
+   "scale": 0.942,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    829.93,
+    134.65,
+    -1278.08
+   ],
+   "yaw_deg": -8.2,
+   "scale": 0.872,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    854.56,
+    132.76,
+    -1158.25
+   ],
+   "yaw_deg": -3.9,
+   "scale": 0.874,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    853.55,
+    132.39,
+    -1156.23
+   ],
+   "yaw_deg": 28.0,
+   "scale": 1.207,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    856.06,
+    132.8,
+    -1153.95
+   ],
+   "yaw_deg": 0.4,
+   "scale": 1.211,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    854.35,
+    132.21,
+    -1149.95
+   ],
+   "yaw_deg": -15.5,
+   "scale": 1.196,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    857.6,
+    132.78,
+    -1149.27
+   ],
+   "yaw_deg": -27.9,
+   "scale": 0.862,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    855.08,
+    132.16,
+    -1145.76
+   ],
+   "yaw_deg": 5.9,
+   "scale": 0.964,
+   "under": true
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    857.26,
+    132.7,
+    -1146.77
+   ],
+   "yaw_deg": -8.9,
+   "scale": 1.186,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    856.24,
+    131.93,
+    -1135.32
+   ],
+   "yaw_deg": -29.7,
+   "scale": 0.887,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    838.18,
+    136.92,
+    -1445.73
+   ],
+   "yaw_deg": -14.4,
+   "scale": 0.973,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    835.27,
+    138.36,
+    -1443.67
+   ],
+   "yaw_deg": 16.9,
+   "scale": 1.14,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    836.13,
+    137.24,
+    -1442.4
+   ],
+   "yaw_deg": -12.9,
+   "scale": 0.884,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    836.78,
+    136.79,
+    -1439.87
+   ],
+   "yaw_deg": 4.9,
+   "scale": 1.196,
+   "under": true
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    832.95,
+    136.82,
+    -1427.64
+   ],
+   "yaw_deg": -15.0,
+   "scale": 1.193,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    831.51,
+    136.58,
+    -1420.34
+   ],
+   "yaw_deg": -13.3,
+   "scale": 1.155,
+   "under": true
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    869.64,
+    140.15,
+    -1491.01
+   ],
+   "yaw_deg": 17.1,
+   "scale": 1.157,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    867.76,
+    137.92,
+    -1486.35
+   ],
+   "yaw_deg": -27.9,
+   "scale": 1.071,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    857.71,
+    131.61,
+    -1115.88
+   ],
+   "yaw_deg": 20.4,
+   "scale": 1.041,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    836.1,
+    133.36,
+    -1082.2
+   ],
+   "yaw_deg": 12.0,
+   "scale": 0.858,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    835.01,
+    133.54,
+    -1080.83
+   ],
+   "yaw_deg": 1.8,
+   "scale": 1.138,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    836.84,
+    132.11,
+    -1077.17
+   ],
+   "yaw_deg": -13.8,
+   "scale": 1.188,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    835.09,
+    133.22,
+    -1074.28
+   ],
+   "yaw_deg": 8.6,
+   "scale": 1.228,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    832.45,
+    133.4,
+    -1074.94
+   ],
+   "yaw_deg": -16.5,
+   "scale": 1.185,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    832.7,
+    133.31,
+    -1070.88
+   ],
+   "yaw_deg": -29.7,
+   "scale": 0.874,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    832.85,
+    133.23,
+    -1067.22
+   ],
+   "yaw_deg": 8.5,
+   "scale": 1.19,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    829.63,
+    133.04,
+    -1059.27
+   ],
+   "yaw_deg": 2.7,
+   "scale": 1.24,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    831.71,
+    133.12,
+    -1062.5
+   ],
+   "yaw_deg": -34.9,
+   "scale": 0.941,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    830.07,
+    133.02,
+    -1058.32
+   ],
+   "yaw_deg": -16.9,
+   "scale": 1.219,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    828.67,
+    132.82,
+    -1049.93
+   ],
+   "yaw_deg": -37.5,
+   "scale": 1.158,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    837.31,
+    138.74,
+    -1452.8
+   ],
+   "yaw_deg": -9.8,
+   "scale": 0.854,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    837.26,
+    138.13,
+    -1450.22
+   ],
+   "yaw_deg": -19.5,
+   "scale": 1.08,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    837.88,
+    137.48,
+    -1450.0
+   ],
+   "yaw_deg": -32.8,
+   "scale": 1.081,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    834.92,
+    139.16,
+    -1447.24
+   ],
+   "yaw_deg": -11.0,
+   "scale": 1.186,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    835.14,
+    138.89,
+    -1445.31
+   ],
+   "yaw_deg": -8.7,
+   "scale": 0.979,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    832.99,
+    139.06,
+    -1440.1
+   ],
+   "yaw_deg": -46.0,
+   "scale": 0.987,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    830.92,
+    138.98,
+    -1435.39
+   ],
+   "yaw_deg": -2.9,
+   "scale": 0.986,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    833.49,
+    139.11,
+    -1443.85
+   ],
+   "yaw_deg": 2.3,
+   "scale": 1.094,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    833.8,
+    136.48,
+    -1426.65
+   ],
+   "yaw_deg": -15.6,
+   "scale": 0.959,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    832.12,
+    136.89,
+    -1426.04
+   ],
+   "yaw_deg": 0.5,
+   "scale": 1.202,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    830.66,
+    138.94,
+    -1432.35
+   ],
+   "yaw_deg": -15.4,
+   "scale": 1.106,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    831.41,
+    138.6,
+    -1431.27
+   ],
+   "yaw_deg": -28.1,
+   "scale": 0.889,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    828.77,
+    132.48,
+    -1207.05
+   ],
+   "yaw_deg": 5.1,
+   "scale": 1.183,
+   "under": true
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    839.08,
+    134.14,
+    -1231.59
+   ],
+   "yaw_deg": 14.4,
+   "scale": 1.242,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    840.05,
+    134.13,
+    -1228.24
+   ],
+   "yaw_deg": -13.4,
+   "scale": 0.891,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    838.46,
+    133.85,
+    -1228.57
+   ],
+   "yaw_deg": 34.9,
+   "scale": 1.118,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    822.78,
+    135.5,
+    -1196.94
+   ],
+   "yaw_deg": -0.7,
+   "scale": 0.966,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    824.21,
+    135.3,
+    -1195.22
+   ],
+   "yaw_deg": -13.3,
+   "scale": 0.926,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    824.17,
+    135.4,
+    -1190.53
+   ],
+   "yaw_deg": 15.4,
+   "scale": 1.055,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    825.65,
+    135.03,
+    -1190.19
+   ],
+   "yaw_deg": 52.6,
+   "scale": 1.114,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    826.72,
+    135.06,
+    -1184.84
+   ],
+   "yaw_deg": -33.3,
+   "scale": 1.202,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    824.41,
+    135.27,
+    -1180.91
+   ],
+   "yaw_deg": 32.5,
+   "scale": 1.052,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    823.62,
+    135.36,
+    -1187.51
+   ],
+   "yaw_deg": 37.5,
+   "scale": 0.952,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    826.67,
+    134.91,
+    -1186.25
+   ],
+   "yaw_deg": -14.9,
+   "scale": 0.893,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    824.57,
+    135.27,
+    -1181.51
+   ],
+   "yaw_deg": 7.6,
+   "scale": 0.869,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    828.64,
+    135.07,
+    -1168.46
+   ],
+   "yaw_deg": 33.2,
+   "scale": 1.091,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    827.91,
+    135.16,
+    -1174.13
+   ],
+   "yaw_deg": 12.2,
+   "scale": 0.997,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    839.58,
+    133.45,
+    -1218.83
+   ],
+   "yaw_deg": 24.2,
+   "scale": 1.166,
+   "under": true
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    839.18,
+    133.12,
+    -1216.03
+   ],
+   "yaw_deg": 42.9,
+   "scale": 1.0,
+   "under": true
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    840.06,
+    133.3,
+    -1215.44
+   ],
+   "yaw_deg": 23.9,
+   "scale": 1.164,
+   "under": true
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    824.04,
+    138.53,
+    -1405.94
+   ],
+   "yaw_deg": -43.5,
+   "scale": 1.197,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    824.6,
+    137.38,
+    -1400.9
+   ],
+   "yaw_deg": 12.0,
+   "scale": 0.94,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    822.75,
+    138.26,
+    -1398.92
+   ],
+   "yaw_deg": 6.9,
+   "scale": 1.057,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    828.73,
+    135.69,
+    -1399.86
+   ],
+   "yaw_deg": -7.7,
+   "scale": 0.854,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    827.5,
+    135.7,
+    -1395.91
+   ],
+   "yaw_deg": -10.7,
+   "scale": 1.109,
+   "under": true
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    822.94,
+    137.18,
+    -1393.64
+   ],
+   "yaw_deg": -11.1,
+   "scale": 0.943,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    823.01,
+    138.17,
+    -1398.85
+   ],
+   "yaw_deg": -52.8,
+   "scale": 1.124,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    854.4,
+    130.41,
+    -1076.05
+   ],
+   "yaw_deg": 13.2,
+   "scale": 1.037,
+   "under": true
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    855.59,
+    130.66,
+    -1073.07
+   ],
+   "yaw_deg": 14.1,
+   "scale": 1.097,
+   "under": true
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    854.35,
+    130.41,
+    -1057.23
+   ],
+   "yaw_deg": 4.6,
+   "scale": 1.056,
+   "under": true
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    816.02,
+    133.79,
+    -1256.0
+   ],
+   "yaw_deg": 1.6,
+   "scale": 1.168,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    815.89,
+    134.01,
+    -1249.77
+   ],
+   "yaw_deg": 2.7,
+   "scale": 1.152,
+   "under": true
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    815.57,
+    134.29,
+    -1246.02
+   ],
+   "yaw_deg": 9.2,
+   "scale": 0.989,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    849.6,
+    133.04,
+    -1180.07
+   ],
+   "yaw_deg": 31.3,
+   "scale": 1.049,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    849.72,
+    132.93,
+    -1178.26
+   ],
+   "yaw_deg": -1.8,
+   "scale": 0.902,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    850.39,
+    132.85,
+    -1174.89
+   ],
+   "yaw_deg": -10.5,
+   "scale": 0.868,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    852.29,
+    133.01,
+    -1170.62
+   ],
+   "yaw_deg": 19.0,
+   "scale": 1.083,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    853.6,
+    132.47,
+    -1157.39
+   ],
+   "yaw_deg": 4.3,
+   "scale": 1.187,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    826.64,
+    133.27,
+    -1069.99
+   ],
+   "yaw_deg": -29.9,
+   "scale": 1.043,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    830.8,
+    133.22,
+    -1067.28
+   ],
+   "yaw_deg": -12.9,
+   "scale": 1.18,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    828.28,
+    133.21,
+    -1066.9
+   ],
+   "yaw_deg": -40.1,
+   "scale": 1.187,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    828.3,
+    133.17,
+    -1065.06
+   ],
+   "yaw_deg": -4.9,
+   "scale": 1.066,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    827.83,
+    133.02,
+    -1058.84
+   ],
+   "yaw_deg": -14.4,
+   "scale": 1.048,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    829.1,
+    133.11,
+    -1062.45
+   ],
+   "yaw_deg": 9.7,
+   "scale": 1.16,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    827.15,
+    133.06,
+    -1060.59
+   ],
+   "yaw_deg": -9.7,
+   "scale": 0.973,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    825.87,
+    132.96,
+    -1056.47
+   ],
+   "yaw_deg": -2.6,
+   "scale": 0.927,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    825.0,
+    132.89,
+    -1053.4
+   ],
+   "yaw_deg": 11.9,
+   "scale": 1.031,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    826.31,
+    132.74,
+    -1046.58
+   ],
+   "yaw_deg": 11.7,
+   "scale": 1.132,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    831.79,
+    136.27,
+    -1311.34
+   ],
+   "yaw_deg": -0.5,
+   "scale": 1.242,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    846.62,
+    133.39,
+    -1195.88
+   ],
+   "yaw_deg": -10.0,
+   "scale": 1.094,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    845.81,
+    132.98,
+    -1192.38
+   ],
+   "yaw_deg": 35.6,
+   "scale": 0.882,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    847.85,
+    133.31,
+    -1190.56
+   ],
+   "yaw_deg": 2.0,
+   "scale": 0.955,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    849.62,
+    133.31,
+    -1186.32
+   ],
+   "yaw_deg": 6.6,
+   "scale": 0.968,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    847.56,
+    133.28,
+    -1191.04
+   ],
+   "yaw_deg": -18.7,
+   "scale": 1.065,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    847.92,
+    133.03,
+    -1185.78
+   ],
+   "yaw_deg": 30.9,
+   "scale": 0.961,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    851.01,
+    132.93,
+    -1173.75
+   ],
+   "yaw_deg": 9.6,
+   "scale": 0.943,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    807.85,
+    137.12,
+    -1308.81
+   ],
+   "yaw_deg": -11.0,
+   "scale": 1.131,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    806.58,
+    137.09,
+    -1306.21
+   ],
+   "yaw_deg": -6.6,
+   "scale": 0.989,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    804.52,
+    137.03,
+    -1302.56
+   ],
+   "yaw_deg": -2.0,
+   "scale": 1.077,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    802.71,
+    136.99,
+    -1299.13
+   ],
+   "yaw_deg": -8.3,
+   "scale": 1.232,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    803.19,
+    136.98,
+    -1298.41
+   ],
+   "yaw_deg": -25.3,
+   "scale": 0.997,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    803.84,
+    136.95,
+    -1296.85
+   ],
+   "yaw_deg": -18.5,
+   "scale": 1.134,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    803.6,
+    136.95,
+    -1296.88
+   ],
+   "yaw_deg": 6.1,
+   "scale": 0.887,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    801.45,
+    136.94,
+    -1296.39
+   ],
+   "yaw_deg": -24.3,
+   "scale": 0.882,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    803.56,
+    136.94,
+    -1295.82
+   ],
+   "yaw_deg": -4.6,
+   "scale": 1.059,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    804.42,
+    136.82,
+    -1287.76
+   ],
+   "yaw_deg": 2.5,
+   "scale": 1.07,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    801.66,
+    136.72,
+    -1280.26
+   ],
+   "yaw_deg": -28.2,
+   "scale": 1.223,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    805.74,
+    136.83,
+    -1288.34
+   ],
+   "yaw_deg": 14.0,
+   "scale": 1.111,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    860.88,
+    137.5,
+    -1459.4
+   ],
+   "yaw_deg": -43.5,
+   "scale": 0.892,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    828.98,
+    133.43,
+    -1183.9
+   ],
+   "yaw_deg": -32.3,
+   "scale": 1.048,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    837.84,
+    132.1,
+    -1158.15
+   ],
+   "yaw_deg": 12.5,
+   "scale": 1.12,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    858.03,
+    132.11,
+    -1128.35
+   ],
+   "yaw_deg": 11.3,
+   "scale": 1.105,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    858.14,
+    131.93,
+    -1122.85
+   ],
+   "yaw_deg": -16.9,
+   "scale": 1.157,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    860.55,
+    132.08,
+    -1104.57
+   ],
+   "yaw_deg": -8.5,
+   "scale": 1.104,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    861.69,
+    132.79,
+    -1099.42
+   ],
+   "yaw_deg": -11.9,
+   "scale": 1.086,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    861.2,
+    132.19,
+    -1105.17
+   ],
+   "yaw_deg": 26.1,
+   "scale": 0.926,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    822.88,
+    132.07,
+    -1016.79
+   ],
+   "yaw_deg": 21.1,
+   "scale": 0.966,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    826.17,
+    130.05,
+    -1011.5
+   ],
+   "yaw_deg": -0.1,
+   "scale": 0.887,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    821.89,
+    131.84,
+    -1006.43
+   ],
+   "yaw_deg": -10.9,
+   "scale": 0.918,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    824.73,
+    133.2,
+    -1211.35
+   ],
+   "yaw_deg": 26.3,
+   "scale": 1.244,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    834.27,
+    131.05,
+    -1053.29
+   ],
+   "yaw_deg": 0.6,
+   "scale": 0.938,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    832.39,
+    132.32,
+    -1052.29
+   ],
+   "yaw_deg": -27.7,
+   "scale": 1.068,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    833.12,
+    131.26,
+    -1049.46
+   ],
+   "yaw_deg": -17.5,
+   "scale": 1.186,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    832.28,
+    132.03,
+    -1049.74
+   ],
+   "yaw_deg": -4.3,
+   "scale": 0.903,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    833.16,
+    131.03,
+    -1047.96
+   ],
+   "yaw_deg": -7.0,
+   "scale": 1.098,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    832.02,
+    131.33,
+    -1044.5
+   ],
+   "yaw_deg": 35.8,
+   "scale": 1.059,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    828.62,
+    131.73,
+    -1030.72
+   ],
+   "yaw_deg": -3.7,
+   "scale": 1.071,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    828.43,
+    131.31,
+    -1027.75
+   ],
+   "yaw_deg": -22.9,
+   "scale": 1.093,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    827.35,
+    131.97,
+    -1026.58
+   ],
+   "yaw_deg": -11.8,
+   "scale": 0.853,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    831.94,
+    130.61,
+    -1038.48
+   ],
+   "yaw_deg": -16.3,
+   "scale": 1.01,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    823.01,
+    130.53,
+    -1001.86
+   ],
+   "yaw_deg": -3.6,
+   "scale": 1.23,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    822.98,
+    130.24,
+    -1000.56
+   ],
+   "yaw_deg": 14.9,
+   "scale": 0.896,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    822.82,
+    130.07,
+    -999.06
+   ],
+   "yaw_deg": -6.9,
+   "scale": 0.972,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    820.82,
+    131.42,
+    -997.37
+   ],
+   "yaw_deg": -25.5,
+   "scale": 1.05,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    822.8,
+    129.73,
+    -996.52
+   ],
+   "yaw_deg": -6.5,
+   "scale": 1.032,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    819.78,
+    130.24,
+    -988.44
+   ],
+   "yaw_deg": 13.4,
+   "scale": 0.936,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    820.22,
+    130.49,
+    -990.91
+   ],
+   "yaw_deg": -14.5,
+   "scale": 1.118,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    819.4,
+    129.06,
+    -979.07
+   ],
+   "yaw_deg": 36.1,
+   "scale": 0.924,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    817.2,
+    129.16,
+    -973.64
+   ],
+   "yaw_deg": -14.2,
+   "scale": 1.165,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    816.23,
+    130.5,
+    -976.59
+   ],
+   "yaw_deg": 9.4,
+   "scale": 1.221,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    818.63,
+    129.17,
+    -977.96
+   ],
+   "yaw_deg": 12.2,
+   "scale": 1.041,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    836.86,
+    131.15,
+    -1066.54
+   ],
+   "yaw_deg": -11.2,
+   "scale": 1.226,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    835.96,
+    131.19,
+    -1063.25
+   ],
+   "yaw_deg": -34.2,
+   "scale": 1.249,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    836.64,
+    130.77,
+    -1059.67
+   ],
+   "yaw_deg": -4.7,
+   "scale": 1.023,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    833.25,
+    132.62,
+    -1058.9
+   ],
+   "yaw_deg": -25.4,
+   "scale": 1.081,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    834.83,
+    131.11,
+    -1056.46
+   ],
+   "yaw_deg": 14.9,
+   "scale": 1.106,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    834.23,
+    131.12,
+    -1053.77
+   ],
+   "yaw_deg": 4.9,
+   "scale": 1.185,
+   "under": false
+  },
+  {
+   "node": "white_stone_10",
+   "pos": [
+    854.96,
+    132.7,
+    -1154.91
+   ],
+   "yaw_deg": -1.7,
+   "scale": 0.873,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    855.42,
+    132.49,
+    -1149.83
+   ],
+   "yaw_deg": 27.3,
+   "scale": 0.982,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    858.49,
+    132.6,
+    -1139.28
+   ],
+   "yaw_deg": 48.9,
+   "scale": 0.987,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    859.04,
+    132.56,
+    -1136.28
+   ],
+   "yaw_deg": -19.8,
+   "scale": 1.105,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    858.62,
+    132.71,
+    -1143.92
+   ],
+   "yaw_deg": 0.6,
+   "scale": 1.021,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    834.88,
+    135.85,
+    -1255.9
+   ],
+   "yaw_deg": -3.5,
+   "scale": 0.996,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    837.03,
+    134.37,
+    -1242.74
+   ],
+   "yaw_deg": -4.0,
+   "scale": 1.172,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    837.31,
+    135.89,
+    -1242.46
+   ],
+   "yaw_deg": 21.6,
+   "scale": 1.151,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    836.22,
+    134.38,
+    -1129.44
+   ],
+   "yaw_deg": 13.2,
+   "scale": 1.048,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    837.34,
+    133.85,
+    -1127.83
+   ],
+   "yaw_deg": 18.1,
+   "scale": 0.98,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    836.55,
+    134.33,
+    -1125.56
+   ],
+   "yaw_deg": -1.5,
+   "scale": 0.941,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    839.11,
+    132.57,
+    -1123.73
+   ],
+   "yaw_deg": -9.4,
+   "scale": 0.942,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    848.39,
+    132.74,
+    -1180.62
+   ],
+   "yaw_deg": -5.6,
+   "scale": 1.091,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    832.25,
+    134.41,
+    -1126.06
+   ],
+   "yaw_deg": 47.1,
+   "scale": 1.002,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    834.56,
+    134.37,
+    -1123.37
+   ],
+   "yaw_deg": 26.2,
+   "scale": 0.927,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    831.76,
+    134.32,
+    -1120.91
+   ],
+   "yaw_deg": 39.5,
+   "scale": 0.974,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    833.29,
+    134.34,
+    -1121.92
+   ],
+   "yaw_deg": 7.8,
+   "scale": 1.026,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    835.58,
+    134.19,
+    -1112.78
+   ],
+   "yaw_deg": 19.6,
+   "scale": 1.007,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    833.9,
+    134.28,
+    -1118.21
+   ],
+   "yaw_deg": 14.7,
+   "scale": 0.956,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    830.73,
+    134.27,
+    -1117.27
+   ],
+   "yaw_deg": 17.3,
+   "scale": 1.082,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    836.47,
+    134.28,
+    -1118.1
+   ],
+   "yaw_deg": 1.3,
+   "scale": 0.978,
+   "under": false
+  },
+  {
+   "node": "white_stone_07",
+   "pos": [
+    836.23,
+    134.37,
+    -1125.24
+   ],
+   "yaw_deg": -6.0,
+   "scale": 1.083,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    834.85,
+    134.37,
+    -1123.12
+   ],
+   "yaw_deg": 12.4,
+   "scale": 1.167,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    834.07,
+    134.3,
+    -1119.29
+   ],
+   "yaw_deg": 5.0,
+   "scale": 0.947,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    836.01,
+    134.28,
+    -1117.87
+   ],
+   "yaw_deg": 35.9,
+   "scale": 1.233,
+   "under": false
+  },
+  {
+   "node": "white_stone_11",
+   "pos": [
+    835.81,
+    134.19,
+    -1112.38
+   ],
+   "yaw_deg": 38.7,
+   "scale": 1.032,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    836.14,
+    134.21,
+    -1113.82
+   ],
+   "yaw_deg": -3.1,
+   "scale": 1.055,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    835.29,
+    134.2,
+    -1113.01
+   ],
+   "yaw_deg": 24.1,
+   "scale": 1.208,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    839.57,
+    132.48,
+    -1110.94
+   ],
+   "yaw_deg": 18.7,
+   "scale": 0.967,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    839.08,
+    132.63,
+    -1103.43
+   ],
+   "yaw_deg": 0.2,
+   "scale": 1.193,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    840.12,
+    133.86,
+    -1224.41
+   ],
+   "yaw_deg": 45.1,
+   "scale": 0.939,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    842.21,
+    133.7,
+    -1214.51
+   ],
+   "yaw_deg": 39.4,
+   "scale": 1.047,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    840.78,
+    133.67,
+    -1217.6
+   ],
+   "yaw_deg": 11.5,
+   "scale": 1.03,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    845.36,
+    133.6,
+    -1205.0
+   ],
+   "yaw_deg": 26.0,
+   "scale": 0.884,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    844.22,
+    133.33,
+    -1202.13
+   ],
+   "yaw_deg": 15.8,
+   "scale": 1.159,
+   "under": false
+  },
+  {
+   "node": "white_stone_06",
+   "pos": [
+    843.18,
+    133.26,
+    -1204.59
+   ],
+   "yaw_deg": 22.9,
+   "scale": 1.232,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    841.15,
+    137.26,
+    -1459.06
+   ],
+   "yaw_deg": -16.9,
+   "scale": 1.054,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    825.3,
+    129.93,
+    -1007.2
+   ],
+   "yaw_deg": 13.1,
+   "scale": 1.227,
+   "under": false
+  },
+  {
+   "node": "white_stone_01",
+   "pos": [
+    844.17,
+    138.2,
+    -1476.7
+   ],
+   "yaw_deg": -20.1,
+   "scale": 0.966,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    844.61,
+    137.72,
+    -1475.06
+   ],
+   "yaw_deg": -14.1,
+   "scale": 1.072,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    844.62,
+    137.56,
+    -1473.82
+   ],
+   "yaw_deg": 30.7,
+   "scale": 1.086,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    841.28,
+    139.35,
+    -1471.78
+   ],
+   "yaw_deg": -28.8,
+   "scale": 0.906,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    842.6,
+    137.92,
+    -1469.27
+   ],
+   "yaw_deg": -54.8,
+   "scale": 1.006,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    841.84,
+    138.07,
+    -1467.41
+   ],
+   "yaw_deg": 12.0,
+   "scale": 1.143,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    839.64,
+    137.37,
+    -1454.92
+   ],
+   "yaw_deg": -18.6,
+   "scale": 1.043,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    829.28,
+    134.9,
+    -1157.01
+   ],
+   "yaw_deg": 6.8,
+   "scale": 1.135,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    832.09,
+    134.85,
+    -1155.97
+   ],
+   "yaw_deg": -19.4,
+   "scale": 0.865,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    833.52,
+    134.3,
+    -1154.6
+   ],
+   "yaw_deg": 10.5,
+   "scale": 1.114,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    833.42,
+    134.67,
+    -1150.26
+   ],
+   "yaw_deg": -8.7,
+   "scale": 0.936,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    834.16,
+    134.45,
+    -1149.29
+   ],
+   "yaw_deg": 12.5,
+   "scale": 1.113,
+   "under": false
+  },
+  {
+   "node": "white_stone_02",
+   "pos": [
+    834.98,
+    134.55,
+    -1142.35
+   ],
+   "yaw_deg": 3.3,
+   "scale": 1.16,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    832.79,
+    134.74,
+    -1147.02
+   ],
+   "yaw_deg": -14.4,
+   "scale": 1.166,
+   "under": false
+  },
+  {
+   "node": "white_stone_04",
+   "pos": [
+    835.87,
+    134.02,
+    -1140.8
+   ],
+   "yaw_deg": -25.6,
+   "scale": 1.118,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    833.9,
+    134.69,
+    -1143.85
+   ],
+   "yaw_deg": -11.9,
+   "scale": 0.909,
+   "under": false
+  },
+  {
+   "node": "white_stone_09",
+   "pos": [
+    828.99,
+    135.01,
+    -1302.47
+   ],
+   "yaw_deg": -34.1,
+   "scale": 0.953,
+   "under": false
+  },
+  {
+   "node": "white_stone_05",
+   "pos": [
+    829.32,
+    135.0,
+    -1299.14
+   ],
+   "yaw_deg": -39.8,
+   "scale": 1.046,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    814.47,
+    135.6,
+    -1341.4
+   ],
+   "yaw_deg": -11.1,
+   "scale": 1.121,
+   "under": false
+  },
+  {
+   "node": "white_stone_08",
+   "pos": [
+    858.49,
+    131.36,
+    -1070.86
+   ],
+   "yaw_deg": -22.8,
+   "scale": 0.986,
+   "under": false
+  },
+  {
+   "node": "white_stone_00",
+   "pos": [
+    859.18,
+    131.58,
+    -1065.62
+   ],
+   "yaw_deg": -7.3,
+   "scale": 1.122,
+   "under": false
+  },
+  {
+   "node": "white_stone_03",
+   "pos": [
+    857.27,
+    131.13,
+    -1060.33
+   ],
+   "yaw_deg": -3.7,
+   "scale": 0.913,
+   "under": false
+  }
+ ]
+}

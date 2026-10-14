@@ -1,0 +1,93 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://dnnbja0vfnfw8"
+path="res://.godot/imported/rope_bridge_r1.glb-cd3f70613ee26619f78f407834f68308.scn"
+
+[deps]
+
+source_file="res://assets/thuyvan/village/rope_bridge_r1.glb"
+dest_files=["res://.godot/imported/rope_bridge_r1.glb-cd3f70613ee26619f78f407834f68308.scn"]
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=true
+meshes/create_shadow_meshes=true
+meshes/light_baking=0
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=false
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"materials": {
+"tvv_banner_indigo": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_banner_indigo.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_banner_indigo.tres"
+},
+"tvv_cloth_madder": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_cloth_madder.tres"
+},
+"tvv_drystone": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_drystone.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_drystone.tres"
+},
+"tvv_flags": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_flags.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_flags.tres"
+},
+"tvv_iron": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_iron.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_iron.tres"
+},
+"tvv_paper": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_paper.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_paper.tres"
+},
+"tvv_plank": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_plank.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_plank.tres"
+},
+"tvv_rope": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_rope.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_rope.tres"
+},
+"tvv_timber": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/thuyvan/village/materials/tvv_timber.tres",
+"use_external/path": "res://assets/thuyvan/village/materials/tvv_timber.tres"
+}
+}
+}
+gltf/naming_version=2
+gltf/embedded_image_handling=1
+gltf/texture_map_mode=1

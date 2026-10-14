@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" load_steps=5 format=3]
+
+[ext_resource type="Shader" path="res://shaders/thuyvan/tv_rock.gdshader" id="1_sh"]
+[ext_resource type="Texture2D" path="res://assets/thuyvan/paint/rock/tv_karst_face_16m.png" id="2_rock"]
+[ext_resource type="Texture2D" path="res://assets/thuyvan/rock/textures/moss_cap.png" id="3_moss"]
+[ext_resource type="Texture2D" path="res://assets/thuyvan/paint/rock/tv_karst_face_16m_normal.png" id="4_nrm"]
+
+[resource]
+resource_name = "rock_karst"
+shader = ExtResource("1_sh")
+shader_parameter/rock_tex = ExtResource("2_rock")
+shader_parameter/tile_m = 16.0
+shader_parameter/moss_tex = ExtResource("3_moss")
+shader_parameter/moss_tile_m = 4.0
+shader_parameter/normal_tex = ExtResource("4_nrm")
+shader_parameter/normal_strength = 0.25
+shader_parameter/moss_amount = 1.0

@@ -1,0 +1,97 @@
+{
+  "_doc": [
+    "DRAFT of data/world/maps/r1/layout.json for task T0. The lead commits the final version to `thuyvan` BEFORE T3 and T4 are dispatched; T3 (water) and T4 (terrain) both read it and neither edits it.",
+    "Units: metres. North is -Z, west is -X (the region's own WorldClock north_offset_deg is 0). A square is 832 m (bake grid 833 x 833 at 1 m, as bake_terrain.py). Columns A, B, C run west to east; rows 1-4 run north to south.",
+    "The main channel is z-monotonic (north to south through C1-C4 and out of the south edge), so Phase 3 M0 can still serve it with WorldRiver (x by z, level by z) plus per-reach flow scales. The torrent (A2 to C2) is NOT z-monotonic and exists only through WaterNetwork, from Phase 3 M1 on.",
+    "Levels and widths are first numbers for T4's recipes to confirm; if a recipe cannot meet one, T4 reports it to the lead, who edits this file (never the builder).",
+    "Names here are placeholders with status proposal (the village, its clan and the lock town wait on the owner)."
+  ],
+  "square_m": 832,
+  "origin": [0, 0],
+  "grid": {
+    "cols": ["A", "B", "C"],
+    "rows": [1, 2, 3, 4],
+    "col_center_x": {"A": -832, "B": 0, "C": 832},
+    "row_center_z": {"1": -1248, "2": -416, "3": 416, "4": 1248},
+    "cells": {
+      "A1": "high_pass", "B1": "terraced_slope", "C1": "gorge",
+      "A2": "bridge_gorge", "B2": "switchbacks", "C2": "middle_reach",
+      "A3": "stone_height", "B3": "foothill_paddies", "C3": "river_flats_lock",
+      "A4": "rim", "B4": "rim", "C4": "river_exit_karst"
+    },
+    "build_order": {
+      "M0": ["C1", "B1"],
+      "M1": ["C1", "B1", "C2", "B2"],
+      "M2": ["C3", "C4", "A2", "A1", "A3", "B3", "A4", "B4"]
+    }
+  },
+  "channels": [
+    {
+      "id": "main",
+      "_doc": "Đá Trắng's river. Nodes north to south: x, z, half_width, level (surface), flow_scale (1 = ordinary).",
+      "z_monotonic": true,
+      "nodes": [
+        [900, -1664, 9, 142, 1.0],
+        [860, -1500, 9, 138, 1.0],
+        [820, -1300, 9, 135, 1.0],
+        [850, -1100, 10, 132, 1.0],
+        [800, -832, 14, 126, 1.0],
+        [760, -400, 22, 118, 1.0],
+        [780, -150, 26, 115, 1.0],
+        [820, 200, 30, 110, 1.0],
+        [840, 380, 30, 108, 1.0],
+        [850, 460, 30, 104, 1.0],
+        [860, 800, 34, 100, 1.0],
+        [900, 1664, 36, 94, 1.0]
+      ],
+      "reaches": [
+        {"id": "silent_reach", "z_from": -1500, "z_to": -1100, "ease_m": 40, "scale_by_state": {"S0": 1.0, "S1": 0.0, "S2": 0.0, "S3": 0.0, "S4": 0.0}}
+      ],
+      "steps": [
+        {"id": "fifth_lock", "z_upper": 380, "z_lower": 460, "_doc": "4 m level step at the lock; M2, WaterNetwork only. Until M2 the level eases through it like a rapid."}
+      ]
+    },
+    {
+      "id": "torrent",
+      "_doc": "West-east torrent under Two Heights, joining the main channel in C2. WaterNetwork only (M1+).",
+      "z_monotonic": false,
+      "nodes": [
+        [-1248, -520, 4, 230, 1.0],
+        [-832, -460, 5, 200, 1.0],
+        [-400, -430, 5, 170, 1.0],
+        [0, -400, 6, 150, 1.0],
+        [400, -380, 7, 130, 1.0],
+        [760, -350, 8, 118, 1.0]
+      ],
+      "falls_x": [-600, -200, 300],
+      "joins": {"channel": "main", "at": [760, -350]}
+    }
+  ],
+  "pounds": [
+    {"id": "lock_chamber", "cell": "C3", "rect_center": [845, 420], "size": [18, 90], "level_upper": 108, "level_lower": 104, "milestone": "M2"},
+    {"id": "barge_basin", "cell": "C3", "rect_center": [930, 520], "size": [120, 80], "level": 104, "milestone": "M2"},
+    {"id": "paddy_steps", "cell": "B3", "first_center": [-60, 300], "steps": 8, "step_size": [90, 40], "step_drop_m": 1.2, "top_level": 128, "milestone": "M2"},
+    {"id": "village_paddies", "cell": "B1", "first_center": [80, -1150], "steps": 5, "step_size": [70, 30], "step_drop_m": 1.5, "top_level": 168, "milestone": "M1"}
+  ],
+  "landmarks": {
+    "village": {"cell": "B1", "at": [0, -1248], "name": "proposal: owner names the village and its submitted clan"},
+    "clan_house": {"cell": "B1", "at": [60, -1330]},
+    "rope_rite_cliff": {"cell": "B1", "at": [-150, -1450], "_doc": "the Prologue's rope crossing, on today's ledge and grip system with a scripted rope"},
+    "silent_reach_center": {"cell": "C1", "at": [830, -1300]},
+    "cordon": {"cell": "C1", "at": [800, -1080], "_doc": "S1+: soldiers and clan watchers keep people off the still water"},
+    "undercut_bank": {"cell": "C1", "at": [845, -1040], "_doc": "just below the reach: the bank the displaced flow undercuts (Act 1.2)"},
+    "gallery_mouth": {"cell": "C1", "at": [955, -1250], "_doc": "old masonry in the gorge wall; closed in Book I"},
+    "burial_cairns": {"cell": "C1", "at": [700, -1580]},
+    "survey_camp": {"cell": "C1", "at": [650, -1000]},
+    "waystones": {"cell": "A1", "at": [-832, -1400]},
+    "two_heights_bridge": {"cell": "A2", "at": [-832, -460]},
+    "shrine_house": {"cell": "B2", "at": [100, -500]},
+    "ferry": {"cell": "C2", "at": [780, -150], "name": "proposal: Khe Lan Ferry (owner)"},
+    "fishing_hamlet": {"cell": "C2", "at": [650, -100]},
+    "stone_hamlet": {"cell": "A3", "at": [-832, 416]},
+    "lock_town": {"cell": "C3", "at": [760, 430], "name": "placeholder: the Fifth Lock (owner)"},
+    "crossing_house": {"cell": "C3", "at": [800, 470]},
+    "journey_pier": {"cell": "C4", "at": [900, 1450]},
+    "karst_footprints": {"cell": "C4", "at": [[1000, 1100], [700, 1300], [1100, 1500]]}
+  }
+}

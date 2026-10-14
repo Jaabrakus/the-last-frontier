@@ -1,0 +1,102 @@
+{
+  "_doc": [
+    "R1's terrain squares: each of the layout's twelve cells with its type and recipe parameters, for the region baker (tools/environment/terrain/regions/bake_region.py, recipes in recipes_thuyvan.py).",
+    "Coordinates, centres, water levels, pounds and landmarks come only from layout.json (the lead's file); the water network from water.json. Here: per type, the recipe's parameters (params), the A/B/C variants shown to the owner in the relief views (variants; params is the picked one), its status (full, or placeholder until Phase 3 M2) and the bounds its heights stay within; per cell, its type and its broad relief.",
+    "relief: [u, v, height m] points of the square (u west to east, v north to south, 0..1 over the square). Every square's points together make the region's broad relief (a Gaussian-weighted mean, relief_sigma_m); recipes shape the ground over it and the rivers cut it. All heights are first numbers (status proposal) for the owner's relief views to settle.",
+    "Lengths in metres, slopes in m per m. Placeholders meet the layout's levels and seams and nothing more."
+  ],
+  "version": 1,
+  "region": "r1",
+  "status": "proposal",
+  "size_m": 832,
+  "seed": 4127,
+  "relief_sigma_m": 230,
+  "region_rim": {
+    "_doc": "The ground rises toward the region's outer edges (rise_min_m..rise_max_m over width_m) so the edge is never seen; the rivers' valleys cut through it. notches: [landmark, edge, radius m], where a route leaves (the pass north of the waystones).",
+    "width_m": 160, "rise_min_m": 25, "rise_max_m": 70,
+    "notches": [["waystones", "north", 140]]
+  },
+  "paddy": {"_doc": "Every paddy pound's bund, inside its edge: bund_m wide, bund_h_m over its water; round a paddy group the ground eases to its nearest paddy's bund over apron_m, so the paddies sit in their slope, not in a pit or on a mound.", "bund_m": 0.8, "bund_h_m": 0.25, "apron_m": 30},
+  "types": {
+    "gorge": {
+      "name": "gorge", "status": "full", "bounds_m": [100, 360],
+      "params": {"depth_m": 75, "wall_m": 70, "strata_m": 7, "riser": 0.45, "beyond_slope": 1.2, "bench_m": 16,
+                 "bench_h_m": 2.0, "wander_m": 10, "lip_fade_m": 220, "rough_m": 5},
+      "variants": {"pick": "B", "about": "gorge depth and wall steepness",
+                   "A": {"depth_m": 45, "wall_m": 100, "label": "shallow gorge, sloping walls"},
+                   "B": {"depth_m": 75, "wall_m": 70, "label": "deep gorge, steep walls"},
+                   "C": {"depth_m": 120, "wall_m": 45, "label": "very deep gorge, sheer walls"}}
+    },
+    "terraced_slope": {
+      "name": "terraced slope", "status": "full", "bounds_m": [140, 380],
+      "params": {"step_m": 1.5, "riser": 0.12, "align_to": "village_paddies", "seat_m": 160, "contour_wobble_m": 1.5, "contour_lam_m": 90,
+                 "terrace_top_m": 215, "rough_m": 2.5,
+                 "cliff": {"at": "rope_rite_cliff", "angle_deg": 20, "length_m": 170, "height_m": 18, "top_m": 140}},
+      "variants": {"pick": "B", "about": "terrace step height",
+                   "A": {"step_m": 0.8, "label": "low steps, many terraces"},
+                   "B": {"step_m": 1.5, "label": "steps as tall as the village paddies"},
+                   "C": {"step_m": 3.0, "label": "tall steps, few wide terraces"}}
+    },
+    "middle_reach": {
+      "name": "middle reach", "status": "full", "bounds_m": [95, 280],
+      "params": {"bank_h_m": 1.6, "flood_m": 110, "hill_slope": 0.35, "rough_m": 4, "ferry_at": "ferry",
+                 "ferry_bank_m": 45, "ferry_slope": 0.07, "ferry_reach_m": 60},
+      "variants": {"pick": "B", "about": "ferry bank width",
+                   "A": {"ferry_bank_m": 20, "label": "narrow ferry landing"},
+                   "B": {"ferry_bank_m": 45, "label": "ferry landing for a few boats"},
+                   "C": {"ferry_bank_m": 90, "label": "long beach at the ferry"}}
+    },
+    "switchbacks": {
+      "name": "switchbacks", "status": "full", "bounds_m": [115, 300],
+      "params": {"anchor": "shrine_house", "span_m": 240, "z_from_m": 70, "z_to_m": -220, "turns": 6,
+                 "path_w_m": 3.5, "shoulder_m": 4, "shrine_pad_m": 14, "side_slope": 0.55, "rough_m": 3},
+      "variants": {"pick": "B", "about": "how many hairpins the trail takes",
+                   "A": {"turns": 3, "label": "three hairpins, steep trail"},
+                   "B": {"turns": 6, "label": "six hairpins"},
+                   "C": {"turns": 10, "label": "ten hairpins, gentle trail"}}
+    },
+    "rim": {
+      "name": "rim", "status": "full", "bounds_m": [110, 560],
+      "params": {"rise_m": 110, "ridge_m": 35, "from_v": 0.1}
+    },
+    "high_pass": {
+      "name": "high pass", "status": "placeholder", "bounds_m": [230, 520],
+      "params": {"anchor": "waystones", "corridor_m": 70, "crag_m": 30}
+    },
+    "bridge_gorge": {
+      "name": "bridge gorge", "status": "placeholder", "bounds_m": [150, 430],
+      "params": {"depth_m": 85, "wall_m": 25, "strata_m": 6, "beyond_slope": 1.0, "rough_m": 5}
+    },
+    "stone_height": {
+      "name": "stone height", "status": "placeholder", "bounds_m": [170, 390],
+      "params": {"anchor": "stone_hamlet", "court_m": 40, "bench_m": 5, "rough_m": 4}
+    },
+    "foothill_paddies": {
+      "name": "foothill paddies", "status": "placeholder", "bounds_m": [105, 260],
+      "params": {"align_to": "paddy_steps", "seat_m": 160, "step_m": 1.2, "riser": 0.12, "terrace_top_m": 150, "rough_m": 2}
+    },
+    "river_flats_lock": {
+      "name": "river flats and lock", "status": "placeholder", "bounds_m": [85, 240],
+      "params": {"bank_h_m": 2.0, "flood_m": 160, "hill_slope": 0.25, "rough_m": 3}
+    },
+    "river_exit_karst": {
+      "name": "river exit and first karst", "status": "placeholder", "bounds_m": [80, 280],
+      "params": {"bank_h_m": 1.8, "flood_m": 140, "hill_slope": 0.3, "rough_m": 3, "karst_at": "karst_footprints",
+                 "karst_r_m": 45, "plinth_m": 4}
+    }
+  },
+  "cells": {
+    "A1": {"type": "high_pass", "relief": [[0.5, 0.0, 345], [0.5, 0.32, 330], [0.1, 0.35, 430], [0.9, 0.25, 385], [0.15, 0.85, 370], [0.85, 0.8, 300], [0.5, 0.7, 320]]},
+    "B1": {"type": "terraced_slope", "relief": [[0.5, 0.5, 170], [0.6, 0.7, 158], [0.62, 0.92, 146], [0.15, 0.2, 235], [0.15, 0.75, 190], [0.85, 0.3, 180], [0.9, 0.8, 145], [0.5, 0.05, 210]]},
+    "C1": {"type": "gorge", "relief": [[0.15, 0.3, 185], [0.15, 0.8, 168], [0.95, 0.2, 245], [0.95, 0.7, 225], [0.35, 0.0, 190]]},
+    "A2": {"type": "bridge_gorge", "relief": [[0.5, 0.12, 300], [0.5, 0.75, 285], [0.1, 0.15, 330], [0.1, 0.8, 310], [0.9, 0.15, 270], [0.9, 0.8, 255]]},
+    "B2": {"type": "switchbacks", "relief": [[0.5, 0.2, 225], [0.15, 0.2, 245], [0.85, 0.2, 205], [0.3, 0.8, 180], [0.8, 0.8, 160]]},
+    "C2": {"type": "middle_reach", "relief": [[0.15, 0.3, 150], [0.15, 0.8, 140], [0.95, 0.3, 185], [0.95, 0.8, 170]]},
+    "A3": {"type": "stone_height", "relief": [[0.5, 0.5, 265], [0.1, 0.3, 300], [0.85, 0.25, 240], [0.2, 0.9, 290], [0.8, 0.85, 255]]},
+    "B3": {"type": "foothill_paddies", "relief": [[0.43, 0.36, 122], [0.43, 0.55, 116], [0.43, 0.72, 110], [0.45, 0.92, 104], [0.1, 0.4, 150], [0.8, 0.3, 122], [0.8, 0.8, 112], [0.15, 0.95, 150]]},
+    "C3": {"type": "river_flats_lock", "relief": [[0.15, 0.3, 128], [0.15, 0.8, 120], [0.95, 0.3, 150], [0.95, 0.8, 140]]},
+    "A4": {"type": "rim", "relief": [[0.5, 0.2, 280], [0.2, 0.6, 330], [0.8, 0.6, 300], [0.5, 0.95, 360]]},
+    "B4": {"type": "rim", "relief": [[0.5, 0.15, 150], [0.2, 0.5, 210], [0.8, 0.5, 170], [0.5, 0.95, 260]]},
+    "C4": {"type": "river_exit_karst", "relief": [[0.15, 0.3, 125], [0.15, 0.85, 150], [0.95, 0.3, 140], [0.95, 0.85, 165]]}
+  }
+}

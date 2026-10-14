@@ -1,0 +1,357 @@
+{
+ "id": "tv_sc_trousers",
+ "name": "Wide work trousers",
+ "description": "Wide dust-buff work trousers on a drawstring, full to the knee, the ends bound by leg wraps.",
+ "kind": "garment",
+ "set": "tv_stone",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/tv_stone/tv_sc_trousers.glb",
+ "mesh": "tv_sc_trousers",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_sc_trousers"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_center",
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "work cloth",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_dust_buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "drawstring band",
+   "role": "trim",
+   "fabric": "HES",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_leather",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3234,
+    "verts": 1850,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "r_upper_leg",
+     "r_knee",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 3234,
+  "verts": 1850,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0475,
+   "breast_large": 0.0016,
+   "breast_small": 0.018
+  },
+  "coverage": {
+   "chest_back": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.854
+   },
+   "abdomen_side": {
+    "normal": 0.948,
+    "cone": 0.823
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.76
+   },
+   "pelvis_center": {
+    "normal": 0.854,
+    "cone": 0.615
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 0.323,
+    "cone": 0.281
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 0.354,
+    "cone": 0.302
+   }
+  },
+  "glb_kb": 395.7
+ },
+ "budget": {
+  "tris_max": 6000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the pale legs under the mason's dark tunic and apron (lineup); the cut of the highland trousers, fuller (Stone Children read broad).",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "pants",
+  "tv_stone",
+  "stone_children",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.97,
+    "p05_mm": 5.25,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": -18.17,
+    "p05_mm": 4.57,
+    "inside_skin": 25
+   },
+   "bl": {
+    "min_mm": 2.97,
+    "p05_mm": 5.25,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 2.99,
+    "p05_mm": 5.25,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_sc_trousers.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_sc_trousers.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "leather"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "dust": {
+    "0": "tv_dust_buff"
+   },
+   "charcoal": {
+    "0": "tv_charcoal"
+   }
+  },
+  "recipe_note": "cloth2.dress.trousers wide: to 0.80, cuff open, flare to 4.5 cm at the thigh."
+ }
+}

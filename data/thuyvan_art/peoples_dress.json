@@ -1,0 +1,49 @@
+{
+ "format": "thuyvan-peoples-dress",
+ "version": 1,
+ "status": "proposal",
+ "note": "The dress half of data/customizer/thuyvan_peoples.json (peoples_design.md 2.1: lineup_outfit, npc_outfits) for the peoples whose garments are built (cloth2, assets/character/garments/tv_*). Garment ids are catalog ids; `dyes` are zone -> palette token overrides (cloth2/palette.json tv_*). Anyone may wear any garment: a set orders the Outfit tab and sets NPC defaults, it locks nothing. Every face, skin and hair stays open for every people.",
+ "sets": {"tv_highland": "Mountain Folk", "tv_stone": "Stone Children", "tv_delta": "Dragon-Sea", "tv_common": "Shared pieces"},
+ "peoples": {
+  "mountain_folk": {
+   "set": "tv_highland",
+   "lineup_outfit": {
+    "female": ["tv_mf_trousers", "tv_mf_short_robe", "tv_mf_hip_panels", "tv_mf_sash", "tv_mf_leg_wraps", "tv_mf_sandals", "tv_mf_shoulder_mantle", "tv_mf_brow_band"],
+    "male": ["tv_mf_trousers", "tv_mf_wrap_vest", "tv_mf_hip_panels", "tv_mf_sash", "tv_mf_leg_wraps", "tv_mf_sandals", "tv_mf_shoulder_mantle", "tv_mf_back_basket"]
+   },
+   "clan_dyes": {
+    "stone_ridge": {},
+    "cloud_pass": {"tv_mf_wrap_vest": {"0": "tv_bone", "1": "tv_jade_cloth"}, "tv_mf_short_robe": {"0": "tv_bone", "1": "tv_jade_cloth"}, "tv_mf_hip_panels": {"0": "tv_hemp", "1": "tv_jade_cloth"}, "tv_mf_sash": {"0": "tv_jade_cloth", "3": "tv_bone"}, "tv_mf_shoulder_mantle": {"0": "tv_bone", "1": "tv_jade_cloth"}, "tv_mf_brow_band": {"0": "tv_jade_cloth"}},
+    "high_pine": {"tv_mf_wrap_vest": {"0": "tv_pine_black", "1": "tv_ochre"}, "tv_mf_short_robe": {"0": "tv_pine_black", "1": "tv_ochre"}, "tv_mf_hip_panels": {"0": "tv_pine_black", "1": "tv_ochre"}, "tv_mf_sash": {"0": "tv_ochre", "3": "tv_madder"}, "tv_mf_shoulder_mantle": {"0": "tv_pine_black", "1": "tv_ochre", "2": "tv_walnut"}, "tv_mf_trousers": {"0": "tv_pine_black"}, "tv_mf_brow_band": {"0": "tv_ochre"}}
+   },
+   "npc_outfits": {
+    "porter": ["tv_mf_trousers", "tv_mf_wrap_vest", "tv_mf_hip_panels", "tv_mf_sash", "tv_mf_leg_wraps", "tv_mf_sandals", "tv_mf_back_basket", "tv_conical_hat"],
+    "hunter": ["tv_mf_trousers", "tv_mf_wrap_vest", "tv_mf_hip_panels", "tv_mf_sash", "tv_mf_leg_wraps", "tv_mf_sandals", "tv_mf_shoulder_mantle", "tv_mf_brow_band"]
+   }
+  },
+  "stone_children": {
+   "set": "tv_stone",
+   "lineup_outfit": {
+    "female": ["tv_sc_trousers", "tv_sc_work_tunic", "tv_sc_shade_cloth", "tv_sc_apron_sash", "tv_sc_leg_wraps", "tv_sc_sandals", "tv_sc_quarry_hat"],
+    "male": ["tv_sc_trousers", "tv_sc_work_tunic", "tv_sc_shade_cloth", "tv_sc_apron_sash", "tv_sc_leg_wraps", "tv_sc_sandals"]
+   },
+   "npc_outfits": {
+    "quarry_hand": ["tv_sc_trousers", "tv_sc_work_tunic", "tv_sc_apron_sash", "tv_sc_leg_wraps", "tv_sc_sandals", "tv_sc_quarry_hat", "tv_sc_carry_frame"],
+    "mason": ["tv_sc_trousers", "tv_sc_work_tunic", "tv_sc_shade_cloth", "tv_sc_apron_sash", "tv_sc_leg_wraps", "tv_sc_sandals"]
+   }
+  },
+  "dragon_sea": {
+   "set": "tv_delta",
+   "lineup_outfit": {
+    "female": ["tv_ds_long_skirt", "tv_ds_short_robe", "tv_ds_sash_strings", "tv_ds_sandals", "tv_conical_hat"],
+    "male": ["tv_ds_rolled_trousers", "tv_ds_dock_jacket", "tv_ds_sandals", "tv_conical_hat"]
+   },
+   "npc_outfits": {
+    "levy_soldier": ["tv_mf_trousers", "tv_ds_levy_coat", "tv_mf_leg_wraps", "tv_ds_sandals", "tv_ds_levy_hat"],
+    "levy_soldier_dyes": {"tv_mf_trousers": {"0": "tv_deep_navy"}},
+    "floodgate_clerk": ["tv_ds_rolled_trousers", "tv_ds_clerk_robe", "tv_ds_sandals", "tv_ds_clerk_cap"],
+    "boat_folk": ["tv_ds_rolled_trousers", "tv_ds_dock_jacket", "tv_ds_sandals", "tv_conical_hat"]
+   }
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "id": "ho_tinh_ears_tufted",
+ "name": "Fox ears, tufted",
+ "description": "Fox ears of the Fox-Blooded, tufted; fur over a pale inner ear with a tuft; rigid on the head.",
+ "kind": "feature",
+ "set": "tv_features",
+ "slot": "features.ears",
+ "alt_slots": [],
+ "layer": {
+  "default": 72
+ },
+ "glb": "res://assets/thuyvan/character/fox/ho_tinh_ears_tufted.glb",
+ "mesh": "ho_tinh_ears_tufted",
+ "surfaces": [
+  {
+   "surface": "fur",
+   "name": "ho_tinh_ears_tufted"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fur",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "cream",
+    "russet",
+    "silver_white",
+    "ash",
+    "black_tipped"
+   ],
+   "default": "cream"
+  }
+ ],
+ "stats": {
+  "tris": 2546
+ },
+ "status": "proposal",
+ "bone": "headb",
+ "shape_keys": [
+  "ear_back",
+  "ear_flat",
+  "ear_perk"
+ ]
+}

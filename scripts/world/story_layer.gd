@@ -27,6 +27,8 @@ extends Node3D
 ## layer has none of leave). clear() puts free play's numbers back for the next land made.
 
 const DIR := "res://data/world/layers/"
+## The region loader (Thủy Vân; WorldRegion): a region's layers (data/world/maps/<id>/layers/) when one is set, DIR otherwise.
+const Region := preload("res://scripts/world/world_region.gd")
 ## The layer place() and places() read when none is applied yet (the only one so far).
 const DEFAULT_LAYER := "1757"
 const NODE_PREFIX := "StoryLayer_"
@@ -56,7 +58,7 @@ var placed := 0
 static func apply(level: Node, id: String) -> StoryLayer:
 	var d := load_layer(id)
 	if d.is_empty():
-		push_error("StoryLayer: no layer %s (%s%s.json)" % [id, DIR, id])
+		push_error("StoryLayer: no layer %s (%s%s.json)" % [id, _dir(), id])
 		return null
 	if level == null or not level.is_inside_tree():
 		push_error("StoryLayer: layer %s needs a level in the tree" % id)
@@ -92,13 +94,18 @@ static func clear() -> void:
 
 ## Layer `id`'s data ({} none).
 static func load_layer(id: String) -> Dictionary:
-	if not _cache.has(id):
+	var path := _dir() + "%s.json" % id
+	if not _cache.has(path):
 		var d: Variant = null
-		var path := DIR + "%s.json" % id
 		if FileAccess.file_exists(path):
 			d = JSON.parse_string(FileAccess.get_file_as_string(path))
-		_cache[id] = d if d is Dictionary else {}
-	return _cache[id]
+		_cache[path] = d if d is Dictionary else {}
+	return _cache[path]
+
+
+## The layers' folder: the region's (WorldRegion.layers_dir), DIR with none.
+static func _dir() -> String:
+	return Region.layers_dir()
 
 
 ## The named point `name` of the layer (`id`, else the one applied, else DEFAULT_LAYER) on the ground; Vector3.INF when
@@ -269,7 +276,7 @@ static func site_xf(s: Dictionary) -> Transform3D:
 	var at := _xz(s.get("at", [0.0, 0.0]))
 	var yaw := deg_to_rad(float(s.get("yaw", 0.0)))
 	if String(s.get("face", "")) == "river":
-		var f := WorldRiver.flow_at(at.y)
+		var f := WorldRiver.dir_at(at.y)
 		var n := Vector3(-f.z, 0.0, f.x)
 		if signf(WorldRiver.x_at(at.y) - at.x) != signf(n.x):
 			n = -n
@@ -542,7 +549,7 @@ func _mill_wheel(s: Dictionary) -> Node3D:
 	var y := maxf(ground + r - 0.15, minf(level + r - 0.55, floor_y + 1.6))
 	c.y = y
 	var shaft := (c - wall).length()
-	var flow := WorldRiver.flow_at(c.z)
+	var flow := WorldRiver.dir_at(c.z)
 	# the axle along the node's +Z toward the wall: the paddles under it pushed downstream
 	var basis := Basis.looking_at(out, Vector3.UP)         # (-Z out toward the river: +Z toward the wall)
 	var turn := 0.35 * signf(basis.x.dot(flow))

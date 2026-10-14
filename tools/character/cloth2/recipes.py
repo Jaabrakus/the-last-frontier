@@ -103,6 +103,7 @@ COAT = {
     "overlap": None,                    # instead of an opening: {"x": -0.05, "split_below": 0.86, "h": 0.003}
     "overlap_line": None,               # the robes' overlap (cloth2.dress.ROBE): {"line": [(z, theta deg)], "split_below",
                                         # "w", "h", "outer", "split_weights"}: an edge running round the body
+    "sleeveless": None,                 # Garment.armholes keys: no sleeves, round armholes (cloth2.dress.ROBE sleeves None)
     "slits": None,                      # side slits in the skirts [(from deg, to deg, up to z)] (both sides)
     "over_relax": 0,                    # rounds of smoothing the skirts and fitting them over the layers again
     "vent": 0.80,                       # back vent up to (m), or None
@@ -158,10 +159,15 @@ def coat(g, st=None):
     Z = st["zones"]
     g.shell(G.TORSO + G.ARMS)
     g.neckline(**st["neck"]).bottom(st["bottom"])
-    g.sleeves(end=st["sleeve_end"], ease=st["sleeve_ease"], gather=st["gather"])
-    g.seams()
+    if st.get("sleeveless"):
+        # (2026-10-06, the Thủy Vân vests and work tunics: cloth2.dress.ROBE sleeves None) round armholes
+        g.armholes(**st["sleeveless"])
+        g.seams(limbs=())
+    else:
+        g.sleeves(end=st["sleeve_end"], ease=st["sleeve_ease"], gather=st["gather"])
+        g.seams()
     g.fit(ease=st["ease"])
-    if st["armpit_relief"]:
+    if st["armpit_relief"] and not st.get("sleeveless"):
         g.relieve(g.armpits(), st["armpit_relief"]["radius"], st["armpit_relief"]["depth"])
     front, side, back = st["hem"]
     hung = min(front, side, back) < st["bottom"] - 0.01
@@ -205,7 +211,7 @@ def coat(g, st=None):
     if st["lining"] and hung:
         sel = _skirt_faces(g, z_hung)
         lining = TR.overlay(g.m, sel, -0.0016, Z["facing"], flip=True)
-    if st["cuffs"]:
+    if st["cuffs"] and not st.get("sleeveless"):
         g.cuffs(st["cuffs"]["t0"], st["cuffs"]["h"], Z["facing"], flare=st["cuffs"].get("flare", 0.0))
     if st["lapels"]:
         _lapels(g, st)
@@ -343,7 +349,7 @@ def _coat_buttons(g, st, z_hung):
                       (st["overlap"]["x"] + 0.03 if st["overlap"] else 0.0) for z in zs])
         g.buttons(g.front_points(x, zs), Z["button"], r=br)
     n = st["cuff_buttons"]
-    if n and st["cuffs"]:
+    if n and st["cuffs"] and not st.get("sleeveless"):
         t0 = st["cuffs"]["t0"]
         ts = np.linspace(t0 + 0.04, st["sleeve_end"] - 0.035, n)
         for lb in ("arm_l", "arm_r"):
@@ -784,3 +790,36 @@ def hose(g, st=None):
     """Stockings with gartering: the cuff turned down, the garter's ends hanging (dress.HOSE)."""
     from cloth2 import dress as DR
     return DR.hose(g, st)
+
+
+# ======================================================================================================================
+# the Thủy Vân types (cloth2.tv_dress, 2026-10-06: peoples_design.md section 2.9)
+# ======================================================================================================================
+def leg_wraps(g, st=None):
+    """A strip wound down each shin over the trousers, a crossing cord, a knot under the knee (tv_dress.LEG_WRAPS)."""
+    from cloth2 import tv_dress as TV
+    return TV.leg_wraps(g, st)
+
+
+def sandals(g, st=None):
+    """A sole slab and straps kept from a sock tube (tv_dress.SANDALS rope; TOE_SANDALS, HEAVY_SANDALS, SLIPPERS)."""
+    from cloth2 import tv_dress as TV
+    return TV.sandals(g, st)
+
+
+def fringe_mantle(g, st=None):
+    """A shoulder capelet cut into ragged strips, a fur ruff, feathers (tv_dress.FRINGE_MANTLE)."""
+    from cloth2 import tv_dress as TV
+    return TV.fringe_mantle(g, st)
+
+
+def carry(g, st=None):
+    """A back basket on shoulder straps (tv_dress.TALL_BASKET, ROUND_BASKET)."""
+    from cloth2 import tv_dress as TV
+    return TV.carry(g, st)
+
+
+def dangles(g, strings, obstacles=(), lift=0.008):
+    """Strings of rigid pieces hung from the garment (tv_dress.dangles)."""
+    from cloth2 import tv_dress as TV
+    return TV.dangles(g, strings, obstacles, lift)

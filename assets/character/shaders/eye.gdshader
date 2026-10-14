@@ -23,6 +23,12 @@ uniform float pupil_radius = 0.0021;
 uniform float iris_radius = 0.0058;
 uniform float lid_shadow : hint_range(0.0, 1.0) = 0.6;
 uniform int stylized = 0;
+// Reflective eyes (Thủy Vân: Dragon-Sea, Riverborn; BodyMaterials.eye_material from the look's `reflect_eye`): at night
+// (`tv_night` 1, set by the environment from the sun's energy) the pupil and iris give back light in the people's
+// tapetum colour, strongest looking straight in; by day only the iris's rim brightens a little.
+uniform float reflect_eye : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 tapetum_color : source_color = vec3(0.62, 0.82, 0.54);
+uniform float tv_night : hint_range(0.0, 1.0) = 0.0;
 
 float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -102,6 +108,10 @@ void fragment() {
 	}
 	ALBEDO = col;
 	float on_iris = 1.0 - smoothstep(iris_radius, iris_radius + 0.0006, d);
+	if (reflect_eye > 0.0) {
+		ALBEDO *= 1.0 + 0.10 * reflect_eye * (1.0 - tv_night) * on_iris * smoothstep(0.6, 1.0, d / iris_radius);
+		EMISSION = tapetum_color * reflect_eye * tv_night * pow(max(dot(NORMAL, VIEW), 0.0), 6.0) * on_iris * 2.5;
+	}
 	if (stylized == 1) {
 		// painted: the catch light is painted, so the cornea is a soft satin rather than a mirror
 		// (the game's bright sky in a mirror cornea washed every iris out to a pale grey-blue)

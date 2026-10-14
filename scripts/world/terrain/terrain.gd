@@ -59,6 +59,12 @@ extends Node3D
 ## meshes, collision and grass are built for each (a material per square: the shaders' square_origin), and the
 ## WorldEdge walls stand only where the ground ends (a side with no square beyond). in_world(): on the ground there is.
 ##
+## A region's ground (WorldRegion; Thủy Vân's R1, data/world/maps/r1/region.json) may sit off this grid: its block's
+## "terrain_origin" [x, z] moves every square by that much (R1's rows are centred half a square off: [0, -416]), so
+## square (0, 0) (the region's root square, its data in data_dir() itself) is centred there. The statics take world
+## positions and read the grid at (x, z) - origin; square_origin() is in the world. A region's ground needs no detail
+## (core) map. With no region the origin is (0, 0) and the core map is required: today's ground, exactly as before.
+##
 ## Debug switches (command line user args, B-local): terrain_debug=placeholder builds the old
 ## flat plane instead (A/B cost), grass_density=<0..1> overrides WorldSettings.grass_density.
 
@@ -80,6 +86,8 @@ const FIRING_LINE_Z := -20.0
 
 ## Baked data layout (keep in sync with tools/environment/terrain/bake_terrain.py).
 const DATA_DIR := "res://assets/environment/terrain/"
+## The region loader (Thủy Vân; WorldRegion): a region's baked ground when it names one (data_dir), DATA_DIR otherwise.
+const Region := preload("res://scripts/world/world_region.gd")
 const GRID_HALF := 416
 const GRID_N := 833
 const CHUNK_SIZE := 64
@@ -132,6 +140,9 @@ static var _data_tried := false
 ## read), dir}. The fort's (0, 0) is also in the arrays above (its fast path).
 static var _squares := {}
 static var _nearest_of := {}
+## The region's offset of the square grid (terrain_origin; (0, 0) today), and whether a detail map was loaded.
+static var origin := Vector2.ZERO
+static var _has_core := true
 
 var settings: WorldSettings
 var material: ShaderMaterial
@@ -183,6 +194,8 @@ static func height_at(x: float, z: float) -> float:
 		return 0.0
 	if not _data_ok and not _ensure_data():
 		return 0.0
+	x -= origin.x
+	z -= origin.y
 	if _in_fort(x, z):
 		return _tri_sample(_heights, x, z)
 	var d := _data_at(x, z)
@@ -224,9 +237,9 @@ static func squares() -> Array[Vector2i]:
 	return out
 
 
-## Square `sq`'s middle.
+## Square `sq`'s middle (in the world: the region's terrain_origin added).
 static func square_origin(sq: Vector2i) -> Vector3:
-	return Vector3(float(sq.x) * SQUARE_M, 0.0, float(sq.y) * SQUARE_M)
+	return Vector3(float(sq.x) * SQUARE_M + origin.x, 0.0, float(sq.y) * SQUARE_M + origin.y)
 
 
 ## Whether (x, z) is on the ground there is: in a square with ground, and no further than WORLD_HALF from its middle
@@ -234,6 +247,8 @@ static func square_origin(sq: Vector2i) -> Vector3:
 static func in_world(x: float, z: float) -> bool:
 	if not _data_ok and not _ensure_data():
 		return absf(x) <= WORLD_HALF and absf(z) <= WORLD_HALF
+	x -= origin.x
+	z -= origin.y
 	var sq := Vector2i(floori((x + GRID_HALF) / SQUARE_M), floori((z + GRID_HALF) / SQUARE_M))
 	if not _squares.has(sq):
 		return false
@@ -250,7 +265,9 @@ static func in_world(x: float, z: float) -> bool:
 static func collision_height_at(x: float, z: float) -> float:
 	if not _data_ok and not _ensure_data():
 		return 0.0
-	if not _in_fort(x, z):
+	if not _in_fort(x - origin.x, z - origin.y):
+		x -= origin.x
+		z -= origin.y
 		var d := _data_at(x, z)
 		return _tri_sample(_square_collision(d), x - float(d.ox), z - float(d.oz))
 	if _collision.is_empty():
@@ -258,7 +275,7 @@ static func collision_height_at(x: float, z: float) -> float:
 		if img == null:
 			return height_at(x, z)
 		_collision = img.get_data().to_float32_array()
-	return _tri_sample(_collision, x, z)
+	return _tri_sample(_collision, x - origin.x, z - origin.y)
 
 
 ## A square's collision heights (read when first asked for).
@@ -274,6 +291,8 @@ static func normal_at(x: float, z: float) -> Vector3:
 		return Vector3.UP
 	if not _data_ok and not _ensure_data():
 		return Vector3.UP
+	x -= origin.x
+	z -= origin.y
 	var b := _normals
 	if not _in_fort(x, z):
 		var d := _data_at(x, z)
@@ -301,6 +320,8 @@ static func ground_layers(x: float, z: float) -> PackedFloat32Array:
 	if not _data_ok and not _ensure_data():
 		w[LAYER_DIRT if Sfx.is_dirt(Vector3(x, 0.0, z)) else LAYER_GRASS] = 1.0
 		return w
+	x -= origin.x
+	z -= origin.y
 	var sp0 := _splat0
 	var sp1 := _splat1
 	var lx := x
@@ -323,7 +344,7 @@ static func ground_layers(x: float, z: float) -> PackedFloat32Array:
 	var rock := b.y
 	var cu := (x - CORE_X0) / CORE_W
 	var cv := (z - CORE_Z0) / CORE_D
-	if cu > 0.0 and cv > 0.0 and cu < 1.0 and cv < 1.0:
+	if _has_core and cu > 0.0 and cv > 0.0 and cu < 1.0 and cv < 1.0:
 		var c := _bilerp4(_core, CORE_NX, clampf(cu * CORE_NX - 0.5, 0.0, CORE_NX - 1.0001),
 				clampf(cv * CORE_NZ - 0.5, 0.0, CORE_NZ - 1.0001))
 		var k := clampf(minf(minf(cu, 1.0 - cu) * CORE_W, minf(cv, 1.0 - cv) * CORE_D) * 0.5, 0.0, 1.0)
@@ -355,6 +376,8 @@ static func forest_density(x: float, z: float) -> float:
 		return 0.0
 	if not _data_ok and not _ensure_data():
 		return 0.0 if flat_distance(x, z) < 10.0 else 1.0
+	x -= origin.x
+	z -= origin.y
 	var b := _splat1
 	if not _in_fort(x, z):
 		var d := _data_at(x, z)
@@ -376,9 +399,11 @@ static func forest_density(x: float, z: float) -> float:
 static func grass_height_at(x: float, z: float) -> float:
 	if not _data_ok and not _ensure_data():
 		return 0.0
+	x -= origin.x
+	z -= origin.y
 	var cu := (x - CORE_X0) / CORE_W
 	var cv := (z - CORE_Z0) / CORE_D
-	if cu > 0.0 and cv > 0.0 and cu < 1.0 and cv < 1.0:
+	if _has_core and cu > 0.0 and cv > 0.0 and cu < 1.0 and cv < 1.0:
 		var c := _bilerp4(_core, CORE_NX, clampf(cu * CORE_NX - 0.5, 0.0, CORE_NX - 1.0001),
 				clampf(cv * CORE_NZ - 0.5, 0.0, CORE_NZ - 1.0001))
 		return c.w * GRASS_H_SCALE
@@ -397,6 +422,11 @@ static func data_loaded() -> bool:
 	return _data_ok or _ensure_data()
 
 
+## The baked data's folder: the region's (WorldRegion.terrain_dir), DATA_DIR with none.
+static func data_dir() -> String:
+	return Region.terrain_dir()
+
+
 ## Baked Image resource (terrain_height.res etc.), loaded once.
 static func data_image(file: String) -> Image:
 	if not _images.has(file):
@@ -408,21 +438,25 @@ static func _ensure_data() -> bool:
 	if _data_tried:
 		return _data_ok
 	_data_tried = true
+	var to: Variant = Region.info().get("terrain_origin", [0.0, 0.0])
+	origin = Vector2(float(to[0]), float(to[1])) if to is Array and (to as Array).size() == 2 else Vector2.ZERO
 	var h := data_image("terrain_height.res")
 	var s0 := data_image("terrain_splat0.res")
 	var s1 := data_image("terrain_splat1.res")
 	var nm := data_image("terrain_normal.res")
 	var core := data_image("terrain_core.res")
-	if h == null or s0 == null or s1 == null or nm == null or core == null \
+	# (a region's own ground has no detail map; today's must)
+	_has_core = core != null
+	if h == null or s0 == null or s1 == null or nm == null or (core == null and data_dir() == DATA_DIR) \
 			or h.get_width() != GRID_N or h.get_format() != Image.FORMAT_RF:
-		push_warning("FrontierTerrain: baked terrain data missing under %s; using the flat placeholder" % DATA_DIR)
+		push_warning("FrontierTerrain: baked terrain data missing under %s; using the flat placeholder" % data_dir())
 		return false
 	_heights = h.get_data().to_float32_array()
 	var n4 := GRID_N * GRID_N * 4
 	_splat0 = s0.get_data().slice(0, n4)
 	_splat1 = s1.get_data().slice(0, n4)
 	_normals = nm.get_data().slice(0, n4)
-	_core = core.get_data().slice(0, CORE_NX * CORE_NZ * 4)
+	_core = core.get_data().slice(0, CORE_NX * CORE_NZ * 4) if core else PackedByteArray()
 	_squares[Vector2i.ZERO] = {"sq": Vector2i.ZERO, "ox": 0.0, "oz": 0.0, "h": _heights, "s0": _splat0, "s1": _splat1,
 			"nm": _normals, "col": PackedFloat32Array(), "dir": ""}
 	# the other squares baked (WorldSquares' grid)
@@ -436,8 +470,8 @@ static func _ensure_data() -> bool:
 		var snm := data_image(dir + "terrain_normal.res")
 		if sh == null or ss0 == null or ss1 == null or snm == null or sh.get_width() != GRID_N:
 			continue
-		var o := square_origin(sq)
-		_squares[sq] = {"sq": sq, "ox": o.x, "oz": o.z, "h": sh.get_data().to_float32_array(),
+		var o := Vector2(sq) * SQUARE_M          # (in the grid: the statics subtract the origin first)
+		_squares[sq] = {"sq": sq, "ox": o.x, "oz": o.y, "h": sh.get_data().to_float32_array(),
 				"s0": ss0.get_data().slice(0, n4), "s1": ss1.get_data().slice(0, n4), "nm": snm.get_data().slice(0, n4),
 				"col": PackedFloat32Array(), "dir": dir}
 	_data_ok = true
@@ -445,7 +479,7 @@ static func _ensure_data() -> bool:
 
 
 static func _load_image(file: String) -> Image:
-	var path := DATA_DIR + file
+	var path := data_dir() + file
 	if not ResourceLoader.exists(path):
 		return null
 	return load(path) as Image
@@ -553,7 +587,7 @@ func _build_collision() -> void:
 	for sq: Vector2i in squares():
 		var dir := "" if sq == Vector2i.ZERO else SQUARE_DIR % [sq.x, sq.y]
 		for kind in [["GroundDirt", "dirt"], ["GroundStone", "stone"]]:
-			var path := DATA_DIR + dir + "terrain_overlay_%s.res" % kind[1]
+			var path := data_dir() + dir + "terrain_overlay_%s.res" % kind[1]
 			var shape := load(path) as Shape3D if ResourceLoader.exists(path) else null
 			if shape == null:
 				continue

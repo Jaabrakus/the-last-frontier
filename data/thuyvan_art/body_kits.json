@@ -1,0 +1,817 @@
+{
+ "format": "thuyvan.body_kits",
+ "version": 1,
+ "note": "The non-human body kits (bodies_design.md 2.2): extension bones, springs, pose layer, posture, proportion, creator rows, the face/skin/hair maps and clearance. Visual only: nothing here changes speed, aim, the capsule or the camera (plan 3.4 item 32). PROPOSAL from the grey-box pass (tools/thuyvan_art/bodies); the Godot lane reads it when BodyExtensions exists. Bones are Godot skeleton space at null-add, female base, stature 1.0 (+Z forward); kit glbs list the 291 Actor_B bones in rig order, then these in table order.",
+ "kits": [
+  {
+   "id": "floodborn",
+   "people": "P04",
+   "body": "res://assets/thuyvan/bodies/floodborn_greybox.glb",
+   "head": "own",
+   "status": "grey-box, awaiting the owner's silhouette pick",
+   "bones": [
+    {
+     "name": "tail_01",
+     "parent": "pelvis",
+     "head": [
+      0,
+      0.9,
+      -0.11
+     ],
+     "len": 0.24
+    },
+    {
+     "name": "tail_02",
+     "parent": "tail_01",
+     "head": [
+      0,
+      0.746,
+      -0.294
+     ],
+     "len": 0.22
+    },
+    {
+     "name": "tail_03",
+     "parent": "tail_02",
+     "head": [
+      0,
+      0.604,
+      -0.462
+     ],
+     "len": 0.2
+    },
+    {
+     "name": "tail_04",
+     "parent": "tail_03",
+     "head": [
+      0,
+      0.476,
+      -0.616
+     ],
+     "len": 0.19
+    },
+    {
+     "name": "tail_05",
+     "parent": "tail_04",
+     "head": [
+      0,
+      0.427,
+      -0.799
+     ],
+     "len": 0.17
+    },
+    {
+     "name": "tail_06",
+     "parent": "tail_05",
+     "head": [
+      0,
+      0.383,
+      -0.963
+     ],
+     "len": 0.16
+    },
+    {
+     "name": "tail_07",
+     "parent": "tail_06",
+     "head": [
+      0,
+      0.341,
+      -1.118
+     ],
+     "len": 0.14
+    },
+    {
+     "name": "tail_08",
+     "parent": "tail_07",
+     "head": [
+      0,
+      0.305,
+      -1.253
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "snout_tip",
+     "parent": "headb",
+     "head": [
+      0,
+      1.48,
+      0.42
+     ],
+     "len": 0.0,
+     "deform": false
+    },
+    {
+     "name": "jaw_tip",
+     "parent": "jaw",
+     "head": [
+      0,
+      1.42,
+      0.4
+     ],
+     "len": 0.0,
+     "deform": false
+    }
+   ],
+   "tail_tip": [
+    0,
+    0.271,
+    -1.379
+   ],
+   "springs": {
+    "tail": {
+     "bones": [
+      "tail_01",
+      "tail_02",
+      "tail_03",
+      "tail_04",
+      "tail_05",
+      "tail_06",
+      "tail_07",
+      "tail_08"
+     ],
+     "stiffness": [
+      60,
+      14
+     ],
+     "damping": [
+      9,
+      4
+     ],
+     "gravity": 0.6,
+     "idiom": "character_body.gd SKIRT_CLOSED_SPRING / _soft"
+    },
+    "crest": {
+     "helper": "QUEUE_HELPER",
+     "idiom": "character_body.gd _queue"
+    }
+   },
+   "pose_layer": {
+    "note": "Per-state tail TARGETS as [pitch below horizontal, yaw toward +X] in degrees per bone; the springs move about them.",
+    "idle": [
+     [
+      52,
+      0
+     ],
+     [
+      50,
+      0
+     ],
+     [
+      44,
+      3
+     ],
+     [
+      30,
+      7
+     ],
+     [
+      6,
+      11
+     ],
+     [
+      0,
+      14
+     ],
+     [
+      -2,
+      16
+     ],
+     [
+      -3,
+      18
+     ]
+    ],
+    "idle_alt_side": "mirror yaw every idle cycle",
+    "walk": {
+     "lift_from": "tail_03",
+     "sway_deg": [
+      6,
+      10
+     ],
+     "phase": "opposite pelvis yaw"
+    },
+    "run": [
+     [
+      34,
+      0
+     ],
+     [
+      26,
+      0
+     ],
+     [
+      16,
+      0
+     ],
+     [
+      8,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      -2,
+      0
+     ],
+     [
+      -5,
+      0
+     ],
+     [
+      -8,
+      0
+     ]
+    ],
+    "crouch": "lifted, curled to the free side",
+    "sit": "out to the free side along the ground",
+    "lie": "flat in line with the body",
+    "climb": "hangs, pushed off the wall plane",
+    "springs_per_state": {
+     "idle": [
+      40,
+      10
+     ],
+     "walk": [
+      60,
+      12
+     ],
+     "run": [
+      90,
+      14
+     ],
+     "crouch": [
+      60,
+      12
+     ],
+     "sit": [
+      30,
+      12
+     ],
+     "lie": [
+      20,
+      12
+     ],
+     "climb": [
+      25,
+      6
+     ]
+    }
+   },
+   "posture": {
+    "spine_lean_deg": 8,
+    "neck_counter_deg": -5,
+    "head_counter_deg": -3,
+    "clavicle_fwd_deg": 3,
+    "arm_abduct_deg": 4,
+    "legs": "never touched"
+   },
+   "proportion": "floodborn_A",
+   "variants": {
+    "A": "Mooring Guard (base)",
+    "B": "Reed Runner -> the Snout length / Build ranges",
+    "C": "Old River Bull -> the Build range and an elder option"
+   },
+   "rows": [
+    "face",
+    "skin",
+    "crest",
+    "crest_color",
+    "eyes",
+    "markings",
+    "scars",
+    "jewel_ears",
+    "jewel_snout",
+    "jewel_neck",
+    "jewel_hands",
+    "tattoos"
+   ],
+   "face_map": {
+    "fb_snout_length": {
+     "face_nose_length": 0.6,
+     "face_length": 0.4,
+     "face_prognathism": 0.5
+    },
+    "fb_snout_width": {
+     "face_nose_width": 0.5,
+     "face_jaw_width": 0.5,
+     "face_breadth": 0.3
+    },
+    "fb_snout_depth": {
+     "face_midface": 0.5,
+     "face_chin_height": 0.4
+    },
+    "fb_nasal_boss": {
+     "face_nose_tip": 0.6,
+     "face_nose_hump": 0.4,
+     "face_nose_upturn": 0.3
+    },
+    "fb_brow_boss": {
+     "face_brow_ridge": 0.8,
+     "face_eye_depth": 0.3
+    },
+    "fb_eye_size": {
+     "face_lid_crease": -0.3,
+     "face_eye_depth": -0.4,
+     "face_under_eye": -0.2
+    },
+    "fb_eye_tilt": {
+     "face_eye_tilt": 1.0,
+     "face_epicanthus": 0.3
+    },
+    "fb_jowl": {
+     "face_cheek_fullness": 0.7,
+     "face_cheekbones": 0.3,
+     "face_jaw_angle": -0.3
+    },
+    "fb_jaw_depth": {
+     "face_chin_projection": 0.5,
+     "face_chin_width": 0.4,
+     "face_lips_lower": 0.3
+    },
+    "fb_teeth_show": {
+     "face_lips_upper": -0.4,
+     "face_mouth_width": 0.6
+    },
+    "fb_ear_slit": {
+     "face_ears": 1.0
+    }
+   },
+   "skin_map": {
+    "melanin": "dorsal value, light olive-tan .. near-black olive",
+    "undertone": {
+     "warm": "bronze-olive",
+     "neutral": "olive-grey",
+     "cool": "teal-grey",
+     "olive": "green-olive"
+    },
+    "haemoglobin": "redness of the mouth lining and fresh scars",
+    "freckles": "spot density"
+   },
+   "hide": {
+    "ventral": [
+     "#d9cfb0",
+     "#b9ad8a"
+    ],
+    "dorsal": [
+     "#2f3b2c",
+     "#3e4f3a",
+     "#5b6b4a"
+    ],
+    "teal_cast": "#3e5a52",
+    "seams": "#1e2620",
+    "eyes": "#e0b030",
+    "claws_teeth": "#cfc4a6",
+    "claw_tips": "#3a3128",
+    "quills": "#1e211d",
+    "lambert_wrap": 0.3,
+    "roughness": 0.75,
+    "wet_roughness": 0.25,
+    "wet_specular": 0.5
+   },
+   "hair_map": {
+    "bare_ridge": [
+     "cropped",
+     "shaved",
+     "cornrows",
+     "natural short"
+    ],
+    "short_quill_row": [
+     "other short styles"
+    ],
+    "quill_mane": [
+     "long loose (default)"
+    ],
+    "bound_quills": [
+     "queue",
+     "club",
+     "chonmage"
+    ],
+    "braided_quill_ropes": [
+     "braids",
+     "bags"
+    ],
+    "crest_knot": [
+     "bun",
+     "topknot"
+    ]
+   },
+   "hide_regions": [
+    "tail_root",
+    "tail",
+    "snout",
+    "crest"
+   ],
+   "clearance": {
+    "snout_probe_m": 0.55,
+    "tail_near_camera_fade_m": 0.9,
+    "chest_depth_extra": 0.05,
+    "crest_top_m": {
+     "type2": 1.66,
+     "type1_stature_1.07": 1.78
+    }
+   }
+  },
+  {
+   "id": "moc_tinh",
+   "people": "P07",
+   "body": "res://assets/thuyvan/bodies/moc_tinh_greybox.glb",
+   "head": "makehuman",
+   "status": "grey-box, awaiting the owner's silhouette pick",
+   "bones": [
+    {
+     "name": "crown_root",
+     "parent": "headb",
+     "head": [
+      0.0,
+      1.6,
+      -0.01
+     ],
+     "len": 0.04
+    },
+    {
+     "name": "crown_1_01",
+     "parent": "crown_root",
+     "head": [
+      0.027,
+      1.6526,
+      -0.0068
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_1_02",
+     "parent": "crown_1_01",
+     "head": [
+      0.1352,
+      1.703,
+      0.0058
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "crown_2_01",
+     "parent": "crown_root",
+     "head": [
+      0.0182,
+      1.6625,
+      -0.0179
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_2_02",
+     "parent": "crown_2_01",
+     "head": [
+      0.0911,
+      1.7525,
+      -0.0494
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "crown_3_01",
+     "parent": "crown_root",
+     "head": [
+      0.0066,
+      1.6684,
+      -0.0029
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_3_02",
+     "parent": "crown_3_01",
+     "head": [
+      0.0328,
+      1.782,
+      0.0255
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "crown_4_01",
+     "parent": "crown_root",
+     "head": [
+      -0.0064,
+      1.6677,
+      -0.0197
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_4_02",
+     "parent": "crown_4_01",
+     "head": [
+      -0.0319,
+      1.7783,
+      -0.0584
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "crown_5_01",
+     "parent": "crown_root",
+     "head": [
+      -0.0185,
+      1.6629,
+      -0.0043
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_5_02",
+     "parent": "crown_5_01",
+     "head": [
+      -0.0927,
+      1.7544,
+      0.0186
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "crown_6_01",
+     "parent": "crown_root",
+     "head": [
+      -0.0269,
+      1.6525,
+      -0.0144
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "crown_6_02",
+     "parent": "crown_6_01",
+     "head": [
+      -0.1345,
+      1.7027,
+      -0.0319
+     ],
+     "len": 0.1
+    },
+    {
+     "name": "vine_1_01",
+     "parent": "l_clavicle",
+     "head": [
+      0.12,
+      1.3,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_1_02",
+     "parent": "vine_1_01",
+     "head": [
+      0.12,
+      1.17,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_1_03",
+     "parent": "vine_1_02",
+     "head": [
+      0.12,
+      1.04,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_1_04",
+     "parent": "vine_1_03",
+     "head": [
+      0.12,
+      0.91,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_2_01",
+     "parent": "r_clavicle",
+     "head": [
+      -0.12,
+      1.3,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_2_02",
+     "parent": "vine_2_01",
+     "head": [
+      -0.12,
+      1.17,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_2_03",
+     "parent": "vine_2_02",
+     "head": [
+      -0.12,
+      1.04,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_2_04",
+     "parent": "vine_2_03",
+     "head": [
+      -0.12,
+      0.91,
+      0.04
+     ],
+     "len": 0.13
+    },
+    {
+     "name": "vine_3_01",
+     "parent": "pelvis",
+     "head": [
+      0.1,
+      0.92,
+      0.08
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "vine_3_02",
+     "parent": "vine_3_01",
+     "head": [
+      0.1,
+      0.8,
+      0.08
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "vine_3_03",
+     "parent": "vine_3_02",
+     "head": [
+      0.1,
+      0.68,
+      0.08
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "vine_3_04",
+     "parent": "vine_3_03",
+     "head": [
+      0.1,
+      0.56,
+      0.08
+     ],
+     "len": 0.12
+    },
+    {
+     "name": "vine_4_01",
+     "parent": "spined",
+     "head": [
+      0.0,
+      1.22,
+      -0.1
+     ],
+     "len": 0.14
+    },
+    {
+     "name": "vine_4_02",
+     "parent": "vine_4_01",
+     "head": [
+      0.0,
+      1.08,
+      -0.1
+     ],
+     "len": 0.14
+    },
+    {
+     "name": "vine_4_03",
+     "parent": "vine_4_02",
+     "head": [
+      0.0,
+      0.94,
+      -0.1
+     ],
+     "len": 0.14
+    },
+    {
+     "name": "vine_4_04",
+     "parent": "vine_4_03",
+     "head": [
+      0.0,
+      0.8,
+      -0.1
+     ],
+     "len": 0.14
+    }
+   ],
+   "springs": {
+    "crown": {
+     "bones": "crown_*",
+     "stiffness": [
+      70,
+      30
+     ],
+     "damping": [
+      10,
+      6
+     ],
+     "wind": "world foliage wind"
+    },
+    "vines": {
+     "bones": "vine_*",
+     "stiffness": [
+      25,
+      8
+     ],
+     "damping": [
+      6,
+      3
+     ],
+     "gravity": 1.0
+    }
+   },
+   "pose_layer": {
+    "idle": {
+     "vines": "hang",
+     "crown": "rest"
+    },
+    "idle_rate": 0.7,
+    "rooted": "roots_grip rises over 3 s standing still, released on the first step"
+   },
+   "proportion": {
+    "form": "moc_tinh",
+    "limb_thickness": 0.82,
+    "forearm_len": 1.05,
+    "shin_len": 1.05,
+    "pelvis_chest_x": 0.9,
+    "height_max": 1.02
+   },
+   "variants": {
+    "A": "Grove-Tender (base)",
+    "B": "Sapling Spire -> the Crown row's capped branches",
+    "C": "Moss-Cloak -> the Crown row's umbrella and the Moss row"
+   },
+   "rows": [
+    "face",
+    "skin",
+    "hair_style",
+    "hair_color",
+    "eyes",
+    "eyebrows",
+    "markings",
+    "tattoos",
+    "crown",
+    "bloom",
+    "bark_grain",
+    "moss"
+   ],
+   "skin_map": {
+    "melanin": [
+     "#a8a690",
+     "#3a3226"
+    ],
+    "undertone": {
+     "warm": "red-brown",
+     "neutral": "grey",
+     "cool": "blue-grey",
+     "olive": "green"
+    },
+    "haemoglobin": "amber sap glints (emission, off by default)",
+    "freckles": "lichen spots"
+   },
+   "hair_map": {
+    "black": "dark root",
+    "brown": "bark fibre",
+    "fair": "dry grass",
+    "red": "autumn",
+    "grey": "lichen"
+   },
+   "parts": {
+    "bark": 6000,
+    "roots": 1500,
+    "crown": 2500,
+    "vines": 1500
+   },
+   "hide_regions": [
+    "crown",
+    "roots_l",
+    "roots_r",
+    "vines"
+   ],
+   "clearance": {
+    "crown_cap_player_m": 0.22,
+    "crown_cap_npc_m": 0.45,
+    "crown_ceiling_probe": true,
+    "root_overhang_m": 0.12
+   }
+  }
+ ]
+}

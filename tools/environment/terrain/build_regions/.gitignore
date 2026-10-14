@@ -1,0 +1,4 @@
+# Region bakes (bake_region.py): raw arrays, previews and meta are rebuilt from the seed, never committed.
+*
+!.gitignore
+!.gdignore

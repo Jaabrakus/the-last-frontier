@@ -1,0 +1,67 @@
+{
+ "river_ramp": {
+  "file": "water/tv_river_ramp.png",
+  "x": "depth 0..4 m linear",
+  "rows": {
+   "0-3": "day",
+   "4-7": "still S1"
+  },
+  "stops_m": [
+   0.0,
+   0.25,
+   0.8,
+   1.8,
+   4.0
+  ]
+ },
+ "river_shader_uniforms": {
+  "jade_mist_morning": {
+   "shallow_tint": [
+    0.451,
+    0.744,
+    0.689
+   ],
+   "deep_color": [
+    0.079,
+    0.248,
+    0.27
+   ],
+   "absorb": 0.9,
+   "still_absorb": 0.25
+  },
+  "bright_saturated_noon": {
+   "shallow_tint": [
+    0.429,
+    0.772,
+    0.709
+   ],
+   "deep_color": [
+    0.072,
+    0.258,
+    0.277
+   ],
+   "absorb": 0.9,
+   "still_absorb": 0.25
+  },
+  "golden_lantern_dusk": {
+   "shallow_tint": [
+    0.661,
+    0.744,
+    0.64
+   ],
+   "deep_color": [
+    0.151,
+    0.248,
+    0.253
+   ],
+   "absorb": 0.9,
+   "still_absorb": 0.25
+  }
+ },
+ "scroll_m_per_s": {
+  "fall_body": 0.8,
+  "fall_streaks": 1.4,
+  "river_flow": "flow_speed (0.6)",
+  "mist_bands": 0.5
+ }
+}

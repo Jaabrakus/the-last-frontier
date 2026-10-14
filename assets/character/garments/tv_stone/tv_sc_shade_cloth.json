@@ -1,0 +1,315 @@
+{
+ "id": "tv_sc_shade_cloth",
+ "name": "Shade cloth",
+ "description": "A pale cloth across the back and over one shoulder, down the front to the waist, a rolled edge.",
+ "kind": "garment",
+ "set": "tv_stone",
+ "slot": "accessories.wrap",
+ "alt_slots": [],
+ "layer": {
+  "default": 50
+ },
+ "glb": "res://assets/character/garments/tv_stone/tv_sc_shade_cloth.glb",
+ "mesh": "tv_sc_shade_cloth",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_sc_shade_cloth"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_side",
+  "chest_back",
+  "chest_front",
+  "chest_side",
+  "chest_upper_back",
+  "chest_upper_front",
+  "chest_upper_side",
+  "neck_lower"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "shade cloth",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_dust_buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "unused",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "tv_charcoal",
+    "tv_dust_buff",
+    "tv_leather",
+    "tv_ochre_banner",
+    "tv_quarry_white",
+    "tv_kiln_brick",
+    "tv_jade",
+    "tv_slate_plate",
+    "tv_walnut",
+    "tv_hemp"
+   ],
+   "default": "tv_dust_buff",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_charcoal": "#3D3530",
+    "tv_dust_buff": "#BEAFA6",
+    "tv_leather": "#6C5E52",
+    "tv_ochre_banner": "#C7962F",
+    "tv_quarry_white": "#E6DCCB",
+    "tv_kiln_brick": "#9A4A2C",
+    "tv_jade": "#6FA58E",
+    "tv_slate_plate": "#6F7F8C",
+    "tv_walnut": "#64472F",
+    "tv_hemp": "#C9B48A"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1401,
+    "verts": 1133,
+    "zones": [
+     0
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "chest_upper_back",
+     "chest_upper_front",
+     "chest_upper_side",
+     "neck_lower",
+     "pelvis_center",
+     "pelvis_side",
+     "upper_arm_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_clavicle",
+     "r_clavicle",
+     "neck",
+     "headb",
+     "l_breast",
+     "r_breast",
+     "l_shoulder_twist_a",
+     "r_shoulder_twist_a",
+     "r_shoulder_twist_c",
+     "r_shoulder_twist_b",
+     "r_shoulder_twist_d"
+    ]
+   }
+  },
+  "tris": 1401,
+  "verts": 1133,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0441,
+   "breast_large": 0.0574,
+   "breast_small": 0.0196
+  },
+  "coverage": {
+   "head": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "neck_upper": {
+    "normal": 0.083,
+    "cone": 0.01
+   },
+   "neck_lower": {
+    "normal": 0.448,
+    "cone": 0.365
+   },
+   "chest_upper_front": {
+    "normal": 0.552,
+    "cone": 0.427
+   },
+   "chest_upper_side": {
+    "normal": 0.354,
+    "cone": 0.344
+   },
+   "chest_upper_back": {
+    "normal": 0.573,
+    "cone": 0.521
+   },
+   "chest_front": {
+    "normal": 0.896,
+    "cone": 0.812
+   },
+   "chest_side": {
+    "normal": 0.396,
+    "cone": 0.344
+   },
+   "chest_back": {
+    "normal": 0.333,
+    "cone": 0.229
+   },
+   "abdomen_front": {
+    "normal": 0.229,
+    "cone": 0.104
+   },
+   "abdomen_side": {
+    "normal": 0.375,
+    "cone": 0.229
+   },
+   "abdomen_back": {
+    "normal": 0.135,
+    "cone": 0.083
+   },
+   "pelvis_side": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.083,
+    "cone": 0.01
+   },
+   "forearm_a_l": {
+    "normal": 0.104,
+    "cone": 0.01
+   },
+   "upper_arm_r": {
+    "normal": 0.167,
+    "cone": 0.115
+   }
+  },
+  "glb_kb": 299.4
+ },
+ "budget": {
+  "tris_max": 5000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the pale diagonal across the mason's dark tunic on the lineup sheet. It breaks the Stone Children's block silhouette with one light stroke and keeps the sun off hot stone skin.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "tv_stone",
+  "stone_children",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 3.43,
+    "p05_mm": 19.57,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 2.58,
+    "p05_mm": 15.21,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 3.88,
+    "p05_mm": 17.76,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 3.88,
+    "p05_mm": 19.57,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_sc_shade_cloth.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_sc_shade_cloth.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_sc_work_tunic",
+  "tv_sc_trousers"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "weave"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "dust": {
+    "0": "tv_dust_buff"
+   },
+   "quarry": {
+    "0": "tv_quarry_white"
+   },
+   "hemp": {
+    "0": "tv_hemp"
+   }
+  },
+  "recipe_note": "cloth2.dress.drape one_shoulder: over the right shoulder, the left arm bare; the outline's outline a diagonal band 0.15-0.30 m wide from the right shoulder to the left hip, a rolled top edge."
+ }
+}

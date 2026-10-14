@@ -1,0 +1,359 @@
+{
+ "id": "tv_mf_trousers",
+ "name": "Wide trousers to the calf",
+ "description": "Wide trousers of indigo-black homespun on a drawstring, full at the thigh and knee and narrowing to an open end at mid-calf, made to be bound by leg wraps.",
+ "kind": "garment",
+ "set": "tv_highland",
+ "slot": "legs.lower",
+ "alt_slots": [],
+ "layer": {
+  "default": 30
+ },
+ "glb": "res://assets/character/garments/tv_highland/tv_mf_trousers.glb",
+ "mesh": "tv_mf_trousers",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_mf_trousers"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_center",
+  "pelvis_side",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "homespun",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_indigo_black",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "drawstring band",
+   "role": "trim",
+   "fabric": "HES",
+   "palette": [
+    "tv_indigo_black",
+    "tv_madder",
+    "tv_hemp",
+    "tv_bone",
+    "tv_pine_black",
+    "tv_ochre",
+    "tv_jade_cloth",
+    "tv_walnut",
+    "tv_fur_grey"
+   ],
+   "default": "tv_hemp",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_indigo_black": "#1C2546",
+    "tv_madder": "#A33A28",
+    "tv_hemp": "#C9B48A",
+    "tv_bone": "#CFC4A6",
+    "tv_pine_black": "#1F4436",
+    "tv_ochre": "#B07F2E",
+    "tv_jade_cloth": "#4E8577",
+    "tv_walnut": "#64472F",
+    "tv_fur_grey": "#8A7D6C"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 3234,
+    "verts": 1850,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "l_knee",
+     "r_upper_leg",
+     "r_knee",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined"
+    ]
+   }
+  },
+  "tris": 3234,
+  "verts": 1850,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0475,
+   "breast_large": 0.0029,
+   "breast_small": 0.018
+  },
+  "coverage": {
+   "chest_back": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.99,
+    "cone": 0.854
+   },
+   "abdomen_side": {
+    "normal": 0.948,
+    "cone": 0.823
+   },
+   "abdomen_back": {
+    "normal": 0.99,
+    "cone": 0.76
+   },
+   "pelvis_center": {
+    "normal": 0.865,
+    "cone": 0.667
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_b_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.062,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "thigh_lower_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_l": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_l": {
+    "normal": 0.323,
+    "cone": 0.302
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_upper_r": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "shin_lower_r": {
+    "normal": 0.354,
+    "cone": 0.302
+   }
+  },
+  "glb_kb": 396.4
+ },
+ "budget": {
+  "tris_max": 6000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the sheets' figures read as a full dark mass from the hips to the knee and a bound white shin below it; the trousers give the mass and stop where the wraps begin (peoples_design.md 3.1).",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "men",
+  "women",
+  "pants",
+  "tv_highland",
+  "mountain_folk",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 2.97,
+    "p05_mm": 4.76,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": -18.17,
+    "p05_mm": 4.43,
+    "inside_skin": 25
+   },
+   "bl": {
+    "min_mm": 2.97,
+    "p05_mm": 4.76,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 2.99,
+    "p05_mm": 4.79,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": false,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_mf_trousers.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_mf_trousers.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "hemp"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "stone_ridge": {
+    "0": "tv_indigo_black",
+    "1": "tv_hemp"
+   },
+   "high_pine": {
+    "0": "tv_pine_black",
+    "1": "tv_hemp"
+   },
+   "undyed": {
+    "0": "tv_hemp",
+    "1": "tv_hemp"
+   }
+  },
+  "recipe_note": "cloth2.dress.trousers wide: the legs to 0.80 (mid-calf), cuff open; flare to 3.6 cm at the thigh, falling to nothing below the knee (the wraps go over it); crotch drop 3 cm."
+ }
+}

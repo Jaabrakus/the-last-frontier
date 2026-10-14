@@ -57,6 +57,13 @@ float vnoise(vec2 p) {
 	return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x), mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
+// The Riverborn's water tint (Thủy Vân, peoples_design 2.4; BodyMaterials.set_trait): after the tone and undertone the
+// Oklab a/b move toward a blue-grey of chroma `water_tint_chroma` (less on dark tones' lightness), deep skin lifted a
+// little so it reads slate, not black; every melanin tone stays a choice.
+uniform float water_tint : hint_range(0.0, 1.0) = 0.0;
+uniform float water_tint_hue = 230.0;
+uniform float water_tint_chroma = 0.062;
+
 vec3 tone_at(float mel) {
 	float m = clamp(mel, 0.0, 1.0) * 11.0;
 	int i = min(int(floor(m)), 10);
@@ -67,6 +74,12 @@ vec3 tone_at(float mel) {
 	// maroon (BodyMaterials.tone_color does the same)
 	float k = clamp(lab.x / UNDERTONE_L, 0.25, 1.0);
 	lab.yz += undertone * vec2(k * k, k);
+	if (water_tint > 0.0) {
+		float wc = water_tint_chroma * clamp(lab.x / 0.65, 0.55, 1.0);
+		float wh = radians(water_tint_hue);
+		lab.yz = mix(lab.yz, wc * vec2(cos(wh), sin(wh)), water_tint);
+		lab.x = mix(lab.x, lab.x * 0.94 + 0.03, water_tint);
+	}
 	return oklab_to_lin(lab);
 }
 

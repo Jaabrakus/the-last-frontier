@@ -1,0 +1,414 @@
+{
+ "id": "tv_ds_long_skirt",
+ "name": "Two-layer wrap skirt",
+ "description": "A deep-navy wrap skirt to the ankle, its overlap open at the front, a pale under-layer showing as a stepped band below the knee.",
+ "kind": "garment",
+ "set": "tv_delta",
+ "slot": "legs.lower",
+ "alt_slots": [
+  "accessories.waist"
+ ],
+ "layer": {
+  "default": 30,
+  "hips": 35
+ },
+ "glb": "res://assets/character/garments/tv_delta/tv_ds_long_skirt.glb",
+ "mesh": "tv_ds_long_skirt",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_ds_long_skirt"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side",
+  "ankle_l",
+  "ankle_r",
+  "pelvis_center",
+  "pelvis_side",
+  "shin_lower_l",
+  "shin_lower_r",
+  "shin_upper_l",
+  "shin_upper_r",
+  "thigh_lower_l",
+  "thigh_lower_r",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_regions": [
+  "pelvis_side",
+  "thigh_upper_l",
+  "thigh_upper_r"
+ ],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": {
+  "closed": true,
+  "hems_godot": [
+   [
+    0.128,
+    0.1,
+    0.193
+   ],
+   [
+    0.204,
+    0.1,
+    0.03
+   ],
+   [
+    0.128,
+    0.1,
+    -0.134
+   ]
+  ]
+ },
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "navy cloth",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_deep_navy",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "under-layer band",
+   "role": "trim",
+   "fabric": "LIN",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_sea_glass",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 4147,
+    "verts": 2855,
+    "zones": [
+     0,
+     1
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "ankle_l",
+     "ankle_r",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "foot_l",
+     "foot_r",
+     "pelvis_center",
+     "pelvis_side",
+     "shin_lower_l",
+     "shin_lower_r",
+     "shin_upper_l",
+     "shin_upper_r",
+     "thigh_lower_l",
+     "thigh_lower_r",
+     "thigh_upper_l",
+     "thigh_upper_r"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_thigh_helper",
+     "r_upper_leg_thigh_helper",
+     "l_upper_leg_front_helper",
+     "l_upper_leg_rear_helper",
+     "r_upper_leg_front_helper",
+     "r_upper_leg_rear_helper"
+    ]
+   }
+  },
+  "tris": 4147,
+  "verts": 2855,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0772,
+   "breast_large": 0.0042,
+   "breast_small": 0.0022
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.052,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.083,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 1.0,
+    "cone": 0.875
+   },
+   "abdomen_side": {
+    "normal": 1.0,
+    "cone": 0.802
+   },
+   "abdomen_back": {
+    "normal": 0.979,
+    "cone": 0.74
+   },
+   "pelvis_center": {
+    "normal": 0.656,
+    "cone": 0.5
+   },
+   "pelvis_side": {
+    "normal": 1.0,
+    "cone": 1.0
+   },
+   "upper_arm_l": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.146,
+    "cone": 0.01
+   },
+   "forearm_b_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "forearm_c_l": {
+    "normal": 0.125,
+    "cone": 0.0
+   },
+   "wrist_l": {
+    "normal": 0.156,
+    "cone": 0.0
+   },
+   "hand_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "forearm_b_r": {
+    "normal": 0.115,
+    "cone": 0.0
+   },
+   "forearm_c_r": {
+    "normal": 0.094,
+    "cone": 0.0
+   },
+   "wrist_r": {
+    "normal": 0.198,
+    "cone": 0.0
+   },
+   "hand_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 1.0,
+    "cone": 0.99
+   },
+   "thigh_lower_l": {
+    "normal": 0.938,
+    "cone": 0.76
+   },
+   "shin_upper_l": {
+    "normal": 0.646,
+    "cone": 0.594
+   },
+   "shin_lower_l": {
+    "normal": 0.646,
+    "cone": 0.26
+   },
+   "ankle_l": {
+    "normal": 0.51,
+    "cone": 0.01
+   },
+   "foot_l": {
+    "normal": 0.135,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 1.0,
+    "cone": 0.979
+   },
+   "thigh_lower_r": {
+    "normal": 0.938,
+    "cone": 0.833
+   },
+   "shin_upper_r": {
+    "normal": 0.667,
+    "cone": 0.51
+   },
+   "shin_lower_r": {
+    "normal": 0.594,
+    "cone": 0.25
+   },
+   "ankle_r": {
+    "normal": 0.51,
+    "cone": 0.031
+   },
+   "foot_r": {
+    "normal": 0.177,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 682.5
+ },
+ "budget": {
+  "tris_max": 6000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the lineup's dock woman reads as a long dark column under a teal robe, a pale band at the knee breaking it; the open overlap lets her stride.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "women",
+  "men",
+  "tv_delta",
+  "dragon_sea",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 21.24,
+    "p05_mm": 26.04,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 22.39,
+    "p05_mm": 25.56,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 19.01,
+    "p05_mm": 25.95,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 21.25,
+    "p05_mm": 26.0,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_ds_long_skirt.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_ds_long_skirt.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "weave"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "navy": {
+    "0": "tv_deep_navy",
+    "1": "tv_sea_glass"
+   },
+   "teal": {
+    "0": "tv_estuary_teal",
+    "1": "tv_pearl"
+   }
+  },
+  "recipe_note": "cloth2.dress.wrap_skirt from 1.035 to the hem 0.10, a rim at 0.27 raised 6 mm, the band below 0.27 the under-layer (zone 1), the overlap at -30 deg open to the band."
+ }
+}

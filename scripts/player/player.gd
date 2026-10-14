@@ -227,6 +227,13 @@ var controls := PlayerControls.new()
 var arena := false
 ## The element the arena's bar and dress were last laid for ("" not yet).
 var arena_element := ""
+## NO FIREARMS (Thủy Vân, which has no gunpowder; set BEFORE _ready: ThuyVanLevel): only the guns are not built (the
+## musket and the pistol: no weapon node, socket or model, so no gun IK or gun hold has one to act on) and the musket's
+## loadout is not put on the body (show_gear off). The bow, the thrown weapons, the tools, the torch, the world's screens
+## (H, Tab, K), the equip wheel, building and the household stay: not the arena's switch, which takes those off. The hands
+## start free.
+var no_firearms := false
+const FIREARMS := ["musket", "pistol"]
 
 var yaw := 0.0
 var pitch := 0.0
@@ -425,6 +432,9 @@ func _ready() -> void:
 		show_gear = false
 		torch_count = 0
 		weapon_order = []
+	if no_firearms:
+		show_gear = false
+		weapon_order = weapon_order.filter(func(k: String) -> bool: return not k in FIREARMS)
 	_build_body()
 	_build_camera()
 	_build_character()
@@ -488,6 +498,10 @@ func _ready() -> void:
 		if hud:
 			hud.set_arena(true)
 		_lay_arena.call_deferred()
+	elif no_firearms:
+		# no gun to draw: the hands free from the start (the bow and the thrown weapons on their keys)
+		hands_free = true
+		anim.hands_free = true
 	else:
 		switch_weapon("musket")
 	# the shots' smoke and flash and the gathering chips compile their particle shaders now, not on first use

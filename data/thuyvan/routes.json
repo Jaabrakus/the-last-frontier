@@ -1,0 +1,143 @@
+{
+  "_doc": [
+    "The bible's routes between places (ThuyVanCanon.route, travel_hours): its travel windows in bible days, ordinary and disrupted (war closures, storms, the Silence). One bible day is calendar.json's game_hours_per_day of game time.",
+    "from / to: atlas ids, in the bible's direction; a route is walked or sailed both ways. return_ordinary_days: the window back, where the bible gives one (against the current).",
+    "gates: what a journey must have before it leaves: pilot (a pilot or local guide), licence, open_lock, season (the weather lets it go), invitation, grove_leave. None of them is a key item.",
+    "constraint: one public sentence about the way, as a boatman or porter would put it."
+  ],
+  "routes": [
+    {
+      "id": "van_thuy_to_da_trang",
+      "src": ["L02", "L03"],
+      "status": "canon",
+      "from": "van_thuy",
+      "to": "da_trang",
+      "method": {"text": "River cutter or upstream tow", "voice": "ui"},
+      "ordinary_days": [6, 9],
+      "disrupted_days": [9, 14],
+      "gates": ["open_lock"],
+      "constraint": {"text": "Five lock stages lie on the way up, and every closed gate adds days.", "voice": "npc"}
+    },
+    {
+      "id": "da_trang_to_two_heights",
+      "src": ["L03", "L16"],
+      "status": "canon",
+      "from": "da_trang",
+      "to": "two_heights",
+      "method": {"text": "Pack trail", "voice": "ui"},
+      "ordinary_days": [2, 3],
+      "disrupted_days": [4, 6],
+      "gates": [],
+      "constraint": {"text": "Carrying the wounded or building stone doubles every porter's load.", "voice": "npc"}
+    },
+    {
+      "id": "two_heights_to_thach_uyen",
+      "src": ["L16", "L05"],
+      "status": "canon",
+      "from": "two_heights",
+      "to": "thach_uyen",
+      "method": {"text": "Maintained bridge road", "voice": "ui"},
+      "ordinary_days": [1, 2],
+      "disrupted_days": [3, 5],
+      "gates": [],
+      "constraint": {"text": "A kept road over the bridge and down into the Stone Valleys.", "voice": "npc"}
+    },
+    {
+      "id": "thach_uyen_to_lam_uyen",
+      "src": ["L05", "L10"],
+      "status": "canon",
+      "from": "thach_uyen",
+      "to": "lam_uyen",
+      "method": {"text": "Forest footpath", "voice": "ui"},
+      "ordinary_days": [4, 6],
+      "disrupted_days": [7, 10],
+      "gates": ["grove_leave", "pilot"],
+      "constraint": {"text": "Nobody walks it without the grove's leave and a local guide.", "voice": "npc"}
+    },
+    {
+      "id": "van_thuy_to_reed_marches",
+      "src": ["L02", "L06"],
+      "status": "canon",
+      "from": "van_thuy",
+      "to": "reed_marches",
+      "method": {"text": "Downstream barge", "voice": "ui"},
+      "ordinary_days": [4, 6],
+      "disrupted_days": [6, 9],
+      "return_ordinary_days": [7, 10],
+      "gates": [],
+      "constraint": {"text": "Easy going down; coming back against the current takes longer.", "voice": "npc"}
+    },
+    {
+      "id": "reed_marches_to_khar_ul",
+      "src": ["L06", "L07"],
+      "status": "canon",
+      "from": "reed_marches",
+      "to": "khar_ul",
+      "method": {"text": "Guided shallow boat", "voice": "ui"},
+      "ordinary_days": [1, 2],
+      "disrupted_days": [2, 4],
+      "gates": ["pilot"],
+      "constraint": {"text": "No deep-draft boat can reach it, and no stranger finds it alone.", "voice": "npc"}
+    },
+    {
+      "id": "reed_marches_to_deep_lotus",
+      "src": ["L06", "L08"],
+      "status": "canon",
+      "from": "reed_marches",
+      "to": "deep_lotus",
+      "method": {"text": "Pilot route", "voice": "ui"},
+      "ordinary_days": [2, 3],
+      "disrupted_days": [4, 6],
+      "gates": ["pilot", "licence"],
+      "constraint": {"text": "Crews not born to the water need air stops and the right gear.", "voice": "npc"}
+    },
+    {
+      "id": "van_thuy_to_southern_delta",
+      "src": ["L02", "L12"],
+      "status": "canon",
+      "from": "van_thuy",
+      "to": "southern_delta",
+      "method": {"text": "Coastal sailing", "voice": "ui"},
+      "ordinary_days": [5, 8],
+      "disrupted_days": [9, 16],
+      "gates": ["season"],
+      "constraint": {"text": "A storm can shut the whole coast.", "voice": "npc"}
+    },
+    {
+      "id": "southern_delta_to_fishing_coast",
+      "src": ["L12", "L13"],
+      "status": "canon",
+      "from": "southern_delta",
+      "to": "fishing_coast",
+      "method": {"text": "Small craft along the shore", "voice": "ui"},
+      "ordinary_days": [2, 4],
+      "disrupted_days": [5, 8],
+      "gates": [],
+      "constraint": {"text": "Crowded boats go slower than the dispatch craft.", "voice": "npc"}
+    },
+    {
+      "id": "van_thuy_to_ao_thanh",
+      "src": ["L02", "L09"],
+      "status": "canon",
+      "from": "van_thuy",
+      "to": "ao_thanh",
+      "method": {"text": "Road and threshold corridor", "voice": "ui"},
+      "ordinary_days": [7, 10],
+      "disrupted_days": [12, 16],
+      "gates": ["invitation"],
+      "constraint": {"text": "The road is long, and only an invitation opens its last stretch.", "voice": "npc"}
+    },
+    {
+      "id": "da_trang_to_ancestor_roads",
+      "src": ["L03", "L11"],
+      "status": "canon",
+      "from": "da_trang",
+      "to": "ancestor_roads",
+      "method": {"text": "Road to the shrine circuit", "voice": "ui"},
+      "ordinary_days": [2, 4],
+      "disrupted_days": [4, 7],
+      "gates": [],
+      "constraint": {"text": "Each shrine house on the circuit is a separate stop on the road.", "voice": "npc"}
+    }
+  ]
+}

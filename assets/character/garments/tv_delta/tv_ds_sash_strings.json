@@ -1,0 +1,378 @@
+{
+ "id": "tv_ds_sash_strings",
+ "name": "Knotted sash with shell strings",
+ "description": "A pearl-white sash knotted in front with two hanging ends, hung with strings of shells, pearls and a red tassel.",
+ "kind": "garment",
+ "set": "tv_delta",
+ "slot": "accessories.waist",
+ "alt_slots": [],
+ "layer": {
+  "default": 60
+ },
+ "glb": "res://assets/character/garments/tv_delta/tv_ds_sash_strings.glb",
+ "mesh": "tv_ds_sash_strings",
+ "surfaces": [
+  {
+   "surface": "main",
+   "name": "tv_ds_sash_strings"
+  }
+ ],
+ "occupies_regions": [
+  "abdomen_back",
+  "abdomen_front",
+  "abdomen_side"
+ ],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [
+   "sex",
+   "breast_large",
+   "breast_small"
+  ],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "sash",
+   "role": "cloth",
+   "fabric": "LIN",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_pearl",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "LIN"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 1,
+   "name": "shells",
+   "role": "trim",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut"
+   ],
+   "default": "tv_pearl",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": false
+  },
+  {
+   "zone": 2,
+   "name": "pearls",
+   "role": "metal",
+   "fabric": "FLAT",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_bronze",
+    "tv_gold",
+    "tv_bone",
+    "tv_jade"
+   ],
+   "default": "tv_pearl",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_bronze": "#976D40",
+    "tv_bone": "#CFC4A6",
+    "tv_jade": "#6FA58E"
+   },
+   "fabrics": [
+    "FLAT"
+   ],
+   "metal": true
+  },
+  {
+   "zone": 3,
+   "name": "tassel",
+   "role": "fringe",
+   "fabric": "HES",
+   "palette": [
+    "tv_dock_indigo",
+    "tv_salt_white",
+    "tv_estuary_teal",
+    "tv_deep_navy",
+    "tv_sea_glass",
+    "tv_pearl",
+    "tv_lacquer_red",
+    "tv_gold",
+    "tv_straw",
+    "tv_rope",
+    "tv_walnut",
+    "tv_madder"
+   ],
+   "default": "tv_lacquer_red",
+   "pattern": null,
+   "bands": null,
+   "palette_hex": {
+    "tv_dock_indigo": "#646A81",
+    "tv_salt_white": "#E3DCCB",
+    "tv_estuary_teal": "#2F6F7A",
+    "tv_deep_navy": "#24386E",
+    "tv_sea_glass": "#A9C9C2",
+    "tv_pearl": "#ECE6D6",
+    "tv_lacquer_red": "#8E2E22",
+    "tv_gold": "#D8A743",
+    "tv_straw": "#BC9C5C",
+    "tv_rope": "#776040",
+    "tv_walnut": "#64472F",
+    "tv_madder": "#A33A28"
+   },
+   "fabrics": [
+    "HES"
+   ],
+   "metal": false
+  }
+ ],
+ "stats": {
+  "surfaces": {
+   "main": {
+    "tris": 1065,
+    "verts": 740,
+    "zones": [
+     0,
+     2,
+     3
+    ],
+    "regions": [
+     "abdomen_back",
+     "abdomen_front",
+     "abdomen_side",
+     "chest_back",
+     "chest_front",
+     "chest_side",
+     "pelvis_center",
+     "thigh_upper_l"
+    ],
+    "max_influences": 4,
+    "bones": [
+     "pelvis",
+     "l_upper_leg",
+     "spinea",
+     "spineb",
+     "spinec",
+     "spined",
+     "l_upper_leg_front_helper"
+    ]
+   }
+  },
+  "tris": 1065,
+  "verts": 740,
+  "surface_count": 1,
+  "shapes": {
+   "sex": 0.0579,
+   "breast_large": 0.0356,
+   "breast_small": 0.0186
+  },
+  "coverage": {
+   "chest_front": {
+    "normal": 0.104,
+    "cone": 0.0
+   },
+   "chest_side": {
+    "normal": 0.094,
+    "cone": 0.0
+   },
+   "chest_back": {
+    "normal": 0.177,
+    "cone": 0.0
+   },
+   "abdomen_front": {
+    "normal": 0.792,
+    "cone": 0.479
+   },
+   "abdomen_side": {
+    "normal": 0.656,
+    "cone": 0.292
+   },
+   "abdomen_back": {
+    "normal": 0.562,
+    "cone": 0.25
+   },
+   "pelvis_center": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "upper_arm_l": {
+    "normal": 0.031,
+    "cone": 0.0
+   },
+   "forearm_a_l": {
+    "normal": 0.073,
+    "cone": 0.0
+   },
+   "upper_arm_r": {
+    "normal": 0.021,
+    "cone": 0.0
+   },
+   "forearm_a_r": {
+    "normal": 0.042,
+    "cone": 0.0
+   },
+   "thigh_upper_l": {
+    "normal": 0.01,
+    "cone": 0.0
+   },
+   "thigh_upper_r": {
+    "normal": 0.01,
+    "cone": 0.0
+   }
+  },
+  "glb_kb": 221.9
+ },
+ "budget": {
+  "tris_max": 4000
+ },
+ "evidence": "C",
+ "licence_note": null,
+ "history": "Design note: the lineup's dock woman knots a white sash over her teal robe and hangs shells from it; the one warm note is the lacquer-red tassel.",
+ "sources": [],
+ "aliases": [],
+ "tags": [
+  "women",
+  "men",
+  "tv_delta",
+  "dragon_sea",
+  "everyday"
+ ],
+ "checks": {
+  "clearance": {
+   "f": {
+    "min_mm": 32.1,
+    "p05_mm": 37.6,
+    "inside_skin": 0
+   },
+   "m": {
+    "min_mm": 31.41,
+    "p05_mm": 37.75,
+    "inside_skin": 0
+   },
+   "bl": {
+    "min_mm": 9.35,
+    "p05_mm": 33.23,
+    "inside_skin": 0
+   },
+   "bs": {
+    "min_mm": 32.18,
+    "p05_mm": 37.51,
+    "inside_skin": 0
+   }
+  },
+  "envelope": {
+   "ok": true,
+   "layer": "cloth2",
+   "groups": {}
+  }
+ },
+ "generator": "tools/character/cloth2/garments/tv_ds_sash_strings.py",
+ "lib_version": 2,
+ "provenance": "Skeleton, bone names and bind pose: Actor_B rig. Geometry generated procedurally by tools/character/cloth2/garments/tv_ds_sash_strings.py (cloth2: grown from the MakeHuman body's surface).",
+ "fabric_note": "Fabric: approved Poly Haven CC0 kit (assets/polyhaven/textures/clothing), luminance detail tinted to the palette colour at runtime; UVs in metres along the grain.",
+ "review": null,
+ "fit_over": [
+  "tv_ds_long_skirt",
+  "tv_ds_short_robe"
+ ],
+ "extra": {
+  "tv_paint": {
+   "0": "weave",
+   "1": "bone",
+   "2": "bone",
+   "3": "cord"
+  },
+  "design_source": "Design: Th\u1ee7y V\u00e2n peoples_design.md (2026-10-06), after the owner's concept sheets; shapes and colours only, no sheet pixels; our own marks (straight cuts, at most one ring).",
+  "presets": {
+   "pearl": {
+    "0": "tv_pearl",
+    "3": "tv_lacquer_red"
+   },
+   "salt": {
+    "0": "tv_salt_white",
+    "3": "tv_estuary_teal"
+   }
+  },
+  "recipe_note": "cloth2.dress.wound_sash (2 turns 6 cm, 0.96-1.05) with a flat knot at 4 deg and two ends 0.30 / 0.24 m; tv_dress.dangles: shells, pearls, a red tassel."
+ }
+}

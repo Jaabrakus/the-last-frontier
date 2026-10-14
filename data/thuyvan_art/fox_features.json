@@ -1,0 +1,1571 @@
+{
+ "format": "thuyvan.fox_features",
+ "version": 1,
+ "note": "Hồ Tinh features shown (the Condition row Features hidden / shown): fox ears rigid on headb with three shape keys, and 1, 3 or 9 tails on their own extension bones (BodyExtensions adds them before the Skin is built; clips never key them). Tail count and fur colour are free cosmetics, never a stat. Visual only: no speed, aim, capsule or camera change. Status: proposal.",
+ "ears": {
+  "pointed": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_ears_pointed.glb",
+   "tris": 2544,
+   "bone": "headb",
+   "shape": {
+    "h": 0.14,
+    "w": 0.07,
+    "d": 0.03,
+    "k": 0.95,
+    "round": 0.0,
+    "tuft": 0.0
+   }
+  },
+  "rounded": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_ears_rounded.glb",
+   "tris": 2544,
+   "bone": "headb",
+   "shape": {
+    "h": 0.115,
+    "w": 0.078,
+    "d": 0.032,
+    "k": 0.55,
+    "round": 1.0,
+    "tuft": 0.0
+   }
+  },
+  "tufted": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_ears_tufted.glb",
+   "tris": 2546,
+   "bone": "headb",
+   "shape": {
+    "h": 0.145,
+    "w": 0.066,
+    "d": 0.029,
+    "k": 1.05,
+    "round": 0.0,
+    "tuft": 0.036
+   }
+  }
+ },
+ "tails": {
+  "1": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_1.glb",
+   "tris": 3388,
+   "bones": [
+    {
+     "name": "fox_tail_1_01",
+     "parent": "pelvis",
+     "head": [
+      0.0,
+      0.92,
+      -0.0936
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_1_02",
+     "parent": "fox_tail_1_01",
+     "head": [
+      0.0,
+      0.7957,
+      -0.2553
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_1_03",
+     "parent": "fox_tail_1_02",
+     "head": [
+      0.0,
+      0.6785,
+      -0.4223
+     ],
+     "len": 0.2039
+    },
+    {
+     "name": "fox_tail_1_04",
+     "parent": "fox_tail_1_03",
+     "head": [
+      0.0,
+      0.5761,
+      -0.5986
+     ],
+     "len": 0.2038
+    },
+    {
+     "name": "fox_tail_1_05",
+     "parent": "fox_tail_1_04",
+     "head": [
+      0.0,
+      0.497,
+      -0.7864
+     ],
+     "len": 0.2037
+    }
+   ],
+   "springs": {
+    "fox_tail_1": {
+     "bones": [
+      "fox_tail_1_01",
+      "fox_tail_1_02",
+      "fox_tail_1_03",
+      "fox_tail_1_04",
+      "fox_tail_1_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    }
+   },
+   "pose_layer": {
+    "idle": [
+     {
+      "tail": 1,
+      "lift_deg": 44.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "walk": [
+     {
+      "tail": 1,
+      "lift_deg": 36.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "run": [
+     {
+      "tail": 1,
+      "lift_deg": 18.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "crouch": [
+     {
+      "tail": 1,
+      "lift_deg": 14.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "sit": [
+     {
+      "tail": 1,
+      "lift_deg": -14.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "lie": [
+     {
+      "tail": 1,
+      "lift_deg": -29.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "climb": [
+     {
+      "tail": 1,
+      "lift_deg": 31.0,
+      "spread_deg": 0.0
+     }
+    ],
+    "swim": [
+     {
+      "tail": 1,
+      "lift_deg": 6.0,
+      "spread_deg": 0.0
+     }
+    ]
+   },
+   "clearance": {
+    "tail_near_camera_fade_m": 0.9
+   }
+  },
+  "3": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_3.glb",
+   "tris": 7560,
+   "bones": [
+    {
+     "name": "fox_tail_1_01",
+     "parent": "pelvis",
+     "head": [
+      -0.022,
+      0.9134,
+      -0.0936
+     ],
+     "len": 0.1947
+    },
+    {
+     "name": "fox_tail_1_02",
+     "parent": "fox_tail_1_01",
+     "head": [
+      -0.0794,
+      0.7793,
+      -0.2225
+     ],
+     "len": 0.1946
+    },
+    {
+     "name": "fox_tail_1_03",
+     "parent": "fox_tail_1_02",
+     "head": [
+      -0.1391,
+      0.6514,
+      -0.3566
+     ],
+     "len": 0.1946
+    },
+    {
+     "name": "fox_tail_1_04",
+     "parent": "fox_tail_1_03",
+     "head": [
+      -0.203,
+      0.5367,
+      -0.5001
+     ],
+     "len": 0.1945
+    },
+    {
+     "name": "fox_tail_1_05",
+     "parent": "fox_tail_1_04",
+     "head": [
+      -0.2723,
+      0.4428,
+      -0.6557
+     ],
+     "len": 0.1944
+    },
+    {
+     "name": "fox_tail_2_01",
+     "parent": "pelvis",
+     "head": [
+      0.0,
+      0.92,
+      -0.0936
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_2_02",
+     "parent": "fox_tail_2_01",
+     "head": [
+      0.0,
+      0.7957,
+      -0.2553
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_2_03",
+     "parent": "fox_tail_2_02",
+     "head": [
+      0.0,
+      0.6785,
+      -0.4223
+     ],
+     "len": 0.2039
+    },
+    {
+     "name": "fox_tail_2_04",
+     "parent": "fox_tail_2_03",
+     "head": [
+      0.0,
+      0.5761,
+      -0.5986
+     ],
+     "len": 0.2038
+    },
+    {
+     "name": "fox_tail_2_05",
+     "parent": "fox_tail_2_04",
+     "head": [
+      0.0,
+      0.497,
+      -0.7864
+     ],
+     "len": 0.2037
+    },
+    {
+     "name": "fox_tail_3_01",
+     "parent": "pelvis",
+     "head": [
+      0.022,
+      0.9134,
+      -0.0936
+     ],
+     "len": 0.1947
+    },
+    {
+     "name": "fox_tail_3_02",
+     "parent": "fox_tail_3_01",
+     "head": [
+      0.0794,
+      0.7793,
+      -0.2225
+     ],
+     "len": 0.1946
+    },
+    {
+     "name": "fox_tail_3_03",
+     "parent": "fox_tail_3_02",
+     "head": [
+      0.1391,
+      0.6514,
+      -0.3566
+     ],
+     "len": 0.1946
+    },
+    {
+     "name": "fox_tail_3_04",
+     "parent": "fox_tail_3_03",
+     "head": [
+      0.203,
+      0.5367,
+      -0.5001
+     ],
+     "len": 0.1945
+    },
+    {
+     "name": "fox_tail_3_05",
+     "parent": "fox_tail_3_04",
+     "head": [
+      0.2723,
+      0.4428,
+      -0.6557
+     ],
+     "len": 0.1944
+    }
+   ],
+   "springs": {
+    "fox_tail_1": {
+     "bones": [
+      "fox_tail_1_01",
+      "fox_tail_1_02",
+      "fox_tail_1_03",
+      "fox_tail_1_04",
+      "fox_tail_1_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_2": {
+     "bones": [
+      "fox_tail_2_01",
+      "fox_tail_2_02",
+      "fox_tail_2_03",
+      "fox_tail_2_04",
+      "fox_tail_2_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_3": {
+     "bones": [
+      "fox_tail_3_01",
+      "fox_tail_3_02",
+      "fox_tail_3_03",
+      "fox_tail_3_04",
+      "fox_tail_3_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    }
+   },
+   "pose_layer": {
+    "idle": [
+     {
+      "tail": 1,
+      "lift_deg": 40.57142857142857,
+      "spread_deg": -32.400000000000006
+     },
+     {
+      "tail": 2,
+      "lift_deg": 44.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 40.57142857142857,
+      "spread_deg": 32.400000000000006
+     }
+    ],
+    "walk": [
+     {
+      "tail": 1,
+      "lift_deg": 32.57142857142857,
+      "spread_deg": -27.599999999999998
+     },
+     {
+      "tail": 2,
+      "lift_deg": 36.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 32.57142857142857,
+      "spread_deg": 27.599999999999998
+     }
+    ],
+    "run": [
+     {
+      "tail": 1,
+      "lift_deg": 14.571428571428571,
+      "spread_deg": -14.399999999999999
+     },
+     {
+      "tail": 2,
+      "lift_deg": 18.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 14.571428571428571,
+      "spread_deg": 14.399999999999999
+     }
+    ],
+    "crouch": [
+     {
+      "tail": 1,
+      "lift_deg": 10.571428571428571,
+      "spread_deg": -38.400000000000006
+     },
+     {
+      "tail": 2,
+      "lift_deg": 14.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 10.571428571428571,
+      "spread_deg": 38.400000000000006
+     }
+    ],
+    "sit": [
+     {
+      "tail": 1,
+      "lift_deg": -17.428571428571427,
+      "spread_deg": -45.599999999999994
+     },
+     {
+      "tail": 2,
+      "lift_deg": -14.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": -17.428571428571427,
+      "spread_deg": 45.599999999999994
+     }
+    ],
+    "lie": [
+     {
+      "tail": 1,
+      "lift_deg": -32.42857142857143,
+      "spread_deg": -28.799999999999997
+     },
+     {
+      "tail": 2,
+      "lift_deg": -29.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": -32.42857142857143,
+      "spread_deg": 28.799999999999997
+     }
+    ],
+    "climb": [
+     {
+      "tail": 1,
+      "lift_deg": 27.571428571428573,
+      "spread_deg": -16.799999999999997
+     },
+     {
+      "tail": 2,
+      "lift_deg": 31.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 27.571428571428573,
+      "spread_deg": 16.799999999999997
+     }
+    ],
+    "swim": [
+     {
+      "tail": 1,
+      "lift_deg": 2.5714285714285716,
+      "spread_deg": -9.600000000000001
+     },
+     {
+      "tail": 2,
+      "lift_deg": 6.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 3,
+      "lift_deg": 2.5714285714285716,
+      "spread_deg": 9.600000000000001
+     }
+    ]
+   },
+   "clearance": {
+    "tail_near_camera_fade_m": 0.9
+   }
+  },
+  "9": {
+   "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_9.glb",
+   "tris": 16020,
+   "bones": [
+    {
+     "name": "fox_tail_1_01",
+     "parent": "pelvis",
+     "head": [
+      -0.045,
+      0.9065,
+      -0.0936
+     ],
+     "len": 0.1877
+    },
+    {
+     "name": "fox_tail_1_02",
+     "parent": "fox_tail_1_01",
+     "head": [
+      -0.136,
+      0.7772,
+      -0.1947
+     ],
+     "len": 0.1876
+    },
+    {
+     "name": "fox_tail_1_03",
+     "parent": "fox_tail_1_02",
+     "head": [
+      -0.2307,
+      0.6539,
+      -0.2998
+     ],
+     "len": 0.1876
+    },
+    {
+     "name": "fox_tail_1_04",
+     "parent": "fox_tail_1_03",
+     "head": [
+      -0.3321,
+      0.5433,
+      -0.4124
+     ],
+     "len": 0.1875
+    },
+    {
+     "name": "fox_tail_1_05",
+     "parent": "fox_tail_1_04",
+     "head": [
+      -0.442,
+      0.4528,
+      -0.5344
+     ],
+     "len": 0.1874
+    },
+    {
+     "name": "fox_tail_2_01",
+     "parent": "pelvis",
+     "head": [
+      -0.0337,
+      0.9098,
+      -0.0936
+     ],
+     "len": 0.1918
+    },
+    {
+     "name": "fox_tail_2_02",
+     "parent": "fox_tail_2_01",
+     "head": [
+      -0.1082,
+      0.7814,
+      -0.215
+     ],
+     "len": 0.1917
+    },
+    {
+     "name": "fox_tail_2_03",
+     "parent": "fox_tail_2_02",
+     "head": [
+      -0.1854,
+      0.6593,
+      -0.341
+     ],
+     "len": 0.1917
+    },
+    {
+     "name": "fox_tail_2_04",
+     "parent": "fox_tail_2_03",
+     "head": [
+      -0.2678,
+      0.5504,
+      -0.4755
+     ],
+     "len": 0.1916
+    },
+    {
+     "name": "fox_tail_2_05",
+     "parent": "fox_tail_2_04",
+     "head": [
+      -0.3567,
+      0.4624,
+      -0.6206
+     ],
+     "len": 0.1915
+    },
+    {
+     "name": "fox_tail_3_01",
+     "parent": "pelvis",
+     "head": [
+      -0.0225,
+      0.9132,
+      -0.0936
+     ],
+     "len": 0.1958
+    },
+    {
+     "name": "fox_tail_3_02",
+     "parent": "fox_tail_3_01",
+     "head": [
+      -0.0758,
+      0.7859,
+      -0.2325
+     ],
+     "len": 0.1958
+    },
+    {
+     "name": "fox_tail_3_03",
+     "parent": "fox_tail_3_02",
+     "head": [
+      -0.1311,
+      0.6652,
+      -0.3764
+     ],
+     "len": 0.1957
+    },
+    {
+     "name": "fox_tail_3_04",
+     "parent": "fox_tail_3_03",
+     "head": [
+      -0.1898,
+      0.5582,
+      -0.5294
+     ],
+     "len": 0.1957
+    },
+    {
+     "name": "fox_tail_3_05",
+     "parent": "fox_tail_3_04",
+     "head": [
+      -0.2529,
+      0.4729,
+      -0.6938
+     ],
+     "len": 0.1955
+    },
+    {
+     "name": "fox_tail_4_01",
+     "parent": "pelvis",
+     "head": [
+      -0.0112,
+      0.9166,
+      -0.0936
+     ],
+     "len": 0.1999
+    },
+    {
+     "name": "fox_tail_4_02",
+     "parent": "fox_tail_4_01",
+     "head": [
+      -0.0395,
+      0.7907,
+      -0.2462
+     ],
+     "len": 0.1999
+    },
+    {
+     "name": "fox_tail_4_03",
+     "parent": "fox_tail_4_02",
+     "head": [
+      -0.0688,
+      0.6716,
+      -0.4041
+     ],
+     "len": 0.1998
+    },
+    {
+     "name": "fox_tail_4_04",
+     "parent": "fox_tail_4_03",
+     "head": [
+      -0.0998,
+      0.5668,
+      -0.5714
+     ],
+     "len": 0.1997
+    },
+    {
+     "name": "fox_tail_4_05",
+     "parent": "fox_tail_4_04",
+     "head": [
+      -0.133,
+      0.4844,
+      -0.7503
+     ],
+     "len": 0.1996
+    },
+    {
+     "name": "fox_tail_5_01",
+     "parent": "pelvis",
+     "head": [
+      0.0,
+      0.92,
+      -0.0936
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_5_02",
+     "parent": "fox_tail_5_01",
+     "head": [
+      0.0,
+      0.7957,
+      -0.2553
+     ],
+     "len": 0.204
+    },
+    {
+     "name": "fox_tail_5_03",
+     "parent": "fox_tail_5_02",
+     "head": [
+      0.0,
+      0.6785,
+      -0.4223
+     ],
+     "len": 0.2039
+    },
+    {
+     "name": "fox_tail_5_04",
+     "parent": "fox_tail_5_03",
+     "head": [
+      0.0,
+      0.5761,
+      -0.5986
+     ],
+     "len": 0.2038
+    },
+    {
+     "name": "fox_tail_5_05",
+     "parent": "fox_tail_5_04",
+     "head": [
+      0.0,
+      0.497,
+      -0.7864
+     ],
+     "len": 0.2037
+    },
+    {
+     "name": "fox_tail_6_01",
+     "parent": "pelvis",
+     "head": [
+      0.0113,
+      0.9166,
+      -0.0936
+     ],
+     "len": 0.1999
+    },
+    {
+     "name": "fox_tail_6_02",
+     "parent": "fox_tail_6_01",
+     "head": [
+      0.0395,
+      0.7907,
+      -0.2462
+     ],
+     "len": 0.1999
+    },
+    {
+     "name": "fox_tail_6_03",
+     "parent": "fox_tail_6_02",
+     "head": [
+      0.0688,
+      0.6716,
+      -0.4041
+     ],
+     "len": 0.1998
+    },
+    {
+     "name": "fox_tail_6_04",
+     "parent": "fox_tail_6_03",
+     "head": [
+      0.0998,
+      0.5668,
+      -0.5714
+     ],
+     "len": 0.1997
+    },
+    {
+     "name": "fox_tail_6_05",
+     "parent": "fox_tail_6_04",
+     "head": [
+      0.133,
+      0.4844,
+      -0.7503
+     ],
+     "len": 0.1996
+    },
+    {
+     "name": "fox_tail_7_01",
+     "parent": "pelvis",
+     "head": [
+      0.0225,
+      0.9132,
+      -0.0936
+     ],
+     "len": 0.1958
+    },
+    {
+     "name": "fox_tail_7_02",
+     "parent": "fox_tail_7_01",
+     "head": [
+      0.0758,
+      0.7859,
+      -0.2325
+     ],
+     "len": 0.1958
+    },
+    {
+     "name": "fox_tail_7_03",
+     "parent": "fox_tail_7_02",
+     "head": [
+      0.1311,
+      0.6652,
+      -0.3764
+     ],
+     "len": 0.1957
+    },
+    {
+     "name": "fox_tail_7_04",
+     "parent": "fox_tail_7_03",
+     "head": [
+      0.1898,
+      0.5582,
+      -0.5294
+     ],
+     "len": 0.1957
+    },
+    {
+     "name": "fox_tail_7_05",
+     "parent": "fox_tail_7_04",
+     "head": [
+      0.2529,
+      0.4729,
+      -0.6938
+     ],
+     "len": 0.1955
+    },
+    {
+     "name": "fox_tail_8_01",
+     "parent": "pelvis",
+     "head": [
+      0.0338,
+      0.9098,
+      -0.0936
+     ],
+     "len": 0.1918
+    },
+    {
+     "name": "fox_tail_8_02",
+     "parent": "fox_tail_8_01",
+     "head": [
+      0.1082,
+      0.7814,
+      -0.215
+     ],
+     "len": 0.1917
+    },
+    {
+     "name": "fox_tail_8_03",
+     "parent": "fox_tail_8_02",
+     "head": [
+      0.1854,
+      0.6593,
+      -0.341
+     ],
+     "len": 0.1917
+    },
+    {
+     "name": "fox_tail_8_04",
+     "parent": "fox_tail_8_03",
+     "head": [
+      0.2678,
+      0.5504,
+      -0.4755
+     ],
+     "len": 0.1916
+    },
+    {
+     "name": "fox_tail_8_05",
+     "parent": "fox_tail_8_04",
+     "head": [
+      0.3567,
+      0.4624,
+      -0.6206
+     ],
+     "len": 0.1915
+    },
+    {
+     "name": "fox_tail_9_01",
+     "parent": "pelvis",
+     "head": [
+      0.045,
+      0.9065,
+      -0.0936
+     ],
+     "len": 0.1877
+    },
+    {
+     "name": "fox_tail_9_02",
+     "parent": "fox_tail_9_01",
+     "head": [
+      0.136,
+      0.7772,
+      -0.1947
+     ],
+     "len": 0.1876
+    },
+    {
+     "name": "fox_tail_9_03",
+     "parent": "fox_tail_9_02",
+     "head": [
+      0.2307,
+      0.6539,
+      -0.2998
+     ],
+     "len": 0.1876
+    },
+    {
+     "name": "fox_tail_9_04",
+     "parent": "fox_tail_9_03",
+     "head": [
+      0.3321,
+      0.5433,
+      -0.4124
+     ],
+     "len": 0.1875
+    },
+    {
+     "name": "fox_tail_9_05",
+     "parent": "fox_tail_9_04",
+     "head": [
+      0.442,
+      0.4528,
+      -0.5344
+     ],
+     "len": 0.1874
+    }
+   ],
+   "springs": {
+    "fox_tail_1": {
+     "bones": [
+      "fox_tail_1_01",
+      "fox_tail_1_02",
+      "fox_tail_1_03",
+      "fox_tail_1_04",
+      "fox_tail_1_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_2": {
+     "bones": [
+      "fox_tail_2_01",
+      "fox_tail_2_02",
+      "fox_tail_2_03",
+      "fox_tail_2_04",
+      "fox_tail_2_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_3": {
+     "bones": [
+      "fox_tail_3_01",
+      "fox_tail_3_02",
+      "fox_tail_3_03",
+      "fox_tail_3_04",
+      "fox_tail_3_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_4": {
+     "bones": [
+      "fox_tail_4_01",
+      "fox_tail_4_02",
+      "fox_tail_4_03",
+      "fox_tail_4_04",
+      "fox_tail_4_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_5": {
+     "bones": [
+      "fox_tail_5_01",
+      "fox_tail_5_02",
+      "fox_tail_5_03",
+      "fox_tail_5_04",
+      "fox_tail_5_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_6": {
+     "bones": [
+      "fox_tail_6_01",
+      "fox_tail_6_02",
+      "fox_tail_6_03",
+      "fox_tail_6_04",
+      "fox_tail_6_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_7": {
+     "bones": [
+      "fox_tail_7_01",
+      "fox_tail_7_02",
+      "fox_tail_7_03",
+      "fox_tail_7_04",
+      "fox_tail_7_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_8": {
+     "bones": [
+      "fox_tail_8_01",
+      "fox_tail_8_02",
+      "fox_tail_8_03",
+      "fox_tail_8_04",
+      "fox_tail_8_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    },
+    "fox_tail_9": {
+     "bones": [
+      "fox_tail_9_01",
+      "fox_tail_9_02",
+      "fox_tail_9_03",
+      "fox_tail_9_04",
+      "fox_tail_9_05"
+     ],
+     "stiffness": [
+      55,
+      12
+     ],
+     "damping": [
+      8,
+      3
+     ],
+     "gravity": 0.35
+    }
+   },
+   "pose_layer": {
+    "idle": [
+     {
+      "tail": 1,
+      "lift_deg": 38.0,
+      "spread_deg": -56.7
+     },
+     {
+      "tail": 2,
+      "lift_deg": 39.5,
+      "spread_deg": -42.525000000000006
+     },
+     {
+      "tail": 3,
+      "lift_deg": 41.0,
+      "spread_deg": -28.35
+     },
+     {
+      "tail": 4,
+      "lift_deg": 42.5,
+      "spread_deg": -14.175
+     },
+     {
+      "tail": 5,
+      "lift_deg": 44.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 42.5,
+      "spread_deg": 14.175
+     },
+     {
+      "tail": 7,
+      "lift_deg": 41.0,
+      "spread_deg": 28.35
+     },
+     {
+      "tail": 8,
+      "lift_deg": 39.5,
+      "spread_deg": 42.525000000000006
+     },
+     {
+      "tail": 9,
+      "lift_deg": 38.0,
+      "spread_deg": 56.7
+     }
+    ],
+    "walk": [
+     {
+      "tail": 1,
+      "lift_deg": 30.0,
+      "spread_deg": -48.3
+     },
+     {
+      "tail": 2,
+      "lift_deg": 31.5,
+      "spread_deg": -36.224999999999994
+     },
+     {
+      "tail": 3,
+      "lift_deg": 33.0,
+      "spread_deg": -24.15
+     },
+     {
+      "tail": 4,
+      "lift_deg": 34.5,
+      "spread_deg": -12.075
+     },
+     {
+      "tail": 5,
+      "lift_deg": 36.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 34.5,
+      "spread_deg": 12.075
+     },
+     {
+      "tail": 7,
+      "lift_deg": 33.0,
+      "spread_deg": 24.15
+     },
+     {
+      "tail": 8,
+      "lift_deg": 31.5,
+      "spread_deg": 36.224999999999994
+     },
+     {
+      "tail": 9,
+      "lift_deg": 30.0,
+      "spread_deg": 48.3
+     }
+    ],
+    "run": [
+     {
+      "tail": 1,
+      "lift_deg": 12.0,
+      "spread_deg": -25.2
+     },
+     {
+      "tail": 2,
+      "lift_deg": 13.5,
+      "spread_deg": -18.9
+     },
+     {
+      "tail": 3,
+      "lift_deg": 15.0,
+      "spread_deg": -12.6
+     },
+     {
+      "tail": 4,
+      "lift_deg": 16.5,
+      "spread_deg": -6.3
+     },
+     {
+      "tail": 5,
+      "lift_deg": 18.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 16.5,
+      "spread_deg": 6.3
+     },
+     {
+      "tail": 7,
+      "lift_deg": 15.0,
+      "spread_deg": 12.6
+     },
+     {
+      "tail": 8,
+      "lift_deg": 13.5,
+      "spread_deg": 18.9
+     },
+     {
+      "tail": 9,
+      "lift_deg": 12.0,
+      "spread_deg": 25.2
+     }
+    ],
+    "crouch": [
+     {
+      "tail": 1,
+      "lift_deg": 8.0,
+      "spread_deg": -67.2
+     },
+     {
+      "tail": 2,
+      "lift_deg": 9.5,
+      "spread_deg": -50.400000000000006
+     },
+     {
+      "tail": 3,
+      "lift_deg": 11.0,
+      "spread_deg": -33.6
+     },
+     {
+      "tail": 4,
+      "lift_deg": 12.5,
+      "spread_deg": -16.8
+     },
+     {
+      "tail": 5,
+      "lift_deg": 14.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 12.5,
+      "spread_deg": 16.8
+     },
+     {
+      "tail": 7,
+      "lift_deg": 11.0,
+      "spread_deg": 33.6
+     },
+     {
+      "tail": 8,
+      "lift_deg": 9.5,
+      "spread_deg": 50.400000000000006
+     },
+     {
+      "tail": 9,
+      "lift_deg": 8.0,
+      "spread_deg": 67.2
+     }
+    ],
+    "sit": [
+     {
+      "tail": 1,
+      "lift_deg": -20.0,
+      "spread_deg": -79.8
+     },
+     {
+      "tail": 2,
+      "lift_deg": -18.5,
+      "spread_deg": -59.849999999999994
+     },
+     {
+      "tail": 3,
+      "lift_deg": -17.0,
+      "spread_deg": -39.9
+     },
+     {
+      "tail": 4,
+      "lift_deg": -15.5,
+      "spread_deg": -19.95
+     },
+     {
+      "tail": 5,
+      "lift_deg": -14.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": -15.5,
+      "spread_deg": 19.95
+     },
+     {
+      "tail": 7,
+      "lift_deg": -17.0,
+      "spread_deg": 39.9
+     },
+     {
+      "tail": 8,
+      "lift_deg": -18.5,
+      "spread_deg": 59.849999999999994
+     },
+     {
+      "tail": 9,
+      "lift_deg": -20.0,
+      "spread_deg": 79.8
+     }
+    ],
+    "lie": [
+     {
+      "tail": 1,
+      "lift_deg": -35.0,
+      "spread_deg": -50.4
+     },
+     {
+      "tail": 2,
+      "lift_deg": -33.5,
+      "spread_deg": -37.8
+     },
+     {
+      "tail": 3,
+      "lift_deg": -32.0,
+      "spread_deg": -25.2
+     },
+     {
+      "tail": 4,
+      "lift_deg": -30.5,
+      "spread_deg": -12.6
+     },
+     {
+      "tail": 5,
+      "lift_deg": -29.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": -30.5,
+      "spread_deg": 12.6
+     },
+     {
+      "tail": 7,
+      "lift_deg": -32.0,
+      "spread_deg": 25.2
+     },
+     {
+      "tail": 8,
+      "lift_deg": -33.5,
+      "spread_deg": 37.8
+     },
+     {
+      "tail": 9,
+      "lift_deg": -35.0,
+      "spread_deg": 50.4
+     }
+    ],
+    "climb": [
+     {
+      "tail": 1,
+      "lift_deg": 25.0,
+      "spread_deg": -29.4
+     },
+     {
+      "tail": 2,
+      "lift_deg": 26.5,
+      "spread_deg": -22.049999999999997
+     },
+     {
+      "tail": 3,
+      "lift_deg": 28.0,
+      "spread_deg": -14.7
+     },
+     {
+      "tail": 4,
+      "lift_deg": 29.5,
+      "spread_deg": -7.35
+     },
+     {
+      "tail": 5,
+      "lift_deg": 31.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 29.5,
+      "spread_deg": 7.35
+     },
+     {
+      "tail": 7,
+      "lift_deg": 28.0,
+      "spread_deg": 14.7
+     },
+     {
+      "tail": 8,
+      "lift_deg": 26.5,
+      "spread_deg": 22.049999999999997
+     },
+     {
+      "tail": 9,
+      "lift_deg": 25.0,
+      "spread_deg": 29.4
+     }
+    ],
+    "swim": [
+     {
+      "tail": 1,
+      "lift_deg": 0.0,
+      "spread_deg": -16.8
+     },
+     {
+      "tail": 2,
+      "lift_deg": 1.5,
+      "spread_deg": -12.600000000000001
+     },
+     {
+      "tail": 3,
+      "lift_deg": 3.0,
+      "spread_deg": -8.4
+     },
+     {
+      "tail": 4,
+      "lift_deg": 4.5,
+      "spread_deg": -4.2
+     },
+     {
+      "tail": 5,
+      "lift_deg": 6.0,
+      "spread_deg": 0.0
+     },
+     {
+      "tail": 6,
+      "lift_deg": 4.5,
+      "spread_deg": 4.2
+     },
+     {
+      "tail": 7,
+      "lift_deg": 3.0,
+      "spread_deg": 8.4
+     },
+     {
+      "tail": 8,
+      "lift_deg": 1.5,
+      "spread_deg": 12.600000000000001
+     },
+     {
+      "tail": 9,
+      "lift_deg": 0.0,
+      "spread_deg": 16.8
+     }
+    ]
+   },
+   "clearance": {
+    "tail_near_camera_fade_m": 0.9
+   }
+  }
+ },
+ "fur_colors": {
+  "cream": {
+   "base": "#dcb394",
+   "tip": "#fbf3ea",
+   "shade": "#9e5644"
+  },
+  "russet": {
+   "base": "#b94420",
+   "tip": "#f6efe6",
+   "shade": "#6a2010"
+  },
+  "silver_white": {
+   "base": "#dfe2e4",
+   "tip": "#ffffff",
+   "shade": "#8a9aae"
+  },
+  "ash": {
+   "base": "#8f8a86",
+   "tip": "#d9d6d2",
+   "shade": "#4a4440"
+  },
+  "black_tipped": {
+   "base": "#b94420",
+   "tip": "#1e1a18",
+   "shade": "#6a2010"
+  }
+ },
+ "inner_ear": "#f2dcc8",
+ "inner_tuft": "#fbf3e8",
+ "color_model": "COLOR_0: R painted value (0.5 avg) plus fur strokes along the tail's UV v -> ramp(mix(base, shade)*0.7, base, mix(base, white, 0.22)); G tip -> the tip colour; B inner ear (1, #e8b4a8) / inner tuft (0.55, #fbf3e8)",
+ "hat_rule": "a head garment that hides the hair crown (hides_hair_zones has 'crown') sets ear_flat 1.0; a hood sets ear_back 1.0",
+ "garment_rule": "with tails shown, the lower garments open the tail_root hide region (tail_slit: a back slit at 180 deg up to 0.95 m); the tails root 2 cm off the skin at the sacrum, above the trouser band"
+}

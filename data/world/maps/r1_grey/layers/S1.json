@@ -1,0 +1,28 @@
+{
+  "_doc": "The greybox's S1 (StoryLayer, WorldRegion r1_grey): the reach stopped. WorldRiver's still reach applies (the river block's reaches, scale 0 in S1) and the reach is cordoned (plan section 2, 'The Silence in play': soldiers and clan watchers turn people back; what touching the water does stays unanswered). cordon: read by ThuyVanCordon. ropes: a rope line across the corridor at each end of the reach, posts every post_m; watchers: people standing at the ropes facing out (river_z, river_d: their place by the river, the d m along x from its centre); hold: how far either side of the river's centre the corridor runs; lines: what a watcher says to someone who comes up to the rope (plain words, nothing explained).",
+  "id": "S1",
+  "label": "The reach still",
+  "state": "S1",
+  "places": {
+    "reach_lower_end": {"river_z": -60.0, "river_d": 0.0},
+    "reach_middle": {"river_z": -118.0, "river_d": 0.0},
+    "reach_upper_end": {"river_z": -175.0, "river_d": 0.0},
+    "west_bank_below": {"river_z": -40.0, "river_d": -22.0}
+  },
+  "cordon": {
+    "hold_m": 46.0,
+    "ropes": [
+      {"z": -56.0, "post_m": 7.0},
+      {"z": -179.0, "post_m": 7.0}
+    ],
+    "watchers": [
+      {"river_z": -53.0, "river_d": -21.0, "sex": 1.0},
+      {"river_z": -52.0, "river_d": -33.0, "sex": 1.0},
+      {"river_z": -53.0, "river_d": 19.0, "sex": 0.0},
+      {"river_z": -182.0, "river_d": -24.0, "sex": 1.0}
+    ],
+    "lines": ["Back from the water.", "No one goes past the rope.", "Not today. Go home.", "Keep off. Nobody touches it."]
+  },
+  "sites": [],
+  "animals": {}
+}

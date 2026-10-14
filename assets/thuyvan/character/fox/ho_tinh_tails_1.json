@@ -1,0 +1,109 @@
+{
+ "id": "ho_tinh_tails_1",
+ "name": "Fox tails, 1",
+ "description": "1 fox tail on their own bones, cream by default with a pale tip; any count 1-9 is a free choice.",
+ "kind": "feature",
+ "set": "tv_features",
+ "slot": "features.tail",
+ "alt_slots": [],
+ "layer": {
+  "default": 12
+ },
+ "glb": "res://assets/thuyvan/character/fox/ho_tinh_tails_1.glb",
+ "mesh": "ho_tinh_tails_1",
+ "surfaces": [
+  {
+   "surface": "fur",
+   "name": "fox_tail_1"
+  }
+ ],
+ "occupies_regions": [],
+ "hides_regions": [],
+ "hides_hair_zones": [],
+ "hair_zones": [],
+ "excludes": [],
+ "requires": [],
+ "variants": {},
+ "skirt": null,
+ "helpers": [],
+ "body_fit": {
+  "shapes": [],
+  "female": true,
+  "male": true
+ },
+ "zones": [
+  {
+   "zone": 0,
+   "name": "fur",
+   "role": "fur",
+   "fabric": "FUR",
+   "palette": [
+    "cream",
+    "russet",
+    "silver_white",
+    "ash",
+    "black_tipped"
+   ],
+   "default": "cream"
+  }
+ ],
+ "stats": {
+  "tris": 3388
+ },
+ "status": "proposal",
+ "extension_bones": [
+  {
+   "name": "fox_tail_1_01",
+   "parent": "pelvis",
+   "head": [
+    0.0,
+    0.92,
+    -0.0936
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_1_02",
+   "parent": "fox_tail_1_01",
+   "head": [
+    0.0,
+    0.7957,
+    -0.2553
+   ],
+   "len": 0.204
+  },
+  {
+   "name": "fox_tail_1_03",
+   "parent": "fox_tail_1_02",
+   "head": [
+    0.0,
+    0.6785,
+    -0.4223
+   ],
+   "len": 0.2039
+  },
+  {
+   "name": "fox_tail_1_04",
+   "parent": "fox_tail_1_03",
+   "head": [
+    0.0,
+    0.5761,
+    -0.5986
+   ],
+   "len": 0.2038
+  },
+  {
+   "name": "fox_tail_1_05",
+   "parent": "fox_tail_1_04",
+   "head": [
+    0.0,
+    0.497,
+    -0.7864
+   ],
+   "len": 0.2037
+  }
+ ],
+ "opens_regions": [
+  "tail_root"
+ ]
+}

@@ -1,0 +1,110 @@
+{
+ "atlas": "res://assets/thuyvan/paint/foliage/tv_foliage_atlas.png",
+ "species": {
+  "tv_broadleaf": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_bark_broadleaf.png",
+   "variants": [
+    {
+     "height_m": 8.0,
+     "tris_lod0": 1340,
+     "tris_lod1": 328
+    },
+    {
+     "height_m": 12.0,
+     "tris_lod0": 988,
+     "tris_lod1": 264
+    },
+    {
+     "height_m": 17.0,
+     "tris_lod0": 988,
+     "tris_lod1": 264
+    }
+   ]
+  },
+  "tv_karst_pine": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_bark_pine.png",
+   "variants": [
+    {
+     "height_m": 4.0,
+     "tris_lod0": 596,
+     "tris_lod1": 208
+    },
+    {
+     "height_m": 7.0,
+     "tris_lod0": 1084,
+     "tris_lod1": 352
+    },
+    {
+     "height_m": 11.0,
+     "tris_lod0": 808,
+     "tris_lod1": 280
+    }
+   ]
+  },
+  "tv_bamboo": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_bamboo_culm.png",
+   "variants": [
+    {
+     "height_m": 6.5,
+     "tris_lod0": 2108,
+     "tris_lod1": 608
+    },
+    {
+     "height_m": 10.0,
+     "tris_lod0": 1736,
+     "tris_lod1": 532
+    }
+   ]
+  },
+  "tv_banana": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_banana_trunk.png",
+   "variants": [
+    {
+     "height_m": 4.2,
+     "tris_lod0": 336,
+     "tris_lod1": 90
+    }
+   ]
+  },
+  "tv_fern": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_bark_broadleaf.png",
+   "variants": [
+    {
+     "height_m": 0.8,
+     "tris_lod0": 54,
+     "tris_lod1": 20
+    },
+    {
+     "height_m": 1.2,
+     "tris_lod0": 42,
+     "tris_lod1": 20
+    },
+    {
+     "height_m": 1.6,
+     "tris_lod0": 54,
+     "tris_lod1": 20
+    }
+   ]
+  },
+  "tv_shrub": {
+   "bark": "res://assets/thuyvan/paint/foliage/tv_bark_broadleaf.png",
+   "variants": [
+    {
+     "height_m": 1.2,
+     "tris_lod0": 310,
+     "tris_lod1": 110
+    },
+    {
+     "height_m": 1.8,
+     "tris_lod0": 310,
+     "tris_lod1": 110
+    },
+    {
+     "height_m": 2.4,
+     "tris_lod0": 392,
+     "tris_lod1": 140
+    }
+   ]
+  }
+ }
+}

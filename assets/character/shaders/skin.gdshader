@@ -350,6 +350,7 @@ void fragment() {
 	float sss = sss_strength;
 	// a world people's mark in the skin (people_trait.gdshaderinc: keelstone flecks, Form veins), not on the lips
 	vec3 trait_emit = trait_shade(UV, v_region, 1.0 - mucosa, albedo, rough);
+	trait_emit += tv_trait_shade(UV, v_mh, v_region, 1.0 - mucosa, dot(NORMAL, VIEW), albedo, rough);
 	// mucosa: less melanin, more blood, glossier; darker skin keeps more pigment in the lips
 	if (mucosa > 0.001) {
 		vec3 lip = tone_at(melanin * 0.82 + 0.02) * albedo_scale * blood(0.5 + 0.55 + 0.25 * haemoglobin, melanin * 0.8);
