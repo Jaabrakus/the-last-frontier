@@ -146,9 +146,14 @@ func _set_active(on: bool) -> void:
 		_unbound.clear()
 
 
-## The game's clock (s): its physics frames, so that a tap's TAP_S is the frames the caster saw (the tests run them faster than
-## the wall's clock).
+## The wall's clock (s): a finger's time.
 func _now() -> float:
+	return Time.get_ticks_msec() / 1000.0
+
+
+## The game's clock (s): its physics frames. A press is a tap only by both clocks: a slow frame rate (a phone's, a hidden page's)
+## never makes a hold a tap, nor do the tests' frames, run faster than the wall's.
+func _now_game() -> float:
 	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
 
 
@@ -342,7 +347,7 @@ func _down(i: int, pos: Vector2) -> void:
 		return
 	var b := _button_at(pos)
 	if not b.is_empty():
-		_touch[i] = {"kind": "button", "b": b, "t0": _now(), "at": pos, "moved": 0.0}
+		_touch[i] = {"kind": "button", "b": b, "t0": _now(), "g0": _now_game(), "at": pos, "moved": 0.0}
 		if b.has("key"):
 			var k := int(b.key)
 			if _acts_at_once(k):
@@ -404,7 +409,7 @@ func _up(i: int, pos := Vector2.ZERO) -> void:
 			var c := SwayCaster.of(player) if is_instance_valid(player) else null
 			var full := c != null and c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]
 			var dragged := float(t.moved) >= _pad.size.y * DRAG_PX
-			var tap := not dragged and not full and _now() - float(t.t0) < TAP_S
+			var tap := not dragged and not full and _now() - float(t.t0) < TAP_S and _now_game() - float(t.g0) < TAP_S
 			var back := dragged and pos.distance_to(b.at) <= float(b.r) * HIT_SLACK
 			if tap or back:
 				# (a tap: only a hold and let go casts (the owner, 2026-10-14), its skill left readied; dragged out and back
