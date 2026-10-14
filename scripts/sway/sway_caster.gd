@@ -360,6 +360,14 @@ var rooted := false
 var _floor_t := 0.0
 var _local_at := Vector3.ZERO        ## the locked point in the target's frame
 var _wait_release := false
+## The tap style (MatchSetup.cast_style "tap"; moves.json tap_cast; the owner, 2026-10-13): each skill's cooldown ("move/mode"
+## -> [when it is ready again, its length], BendStatus.now()), the shared one's end and length, and a click kept while its
+## skill cooled (its source; until when it waits to begin).
+var _cd := {}
+var _gcd_until := -INF
+var _gcd_len := 0.0
+var _tap_buf_until := -INF
+var _tap_buf_src := ""
 var _cam_w := 0.0
 var _arm_w := 0.0
 var _shove_t := -1.0
@@ -750,6 +758,9 @@ func ready_default() -> void:
 func drop_all() -> void:
 	_buf3 = false
 	_queued = false
+	_cd.clear()                                   # (the tap style: a fall starts every skill ready)
+	_gcd_until = -INF
+	_tap_buf_until = -INF
 	var src := lock_src
 	if state == State.HOLDING:
 		_end_hold("fall")
@@ -1632,7 +1643,11 @@ func _physics_process(dt: float) -> void:
 		if lock_src != SRC_AIM or not _src_held(SRC_AIM):
 			_sch_id = ""                          # (the scheme's pick lives while the aim is held)
 			_sch_mode = ""
+		if _tap_buf_until > BendStatus.now() and not _src_held(lock_src):
+			lock_src = _tap_buf_src               # (the tap style: a click kept while its skill cooled)
 	var held := _src_held(lock_src)
+	if not held and state == State.IDLE and lock_src == _tap_buf_src and BendStatus.now() < _tap_buf_until:
+		held = true                               # (it begins the moment its skill is ready, as a click: _try_begin's caller)
 	var waiting := _wait_release and _wait_src == lock_src
 	if _track_press(held, dt) and _queued and state != State.IDLE and lock_src != SRC_DASH:
 		_queued = false                       # (a click waiting on its lock pressed again: a hold again, the time kept)
@@ -1678,8 +1693,8 @@ func _physics_process(dt: float) -> void:
 					_let_go = false
 					_beat_go = false
 			State.LOCKING:
-				if elem() and _press_t < Bending.rule("click_s", 0.2) and _click_runs_on():
-					_queued = true                # (a click: it goes the moment the lock is full)
+				if elem() and (_press_t < Bending.rule("click_s", 0.2) or _tap_runs()) and _click_runs_on():
+					_queued = true                # (a click: it goes the moment the lock is full; the tap style: any let go)
 				elif frozen():
 					_queued = true                # (round 3: a release in hitstun is kept for the first free frame: a hit never
 					                              # costs the cast its lock, the hold rule's one exception)
@@ -1700,6 +1715,10 @@ func _physics_process(dt: float) -> void:
 	match state:
 		State.IDLE:
 			_try_begin(_q)
+			if state != State.IDLE and _tap_buf_until > -INF:
+				_tap_buf_until = -INF
+				if not _src_held(lock_src):
+					_queued = true                # (the kept click: it goes the moment its wind-up is full)
 		State.LOCKING, State.FULL:
 			_hold(dt, _q)
 		State.HOLDING:
@@ -1836,7 +1855,12 @@ func _pick_src() -> void:
 ## Bending.rule("click_queue") (the owner, 2026-10-10: "we cant just click and it does we have to hold it no more click and
 ## forget": a cast is held until its lock is full, then let go; let go early, it is called off and nothing is spent).
 func _click_runs_on() -> bool:
-	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false))
+	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false)) or _tap_runs()
+
+
+## The tap style's aim and quick button: a click casts (MatchSetup.cast_style "tap").
+func _tap_runs() -> bool:
+	return tap_on() and lock_src in [SRC_AIM, SRC_QUICK]
 
 
 ## The cast going now is a held one let go (the let-go branch): the Beat may count.
@@ -2408,6 +2432,19 @@ func _try_begin(q: Dictionary) -> void:
 				player.interactor.notice("Too heavy for one: it needs two casters", 1.5)
 			_hinted = "heavy"
 			return
+	if _tap_runs():
+		var left := cooldown_left(m, mode_of(m))
+		if left > 0.0:
+			# (the tap style: its own cooldown or the shared one still running; a click within queue_s of its end is kept and
+			# begins then, a held button begins then by itself)
+			if left <= tap_num("queue_s", 0.3) and _tap_buf_until < BendStatus.now():
+				_tap_buf_until = BendStatus.now() + left + 0.05
+				_tap_buf_src = lock_src
+			if _hinted != "cooling" and player.is_local and left > tap_num("queue_s", 0.3):
+				BendSounds.play(&"lock_sputter", Vector3.INF, -8.0, 1.3)    # (not ready: a soft fizz, once a press)
+			hint = "cooling"
+			_hinted = "cooling"
+			return
 	var dist := reach_to(point, m)
 	var r := range_of(m, t)
 	if dist > r and not _self_cast(m):
@@ -2550,6 +2587,10 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
 		base = float(air_times.get(mode_of(m), base))
+	if tap_on() and lock_src in [SRC_AIM, SRC_QUICK] and not holds_stone(m, t):
+		var tv := tap_of(m, mode_of(m))
+		if not tv.is_empty():
+			base = float(tv[0])                    # (the tap style: its short wind-up; its cooldown after the cast, _tap_spent)
 	if elem() and lock_src == SRC_GUARD:
 		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
@@ -3381,6 +3422,8 @@ func _cast() -> void:
 			_wait_src = SRC_GUARD
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
+	if tap_on() and src in [SRC_AIM, SRC_QUICK]:
+		_tap_spent(m, String(pin[1]))
 	cast_released.emit(m, String(pin[1]))
 	if r3_on and bool(rel.get("air", false)):
 		air_cast.emit(m, String(pin[1]))           # (round 3: MOVE plays the air legs)
@@ -3665,6 +3708,62 @@ func _end_on(why: String) -> void:
 
 func _on_fired() -> void:
 	_end_on("fired")
+
+
+# ---------------------------------------------------------------- the tap style (MatchSetup.cast_style "tap")
+## The tap style on for this caster: a ring's or a duel's element caster with the tap style chosen (MatchSetup.tap_cast).
+func tap_on() -> bool:
+	return elem() and MatchSetup.tap_cast()
+
+
+## Skill `m` at `md`'s tap numbers [wind-up s, cooldown s] (moves.json tap_cast.moves: "move/mode", else "move"); [] when it
+## keeps its own lock and has no cooldown (the jab, the guard, key 3's movement).
+static func tap_of(m: String, md: String) -> Array:
+	var t: Dictionary = (SwayMoves.data().get("tap_cast", {}) as Dictionary).get("moves", {})
+	var v: Variant = t.get("%s/%s" % [m, md], t.get(m))
+	return v as Array if v is Array and (v as Array).size() >= 2 else []
+
+
+static func tap_num(key: String, def: float) -> float:
+	return float((SwayMoves.data().get("tap_cast", {}) as Dictionary).get(key, def))
+
+
+## Seconds until skill `m` at `md` may cast again under the tap style: the longer of its own cooldown and the shared one (0:
+## ready; always 0 off the tap style or for a skill without tap numbers).
+func cooldown_left(m: String, md: String) -> float:
+	if not tap_on() or tap_of(m, md).is_empty():
+		return 0.0
+	var now := BendStatus.now()
+	var own: Array = _cd.get("%s/%s" % [m, md], [-INF, 0.0])
+	return maxf(maxf(float(own[0]) - now, _gcd_until - now), 0.0)
+
+
+## The share of its cooldown still to run (0..1: the strip's sweep), the longer of its own and the shared one by time left.
+func cooldown_share(m: String, md: String) -> float:
+	if not tap_on() or tap_of(m, md).is_empty():
+		return 0.0
+	var now := BendStatus.now()
+	var own: Array = _cd.get("%s/%s" % [m, md], [-INF, 0.0])
+	var left_own := float(own[0]) - now
+	var left_g := _gcd_until - now
+	if left_own <= 0.0 and left_g <= 0.0:
+		return 0.0
+	if left_own >= left_g:
+		return clampf(left_own / maxf(float(own[1]), 0.01), 0.0, 1.0)
+	return clampf(left_g / maxf(_gcd_len, 0.01), 0.0, 1.0)
+
+
+## A tap cast of `m` at `md` spent: its own cooldown (each combo stack of his takes combo.fill off it: BendCombo.head_start)
+## and the shared one begin.
+func _tap_spent(m: String, md: String) -> void:
+	var tv := tap_of(m, md)
+	if tv.is_empty():
+		return
+	var now := BendStatus.now()
+	var cd := float(tv[1]) * (1.0 - BendCombo.head_start(player))
+	_cd["%s/%s" % [m, md]] = [now + cd, cd]
+	_gcd_len = tap_num("gcd_s", 0.4)
+	_gcd_until = now + _gcd_len
 
 
 func _sfx(key: String, db: float, at := Vector3.INF) -> void:

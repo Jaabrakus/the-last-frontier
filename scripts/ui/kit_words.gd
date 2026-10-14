@@ -201,7 +201,9 @@ static func help_line(s := "") -> String:
 ## The strip's one help line under scheme `s` (round 4, HUD: screens.json kit.help_strip; one line, 64 characters or fewer,
 ## its first letter a capital; round 2's longer help_line stays the duel's and F1's).
 static func strip_help(s := "") -> String:
-	var h: Dictionary = words().get("help_strip", {})
+	var h: Dictionary = words().get("help_strip_tap" if MatchSetup.tap_cast() else "help_strip", {})   # (the cast style's)
+	if h.is_empty():
+		h = words().get("help_strip", {})
 	var k := scheme_id(s)
 	var t := keyed(String(h.get(k, h.get("keys", ""))))
 	return t.substr(0, 1).to_upper() + t.substr(1) if t != "" else help_line(s)
@@ -210,9 +212,12 @@ static func strip_help(s := "") -> String:
 ## F1's and the first-time panels' four rules: the lock, the guard, the counters, the floor and the air.
 static func rule_lines() -> Array:
 	var r: Dictionary = words().get("rules", {})
+	var rt: Dictionary = words().get("rules_tap", {}) if MatchSetup.tap_cast() else {}
 	var out: Array = []
 	for k in ["lock", "guard", "web", "dodge"]:
-		if r.has(k):
+		if rt.has(k):
+			out.append(keyed(String(rt[k])))         # (the tap style's own line: a click casts)
+		elif r.has(k):
 			out.append(keyed(String(r[k])))
 	return out
 

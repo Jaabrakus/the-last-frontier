@@ -521,6 +521,10 @@ static func lock_for(id: String, md: String, preset_name := "hard", dist := 0.0,
 		# (Second Wind's Patch lock as its share of the ring's Patch lock: a bot's Patch lock is its own; Classic x1)
 		var ring := float(d.get("ring_lock_s", base))
 		base *= AirTalents.patch_lock(who, ring) / maxf(ring, 0.01)
+	if who != null and MatchSetup.tap_cast() and BendR3.on(who) and id != "patch":
+		var tv := SwayCaster.tap_of(id, md)
+		if not tv.is_empty():
+			base = float(tv[0])                  # (the tap style: the player's short wind-up, his cooldown as its cool)
 	var stretch := 1.0
 	if not self_cast(id, md):
 		var r := range_of(id, md)
@@ -1622,6 +1626,10 @@ func _release() -> void:
 			gusts += 1
 	var o := _option(key)
 	_cool[key] = _now() + float((o.get("hint", {}) as Dictionary).get("cool_s", 2.5)) if not o.is_empty() else _now() + 2.5
+	if MatchSetup.tap_cast() and BendR3.on(me):
+		var tv := SwayCaster.tap_of(id, md)
+		if not tv.is_empty():
+			_cool[key] = maxf(float(_cool[key]), _now() + float(tv[1]))   # (the tap style: at least the player's cooldown)
 	var rs: Variant = pr.get("rest_s", [0.5, 1.0])
 	_rest_until = _now() + (me.rng.randf_range(float(rs[0]), float(rs[1])) if rs is Array else float(rs))
 	_last_key = key

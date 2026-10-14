@@ -405,6 +405,7 @@ func _process(dt: float) -> void:
 			(ui.other as Label).visible = float(_tap_a[i]) > 0.001 and (ui.other as Label).text != ""
 		(ui.grow as Label).modulate.a = float(_tap_a[i])
 		(ui.grow as Label).visible = float(_tap_a[i]) > 0.001 and (ui.grow as Label).text != ""
+	_cooldowns()
 	_help_a = move_toward(_help_a, 1.0 if help_on() else 0.0, dt / maxf(snum("help_fade_s", 1.0), 0.01))
 	_help.modulate.a = _help_a
 	_help.visible = _help_a > 0.001 and _help.text != ""
@@ -783,6 +784,7 @@ func refresh() -> void:
 		_paint(_cols[i], String(col.head), String(col.id), String(col.label), String(col.sub), String(col.grow), bool(col.readied),
 				not bool(col.hidden), String(col.icon_id), String(col.icon_mode), el)
 		var ui: Dictionary = _cols[i]
+		ui["cd_mv"] = [String(col.get("id", "")), String(col.get("mode", ""))]    # (the tap style's cooldown: _process)
 		if col.has("stale"):
 			# (the % ring: the name dims by stale copies; ground-dependent spells have a grey chip in the air)
 			(ui.name as Label).modulate.a = stale_alpha(int(col.stale))
@@ -905,6 +907,47 @@ static func every_chip() -> Array:
 
 
 # ---------------------------------------------------------------- drawing
+## The tap style (MatchSetup.cast_style "tap"): each key's skill's cooldown, its share still to run and its seconds, kept on
+## its chip (cd, cd_s) and drawn over its picture as WoW's sweep (_draw_cooldown); redrawn only as it moves.
+func _cooldowns() -> void:
+	var sc := SwayCaster.of(player)
+	for i in mini(KEYS, _cols.size()):
+		var ui: Dictionary = _cols[i]
+		var mv: Array = ui.get("cd_mv", [])
+		var sh := 0.0
+		var left := 0.0
+		if sc != null and mv.size() == 2 and String(mv[0]) != "":
+			sh = sc.cooldown_share(String(mv[0]), String(mv[1]))
+			left = sc.cooldown_left(String(mv[0]), String(mv[1]))
+		var was := float(ui.get("cd", 0.0))
+		if absf(sh - was) > 0.004 or (sh <= 0.0) != (was <= 0.0) or absf(left - float(ui.get("cd_s", 0.0))) > 0.09:
+			ui["cd"] = sh
+			ui["cd_s"] = left
+			(ui.icon as Control).queue_redraw()
+
+
+## A cooldown's sweep over a chip's picture: the share `k` still to run darkened, from the top round clockwise as WoW's, the
+## seconds left over it (tenths under one second).
+static func _draw_cooldown(icon: Control, r: Rect2, k: float, left: float) -> void:
+	var c := r.get_center()
+	var rad := minf(r.size.x, r.size.y) * 0.5 + 2.0
+	var pts := PackedVector2Array([c])
+	var n := maxi(int(48.0 * k), 2)
+	for j in n + 1:
+		var a := -PI * 0.5 + TAU * (1.0 - k) + TAU * k * float(j) / float(n)
+		pts.append(c + Vector2(cos(a), sin(a)) * rad)
+	icon.draw_colored_polygon(pts, Color(0.02, 0.015, 0.01, 0.66))
+	var f := icon.get_theme_default_font()
+	if f == null or left <= 0.05:
+		return
+	var txt := ("%d" % ceili(left)) if left >= 1.0 else ("%.1f" % left)
+	var px := int(snum("cooldown_px", 15.0))
+	var w := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var at := c + Vector2(-w * 0.5, px * 0.36)
+	icon.draw_string_outline(f, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 4, Color(0.02, 0.015, 0.01, 0.9))
+	icon.draw_string(f, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, FrontierHUD.TEXT)
+
+
 func _draw_icon(ui: Dictionary) -> void:
 	var icon := ui.icon as Control
 	var r := Rect2(Vector2.ZERO, icon.size)
@@ -913,6 +956,8 @@ func _draw_icon(ui: Dictionary) -> void:
 	var tex: Texture2D = ui.tex
 	if tex == null:
 		FrontierHUD.draw_spell_circle(icon, r)
+		if float(ui.get("cd", 0.0)) > 0.0:
+			_draw_cooldown(icon, r, float(ui.cd), float(ui.get("cd_s", 0.0)))
 		return
 	var ts := tex.get_size()
 	var k := minf(r.size.x / ts.x, r.size.y / ts.y)
@@ -923,3 +968,5 @@ func _draw_icon(ui: Dictionary) -> void:
 	for d: Vector2 in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1), Vector2(1.4, 1.4)]:
 		icon.draw_texture_rect(tex, Rect2(fit.position + d * ink, fit.size), false, ink_c)
 	icon.draw_texture_rect(tex, fit, false, ui.get("tint", Color.WHITE) if tex.resource_path.ends_with(".svg") else Color.WHITE)
+	if float(ui.get("cd", 0.0)) > 0.0:
+		_draw_cooldown(icon, r, float(ui.cd), float(ui.get("cd_s", 0.0)))

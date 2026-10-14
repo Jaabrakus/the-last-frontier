@@ -18,6 +18,7 @@ extends CanvasLayer
 ##                      off, speed, fresh moves), each at once and kept (RingPractice applies them; practice.json words)
 ##   Options            its rows in the panel at the right, each at once and kept:
 ##     Aim help: Normal   how much the casts are helped onto a fighter near the crosshair, in turn (Off, Normal, Strong)
+##     Cast style: Tap    a click casts after a short wind-up, each skill then on its cooldown (Tap), or held until full (Hold)
 ##     Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                        section); on, they show in the match under way
 ##     Camera: High       round 4 (READ): where the camera sits behind you, in turn (RingCamera: High, Close, Shoulder, High
@@ -67,6 +68,7 @@ var _scheme: Button
 ## Round 4 SIMPLE: the Controls preset's row (Basic / Full), laid into the Controls panel with the scheme's.
 var _preset: Button
 var _aim: Button
+var _cast_row: Button
 var _hints: Button
 var _camera: Button
 var _jolt: Button
@@ -263,6 +265,10 @@ func _ready() -> void:
 	_options = _sub_panel("OptionRows", w("options"))
 	_aim = _opt_row(_options, "AimHelp", "Aim help", MatchSetup.AIM_ORDER.map(MatchSetup.aim_name), cycle_aim, func(i: int) -> void:
 		MatchSetup.set_aim_help(String(MatchSetup.AIM_ORDER[i]))
+		_paint())
+	_cast_row = _opt_row(_options, "CastStyle", "Cast style", MatchSetup.CAST_STYLES.map(func(c: String) -> String:
+			return String(MatchSetup.CAST_NAMES.get(c, c))), cycle_cast, func(i: int) -> void:
+		MatchSetup.set_cast_style(String(MatchSetup.CAST_STYLES[i]))
 		_paint())
 	_hints = _opt_row(_options, "KeyHints", "Key hints", ["On", "Off"], toggle_hints, func(i: int) -> void:
 		if (i == 0) != FirstHints.on():
@@ -672,6 +678,13 @@ func cycle_aim() -> void:
 	_note.text = "Aim help: %s" % MatchSetup.aim_name()
 
 
+## The cast style in turn (MatchSetup.CAST_STYLES: tap, hold): at once, kept.
+func cycle_cast() -> void:
+	MatchSetup.set_cast_style(MatchSetup.next_cast_style())
+	_paint()
+	_note.text = MatchSetup.cast_row()
+
+
 ## The key hints on or off: at once (on: shown over the match under way; off: the ones up go), kept.
 func toggle_hints() -> void:
 	var now := not FirstHints.on()
@@ -778,6 +791,7 @@ func _paint() -> void:
 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
 	_set_row(_preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
 	_opt(_aim, MatchSetup.aim_row(), MatchSetup.AIM_ORDER.find(MatchSetup.aim_help()), MatchSetup.aim_row_line())
+	_opt(_cast_row, MatchSetup.cast_row(), MatchSetup.CAST_STYLES.find(MatchSetup.cast_style()), MatchSetup.cast_row_line())
 	_opt(_hints, FirstHints.row_text(), 0 if FirstHints.on() else 1, FirstHints.row_line())
 	var cam_keys: Array = ["close", "shoulder", "high", "high_shoulder"]
 	_opt(_camera, RingCamera.row_text(), cam_keys.find(RingCamera.key()), RingCamera.row_line())

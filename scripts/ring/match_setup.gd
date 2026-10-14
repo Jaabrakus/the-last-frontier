@@ -234,6 +234,9 @@ static func parse(args: PackedStringArray) -> bool:
 			"aim", "aim_help":
 				if v in AIMS:
 					_aim_help = v                # (for the run: not kept)
+			"cast", "cast_style":
+				if v in CAST_STYLES:
+					_cast_style = v              # (for the run: not kept)
 			"scheme", "controls":
 				if k == "controls" and v in CONTROLS:
 					_controls = v                # (round 4: the Controls preset for the run: not kept)
@@ -668,6 +671,7 @@ static func reload_scheme() -> void:
 	_scheme = ""
 	_aim_help = ""
 	_controls = ""
+	_cast_style = ""
 
 
 # --- The Controls preset (round 4 SIMPLE: "simple like runescape but hard to master like runescape") ---------------
@@ -792,6 +796,55 @@ static func aim_cone_deg() -> float:
 
 static func aim_pull() -> float:
 	return float(AIM_PULL.get(aim_help(), 1.0))
+
+
+# ---------------------------------------------------------------- the cast style
+## How a readied skill casts (the owner, 2026-10-13: "would we break the game if cast time is the cooldown ... after each click
+## it does a mini refresh like how wow does", then "yea ... just global cooldowns we still have to click a number or highlight
+## and we can click ... to launch it or hold it longer for its bigger cast"): "tap" (a click casts it after its short wind-up,
+## then it waits its own cooldown and every skill a short shared one; held on, it grows as ever: SwayCaster's tap layer,
+## moves.json tap_cast) or "hold" (its lock held until full, then let go: as before). Kept (GameSettings); a script run (the
+## tests) keeps "hold" unless it asks (cast=tap).
+const CAST_STYLES := ["tap", "hold"]
+const CAST_KEY := "cast_style"
+const CAST_NAMES := {"tap": "Tap", "hold": "Hold"}
+static var _cast_style := ""
+
+
+static func cast_style() -> String:
+	if _cast_style == "":
+		var def := "hold" if SaveGame._is_script_run() else "tap"
+		var cf := ConfigFile.new()
+		cf.load(GameSettings.file())
+		var s := String(cf.get_value(SECTION, CAST_KEY, def))
+		_cast_style = s if s in CAST_STYLES else def
+	return _cast_style
+
+
+static func set_cast_style(s: String) -> bool:
+	if not s in CAST_STYLES:
+		return false
+	_cast_style = s
+	GameSettings.set_value(SECTION, CAST_KEY, s)
+	return true
+
+
+## A click casts (the tap style).
+static func tap_cast() -> bool:
+	return cast_style() == "tap"
+
+
+static func next_cast_style() -> String:
+	return String(CAST_STYLES[(CAST_STYLES.find(cast_style()) + 1) % CAST_STYLES.size()])
+
+
+static func cast_row() -> String:
+	return "Cast style:  %s" % String(CAST_NAMES.get(cast_style(), cast_style().capitalize()))
+
+
+static func cast_row_line() -> String:
+	return "click to cast, each skill then on its cooldown; hold on for its bigger cast" if tap_cast() \
+			else "hold until the ring fills, then let go"
 
 
 ## The name the player sees for choice `a` (the one kept when "").
