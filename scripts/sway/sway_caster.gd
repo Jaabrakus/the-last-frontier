@@ -3753,6 +3753,19 @@ func cooldown_share(m: String, md: String) -> float:
 	return clampf(left_g / maxf(_gcd_len, 0.01), 0.0, 1.0)
 
 
+## A lock of the aim or the quick button called off, nothing spent, a raised stone let go loose (the touch layer's finger
+## dragged back onto its key: TouchControls), as a let go before full under the hold style; a click kept is dropped too.
+func cancel_lock() -> void:
+	_tap_buf_until = -INF
+	if state == State.IDLE:
+		return
+	_queued = false
+	if state == State.HOLDING:
+		_end_hold("let go")
+	else:
+		_break("let go")
+
+
 ## A tap cast of `m` at `md` spent: its own cooldown (each combo stack of his takes combo.fill off it: BendCombo.head_start)
 ## and the shared one begin.
 func _tap_spent(m: String, md: String) -> void:

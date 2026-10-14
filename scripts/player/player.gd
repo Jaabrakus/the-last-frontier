@@ -472,6 +472,7 @@ func _ready() -> void:
 		if arena:
 			TouchControls.attach(self)         # (the web build on a phone or a tablet: the thumbs' controls; else nothing)
 			WebPerf.attach(self)               # (the web build with ?perf=1: the frame's numbers in the console)
+			CastGuide.attach(self)             # (where an aimed skill will go, while it is aimed: every platform)
 		var arc := TrajectoryPreview.new()
 		arc.name = "TrajectoryPreview"
 		arc.player = self

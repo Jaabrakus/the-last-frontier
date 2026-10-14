@@ -79,6 +79,7 @@
 		"format_line_4v4": "four a side on the big deck, 2 lives each: your team-mates and their other three drawn at random",
 		"games_1": "1",
 		"games_3": "best of 3",
-		"controls_line": "1, 2, 4, 5 ready a move  ·  hold right click, let go: cast  ·  hold left click: jab  ·  E guards  ·  3 dodges  ·  Space jumps  ·  C is down"
+		"controls_line": "1, 2, 4, 5 ready a move  ·  hold right click, let go: cast  ·  hold left click: jab  ·  E guards  ·  3 dodges  ·  Space jumps  ·  C is down",
+		"controls_line_tap": "1, 2, 4, 5 ready a move  ·  right click: cast, hold for the bigger one  ·  left click: jab  ·  E guards  ·  3 dodges  ·  Space jumps  ·  C is down"
 	}
 }

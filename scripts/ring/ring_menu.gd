@@ -18,7 +18,6 @@ extends CanvasLayer
 ##                      off, speed, fresh moves), each at once and kept (RingPractice applies them; practice.json words)
 ##   Options            its rows in the panel at the right, each at once and kept:
 ##     Aim help: Normal   how much the casts are helped onto a fighter near the crosshair, in turn (Off, Normal, Strong)
-##     Cast style: Tap    a click casts after a short wind-up, each skill then on its cooldown (Tap), or held until full (Hold)
 ##     Key hints: on      the control scheme's keys at the top left until each is used (FirstHints; GameSettings' hints
 ##                        section); on, they show in the match under way
 ##     Camera: High       round 4 (READ): where the camera sits behind you, in turn (RingCamera: High, Close, Shoulder, High
@@ -31,7 +30,10 @@ extends CanvasLayer
 ##                      E guard, 1-5 with their plain names; in the % ring first the one line of practice.json
 ##                      menu.controls_line), the four rules, and the row "Other ways to pick moves:
 ##                      Keys" (MatchSetup.set_scheme in turn: keys, first moves only, direction, the wheel; at once, kept;
-##                      cycle_scheme)
+##                      cycle_scheme); under it how a click casts, each at once and kept (laid in as the panel opens, like
+##                      the scheme's row; out of Options so that its rows stay in view at 1280 x 720):
+##     Cast style: Tap    a click casts after a short wind-up, each skill then on its cooldown (Tap), or held until full (Hold)
+##     Cast guides        where an aimed skill will go: Always, Touch only, Off (CastGuide)
 ##   Class & talents    the Character Advancement window over this menu (AdvancementWindow, for the element in play; its own layer
 ##                      above this one, Esc closes it alone); what it changes applies from the next restart (the row's line)
 ##   Settings           the main menu's (GameSettings)
@@ -69,6 +71,9 @@ var _scheme: Button
 var _preset: Button
 var _aim: Button
 var _cast_row: Button
+var _guides_row: Button
+## The Controls panel's one line in the % ring (its cast style's words: kept in step as the style changes there).
+var _ctl_line: Label
 var _hints: Button
 var _camera: Button
 var _jolt: Button
@@ -266,9 +271,14 @@ func _ready() -> void:
 	_aim = _opt_row(_options, "AimHelp", "Aim help", MatchSetup.AIM_ORDER.map(MatchSetup.aim_name), cycle_aim, func(i: int) -> void:
 		MatchSetup.set_aim_help(String(MatchSetup.AIM_ORDER[i]))
 		_paint())
-	_cast_row = _opt_row(_options, "CastStyle", "Cast style", MatchSetup.CAST_STYLES.map(func(c: String) -> String:
+	# (how a click casts: rows of the Controls panel, kept out of the tree until it opens, like the scheme's)
+	_cast_row = _loose_opt_row("CastStyle", "Cast style", MatchSetup.CAST_STYLES.map(func(c: String) -> String:
 			return String(MatchSetup.CAST_NAMES.get(c, c))), cycle_cast, func(i: int) -> void:
 		MatchSetup.set_cast_style(String(MatchSetup.CAST_STYLES[i]))
+		_paint())
+	_guides_row = _loose_opt_row("CastGuides", "Cast guides", MatchSetup.GUIDES.map(func(g: String) -> String:
+			return String(MatchSetup.GUIDE_NAMES.get(g, g))), cycle_guides, func(i: int) -> void:
+		MatchSetup.set_cast_guides(String(MatchSetup.GUIDES[i]))
 		_paint())
 	_hints = _opt_row(_options, "KeyHints", "Key hints", ["On", "Off"], toggle_hints, func(i: int) -> void:
 		if (i == 0) != FirstHints.on():
@@ -351,11 +361,23 @@ func _opt_row(into: VBoxContainer, nm: String, title: String, options: Array, wh
 	return b
 
 
+## The same row in no panel yet (laid into one as it opens: the Controls panel's Cast style and Cast guides).
+func _loose_opt_row(nm: String, title: String, options: Array, what: Callable, pick: Callable) -> Button:
+	var b := BroadcastUI.option_row(title, options)
+	b.name = nm
+	b.pressed.connect(what)
+	b.picker = pick
+	return b
+
+
 func _exit_tree() -> void:
 	if is_instance_valid(_scheme) and _scheme.get_parent() == null:
 		_scheme.queue_free()                  # (the scheme's row out of the Controls panel: freed with the menu)
 	if is_instance_valid(_preset) and _preset.get_parent() == null:
 		_preset.queue_free()
+	for r: Button in [_cast_row, _guides_row]:
+		if is_instance_valid(r) and r.get_parent() == null:
+			r.queue_free()
 
 
 func _row(text: String, what: Callable, sub_line := "") -> Button:
@@ -685,6 +707,13 @@ func cycle_cast() -> void:
 	_note.text = MatchSetup.cast_row()
 
 
+## The cast guides in turn (MatchSetup.GUIDES: always, touch, off): at once, kept.
+func cycle_guides() -> void:
+	MatchSetup.set_cast_guides(MatchSetup.next_cast_guides())
+	_paint()
+	_note.text = MatchSetup.guides_row()
+
+
 ## The key hints on or off: at once (on: shown over the match under way; off: the ones up go), kept.
 func toggle_hints() -> void:
 	var now := not FirstHints.on()
@@ -792,6 +821,9 @@ func _paint() -> void:
 	_set_row(_preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
 	_opt(_aim, MatchSetup.aim_row(), MatchSetup.AIM_ORDER.find(MatchSetup.aim_help()), MatchSetup.aim_row_line())
 	_opt(_cast_row, MatchSetup.cast_row(), MatchSetup.CAST_STYLES.find(MatchSetup.cast_style()), MatchSetup.cast_row_line())
+	_opt(_guides_row, MatchSetup.guides_row(), MatchSetup.GUIDES.find(MatchSetup.cast_guides()), MatchSetup.guides_row_line())
+	if is_instance_valid(_ctl_line):
+		_ctl_line.text = _controls_line()
 	_opt(_hints, FirstHints.row_text(), 0 if FirstHints.on() else 1, FirstHints.row_line())
 	var cam_keys: Array = ["close", "shoulder", "high", "high_shoulder"]
 	_opt(_camera, RingCamera.row_text(), cam_keys.find(RingCamera.key()), RingCamera.row_line())
@@ -842,8 +874,8 @@ func _clear_panel() -> void:
 			(c as Control).visible = false     # (the Match setup and Options rows are kept, hidden)
 			continue
 		_panel.remove_child(c)
-		if c != _scheme and c != _preset:
-			c.queue_free()                    # (the scheme's row is kept: it is laid in again)
+		if not c in [_scheme, _preset, _cast_row, _guides_row]:
+			c.queue_free()                    # (the scheme's row and the cast rows are kept: laid in again)
 
 
 ## The element in play's buttons (round 2 of the skills, KitWords): its passive and its guard, each button with its plain
@@ -858,16 +890,24 @@ func _controls() -> void:
 	_panel.add_child(BroadcastUI.heading(KitWords.w("controls_head", "%s: your buttons") % MatchSetup.label(el)))
 	if RingRules.stock_on():
 		# (round 3: the % ring's one line, in right-click terms)
-		_panel.add_child(BroadcastUI.label(MatchSetup.menu_word("controls_line"), 18, BroadcastUI.TEAL, true))
+		_ctl_line = BroadcastUI.label(_controls_line(), 18, BroadcastUI.TEAL, true)
+		_panel.add_child(_ctl_line)
 	_panel.add_child(_preset)                   # (round 4: Basic / Full first)
 	_panel.add_child(_scheme)                   # (the other ways first: in view without a scroll)
 	_scheme.visible = not MatchSetup.basic()    # (the schemes are Full's)
+	_panel.add_child(_cast_row)                 # (how a click casts, and the guides of where it goes)
+	_panel.add_child(_guides_row)
 	for line in KitWords.pick_lines(el):
 		_panel.add_child(BroadcastUI.label(String(line), 17, BroadcastUI.DIM, true))
 	for line in control_lines(el):
 		_panel.add_child(BroadcastUI.label(String(line), 18, BroadcastUI.WHITE, true))
 	for line in KitWords.rule_lines():
 		_panel.add_child(BroadcastUI.label(String(line), 16, BroadcastUI.DIM, true))
+
+
+## The % ring's one line of the buttons, in the cast style's words (practice.json menu.controls_line, _tap).
+static func _controls_line() -> String:
+	return MatchSetup.menu_word("controls_line_tap" if MatchSetup.tap_cast() else "controls_line")
 
 
 ## "1   STRIKE   Spike  ·  tap twice: Boulder" for each button of `el` under the scheme now (KitWords.kit_lines).

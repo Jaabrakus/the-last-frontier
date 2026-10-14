@@ -5,19 +5,22 @@ extends CanvasLayer
 ## (Input.parse_input_event: the hotbar, the caster and RingMoves see a press as they see a key's).
 ##   left thumb   a stick where it lands on the left of the screen: move_forward / back / left / right, by how far it is pushed
 ##   right thumb  dragged anywhere free: the look (the player's yaw and pitch, as the mouse turns them)
-##   1-5          (the owner, 2026-10-13: "tap once to highlight it and then if highlighted tap again to change it ... a skill
-##                selector pops out"; no double tap)
-##                  tap          the key readied and lit, and its forms beside it (the selector: chips, the one readied lit;
-##                               a chip tapped readies that form)
-##                  tap it again the key's next form (its moves and their ways in turn, as a wheel: Fissure, Column, Column
-##                               throw right, ...; KitWords.key_moves x BendVariants)
-##                  hold         the key's form readied and aim held: the finger dragged aims while the lock fills; let go:
-##                               cast (early: called off). The stick pushed meanwhile picks the way, as W, A, S or D with
-##                               the key held (Hotbar._key_dir)
+##   1-5          (the owner, 2026-10-13, with the tap style: "that is nice for drag to cast ... how are we changing the
+##                spells on touch", then "lets implement"): each key's button casts its own skill, no readying first:
+##                  tap          its skill readied and cast, after its wind-up (MatchSetup.cast_style "tap": the aim let go
+##                               early runs on); its cooldown's sweep over the button (SwayCaster.cooldown_share)
+##                  drag         past DRAG_PX the finger aims (the look) while it winds up and while it is held; let go: cast.
+##                               Dragged back onto its button and let go there: called off (SwayCaster.cancel_lock)
+##                  hold still   a skill that grows grows (the Fireball, a grown Spike or Boulder; the stone held before him
+##                               shields him meanwhile); let go: cast. The stick pushed meanwhile picks the way, as W, A, S or
+##                               D with the key held (Hotbar._key_dir: the Column's throws, the Geyser's ways)
+##                  the tag      a key with two skills (Spike and Boulder, Fissure and Column) wears a tag at its corner naming
+##                               the other; tapped: that one is the key's now (no cast)
 ##                Key 3 where it acts at once (the movement spell: no move of its own, Bending.key3) is the key as pressed.
 ##                Each key's button names what it casts now (the strip's column label); held, the lock's fill runs round it
-##                (gold: full, let go)
-##   JAB          fire (the left button's quick spell)        GUARD  bend_guard (E)        JUMP  jump (Space)
+##                (gold: full); CastGuide draws where it will go
+##   JAB          fire (the left button's quick spell); held, it fires again as each volley's lock fills (the tap style)
+##   GUARD        bend_guard (E), beside the jab        JUMP  jump (Space)
 ##   DASH         sprint (Shift) with the stick's way        II     ui_cancel (Esc: the menu)
 ## Shown only on a touch-first device (a coarse pointer and touch points: a phone or a tablet), or with ?touch=1 in the page's
 ## address (the mouse then acts as one finger: Input.emulate_touch_from_mouse, for trying it at a desk). In play (the game
@@ -37,27 +40,31 @@ const HIT_SLACK := 1.2
 ## A key's touch let go within this (s) and moved less than TAP_PX (of the screen's height) is a tap, not a cast.
 const TAP_S := 0.25
 const TAP_PX := 0.03
-## The selector stays this long (s) after the last tap or pick.
-const SELECTOR_S := 5.0
+## A key's finger moved this far (of the screen's height) aims (the look); less is a tap's wobble.
+const DRAG_PX := 0.02
+## A key's tag (its other skill): its place off the button's corner (of the button's radius) and its size.
+const TAG_OFF := 1.05
+const TAG_R := 0.42
 ## The actions the mouse's buttons are taken off while the layer is up.
 const MOUSE_ACTIONS := [&"fire", &"aim", &"weapon_next", &"weapon_prev"]
 
 var player: FrontierPlayer
 var forced := false
+## Up whatever holds the mouse (the tests: tests/ui/test_touch_cast.gd).
+var force_up := false
 
 var _pad: Control
 var _font: Font
 var _active := false
-## touch index -> what it holds: {"kind": "stick" | "look" | "button" | "chip", "b": the button, ...}
+## touch index -> what it holds: {"kind": "stick" | "look" | "button" | "tag", "b": the button, ...}
 var _touch := {}
 var _stick_at := Vector2.ZERO
 var _stick_v := Vector2.ZERO
 var _move := {&"move_left": 0.0, &"move_right": 0.0, &"move_forward": 0.0, &"move_back": 0.0}
 ## The mouse buttons taken off MOUSE_ACTIONS while up: action -> [events].
 var _unbound := {}
-## The selector: the key it is open for (-1 none) and until when (s, Time).
-var _sel_key := -1
-var _sel_until := 0.0
+## The jab held (the tap style): let go as its lock fills, pressed again as the caster is free (_jab_cycle).
+var _jab_again := false
 
 
 static func wanted() -> bool:
@@ -66,6 +73,12 @@ static func wanted() -> bool:
 	return bool(JavaScriptBridge.eval(
 			"(matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0) || /[?&]touch=1/.test(location.search)",
 			true))
+
+
+## The touch layer up for `p` now (CastGuide's "touch").
+static func up(p: Node) -> bool:
+	var t := p.get_node_or_null(^"TouchControls") as TouchControls if p != null and is_instance_valid(p) else null
+	return t != null and t._active
 
 
 static func attach(p: FrontierPlayer) -> TouchControls:
@@ -99,12 +112,11 @@ func _exit_tree() -> void:
 
 
 func _process(_dt: float) -> void:
-	var up := is_instance_valid(player) and not get_tree().paused and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var up := is_instance_valid(player) and not get_tree().paused and (force_up or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED)
 	if up != _active:
 		_set_active(up)
 	if _active:
-		if _sel_key >= 0 and _now() > _sel_until and not _holds("chip"):
-			_sel_key = -1
+		_jab_cycle()
 		_pad.queue_redraw()
 
 
@@ -124,7 +136,6 @@ func _set_active(on: bool) -> void:
 			_unbound[a] = gone
 	else:
 		_let_go_all()
-		_sel_key = -1
 		for a: StringName in _unbound:
 			if InputMap.has_action(a):
 				for e in _unbound[a]:
@@ -253,33 +264,49 @@ func _ready_key(i: int) -> void:
 	_choose(i, pick)
 
 
-func _open_selector(i: int) -> void:
-	_sel_key = i
-	_sel_until = _now() + SELECTOR_S
-
-
-## The selector's chips for key _sel_key, laid out left of the keys: [{at (rect), form, index}].
-func _chips() -> Array:
-	if _sel_key < 0:
-		return []
-	var forms := _forms(_sel_key)
-	if forms.size() < 2:
-		return []
-	var u := _pad.size.y / 100.0
-	var w := 30.0 * u
-	var h := 7.0 * u
-	var x := _pad.size.x - 58.0 * u - w
-	var y0 := _pad.size.y - 12.0 * u - forms.size() * (h + 1.5 * u)
+## Key i's own skills (its moves, KitWords.key_moves: one or two), not their ways (the stick picks a way as it casts).
+func _skills(i: int) -> Array:
 	var out := []
-	for j in forms.size():
-		out.append({"rect": Rect2(x, y0 + j * (h + 1.5 * u), w, h), "form": forms[j], "index": j})
+	for f: Dictionary in _forms(i):
+		var dup := false
+		for o: Dictionary in out:
+			dup = dup or (String(o.id) == String(f.id) and String(o.mode) == String(f.mode))
+		if not dup:
+			out.append({"id": f.id, "mode": f.mode, "way": "", "label": KitWords.move_name(String(f.id), String(f.mode))})
 	return out
 
 
-func _chip_at(pos: Vector2) -> Dictionary:
-	for c: Dictionary in _chips():
-		if (c.rect as Rect2).grow(_pad.size.y * 0.005).has_point(pos):
-			return c
+## Key i's skill now (its index in _skills: the strip's column for it).
+func _skill_now(i: int, skills: Array) -> int:
+	var col := _key_column(i)
+	for j in skills.size():
+		var f: Dictionary = skills[j]
+		if String(f.id) == String(col.get("id", "")) and String(f.mode) == String(col.get("mode", "")):
+			return j
+	return 0
+
+
+## Key b's tag: {at, r, other (the skill it turns the key to), label}; {} for a key of one skill or one that acts at once.
+func _tag(b: Dictionary) -> Dictionary:
+	if not b.has("key") or _acts_at_once(int(b.key)):
+		return {}
+	var k := int(b.key)
+	var skills := _skills(k)
+	if skills.size() < 2:
+		return {}
+	var other: Dictionary = skills[(_skill_now(k, skills) + 1) % skills.size()]
+	var r := float(b.r)
+	var name := String(other.label).split(" ")[0]
+	return {"at": (b.at as Vector2) + Vector2(-0.72, -0.72) * r * TAG_OFF, "r": r * TAG_R, "other": other,
+			"label": name.substr(0, 6)}
+
+
+func _tag_at(pos: Vector2) -> Dictionary:
+	for b: Dictionary in _buttons():
+		var t := _tag(b)
+		if not t.is_empty() and pos.distance_to(t.at) <= float(t.r) * HIT_SLACK:
+			t["key"] = b.key
+			return t
 	return {}
 
 
@@ -303,11 +330,10 @@ func _input(event: InputEvent) -> void:
 func _down(i: int, pos: Vector2) -> void:
 	if _touch.has(i):
 		_up(i, pos)
-	var chip := _chip_at(pos)
-	if not chip.is_empty():
-		_touch[i] = {"kind": "chip"}
-		_choose(_sel_key, chip.form)
-		_open_selector(_sel_key)
+	var tag := _tag_at(pos)
+	if not tag.is_empty():
+		_touch[i] = {"kind": "tag"}
+		_choose(int(tag.key), tag.other)            # (the key's other skill is its own now; nothing cast)
 		return
 	var b := _button_at(pos)
 	if not b.is_empty():
@@ -317,10 +343,9 @@ func _down(i: int, pos: Vector2) -> void:
 			if _acts_at_once(k):
 				_send(StringName("weapon_%d" % (k + 1)), true)
 				return
-			var hb := _hotbar()
-			_touch[i]["was"] = hb != null and hb.readied_key() == k
 			_ready_key(k)
-			# (the key held as the finger is, so the stick pushed now picks the way (Hotbar._key_dir); aim held: a hold casts)
+			# (the key held as the finger is, so the stick pushed now picks the way (Hotbar._key_dir); the aim held: it locks,
+			# a tap's let go runs on in the tap style, a hold grows, a drag aims)
 			_send(StringName("weapon_%d" % (k + 1)), true, 1.0, false)
 			_send(&"aim", true)
 		else:
@@ -347,7 +372,8 @@ func _drag(i: int, pos: Vector2, rel: Vector2) -> void:
 		"button":
 			if (t.b as Dictionary).has("key"):
 				t.moved = maxf(float(t.moved), pos.distance_to(t.at))
-				_look(rel)                          # (a held key's finger aims the lock)
+				if float(t.moved) >= _pad.size.y * DRAG_PX:
+					_look(rel)                      # (a held key's finger dragged aims the lock; a tap's wobble does not)
 
 
 func _up(i: int, pos := Vector2.ZERO) -> void:
@@ -363,22 +389,24 @@ func _up(i: int, pos := Vector2.ZERO) -> void:
 			var b: Dictionary = t.b
 			if not b.has("key"):
 				_send(StringName(b.action), false)
+				if String(b.id) == "jab":
+					_jab_again = false
 				return
 			var k := int(b.key)
 			if _acts_at_once(k):
 				_send(StringName("weapon_%d" % (k + 1)), false)
 				return
-			var tap := _now() - float(t.t0) < TAP_S and float(t.moved) < _pad.size.y * TAP_PX
-			_send(&"aim", false)                    # (a tap: let go early, called off; a hold: cast)
+			var back := float(t.moved) >= _pad.size.y * DRAG_PX and pos.distance_to(b.at) <= float(b.r) * HIT_SLACK
+			if back:
+				# (dragged out and back onto its button: called off, nothing spent)
+				_send(&"aim", false, 1.0, false)
+				var c := SwayCaster.of(player) if is_instance_valid(player) else null
+				if c != null:
+					c.cancel_lock()
+				_send(&"aim", false)
+			else:
+				_send(&"aim", false)                # (let go: cast; the tap style's early let go runs on to its wind-up)
 			_send(StringName("weapon_%d" % (k + 1)), false, 1.0, false)
-			if tap:
-				if bool(t.get("was", false)):
-					var forms := _forms(k)
-					if forms.size() > 1:
-						_choose(k, forms[(_form_now(k, forms) + 1) % forms.size()])
-				_open_selector(k)
-			elif _sel_key == k:
-				_sel_key = -1                       # (cast: the selector goes)
 
 
 func _holds(kind: String) -> bool:
@@ -393,6 +421,24 @@ func _let_go_all() -> void:
 		_up(int(i))
 	_touch.clear()
 	_set_move(Vector2.ZERO)
+
+
+## The jab held under the tap style: let go the moment its lock is full (it casts), pressed again once the caster is free, so
+## a held thumb fires volley after volley at the jab's own pace.
+func _jab_cycle() -> void:
+	var held := false
+	for t: Dictionary in _touch.values():
+		held = held or (String(t.kind) == "button" and String((t.b as Dictionary).id) == "jab")
+	var c := SwayCaster.of(player) if is_instance_valid(player) else null
+	if not held or c == null or not c.tap_on():
+		_jab_again = false
+		return
+	if not _jab_again and c.lock_src == SwayCaster.SRC_QUICK and c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]:
+		_send(&"fire", false)
+		_jab_again = true
+	elif _jab_again and c.state == SwayCaster.State.IDLE:
+		_send(&"fire", true)
+		_jab_again = false
 
 
 # ---------------------------------------------------------------- what they do
@@ -466,17 +512,16 @@ func _draw_pad() -> void:
 				var fs2 := int(maxf(9.0, u * 2.0))
 				var sz2 := _font.get_string_size(n, HORIZONTAL_ALIGNMENT_CENTER, -1, fs2)
 				_label(b.at + Vector2(-sz2.x * 0.5, r + fs2 * 1.1), n, fs2, Color(1, 1, 1, 0.9))
-	var chips := _chips()
-	if not chips.is_empty():
-		var now_i := _form_now(_sel_key, _forms(_sel_key))
-		for c: Dictionary in chips:
-			var rr: Rect2 = c.rect
-			var on := int(c.index) == now_i
-			_pad.draw_rect(rr, Color(0.5, 0.83, 0.9, 0.75) if on else Color(0.05, 0.09, 0.12, 0.7))
-			_pad.draw_rect(rr, rim, false, maxf(1.0, u * 0.25))
-			var fs3 := int(maxf(9.0, u * 2.6))
-			_label(rr.position + Vector2(u * 1.5, rr.size.y * 0.5 + fs3 * 0.35), String((c.form as Dictionary).label), fs3,
-					Color.WHITE)
+			_cooldown(b.at, r, col)
+			var tg := _tag(b)
+			if not tg.is_empty():
+				var tr := float(tg.r)
+				_pad.draw_circle(tg.at, tr, Color(0.05, 0.09, 0.12, 0.7))
+				_pad.draw_arc(tg.at, tr, 0.0, TAU, 28, rim, maxf(1.0, u * 0.25), true)
+				var fs4 := int(maxf(9.0, tr * 0.62))
+				var tl := String(tg.label)
+				var sz4 := _font.get_string_size(tl, HORIZONTAL_ALIGNMENT_CENTER, -1, fs4)
+				_label(tg.at + Vector2(-sz4.x * 0.5, fs4 * 0.35), tl, fs4, Color(1, 1, 1, 0.95))
 	if _holds("stick"):
 		var reach := _pad.size.y * STICK_R
 		_pad.draw_circle(_stick_at, reach, fill)
@@ -495,6 +540,27 @@ func _fill_ring(at: Vector2, r: float) -> void:
 	var k := 1.0 if full else clampf(c.fill, 0.0, 1.0)
 	var col := Color(1.0, 0.82, 0.3, 0.95) if full else Color(1, 1, 1, 0.9)
 	_pad.draw_arc(at, r + maxf(4.0, u * 1.4), -PI * 0.5, -PI * 0.5 + TAU * k, 48, col, maxf(3.0, u * 0.9), true)
+
+
+## Key's skill's cooldown (the tap style) as the strip's sweep over its button, the seconds left over it.
+func _cooldown(at: Vector2, r: float, col: Dictionary) -> void:
+	var c := SwayCaster.of(player) if is_instance_valid(player) else null
+	if c == null or String(col.get("id", "")) == "":
+		return
+	var k := c.cooldown_share(String(col.id), String(col.get("mode", "")))
+	if k <= 0.0:
+		return
+	var pts := PackedVector2Array([at])
+	var n := maxi(int(40.0 * k), 2)
+	for j in n + 1:
+		var a := -PI * 0.5 + TAU * (1.0 - k) + TAU * k * float(j) / float(n)
+		pts.append(at + Vector2(cos(a), sin(a)) * r)
+	_pad.draw_colored_polygon(pts, Color(0.0, 0.0, 0.0, 0.55))
+	var left := c.cooldown_left(String(col.id), String(col.get("mode", "")))
+	var txt := ("%d" % ceili(left)) if left >= 1.0 else ("%.1f" % left)
+	var fs := int(maxf(10.0, r * 0.5))
+	var sz := _font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, fs)
+	_label(at + Vector2(-sz.x * 0.5, -r * 0.2), txt, fs, Color(1, 1, 1, 0.95))
 
 
 ## A label with a dark outline (it reads on the bright deck as on the water).

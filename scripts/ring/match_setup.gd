@@ -672,6 +672,7 @@ static func reload_scheme() -> void:
 	_aim_help = ""
 	_controls = ""
 	_cast_style = ""
+	_guides = ""
 
 
 # --- The Controls preset (round 4 SIMPLE: "simple like runescape but hard to master like runescape") ---------------
@@ -772,8 +773,10 @@ static func aim_help() -> String:
 	if _aim_help == "":
 		var cf := ConfigFile.new()
 		cf.load(GameSettings.file())
-		var a := String(cf.get_value(SECTION, AIM_KEY, AIMS[0]))
-		_aim_help = a if a in AIMS else String(AIMS[0])
+		# (on a touch screen Strong unless chosen: a thumb aims coarser than a mouse; the owner, 2026-10-13, picked the plan)
+		var def := "strong" if "strong" in AIMS and TouchControls.wanted() else String(AIMS[0])
+		var a := String(cf.get_value(SECTION, AIM_KEY, def))
+		_aim_help = a if a in AIMS else def
 	return _aim_help
 
 
@@ -845,6 +848,50 @@ static func cast_row() -> String:
 static func cast_row_line() -> String:
 	return "click to cast, each skill then on its cooldown; hold on for its bigger cast" if tap_cast() \
 			else "hold until the ring fills, then let go"
+
+
+# ---------------------------------------------------------------- the cast guides
+## Where an aimed skill will go, drawn while it is aimed (CastGuide; the owner, 2026-10-13: "guide lines and guide cast on
+## where it should be", "implement for mobile and non mobile"): "always" (the default), "touch" (only with the touch layer up),
+## "off". Kept (GameSettings).
+const GUIDES := ["always", "touch", "off"]
+const GUIDES_KEY := "cast_guides"
+const GUIDE_NAMES := {"always": "Always", "touch": "Touch only", "off": "Off"}
+static var _guides := ""
+
+
+static func cast_guides() -> String:
+	if _guides == "":
+		var cf := ConfigFile.new()
+		cf.load(GameSettings.file())
+		var g := String(cf.get_value(SECTION, GUIDES_KEY, "always"))
+		_guides = g if g in GUIDES else "always"
+	return _guides
+
+
+static func set_cast_guides(g: String) -> bool:
+	if not g in GUIDES:
+		return false
+	_guides = g
+	GameSettings.set_value(SECTION, GUIDES_KEY, g)
+	return true
+
+
+static func next_cast_guides() -> String:
+	return String(GUIDES[(GUIDES.find(cast_guides()) + 1) % GUIDES.size()])
+
+
+static func guides_row() -> String:
+	return "Cast guides:  %s" % String(GUIDE_NAMES.get(cast_guides(), cast_guides().capitalize()))
+
+
+static func guides_row_line() -> String:
+	match cast_guides():
+		"off":
+			return "no guide while you aim"
+		"touch":
+			return "a guide while you aim, on a touch screen only"
+	return "a line, a lane or an outline shows where the skill you aim will go"
 
 
 ## The name the player sees for choice `a` (the one kept when "").
