@@ -8,8 +8,8 @@ extends CanvasLayer
 ##   1-5          (the owner, 2026-10-13, with the tap style: "that is nice for drag to cast ... how are we changing the
 ##                spells on touch", then "lets implement"; 2026-10-14: "only hold and release cast"): each key's button
 ##                casts its own skill, no readying first, held and let go:
-##                  hold, let go its skill cast; let go before its wind-up is full, it runs on to it (MatchSetup.cast_style
-##                               "tap"); its cooldown's sweep over the button (SwayCaster.cooldown_share)
+##                  hold, let go its skill cast; let go before its cast time is up, it runs on to it (MatchSetup.cast_style
+##                               "tap"); with cooldowns on (tap_cast.cooldowns), its sweep over the button
 ##                  tap          (let go within TAP_S, not dragged, its ring not yet full) nothing cast, nothing spent: its
 ##                               skill left readied
 ##                  drag         past DRAG_PX the finger aims (the look) while it winds up and while it is held; let go: cast.
@@ -419,7 +419,7 @@ func _up(i: int, pos := Vector2.ZERO) -> void:
 					c.cancel_lock()
 				_send(&"aim", false)
 			else:
-				_send(&"aim", false)                # (held and let go: cast; let go before its wind-up is full, it runs on)
+				_send(&"aim", false)                # (held and let go: cast; let go before its cast time is up, it runs on)
 			_send(StringName("weapon_%d" % (k + 1)), false, 1.0, false)
 
 

@@ -1,12 +1,12 @@
 extends SceneTree
 ## The touch layer under the tap style (TouchControls; the owner, 2026-10-13: drag aims, hold grows, the tag changes the
-## skill, "for touch it should be hold and release right?"; 2026-10-14: "only hold and release cast"). In the ring (fire, a
-## practice, the standing dummy), the layer made by hand and forced up (force_up), its touches fed straight in:
-##   tap        key 1 tapped (down, up two frames on): nothing cast, no cooldown, the caster idle, the Punch readied
-##   firm       key 1 held 0.2 s (inside TAP_S, past the Punch's 0.15 s wind-up: its ring full) and let go: it casts; its
-##              cooldown runs
-##   short      Lightning on key 1 held 0.3 s (past TAP_S, inside its 0.5 s wind-up) and let go: it casts as the wind-up ends
-##   hold       key 1 held still past its wind-up: it grows (the Fireball); let go: it casts
+## skill, "for touch it should be hold and release right?"; 2026-10-14: "only hold and release cast", then "we need the cast
+## times back", "meaning no more cooldowns"). In the ring (fire, a practice, the standing dummy), the layer made by hand and
+## forced up (force_up), its touches fed straight in:
+##   tap        key 1 tapped (down, up two frames on): nothing cast, the caster idle, the Punch readied
+##   short      key 1 held 0.3 s (past TAP_S, inside the Punch's 0.35 s cast time) and let go: it runs on and casts as its
+##              cast time ends; no cooldown after it. Lightning held 0.3 s (its cast time 2.2 s) the same
+##   hold       key 1 held still past its cast time: it grows (the Fireball); let go: it casts
 ##   drag       key 1 held and the finger dragged past DRAG_PX: the view turns; let go away from it: it casts
 ##   back       dragged out and back onto key 1, let go there: called off, nothing cast, no cooldown
 ##   tag        key 1's tag names its other skill (Lightning); tapped: key 1 is Lightning, nothing cast
@@ -149,20 +149,20 @@ func _run() -> void:
 			released.size(), c.cooldown_left("fire_blast", "punch"), SwayCaster.State.keys()[c.state], col0.get("readied", false),
 			before])
 
-	# ---- a firm press: inside TAP_S but past the Punch's wind-up (its ring full): it casts
+	# ---- held past a tap, let go before its cast time is up (the Punch's 0.35 s): it runs on and casts, no cooldown after
 	await _ready_for_next()
 	released = []
 	t._down(0, at)
-	await _secs(0.2)
-	var was_full := c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING]
+	await _secs(0.3)
+	var mid_p := c.state == SwayCaster.State.LOCKING
 	t._up(0, at)
 	await _until(func() -> bool: return not released.is_empty(), 1.5)
-	_expect(was_full and not released.is_empty() and String(released[0][0]) == "fire_blast",
-			"key 1 held 0.2 s, its ring full (%s), let go: the Punch casts (%s)" % [was_full,
+	_expect(mid_p and not released.is_empty() and String(released[0][0]) == "fire_blast",
+			"key 1 held 0.3 s, let go before its cast time is up (%s): the Punch casts as it ends (%s)" % [mid_p,
 			released[0] if not released.is_empty() else "-"])
-	_expect(c.cooldown_left("fire_blast", "punch") > 0.5, "its cooldown runs (%.2f s)" % c.cooldown_left("fire_blast", "punch"))
+	_expect(is_zero_approx(c.cooldown_left("fire_blast", "punch")), "no cooldown after it (%.2f s)" % c.cooldown_left("fire_blast", "punch"))
 
-	# ---- held past a tap, let go before its wind-up is full (Lightning's 0.5 s): it runs on and casts
+	# ---- the same with Lightning's long cast time (2.2 s)
 	await _ready_for_next()
 	p.hotbar.ready_move(0, "fire_arc", "lightning")
 	await _ticks(3)
@@ -171,9 +171,9 @@ func _run() -> void:
 	await _secs(0.3)
 	var mid := c.state == SwayCaster.State.LOCKING and c.move == "fire_arc"
 	t._up(0, at)
-	await _until(func() -> bool: return not released.is_empty(), 1.5)
+	await _until(func() -> bool: return not released.is_empty(), 4.0)
 	_expect(mid and not released.is_empty() and String(released[0][0]) == "fire_arc",
-			"Lightning held 0.3 s, let go mid wind-up (%s): it casts as the wind-up ends (%s)" % [mid,
+			"Lightning held 0.3 s, let go mid cast (%s): it casts as its cast time ends (%s)" % [mid,
 			released[0] if not released.is_empty() else "-"])
 	p.hotbar.ready_move(0, "fire_blast", "punch")
 	await _ticks(3)

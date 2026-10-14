@@ -1718,7 +1718,7 @@ func _physics_process(dt: float) -> void:
 			if state != State.IDLE and _tap_buf_until > -INF:
 				_tap_buf_until = -INF
 				if not _src_held(lock_src):
-					_queued = true                # (the kept click: it goes the moment its wind-up is full)
+					_queued = true                # (the kept click: it goes the moment its cast time is full)
 		State.LOCKING, State.FULL:
 			_hold(dt, _q)
 		State.HOLDING:
@@ -2587,10 +2587,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
 		base = float(air_times.get(mode_of(m), base))
-	if tap_on() and lock_src in [SRC_AIM, SRC_QUICK] and not holds_stone(m, t):
-		var tv := tap_of(m, mode_of(m))
-		if not tv.is_empty():
-			base = float(tv[0])                    # (the tap style: its short wind-up; its cooldown after the cast, _tap_spent)
+	# (the tap style keeps each skill's own cast time: the owner, 2026-10-14, "the cooldowns may be to fast... we need the cast
+	# times back"; a click goes when it is full, its cooldown after it, _tap_spent)
 	if elem() and lock_src == SRC_GUARD:
 		# (the guard's own: the throw back of a stone held, or a whiffed guard's slower one: BendZone.guard_lock_s)
 		return maxf(BendZone.guard_lock_s(player, base * lock_mult * tier_mult(m)), 0.05)
@@ -3422,7 +3420,7 @@ func _cast() -> void:
 			_wait_src = SRC_GUARD
 	if is_instance_valid(t) and t.has_method(&"sway_cast"):
 		t.call(&"sway_cast", m, self)
-	if tap_on() and src in [SRC_AIM, SRC_QUICK]:
+	if tap_on() and src in [SRC_AIM, SRC_QUICK] and tap_cooldowns():
 		_tap_spent(m, String(pin[1]))
 	cast_released.emit(m, String(pin[1]))
 	if r3_on and bool(rel.get("air", false)):
@@ -3724,6 +3722,13 @@ static func tap_of(m: String, md: String) -> Array:
 	return v as Array if v is Array and (v as Array).size() >= 2 else []
 
 
+## Whether the tap style puts a skill on its cooldown after a cast (moves.json tap_cast.cooldowns; off since the owner,
+## 2026-10-14: "we need the cast times back", "meaning no more cooldowns": each cast's own cast time sets the pace, nothing
+## after it).
+static func tap_cooldowns() -> bool:
+	return bool((SwayMoves.data().get("tap_cast", {}) as Dictionary).get("cooldowns", true))
+
+
 static func tap_num(key: String, def: float) -> float:
 	return float((SwayMoves.data().get("tap_cast", {}) as Dictionary).get(key, def))
 
@@ -3731,7 +3736,7 @@ static func tap_num(key: String, def: float) -> float:
 ## Seconds until skill `m` at `md` may cast again under the tap style: the longer of its own cooldown and the shared one (0:
 ## ready; always 0 off the tap style or for a skill without tap numbers).
 func cooldown_left(m: String, md: String) -> float:
-	if not tap_on() or tap_of(m, md).is_empty():
+	if not tap_on() or not tap_cooldowns() or tap_of(m, md).is_empty():
 		return 0.0
 	var now := BendStatus.now()
 	var own: Array = _cd.get("%s/%s" % [m, md], [-INF, 0.0])
@@ -3740,7 +3745,7 @@ func cooldown_left(m: String, md: String) -> float:
 
 ## The share of its cooldown still to run (0..1: the strip's sweep), the longer of its own and the shared one by time left.
 func cooldown_share(m: String, md: String) -> float:
-	if not tap_on() or tap_of(m, md).is_empty():
+	if not tap_on() or not tap_cooldowns() or tap_of(m, md).is_empty():
 		return 0.0
 	var now := BendStatus.now()
 	var own: Array = _cd.get("%s/%s" % [m, md], [-INF, 0.0])

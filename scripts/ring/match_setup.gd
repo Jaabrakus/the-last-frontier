@@ -804,7 +804,7 @@ static func aim_pull() -> float:
 # ---------------------------------------------------------------- the cast style
 ## How a readied skill casts (the owner, 2026-10-13: "would we break the game if cast time is the cooldown ... after each click
 ## it does a mini refresh like how wow does", then "yea ... just global cooldowns we still have to click a number or highlight
-## and we can click ... to launch it or hold it longer for its bigger cast"): "tap" (a click casts it after its short wind-up,
+## and we can click ... to launch it or hold it longer for its bigger cast"): "tap" (a click casts it once its cast time is up,
 ## then it waits its own cooldown and every skill a short shared one; held on, it grows as ever: SwayCaster's tap layer,
 ## moves.json tap_cast) or "hold" (its lock held until full, then let go: as before). Kept (GameSettings); a script run (the
 ## tests) keeps "hold" unless it asks (cast=tap).
@@ -846,7 +846,7 @@ static func cast_row() -> String:
 
 
 static func cast_row_line() -> String:
-	return "click to cast, each skill then on its cooldown; hold on for its bigger cast" if tap_cast() \
+	return "click to cast once its cast time is up; hold on for its bigger cast" if tap_cast() \
 			else "hold until the ring fills, then let go"
 
 

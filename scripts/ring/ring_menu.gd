@@ -32,7 +32,7 @@ extends CanvasLayer
 ##                      Keys" (MatchSetup.set_scheme in turn: keys, first moves only, direction, the wheel; at once, kept;
 ##                      cycle_scheme); under it how a click casts, each at once and kept (laid in as the panel opens, like
 ##                      the scheme's row; out of Options so that its rows stay in view at 1280 x 720):
-##     Cast style: Tap    a click casts after a short wind-up, each skill then on its cooldown (Tap), or held until full (Hold)
+##     Cast style: Tap    a click casts once its cast time is up, no cooldowns (Tap), or held until full (Hold)
 ##     Cast guides        where an aimed skill will go: Always, Touch only, Off (CastGuide)
 ##   Class & talents    the Character Advancement window over this menu (AdvancementWindow, for the element in play; its own layer
 ##                      above this one, Esc closes it alone); what it changes applies from the next restart (the row's line)
