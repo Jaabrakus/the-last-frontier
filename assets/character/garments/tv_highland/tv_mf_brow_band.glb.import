@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://d4bgrqxbf6l8h"
+path="res://.godot/imported/tv_mf_brow_band.glb-908d2b743670a84dce2e4f04549259fb.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_brow_band.glb"
+dest_files=["res://.godot/imported/tv_mf_brow_band.glb-908d2b743670a84dce2e4f04549259fb.scn"]
 
 [params]
 

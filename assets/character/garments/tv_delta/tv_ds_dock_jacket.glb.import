@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://c5a6bjp007eqy"
+path="res://.godot/imported/tv_ds_dock_jacket.glb-e1d224354d19f6fdb2b48e84d33bf8ba.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_dock_jacket.glb"
+dest_files=["res://.godot/imported/tv_ds_dock_jacket.glb-e1d224354d19f6fdb2b48e84d33bf8ba.scn"]
 
 [params]
 

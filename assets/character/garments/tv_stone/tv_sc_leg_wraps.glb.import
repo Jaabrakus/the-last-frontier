@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dqdewnqh7gkvi"
+path="res://.godot/imported/tv_sc_leg_wraps.glb-ca5262fb2d6d49326c6e26bf1f2fcb89.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_stone/tv_sc_leg_wraps.glb"
+dest_files=["res://.godot/imported/tv_sc_leg_wraps.glb-ca5262fb2d6d49326c6e26bf1f2fcb89.scn"]
 
 [params]
 

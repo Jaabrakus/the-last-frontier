@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dm1uvjxm536s3"
+path="res://.godot/imported/tv_conical_hat.glb-689cbf8f8cfe3926621c5e57468ea977.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_common/tv_conical_hat.glb"
+dest_files=["res://.godot/imported/tv_conical_hat.glb-689cbf8f8cfe3926621c5e57468ea977.scn"]
 
 [params]
 

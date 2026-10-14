@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://7u2cnr1glaid"
+path="res://.godot/imported/tv_mf_back_basket.glb-90d7b2066882f88eace00cea73cfc861.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_back_basket.glb"
+dest_files=["res://.godot/imported/tv_mf_back_basket.glb-90d7b2066882f88eace00cea73cfc861.scn"]
 
 [params]
 

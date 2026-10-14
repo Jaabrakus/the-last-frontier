@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://csi61ddvve56v"
+path="res://.godot/imported/tv_sc_shade_cloth.glb-1ab5adc6a8ba8f1a9c0d62a82735a6f9.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_stone/tv_sc_shade_cloth.glb"
+dest_files=["res://.godot/imported/tv_sc_shade_cloth.glb-1ab5adc6a8ba8f1a9c0d62a82735a6f9.scn"]
 
 [params]
 

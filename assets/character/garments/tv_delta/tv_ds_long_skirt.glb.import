@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dtqxkcnrgalh"
+path="res://.godot/imported/tv_ds_long_skirt.glb-6ed4e3b36722d8a34e318ab155a2cffe.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_long_skirt.glb"
+dest_files=["res://.godot/imported/tv_ds_long_skirt.glb-6ed4e3b36722d8a34e318ab155a2cffe.scn"]
 
 [params]
 

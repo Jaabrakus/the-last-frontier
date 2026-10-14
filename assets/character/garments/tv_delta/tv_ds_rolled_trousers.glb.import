@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://cgt8s1814475c"
+path="res://.godot/imported/tv_ds_rolled_trousers.glb-a40c74fa26dbfb8979f6e883915b0e8e.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_rolled_trousers.glb"
+dest_files=["res://.godot/imported/tv_ds_rolled_trousers.glb-a40c74fa26dbfb8979f6e883915b0e8e.scn"]
 
 [params]
 

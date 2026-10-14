@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://bs8jbk3udkan2"
+path="res://.godot/imported/tv_mf_shoulder_mantle.glb-9cf2216f55f382fd18451549aed8c561.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_shoulder_mantle.glb"
+dest_files=["res://.godot/imported/tv_mf_shoulder_mantle.glb-9cf2216f55f382fd18451549aed8c561.scn"]
 
 [params]
 

@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://cyp7ai67xc10j"
+path="res://.godot/imported/tv_mf_hip_panels.glb-6a96bf67c62d7b3eca7bbec9aa844974.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_hip_panels.glb"
+dest_files=["res://.godot/imported/tv_mf_hip_panels.glb-6a96bf67c62d7b3eca7bbec9aa844974.scn"]
 
 [params]
 

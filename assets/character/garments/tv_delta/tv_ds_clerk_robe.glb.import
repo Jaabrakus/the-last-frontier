@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dsti2h585a6n6"
+path="res://.godot/imported/tv_ds_clerk_robe.glb-fb4d6a04b059c94b1bf0accc84ced8a8.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_clerk_robe.glb"
+dest_files=["res://.godot/imported/tv_ds_clerk_robe.glb-fb4d6a04b059c94b1bf0accc84ced8a8.scn"]
 
 [params]
 

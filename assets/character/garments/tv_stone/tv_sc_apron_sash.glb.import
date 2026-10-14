@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://d2tqytspfuiy6"
+path="res://.godot/imported/tv_sc_apron_sash.glb-f3f92c6c10c7e0e0caca715ec88bff87.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_stone/tv_sc_apron_sash.glb"
+dest_files=["res://.godot/imported/tv_sc_apron_sash.glb-f3f92c6c10c7e0e0caca715ec88bff87.scn"]
 
 [params]
 

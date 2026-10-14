@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://cttohfh3c32t"
+path="res://.godot/imported/tv_mf_leg_wraps.glb-d1419408a2b7bd9725a68393ecad2fa5.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_leg_wraps.glb"
+dest_files=["res://.godot/imported/tv_mf_leg_wraps.glb-d1419408a2b7bd9725a68393ecad2fa5.scn"]
 
 [params]
 

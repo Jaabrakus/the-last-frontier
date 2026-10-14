@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dd7fwlxyyymnw"
+path="res://.godot/imported/tv_sc_quarry_hat.glb-02d700f695d5ea867e1d5bc347707f5a.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_stone/tv_sc_quarry_hat.glb"
+dest_files=["res://.godot/imported/tv_sc_quarry_hat.glb-02d700f695d5ea867e1d5bc347707f5a.scn"]
 
 [params]
 

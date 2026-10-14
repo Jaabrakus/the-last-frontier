@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://dqkchnkpob4vb"
+path="res://.godot/imported/tv_mf_sandals.glb-a98a27f463bbf60bf82687aab8167345.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_sandals.glb"
+dest_files=["res://.godot/imported/tv_mf_sandals.glb-a98a27f463bbf60bf82687aab8167345.scn"]
 
 [params]
 

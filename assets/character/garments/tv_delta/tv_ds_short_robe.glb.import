@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://bg4vxxlkd3eac"
+path="res://.godot/imported/tv_ds_short_robe.glb-baf4e0dc1f34eb44a0c5bfc979e1ca28.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_short_robe.glb"
+dest_files=["res://.godot/imported/tv_ds_short_robe.glb-baf4e0dc1f34eb44a0c5bfc979e1ca28.scn"]
 
 [params]
 

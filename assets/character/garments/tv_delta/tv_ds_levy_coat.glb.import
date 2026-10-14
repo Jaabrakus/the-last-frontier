@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://bo6c1ho8ocn2m"
+path="res://.godot/imported/tv_ds_levy_coat.glb-3f591c431469ecbc72c2dd6d7747bed9.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_delta/tv_ds_levy_coat.glb"
+dest_files=["res://.godot/imported/tv_ds_levy_coat.glb-3f591c431469ecbc72c2dd6d7747bed9.scn"]
 
 [params]
 

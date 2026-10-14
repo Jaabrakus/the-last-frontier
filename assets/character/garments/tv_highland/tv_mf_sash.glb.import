@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://4gncv0dpqug3"
+path="res://.godot/imported/tv_mf_sash.glb-b33e35b7c5389d1f49f5fb4e2c1feff2.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_sash.glb"
+dest_files=["res://.godot/imported/tv_mf_sash.glb-b33e35b7c5389d1f49f5fb4e2c1feff2.scn"]
 
 [params]
 

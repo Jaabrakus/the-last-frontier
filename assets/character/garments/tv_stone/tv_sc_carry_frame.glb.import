@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://d10tv2g6120vr"
+path="res://.godot/imported/tv_sc_carry_frame.glb-7b42fd9d1ffe6e72361a3dd92c64e6b9.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_stone/tv_sc_carry_frame.glb"
+dest_files=["res://.godot/imported/tv_sc_carry_frame.glb-7b42fd9d1ffe6e72361a3dd92c64e6b9.scn"]
 
 [params]
 

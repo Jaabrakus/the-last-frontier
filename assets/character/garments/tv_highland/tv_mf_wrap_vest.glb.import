@@ -3,6 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://b2ey7338d65eg"
+path="res://.godot/imported/tv_mf_wrap_vest.glb-fd75b0311679ff5c48e6579d0777a31b.scn"
+
+[deps]
+
+source_file="res://assets/character/garments/tv_highland/tv_mf_wrap_vest.glb"
+dest_files=["res://.godot/imported/tv_mf_wrap_vest.glb-fd75b0311679ff5c48e6579d0777a31b.scn"]
 
 [params]
 
