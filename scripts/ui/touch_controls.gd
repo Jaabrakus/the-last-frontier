@@ -298,7 +298,7 @@ func _tag(b: Dictionary) -> Dictionary:
 	var r := float(b.r)
 	var name := String(other.label).split(" ")[0]
 	return {"at": (b.at as Vector2) + Vector2(-0.72, -0.72) * r * TAG_OFF, "r": r * TAG_R, "other": other,
-			"label": name.substr(0, 6)}
+			"label": name}
 
 
 func _tag_at(pos: Vector2) -> Dictionary:
@@ -521,6 +521,9 @@ func _draw_pad() -> void:
 				var fs4 := int(maxf(9.0, tr * 0.62))
 				var tl := String(tg.label)
 				var sz4 := _font.get_string_size(tl, HORIZONTAL_ALIGNMENT_CENTER, -1, fs4)
+				if sz4.x > tr * 1.9:                # (the word whole, its type made smaller to sit in the tag)
+					fs4 = int(maxf(8.0, fs4 * tr * 1.9 / sz4.x))
+					sz4 = _font.get_string_size(tl, HORIZONTAL_ALIGNMENT_CENTER, -1, fs4)
 				_label(tg.at + Vector2(-sz4.x * 0.5, fs4 * 0.35), tl, fs4, Color(1, 1, 1, 0.95))
 	if _holds("stick"):
 		var reach := _pad.size.y * STICK_R

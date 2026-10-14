@@ -3,11 +3,13 @@ extends SceneTree
 ## changes the skill, "for touch it should be hold and release right?": press, hold, let go casts). In the ring (fire, a
 ## practice, the standing dummy), the layer made by hand and forced up (force_up), its touches fed straight in:
 ##   tap        key 1 tapped (down, up two frames on): the Punch casts after its wind-up; its cooldown runs
-##   hold       key 1 held still past its wind-up, let go: it casts (held past the grow: the Fireball)
+##   hold       key 1 held still past its wind-up: it grows (the Fireball); let go: it casts
 ##   drag       key 1 held and the finger dragged past DRAG_PX: the view turns; let go away from it: it casts
 ##   back       dragged out and back onto key 1, let go there: called off, nothing cast, no cooldown
 ##   tag        key 1's tag names its other skill (Lightning); tapped: key 1 is Lightning, nothing cast
 ##   jab        the jab held 1.5 s: volley after volley (the tap style's held jab)
+##   words      the strip's help line in the thumbs' words (never "(no key)": the mouse's buttons are off), no Q line; the
+##              tag's word whole (its type made to fit, not cut)
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ui/test_touch_cast.gd
 ## The last line "TOUCH CAST PASSED (<n> checks)" or "TOUCH CAST FAILED (<f> of <n>)".
 
@@ -136,12 +138,12 @@ func _run() -> void:
 	await _ready_for_next()
 	released = []
 	t._down(0, at)
-	await _until(func() -> bool: return c.grown, 3.0)
+	var grew := await _until(func() -> bool: return c.grown, 3.0)
 	await _ticks(3)
 	t._up(0, at)
 	await _until(func() -> bool: return not released.is_empty(), 1.5)
-	_expect(not released.is_empty() and String(released[0][0]) == "fire_blast",
-			"key 1 held still and let go casts it (grew %s)" % c.grown)
+	_expect(grew and not released.is_empty() and String(released[0][0]) == "fire_blast",
+			"key 1 held still grows it (%s: the Fireball) and its let go casts it" % grew)
 
 	# ---- drag aims, let go away casts
 	await _ready_for_next()
@@ -196,6 +198,22 @@ func _run() -> void:
 	await _ticks(30)
 	var jabs := released.filter(func(r: Array) -> bool: return String(r[0]) == "fire_jab").size()
 	_expect(jabs >= 3, "the jab held 1.5 s fires volley after volley (%d)" % jabs)
+
+	# ---- the strip's words on touch, the tag's word
+	var strip: BendStrip = null
+	for n in root.find_children("*", "BendStrip", true, false):
+		strip = n as BendStrip
+	var hl := strip.help_line() if strip != null else "-"
+	var want := String((KitWords.words().get("help_strip_touch", {}) as Dictionary).get("tap", "?"))
+	strip._paint_hint()
+	_expect(strip != null and hl == want and not hl.contains("(no key)") and strip._hint.text == "",
+			"the strip on touch: '%s', no Q line ('%s')" % [hl, strip._hint.text if strip != null else "-"])
+	p.hotbar.ready_move(0, "fire_blast", "punch")
+	await _ticks(3)
+	var tg := t._tag(_key_b(0))
+	var whole := String((tg.get("other", {}) as Dictionary).get("label", "")).split(" ")[0] if not tg.is_empty() else ""
+	_expect(not tg.is_empty() and String(tg.label) == whole and whole.length() > 6,
+			"the tag's word whole: '%s' (%s)" % [tg.get("label", "-"), whole])
 
 	if fails.is_empty():
 		print("TOUCH CAST PASSED (%d checks)" % checks)

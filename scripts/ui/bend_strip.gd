@@ -390,8 +390,9 @@ func _process(dt: float) -> void:
 	_hook_rules()
 	var fm := first_match()
 	var l3 := layout() == "L3"
+	var touch := TouchControls.up(player)            # (on touch a key's tag names its other move: no "tap twice" lines)
 	for i in KEYS:
-		var want := 1.0 if ((fm and int(_casts[i]) >= TAP_AFTER) or held(i)) and not l3 else 0.0
+		var want := 1.0 if ((fm and int(_casts[i]) >= TAP_AFTER) or held(i)) and not l3 and not touch else 0.0
 		var a := move_toward(float(_tap_a[i]), want, dt / TAP_FADE_S)
 		if a != float(_tap_a[i]):
 			_tap_a[i] = a
@@ -705,6 +706,10 @@ func quick_line() -> String:
 ## The strip's one help line (the scheme's, the keys as bound: KitWords.strip_help, one line of 64 characters or fewer;
 ## round 4 SIMPLE: under the Basic controls Basic's own).
 func help_line() -> String:
+	if TouchControls.up(player):
+		# (the touch layer up: the thumbs' words, not the keys' (its mouse buttons are taken off: "(no key)"))
+		var ht: Dictionary = KitWords.words().get("help_strip_touch", {})
+		return String(ht.get("tap" if MatchSetup.tap_cast() else "hold", ""))
 	if basic_strip():
 		# (round 4's merge: Basic's line held to HUD's rule, one line of help_max_chars or fewer, its first letter a capital)
 		var t := KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
@@ -816,6 +821,8 @@ func _paint_hint() -> void:
 	if KitWords.holds_stone(player):
 		t = KitWords.keyed(KitWords.w("throw_back", "{guard} again: throw it back"))
 		gold = true
+	elif TouchControls.up(player):
+		t = ""                                    # (no Q on a touch screen)
 	elif help_on() or (InputMap.has_action(SwayCaster.QUICK_BIND) and Input.is_action_pressed(SwayCaster.QUICK_BIND)):
 		t = q_line().replace("\n", "  ·  ")
 	if _hint.text != t:
