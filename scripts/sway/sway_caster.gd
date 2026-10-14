@@ -2442,6 +2442,7 @@ func _try_begin(q: Dictionary) -> void:
 	                                                        # and mode or air form, FireTalents; the larger with Rebound's; Classic 0)
 	if elem() and lock_src != SRC_GUARD:
 		fill = maxf(fill, BendZone.eddy_fill(player, m))     # (Eddy, a skill tree technique: a head start after a perfect Turn)
+		fill = maxf(fill, BendCombo.head_start(player))     # (his combo: the lock begun fuller, the owner 2026-10-13)
 	if ring:
 		ring.begin()
 	if r3() and lock_src != SRC_GUARD:
@@ -3667,6 +3668,14 @@ func _on_fired() -> void:
 
 
 func _sfx(key: String, db: float, at := Vector3.INF) -> void:
+	if player != null and player.is_inside_tree() and BendSounds.arena_on(player.get_tree()):
+		# (an arena's: the ring's own sounds, moves.json ring_sfx; never the frontier bow's)
+		var r: Variant = (SwayMoves.data().get("ring_sfx", {}) as Dictionary).get(key)
+		if r is Array and not (r as Array).is_empty() and String(r[0]) != "":
+			var ra := r as Array
+			BendSounds.play(StringName(String(ra[0])), at if at != Vector3.INF else hand_point(),
+					db + (float(ra[1]) if ra.size() > 1 else 0.0), float(ra[2]) if ra.size() > 2 else 1.0)
+		return
 	var id := SwayMoves.sfx(key)
 	if id == &"" or not Sfx.has(id):
 		return

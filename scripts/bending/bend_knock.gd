@@ -381,8 +381,10 @@ func _contact_deck() -> void:
 		_bounced = true
 		body.velocity.y = fall * _sn("bounce_k", 0.3)
 		_launch()
+		_thud(-4.0, fall)
 		return
 	tumble = false
+	_thud(-8.0, fall)
 	lying_t = _sn("lie_auto_s", 1.0)
 	_lie_age = 0.0
 	_intangible_until = now + _sn("lie_intangible_s", 0.2)
@@ -401,7 +403,18 @@ func _broke(kind: String, dir: Vector3) -> void:
 		rr.note_stat(body, "breaks")
 	end_stun()
 	_intangible_until = BendStatus.now() + _sn("tech_intangible_s", 0.25)
+	if body != null and is_instance_valid(body):
+		BendSounds.play(&"lock_grow", body.global_position + Vector3.UP * 0.6, 2.0, 1.4)   # (the fall broken: a bright click)
 	broke_fall.emit(kind, dir)
+
+
+## A tumbling body meeting the deck or a wall at `mps` (the sound audit, 2026-10-13: a knockdown met things in silence): the
+## knock's thud there, `db` over it, lower and louder the harder.
+func _thud(db: float, mps: float) -> void:
+	if body == null or not is_instance_valid(body) or not body.is_inside_tree():
+		return
+	var k := clampf(mps / 12.0, 0.0, 1.0)
+	BendSounds.play(&"knock_thud", body.global_position + Vector3.UP * 0.4, db + 3.0 * k, 1.08 - 0.18 * k)
 
 
 ## The E presses before this contact: "ok" (one within tech_s and none tech_s..tech_spoil_s before), "spoiled", "none".
@@ -471,6 +484,7 @@ func _stock_after_slide() -> void:
 					_broke("wall", flat)
 				else:
 					kv = (kv - flat * 2.0 * into) * _sn("wall_miss_k", 0.5)
+					_thud(-4.0, -into)                 # (off the wall: its thud, deeper the harder it met it)
 				break
 			kv = slid
 			applied = kv

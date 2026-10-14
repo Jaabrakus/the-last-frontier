@@ -44,6 +44,7 @@ import elements as el  # noqa: E402
 import flight as fl  # noqa: E402
 import guards as gd  # noqa: E402
 import kit  # noqa: E402
+import ui  # noqa: E402
 from kit import dsp  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
@@ -109,6 +110,10 @@ SOUNDS = {
     "fire_flight": (fl.fire_flight, 3, -18.0, "fire in flight: a roaring hiss with crackle (a loop)"),
     "air_flight": (fl.air_flight, 3, -19.0, "air in flight: a whoosh with a pressure flutter (a loop)"),
     "floor_run": (fl.floor_run, 3, -19.0, "the Kick's floor wave crackling along the deck (a loop)"),
+    # 2026-10-13 (the sound audit: every menu silent): the menus' own, a temple block and a small bowl (ui.py; UiSounds)
+    "ui_hover": (ui.ui_hover, 3, -27.0, "a button lit: a soft high wood tick"),
+    "ui_click": (ui.ui_click, 3, -21.0, "a button pressed: a temple block's knock and a small bowl's ring"),
+    "ui_back": (ui.ui_back, 3, -22.0, "back, close, cancel: the block lower, two knocks falling"),
 }
 # id -> the cross-fade (s) that closes the loop
 LOOPS = {"crowd_murmur": 1.5, "stone_whirr": fl.LOOP_XFADE, "ice_whistle": fl.LOOP_XFADE, "water_rush": fl.LOOP_XFADE,

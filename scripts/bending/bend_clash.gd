@@ -196,7 +196,7 @@ static func effect(at: Vector3, ka: String, kb: String, way: Vector3, with_sound
 	effects += 1
 	var d := way.normalized() if way.length_squared() > 1e-6 else Vector3.FORWARD
 	if with_sound:
-		_sound(at)
+		_sound(at, ka, kb)
 	if not BendLooks.live():
 		return
 	var n := int(cnum("burst_n", 34.0))
@@ -237,12 +237,25 @@ static func _col(k: String) -> Color:
 
 
 ## One sound: the clash id when the sounds have it, else the loudest hit (data).
-static func _sound(at: Vector3) -> void:
+static func _sound(at: Vector3, ka := "", kb := "") -> void:
 	var s: Array = cfg().get("sound", ["clash", 3.0, 1.0])
 	if not BendSounds.has(StringName(String(s[0]))):
 		s = cfg().get("sound_fallback", ["earth_hit", 4.0, 0.78])
+		var pair := _pair_hit(ka, kb)
+		if pair != &"":
+			s = [String(pair), float(s[1]), float(s[2])]   # (no clash sound made yet: the pair's own hit, not always earth's)
 	sounds += 1
 	BendSounds.play(StringName(String(s[0])), at, float(s[1]), float(s[2]))
+
+
+## The hit that stands for a clash of kinds `ka` and `kb` with no clash sound of its own (the sound audit, 2026-10-13: every
+## clash played earth's hit, air into air too): stone's when stone is in it, else ice's, water's, fire's, air's; lightning's
+## crack for lightning; "" with no kinds (the cfg's fallback).
+static func _pair_hit(ka: String, kb: String) -> StringName:
+	for k: String in ["stone", "ice", "water", "fire", "lightning", "steam", "air"]:
+		if ka == k or kb == k:
+			return BendSounds.HITS.get(k, &"")
+	return &""
 
 
 ## IMPACT's BendImpact.hold(body, s) on a caster (a shared beat; never the camera, aim or lock). Round 4's merge: called

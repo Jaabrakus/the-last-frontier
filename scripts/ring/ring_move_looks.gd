@@ -124,9 +124,20 @@ func _slab(at: Vector3) -> void:
 	tw.tween_callback(m.queue_free)
 
 
-## The dodge's element puff on him.
+## The dodge's element puff on him, and its sound (the double jump's, lighter: the sound audit, 2026-10-13, the dodge was
+## silent for everyone).
 func dash(el: String) -> void:
-	BendLooks.burst(_feet() + Vector3.UP * 0.8, _kind(el), 10, Vector3.UP, 120.0, 1.6, 0.18)
+	var at := _feet() + Vector3.UP * 0.8
+	BendLooks.burst(at, _kind(el), 10, Vector3.UP, 120.0, 1.6, 0.18)
+	match el:
+		"earth":
+			BendSounds.play(&"earth_grind", at, -9.0, 1.25)
+		"water":
+			BendSounds.play(&"water_slosh", at, -9.0, 1.25)
+		"fire":
+			BendSounds.play(&"fire_whoomph", at, -9.0, 1.35)
+		_:
+			BendSounds.play(&"air_whoosh", at, -8.0, 1.35)
 
 
 ## The Rise's tell (from `at`, the body; `lip`, the nearest lip point): shown above the lip and loud, for everyone. The in-ring

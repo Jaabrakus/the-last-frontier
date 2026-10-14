@@ -359,10 +359,9 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 			grow_raised(th0, "stone_form", mode, true)    # (grown with no stone swelled yet: at once)
 		_one_boulder(bc, th0, mode)
 		return th0.stone
-	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else at)
-	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var foot := _stone_foot(bc, d, mode, way)
 	var face := air_face(bc)
 	if face != Vector3.INF:
 		foot = face                                # (round 3: in the air it tears from the nearest deck face)
@@ -451,10 +450,9 @@ static func raise_stone(c: Variant, m: String, mode: String) -> Throw:
 ## A new stone of `mode` ("cannonball" a ball, else a spike) of move data `d`, burst up before caster `bc` toward the aim
 ## (its hollow, its sounds), as stone_form raises one.
 static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone:
-	var td: Dictionary = d.get("throw", {})
 	var aim := aim_point(bc)
 	var way := way_to(bc, aim if aim != Vector3.INF else bc.body.global_position + bc.facing() * 10.0)
-	var foot := ground_at(bc, bc.body.global_position + way * float(td.get("ahead_m", 1.4)))
+	var foot := _stone_foot(bc, d, mode, way)
 	var face := air_face(bc)
 	if face != Vector3.INF:
 		foot = face                                # (round 3: in the air it tears from the nearest deck face)
@@ -472,6 +470,101 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 	sfx("rise", foot, -2.0, 0.9)
 	sfx("rumble", foot, -4.0, 1.1)
 	return s
+
+
+## Where a Stone Form stone of `mode` bursts up before caster `bc` along `way` (the ground there): throw.ahead_m before him,
+## nearer with a foe close before him (the owner, 2026-10-13: "it locks wrong when to close": a spike raised 1.4 m out
+## pointed into a foe 2.5 m off, shoved him aside as it rose and flew 40 degrees wide), so the raised stone's reach (a
+## spike's length as it points at him, a ball's radius) stops CLOSE_CLEAR_M short of his middle; nearer than CLOSE_FRONT_M
+## before the caster it rises at his right side (CLOSE_SIDE_M), as far back as CLOSE_BACK_M behind his middle.
+const CLOSE_CLEAR_M := 0.6
+const CLOSE_FRONT_M := 0.6
+const CLOSE_SIDE_M := 0.55
+const CLOSE_BACK_M := 0.6
+## A foe this far to either side of the stone's way is not before it (m: his body, the stone's, room between).
+const CLOSE_LANE_M := 1.0
+
+
+static func _stone_foot(bc: BendCaster, d: Dictionary, mode: String, way: Vector3) -> Vector3:
+	var ahead := float((d.get("throw", {}) as Dictionary).get("ahead_m", 1.4))
+	var reach := float(_ball_d(bc, d).get("radius_m", 0.26)) if mode == "cannonball" \
+			else float((d.get("spike", {}) as Dictionary).get("height_m", 1.75))
+	var side := 0.0
+	var room := foe_room(bc, way)
+	if room - reach - CLOSE_CLEAR_M < ahead:
+		ahead = maxf(room - reach - CLOSE_CLEAR_M, -CLOSE_BACK_M)
+		if ahead < CLOSE_FRONT_M:
+			side = CLOSE_SIDE_M
+	var right := way.cross(Vector3.UP).normalized()
+	return ground_at(bc, bc.body.global_position + way * ahead + right * side)
+
+
+## How far along `way` (flat) the nearest foe of caster `bc` stands before him, within CLOSE_LANE_M of that line (m, his
+## middle's; INF none): a fighter or a player who can fight, never the caster's side.
+static func foe_room(bc: BendCaster, way: Vector3) -> float:
+	if bc == null or not bc.valid():
+		return INF
+	var tree := bc.body.get_tree()
+	var pool: Array = tree.get_nodes_in_group(NpcFighter.GROUP).duplicate()
+	for pl in tree.get_nodes_in_group(&"player"):
+		if not pool.has(pl):
+			pool.append(pl)
+	var o := bc.body.global_position
+	var right := way.cross(Vector3.UP).normalized()
+	var best := INF
+	for n in pool:
+		var f := n as Node3D
+		if f == null or f == bc.body or not NpcSenses.can_fight(f) or BendCaster.same_team(bc.body, f):
+			continue
+		var v := f.global_position - o
+		v.y = 0.0
+		var along := v.dot(way)
+		if along > 0.0 and absf(v.dot(right)) < CLOSE_LANE_M:
+			best = minf(best, along)
+	return best
+
+
+## The stone a lock holds raised before its caster (meta bend_raised_by) that collider `col` is, else null.
+static func raised_rock(col: Node) -> FormStone:
+	var st := col as FormStone
+	return st if st != null and is_instance_valid(st) and st.has_meta(&"bend_raised_by") else null
+
+
+## How much a raised stone takes before it breaks, in % of the ring's classes (a grown one ROCK_GROWN_K more): the owner,
+## 2026-10-13, "block some attacks", not all: a Spike's about two Punches or four volleys of Embers, a Boulder's a third more.
+const ROCK_HOLDS := {"spike": 30.0, "cannonball": 40.0}
+const ROCK_GROWN_K := 1.5
+const ROCK_WEAR_META := &"rock_wear"
+
+
+## What a shot with hit info `info` wears off a raised stone: its class's % (stock.classes by its tag), a volley's share for
+## each of its pieces; `damage` / 4 off the % ring's classes.
+static func shot_wear(info: Dictionary, damage: float) -> float:
+	var cls := RingRules.class_of(String(info.get("tag", ""))) if String(info.get("tag", "")) != "" else {}
+	if cls.is_empty():
+		return maxf(damage * 0.25, 1.0)
+	return float(cls.get("d", 5.0)) / maxf(float(info.get("volley_n", cls.get("volley_n", 1.0))), 1.0)
+
+
+## A shot of `kind` that wears `wear` (shot_wear) met `rock`, raised before its caster: the rock takes it, chips and a stone's
+## knock where it met it; worn past ROCK_HOLDS it breaks where it hangs (Throw.break_raised). True when it took the shot
+## (its Throw still waiting).
+static func rock_takes(rock: FormStone, kind: String, wear: float, at: Vector3, n: Vector3) -> bool:
+	if rock == null or not is_instance_valid(rock) or not rock.has_meta(&"bend_raised_by"):
+		return false
+	var by := instance_from_id(int(rock.get_meta(&"bend_raised_by"))) as Node
+	var th := raised_of(by) if by != null and is_instance_valid(by) else null
+	if th == null or th.stone != rock:
+		return false
+	var holds := float(ROCK_HOLDS.get(rock.kind, 30.0)) * (ROCK_GROWN_K if rock.has_meta(GROWN_META) else 1.0)
+	var worn := float(rock.get_meta(ROCK_WEAR_META, 0.0)) + wear
+	rock.set_meta(ROCK_WEAR_META, worn)
+	BendLooks.burst(at, "stone", 12, n, 70.0, 2.5)
+	BendSounds.play(&"stone_catch", at, -1.0)
+	BendLooks.sound(kind, "hit", at, -9.0)
+	if worn >= holds:
+		th.break_raised(at, n)
+	return true
 
 
 ## The meta on a stone grown in the hands (its scale).
@@ -737,6 +830,18 @@ class Throw:
 	var info := {}
 	var follow := false
 	var _from := Vector3.INF
+	## The fighters its stone passes through, both ways, from its rise until it lands (the owner, 2026-10-13: "it locks wrong
+	## when to close": a raised spike pointing into a near foe shoved him aside as it rose, and the throw followed him wide;
+	## its hits are its flight's own sweep, GustLift, never a body's push).
+	var _through: Array[PhysicsBody3D] = []
+	## The crosshair's point this tick (_aim); the lift's own aim is where a waiting spike's point is turned (_hold_point).
+	var _aim_now := Vector3.INF
+	## A waiting stone carried before its caster's hands (_carry: the owner, 2026-10-13, "when i move and the spike is still
+	## the aiming of the spike is hard"): the point it eases to, INF before its first tick.
+	var _carry_at := Vector3.INF
+	var _ahead_now := 0.0
+	## Its block while it waits (_shield_on; BendBolt and GustLift meet it: FormEffects.rock_takes).
+	var _shield: CollisionShape3D
 
 	## Stone `s` thrown by caster `c` (a SwayCaster, a BendCaster, a body: BendCaster.wrap) with throw data `p_td`, at
 	## `p_fixed` (INF: the aim). Null when there is no caster or no stone.
@@ -769,7 +874,41 @@ class Throw:
 		th.lift.aim = th._aim()
 		th.lift.struck.connect(func(who: Node, dmg: float) -> void: th.struck.append([who, dmg]))
 		th.lift.landed.connect(th._on_landed)
+		th._pass_through()
 		return th
+
+	## Every fighter but the caster (who GustLift keeps out already) and its stone kept apart (_through).
+	func _pass_through() -> void:
+		var s := stone as PhysicsBody3D
+		if s == null or caster == null or not caster.valid():
+			return
+		var pool: Array = s.get_tree().get_nodes_in_group(NpcFighter.GROUP).duplicate()
+		for pl in s.get_tree().get_nodes_in_group(&"player"):
+			if not pool.has(pl):
+				pool.append(pl)
+		for n in pool:
+			var f := n as PhysicsBody3D
+			if f == null or f == caster.body or not is_instance_valid(f) or _through.has(f):
+				continue
+			s.add_collision_exception_with(f)
+			f.add_collision_exception_with(s)
+			_through.append(f)
+
+	## Back in each other's way (it landed, or the throw is gone); one GustLift keeps out on its own (a body it struck)
+	## stays out until it lets the stone go.
+	func _pass_through_end() -> void:
+		var s: PhysicsBody3D = stone as PhysicsBody3D if stone != null and is_instance_valid(stone) else null
+		for f in _through:
+			if s == null or not is_instance_valid(f):
+				continue                           # (the stone gone: its exceptions went with it)
+			f.remove_collision_exception_with(s)
+			if not (lift != null and is_instance_valid(lift) and lift._excepted.has(f)):
+				s.remove_collision_exception_with(f)
+		_through.clear()
+
+	func _exit_tree() -> void:
+		_pass_through_end()
+		_shield_off()
 
 	func _physics_process(dt: float) -> void:
 		if lift == null or not is_instance_valid(lift) or stone == null or not is_instance_valid(stone):
@@ -778,21 +917,122 @@ class Throw:
 		t += dt
 		if is_thrown:
 			return                                # (GustLift flies it: _on_landed)
+		if waiting and caster != null and caster.valid():
+			# (the aim's view as it is now: a stone raised at the lock's start was aimed from where the camera stood then, so
+			# moving and turning through the lock threw it from a stale view)
+			var cam := FormEffects.cam_of(caster)
+			if cam != null and cam_off != Vector3.INF:
+				cam_off = cam.global_position - caster.body.global_position
 		var aim := _aim()
 		if aim != Vector3.INF:
+			_aim_now = aim
 			lift.aim = aim
-		if waiting and not follow and caster != null and caster.valid() and BendR3.on(caster.body) and BendR3.airborne(caster.body):
-			follow = true                          # (a stone raised before takeoff joins the hands; no new stone or charge)
-		if follow and caster != null and caster.valid():
+		if waiting and caster != null and caster.valid():
+			_carry(dt)                             # (on the deck and in the air: before his hands, wherever he goes)
+			if _aim_now != Vector3.INF:
+				lift.aim = _hold_point(_aim_now)
+			_shield_on()
+		elif follow and _carry_at == Vector3.INF and caster != null and caster.valid():
 			_follow()
+		if not waiting:
+			_shield_off()
 		if t >= rise_s and not waiting:
 			is_thrown = true
 			if not info.is_empty():
 				lift.set_meta(&"bend_info", info)
 			var last := _aim(true) if cam_off == Vector3.INF and fixed == Vector3.INF else Vector3.INF
-			target = last if last != Vector3.INF else lift.aim
+			target = last if last != Vector3.INF else (_aim_now if _aim_now != Vector3.INF else lift.aim)
 			lift.hurl(_arced(target))
 			thrown.emit(stone, target)
+
+	## A waiting stone carried before its caster's hands (the owner, 2026-10-13: it hung where it rose, so moving through the
+	## lock left it behind and the throw left from the wrong place): from where it burst up to CARRY_M before him along the
+	## way to his aim, at chest height, over its rise, then eased after him (CARRY_RATE) as he moves and turns. Nearer with a
+	## foe close before him (FormEffects.foe_room): a ball its radius and CLOSE_CLEAR_M short of him, never under CARRY_MIN_M; a
+	## spike's foot CARRY_SPIKE_ROOM_M short of him, its point turned up instead (_hold_point).
+	const CARRY_M := 1.0
+	const CARRY_MIN_M := 0.55
+	const CARRY_SPIKE_MIN_M := 0.45
+	const CARRY_SPIKE_ROOM_M := 1.1
+	const CARRY_RATE := 14.0
+	func _carry(dt: float) -> void:
+		var p := caster.body
+		if _from == Vector3.INF:
+			_from = lift._start.origin
+		var way := FormEffects.way_to(caster, _aim_now if _aim_now != Vector3.INF else p.global_position + caster.facing() * 10.0)
+		var room := FormEffects.foe_room(caster, way)
+		var ahead := CARRY_M
+		if stone.kind == "spike":
+			ahead = clampf(room - CARRY_SPIKE_ROOM_M, CARRY_SPIKE_MIN_M, CARRY_M)
+		else:
+			ahead = clampf(room - stone.radius - FormEffects.CLOSE_CLEAR_M, CARRY_MIN_M, CARRY_M)
+		_ahead_now = ahead
+		var h := float((lift.d.get("hold", {}) as Dictionary).get("rise_m", 1.3))
+		var want := p.global_position + way * ahead + Vector3.UP * (float(td.get("chest_m", 1.3)) - h)
+		_carry_at = want if _carry_at == Vector3.INF else _carry_at.lerp(want, 1.0 - exp(-CARRY_RATE * dt))
+		lift._start.origin = _from.lerp(_carry_at, smoothstep(0.0, rise_s, t))
+
+	## Where a waiting spike's point is turned: at the aim, or up from it with a foe close before it, as far as keeps its length
+	## CARRY_POINT_CLEAR_M off him (a lance raised, levelled as he backs off); a ball turns as it will.
+	const CARRY_POINT_CLEAR_M := 0.45
+	func _hold_point(aim: Vector3) -> Vector3:
+		if stone.kind != "spike" or caster == null or not caster.valid():
+			return aim
+		var foot := stone.global_position
+		var way := FormEffects.way_to(caster, aim)
+		var room := FormEffects.foe_room(caster, way)
+		if room == INF:
+			return aim
+		var clear := room - _ahead_now - CARRY_POINT_CLEAR_M
+		var length := maxf(stone.height, 0.1)
+		if clear >= length:
+			return aim
+		var up := acos(clampf(clear / length, 0.0, 1.0))
+		var to := aim - foot
+		to.y = 0.0
+		var flat := to.normalized() if to.length_squared() > 1e-4 else way
+		var level := asin(clampf((aim - foot).normalized().y, -1.0, 1.0)) if (aim - foot).length_squared() > 1e-4 else 0.0
+		var a := maxf(up, level)
+		return foot + (flat * cos(a) + Vector3.UP * sin(a)) * 10.0
+
+	## The raised stone's block while it waits (the owner, 2026-10-13: the Spike and the Boulder are slower, so "allow the rock
+	## ... to block some attacks"): a sphere SHIELD_K of its size round its middle on its own body (the caster's rays leave its
+	## body out, its fighters pass it: _through); a shot that meets it, FormEffects.rock_takes.
+	const SHIELD_K := 1.5
+	const SHIELD_MIN_R := 0.36
+	func _shield_on() -> void:
+		if _shield != null or stone == null or not is_instance_valid(stone) or not stone.is_inside_tree():
+			return
+		var sph := SphereShape3D.new()
+		sph.radius = maxf(stone.radius * SHIELD_K, SHIELD_MIN_R)
+		_shield = CollisionShape3D.new()
+		_shield.name = "RaisedShield"
+		_shield.shape = sph
+		if stone.kind == "spike":
+			_shield.position = Vector3.UP * stone.height * 0.5
+		stone.add_child(_shield)
+
+	func _shield_off() -> void:
+		if _shield != null and is_instance_valid(_shield):
+			_shield.set_deferred(&"disabled", true)
+			_shield.queue_free()
+		_shield = null
+
+	## Its raised stone broken where it hangs (a heavy shot met it: FormEffects.rock_takes): the shatter's looks, the stone
+	## gone; the cast, let go, raises a new one (stone_form).
+	func break_raised(at: Vector3, n: Vector3) -> void:
+		var by: Node = caster.body if caster != null and caster.valid() else null
+		if by != null and int(by.get_meta(FormEffects.RAISED_META, -1)) == get_instance_id():
+			by.remove_meta(FormEffects.RAISED_META)
+		waiting = false
+		is_thrown = true
+		_shield_off()
+		if stone != null and is_instance_valid(stone):
+			SbFx.stop(stone, "hang")
+			stone.remove_meta(&"bend_raised_by")
+		if lift != null and is_instance_valid(lift):
+			lift._shatter(at, n)
+		queue_free()
 
 	## Round 3: raised in the air, its lift's start moved from where it tore loose to before the caster's hands (its rise's
 	## height taken off) over rise_s, and kept there while it waits (he falls, it falls with him).
@@ -856,6 +1096,7 @@ class Throw:
 	## It met the world at `at`: what is in the physics there is knocked on along its flight (and struck when it takes hits);
 	## a man or a fighter there it did not strike on the way knocked too (BendStatus.knock, by its caster).
 	func _on_landed(at: Vector3) -> void:
+		_pass_through_end()
 		var v := lift.velocity if is_instance_valid(lift) else Vector3.ZERO
 		var by: Node = caster.body if caster != null and is_instance_valid(caster.body) else null
 		if v.length_squared() > 1e-4 and stone != null and is_instance_valid(stone):
@@ -1089,6 +1330,15 @@ static func ground_at(n: Object, p: Vector3, down := 4.0) -> Vector3:
 
 
 static func sfx(key: String, at: Vector3, db := 0.0, pitch := 1.0) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree != null and BendSounds.arena_on(tree):
+		# (an arena's: the ring's own sounds, moves.json ring_form_sfx; never the frontier's gathering recordings)
+		var r: Variant = (SwayMoves.data().get("ring_form_sfx", {}) as Dictionary).get(key)
+		if r is Array and not (r as Array).is_empty() and String(r[0]) != "":
+			var ra := r as Array
+			BendSounds.play(StringName(String(ra[0])), at, db + (float(ra[1]) if ra.size() > 1 else 0.0),
+					pitch * (float(ra[2]) if ra.size() > 2 else 1.0))
+		return
 	var id := StringName(String((SwayMoves.data().get("form_sfx", {}) as Dictionary).get(key, "")))
 	if id == &"":
 		return

@@ -106,6 +106,11 @@ const TABLE := {
 	&"fire_flight": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
 	&"air_flight": {"vol": 0.0, "unit": 4.0, "maxd": 60.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
 	&"floor_run": {"vol": 0.0, "unit": 4.0, "maxd": 50.0, "bus": "World", "rp": 1.04, "rv": 1.0, "cap": 6, "loop": true},
+	# 2026-10-13 (the sound audit: every menu silent): the menus' own, not placed (tools/sfx/bend/ui.py; UiSounds plays them on
+	# its own players, which run through the Esc menu's pause)
+	&"ui_hover": {"vol": -4.0, "unit": 30.0, "maxd": 0.0, "bus": "SFX", "rp": 1.015, "rv": 1.0, "cap": 2},
+	&"ui_click": {"vol": 0.0, "unit": 30.0, "maxd": 0.0, "bus": "SFX", "rp": 1.015, "rv": 1.0, "cap": 2},
+	&"ui_back": {"vol": 0.0, "unit": 30.0, "maxd": 0.0, "bus": "SFX", "rp": 1.015, "rv": 1.0, "cap": 2},
 }
 
 ## Round 4 (READ): a shot's voice in flight by its kind ("floor": the Kick's floor wave). Lightning has none (instant).
@@ -154,6 +159,7 @@ const CAST_BY_MOVE := {
 	"earth_shove/pull": &"earth_grind", "fire_blast/fireball": &"fire_roar", "fire_jets/hover": &"fire_roar",
 	"footwork/ignite_step": &"fire_crackle", "wind_run/air_scooter": &"air_swirl", "flow/geyser": &"water_cast_rush",
 	"wave/push": &"water_cast_rush", "fire_kick/kick": &"fire_roar", "wave/spout": &"water_cast_rush", "air_gust/gust": &"air_gust",
+	"fire_blast/punch.grown": &"fire_roar",
 	"air_gust/pull": &"air_gust", "air_wall/wall": &"air_gust",
 }
 
@@ -333,11 +339,13 @@ static func _current_cast(kind: String) -> StringName:
 	var spec: Dictionary = sv if sv is Dictionary else {}
 	if String(spec.get("do", "")) != String(cur.get("do", "")):
 		spec = {}
-	return cast_id(kind, spec, move, mode)
+	if bool(cur.get("grown", false)) and CAST_BY_MOVE.has("%s/%s.grown" % [move, mode]):
+		return CAST_BY_MOVE["%s/%s.grown" % [move, mode]]     # (a grown cast's own: the Punch held to a Fireball roars)
+	return cast_id(kind, spec, move, mode, String(cur.get("by_el", "")))
 
 
 ## The sound of casting `mode` of `move` (its bend spec `spec`; `kind` the spec's kind as BendEffects hands it).
-static func cast_id(kind: String, spec: Dictionary, move := "", mode := "") -> StringName:
+static func cast_id(kind: String, spec: Dictionary, move := "", mode := "", by_el := "") -> StringName:
 	if spec.has("as") and move != "":
 		spec = BendEffects.resolved(move, spec)    # (round 3: a hidden mode standing for another sounds as that one)
 		kind = String(spec.get("kind", kind))
@@ -350,7 +358,9 @@ static func cast_id(kind: String, spec: Dictionary, move := "", mode := "") -> S
 	if d == "buff" and kind == "lightning":
 		return &"lightning_charge"
 	if d == "heal":
-		return &"heal" if Bending.element_of(move) == "water" else &"mend"
+		# (the caster's element when the move is anyone's: Patch, "any"; the sound audit, 2026-10-13, water's never sounded)
+		var el := by_el if by_el != "" and Bending.element_of(move) in ["", "any"] else Bending.element_of(move)
+		return &"heal" if el == "water" else &"mend"
 	if d == "zone":
 		var z := String(spec.get("zone", ""))
 		if ZONE_CASTS.has(z):
@@ -732,9 +742,16 @@ class _Voices extends Node:
 	## Each flight's place to the listener: the FLIGHT_MAX nearest have voices, the rest wait (their voices let go).
 	func _rank() -> void:
 		var lp := BendSounds.listener_pos(get_viewport())
+		var vp := get_viewport()
 		var order := flights.filter(func(e: Dictionary) -> bool: return not e.out)
 		if lp.is_finite():
+			# (the shots coming at the listener first, his own after them, each the nearest first: the sound audit, 2026-10-13,
+			# his own volley held every voice and an incoming shot waited silent)
 			order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				var oa := is_instance_valid(a.node) and BendSounds.own_shot(a.node as Node, vp)
+				var ob := is_instance_valid(b.node) and BendSounds.own_shot(b.node as Node, vp)
+				if oa != ob:
+					return ob
 				return (a.at as Vector3).distance_squared_to(lp) < (b.at as Vector3).distance_squared_to(lp))
 		for i in order.size():
 			var e: Dictionary = order[i]

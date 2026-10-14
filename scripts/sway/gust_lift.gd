@@ -549,6 +549,10 @@ func _fly(dt: float) -> void:
 			return
 		if who != null:
 			_strike(col, who, c_at)
+		var rock := FormEffects.raised_rock(col)
+		if rock != null and rock != stone:
+			FormEffects.rock_takes(rock, "stone", FormEffects.shot_wear(get_meta(&"bend_info", {}), damage_now()), c_at,
+					Vector3(info.get("normal", Vector3.UP)))
 		_land(from + (to - from) * frac[0], Vector3(info.get("normal", Vector3.UP)), Vector3(info.get("point", c_at)))     # (the touch itself)
 		return
 	_place(to)

@@ -7,8 +7,9 @@ extends RefCounted
 ##   the combo   a gauge (the owner, later: "on the cursor like a gauge that fills up with each succefull action", "and it
 ##               drains"): a body's hit that lands (RingRules.on_hit: past the spawn safety and any guard, once a volley,
 ##               never a tick) and its perfect guard (BendStatus.parry_reward) each fill a stack's worth, up to combo.max;
-##               grace_s after the last it drains drain_s stacks a second; its level takes combo.per a stack off every lock
-##               of his (BendStatus.cast_mult: with the parry's own); a hit he takes empties it. Drawn round the crosshair
+##               grace_s after the last it drains drain_s stacks a second; its level fills combo.fill a stack of every lock
+##               of his as it begins (head_start: SwayCaster's lock), a hit landing mid-lock that much more (gain); a hit he
+##               takes empties it. Drawn round the crosshair
 ##               (SwayRing: the left bracket; the gauge the right one while his guard stands)
 ##   the gauge   0..1, full at first: a guard standing costs gauge.tap (BendZone.make), held past its own window it drains
 ##               drain_s a second (BendZone's frame); off the guard refill_after_s it refills refill_s a second. Empty: the
@@ -50,12 +51,17 @@ static func stacks(n: Node) -> int:
 	return int(ceil(level(n) - 1e-3))
 
 
-## A stack's worth more for `n` (a hit of his landed, a perfect guard of his), up to combo.max.
+## A stack's worth more for `n` (a hit of his landed, a perfect guard of his), up to combo.max; a lock of his running now
+## fills combo.fill more at once (its ring jumps: the owner, 2026-10-13, "fill the cast time fuller"), at the max too.
 static func gain(n: Node) -> void:
 	if n == null or not is_instance_valid(n) or not on():
 		return
 	var k := minf(level(n) + 1.0, _num("combo", "max", 5.0))
 	n.set_meta(COMBO_META, {"n": k, "at": BendStatus.now()})
+	var bump := _num("combo", "fill", 0.0)
+	var c := SwayCaster.of(n)
+	if bump > 0.0 and c != null and c.state == SwayCaster.State.LOCKING:
+		c.fill = minf(c.fill + bump, 1.0)
 
 
 ## `n`'s stacks gone (a hit taken; a round's start).
@@ -64,9 +70,17 @@ static func lose(n: Node) -> void:
 		n.remove_meta(COMBO_META)
 
 
-## The share of its lock time `n`'s casts take for its combo (1 none): per a stack, the level as it drains.
+## The share of its lock time `n`'s casts take for its combo (1 none): combo.per a stack, the level as it drains (0 since
+## 2026-10-13: the combo fills his locks instead, head_start).
 static func cast_share(n: Node) -> float:
-	return 1.0 - _num("combo", "per", 0.05) * level(n)
+	return 1.0 - _num("combo", "per", 0.0) * level(n)
+
+
+## How full `n`'s locks begin for his combo (SwayCaster's lock: a head start, its ring begun fuller): combo.fill a stack, the
+## level as it drains, never past HEAD_MAX.
+const HEAD_MAX := 0.9
+static func head_start(n: Node) -> float:
+	return clampf(_num("combo", "fill", 0.0) * level(n), 0.0, HEAD_MAX)
 
 
 ## A hit of `by` on `n` landed (RingRules.on_hit; its own judgement of what counts): his stack, `n`'s all gone.

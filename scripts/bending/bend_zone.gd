@@ -567,6 +567,12 @@ func _flames(look: Node3D) -> void:
 	gl.position = Vector3.UP * gh * 0.45
 	FxParams.put(gl, &"seed", rng.randf() * 10.0)
 	look.add_child(gl)
+	# (its crackle while it burns, lower on burning ground; gone with its look: the sound audit, 2026-10-13, a Fire Wall and
+	# burning ground stood silent)
+	var cr := BendSounds.loop_player(&"fire_crackle", look, rng.randi() % 4)
+	if cr != null:
+		cr.volume_db += -5.0 if kind == "fire_wall" else -10.0
+		cr.play()
 	var tw := mmi.create_tween()
 	tw.tween_method(func(v: float) -> void: FxParams.put(mmi, &"grow", v), 0.0, 1.0, 0.3) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

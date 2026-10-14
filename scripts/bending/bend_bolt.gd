@@ -55,6 +55,8 @@ extends Node3D
 ## word turns it (net_state) or ends it where the host's did (net_end: its ending's look there).
 
 signal struck(who: Node, dmg: float)
+## The volleys whose voice in flight has begun (volley_id -> the physics frame): one voice a volley (launch).
+static var _voiced := {}
 signal ended(why: String)
 
 const GROUP := &"bend_bolts"
@@ -285,8 +287,19 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 			b._mud_trail = BendLooks.trail(b, "stone", b.radius * 0.7)     # (Mud Lash: clods flung off a brown lash)
 	elif b.kind == "air":
 		BendLooks._air_dust(holder)              # (the dust line under a low air bolt stays: today's look)
-	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight)
-	BendSounds.flight(BendSounds.flight_kind(b), b)
+	# (round 4, READ: its voice in flight, an arena's only; let go at its end: BendSounds.flight). A volley's one voice: its
+	# first piece's (the sound audit, 2026-10-13: Embers' seven pellets took seven of the pool's voices)
+	if b.info.has("volley_id") and int(b.info.get("volley_n", 1)) > 1:
+		var vid := int(b.info.volley_id)
+		var f := Engine.get_physics_frames()
+		for k: int in _voiced.keys():
+			if f - int(_voiced[k]) > 600:
+				_voiced.erase(k)
+		if not _voiced.has(vid):
+			_voiced[vid] = f
+			BendSounds.flight(BendSounds.flight_kind(b), b)
+	else:
+		BendSounds.flight(BendSounds.flight_kind(b), b)
 	return b
 
 
@@ -823,6 +836,13 @@ func _exclude() -> Array[RID]:
 		var held := BendZone.held_stone(caster)
 		if held is CollisionObject3D:
 			ex.append((held as CollisionObject3D).get_rid())      # (round 3: past the stone in its own hand)
+	if is_inside_tree():
+		# (a stone his own side holds raised before them: his shots pass it, a foe's are taken by it; FormEffects.rock_takes)
+		for s: Node in get_tree().get_nodes_in_group(FormStone.GROUP):
+			if s.has_meta(&"bend_raised_by"):
+				var r := instance_from_id(int(s.get_meta(&"bend_raised_by")))
+				if r == caster or BendCaster.same_team(caster, r):
+					ex.append((s as CollisionObject3D).get_rid())
 	if kind == "stone" and is_inside_tree():
 		# (a burrower under the deck: stone passes over him; round 2's Burrow, under_s)
 		for n in BendCaster.near(caster, global_position, 6.0):
@@ -918,6 +938,9 @@ func _hit(col: Node, at: Vector3, n: Vector3) -> void:
 		# (a ghost: the world or a raised wall ends it here as on the host, its look at once; the wall's wear is the host's word)
 		_end_look("wall" if who is FormRaised else "world", at, n)
 		_finish("wall" if who is FormRaised else "world")
+		return
+	if FormEffects.rock_takes(FormEffects.raised_rock(col), kind, FormEffects.shot_wear(info, damage), at, n):
+		end("world")                               # (a stone held raised before a foe took it: FormEffects.rock_takes)
 		return
 	if who is FormRaised and floor_wave and kind == "stone" and bool(info.get("beat", false)) and _quarry(who as FormRaised, at):
 		end("wall")                                # (Quarry: a chunk of his own wall torn off and thrown on, not worn)

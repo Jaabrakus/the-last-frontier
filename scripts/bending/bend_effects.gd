@@ -92,6 +92,8 @@ static func record(c: Variant, d: Dictionary) -> void:
 
 
 static func _record(bc: BendCaster, d: Dictionary) -> void:
+	if bc.body != null and is_instance_valid(bc.body) and not d.has("by_el"):
+		d["by_el"] = BendPoses.element_of(bc.body)    # (the caster's own element: Patch's heal sounds as his, BendSounds)
 	_cur = d
 	if bc.body != null:
 		_lasts[bc.body.get_instance_id()] = d
@@ -415,7 +417,10 @@ static func floor_wave(c: Variant, _a: Dictionary, spec: Dictionary) -> BendBolt
 	s["mps"] = float(spec.get("mps", 18.0))
 	s["range_m"] = float(spec.get("range_m", 16.0))
 	var b := BendBolt.launch(p, p.global_position + dir * 0.7, dir, s)
-	BendSounds.play(&"fire_crackle", p.global_position, 0.0)
+	if String(s.kind) == "fire":
+		BendSounds.play(&"fire_crackle", p.global_position, 0.0)
+	elif String(s.kind) == "stone":
+		BendSounds.play(&"earth_grind", p.global_position, -2.0)   # (earth's Fissure: a grind, not fire's crackle)
 	return b
 
 
@@ -540,6 +545,8 @@ static func _cone_hit(p: Node3D, n: Node3D, to: Vector3, flat: Vector3, spec: Di
 	var away := to.normalized() if to.length_squared() > 1e-4 else flat
 	BendR3.deliver(n, float(spec.get("damage", 0.0)) * gm, n.global_position + Vector3.UP, away, p, float(spec.get("_lock_s", -1.0)),
 			(away * float(spec.get("knock_mps", 0.0)) + Vector3.UP * float(spec.get("up_mps", 0.0))) * gm, inf)
+	BendLooks.sound(kind, "hit", n.global_position + Vector3.UP, -4.0)    # (its element's hit where it lands: the sound audit,
+	                                                                        # 2026-10-13, a cone's hit had only the knock's thud)
 	SbFx.fire(p, SbFx.key_of(info), "hit_body", {"at": n.global_position + Vector3.UP, "dir": away, "info": info})
 	if float(spec.get("root_s", 0.0)) > 0.0:
 		BendStatus.root(n, float(spec.root_s))
@@ -1087,6 +1094,10 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 	if not beam and FireTalents.any(p):
 		rec["live"] = FireTalents.struck(bc, from, end)      # (a worn Forked Lightning's fork to the nearest water)
 	var who := BendBolt._taker(h.collider as Node) if not h.is_empty() else null
+	BendLooks.sound(String(spec.kind) if beam else "lightning", "hit", end, -2.0)   # (where it lands, a miss too: the sound audit)
+	if not h.is_empty():
+		FormEffects.rock_takes(FormEffects.raised_rock(h.collider as Node), String(spec.kind), \
+				FormEffects.shot_wear(spec.get("_info", {}), float(spec.get("damage", 50.0))), end, -dir)
 	rec["hit"] = 0
 	rec["struck_at"] = BendStatus.now()
 	if who == null or not BendStatus.can_take(who, p):
@@ -1131,6 +1142,8 @@ static func _strike(bc: BendCaster, from: Vector3, dir: Vector3, flat: Vector3, 
 		SbFx.fire(who, SbFx.key_of({}, "fire_parry", "parry"), "lightning_back", {"at": bfrom, "dir": bdir})
 		if not SbFx.fire(who, lk, "strike", {"at": bfrom, "to": end2, "dir": bdir, "el": "fire"}):
 			BendLooks.lightning(bfrom, end2)
+		BendSounds.play(&"lightning_crack", bfrom, 0.0)        # (sent back: its crack from the parrier, its hit where it lands)
+		BendLooks.sound("lightning", "hit", end2, -2.0)
 		var who2 := BendBolt._taker(h2.collider as Node) if not h2.is_empty() else null
 		rec["redirected"] = true
 		if who2 != null and BendStatus.can_take(who2, who):
@@ -1217,9 +1230,11 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	if float(spec.get("bind_s", 0.0)) > 0.0:
 		# (Stone Grip, a bind twist: stone closes round his feet where the Column would throw him up; no pillar to stand on)
 		BendLooks.bind_tell(at, "earth", float(spec.get("radius_m", 1.3)), rise)
+		BendSounds.play(&"earth_grind", at, -6.0)
 	else:
 		r = FormRaised.raise(p.get_tree().current_scene, "pillar", xf, wn, absi(hash(at)) % 97)
 		r.set_meta(&"bend_by", p.get_instance_id())
+		BendSounds.play(&"earth_rise", at, 0.0)     # (the stone rising where it rises, not only the cast at his chest: the audit)
 	# (lift_m: the pillar carries whom it rises under up onto its top, where its throw must find him; the owner 2026-10-11, "i
 	# dont think the knock column knocks someone up right?": it was looked for within 3 m of the deck, the pillar 3 m tall)
 	var sa := {"radius_m": float(spec.get("radius_m", 1.3)), "up_mps": float(spec.get("up_mps", 11.0)),
@@ -1367,6 +1382,7 @@ static func ice_wall(c: Variant, flat: Vector3, spec := {}) -> FormRaised:
 	FormRaised.count_wall(r)                 # (ice walls count with the earth walls: rules.json max_walls)
 	if not bool(r.get_meta(&"sbfx_rise", false)):
 		BendLooks.burst(foot + Vector3.UP, "ice", 24)
+	BendSounds.play(&"ice_freeze", foot, 0.0)    # (its freeze where it stands up: the audit, its spot was silent)
 	return r
 
 
@@ -1912,6 +1928,7 @@ class Strike:
 			info = g.info
 		BendR3.deliver(n, float(spec.get("damage", 10.0)) * k, n.global_position + Vector3.UP, kv.normalized(), p,
 				float(spec.get("_lock_s", -1.0)), kv * k, info)
+		BendLooks.sound(String(spec.get("kind", "stone")), "hit", n.global_position + Vector3.UP, -3.0)   # (where it lands)
 		rec["hit"] = int(rec.get("hit", 0)) + 1
 		if not SbFx.fire(p, SbFx.key_of(spec.get("_info", {})), "hit_body", {"at": n.global_position + Vector3.UP, "dir": kv, "info": info}):
 			BendLooks.burst(n.global_position + Vector3.UP, String(spec.get("kind", "stone")), 18, Vector3.UP, 120.0, 4.0, 0.3)

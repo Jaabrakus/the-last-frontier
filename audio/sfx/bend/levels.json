@@ -1252,6 +1252,69 @@
   "short_db": 0.0,
   "dur_s": 2.166
  },
+ "ui_back_01.wav": {
+  "loud_db": -22.0,
+  "peak_dbfs": -14.46,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.237
+ },
+ "ui_back_02.wav": {
+  "loud_db": -22.0,
+  "peak_dbfs": -14.21,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.227
+ },
+ "ui_back_03.wav": {
+  "loud_db": -22.0,
+  "peak_dbfs": -14.24,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.239
+ },
+ "ui_click_01.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.5,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.564
+ },
+ "ui_click_02.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.66,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.564
+ },
+ "ui_click_03.wav": {
+  "loud_db": -21.0,
+  "peak_dbfs": -13.37,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.564
+ },
+ "ui_hover_01.wav": {
+  "loud_db": -27.0,
+  "peak_dbfs": -18.8,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.062
+ },
+ "ui_hover_02.wav": {
+  "loud_db": -27.0,
+  "peak_dbfs": -18.13,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.064
+ },
+ "ui_hover_03.wav": {
+  "loud_db": -27.0,
+  "peak_dbfs": -17.69,
+  "limit_db": 0.0,
+  "short_db": 0.0,
+  "dur_s": 0.069
+ },
  "water_cast_rush_01.wav": {
   "loud_db": -17.0,
   "peak_dbfs": -8.25,

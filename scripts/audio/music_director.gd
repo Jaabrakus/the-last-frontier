@@ -174,7 +174,9 @@ static func play_menu(host: Node) -> MusicDirector:
 
 
 static func menu_cue() -> StringName:
-	return &"tidebreak_lobby" if M.CUES.has("tidebreak_lobby") else &"main_theme"
+	# (its file in the build too: a build that leaves it out plays the main theme, not silence)
+	var c: Dictionary = M.CUES.get("tidebreak_lobby", {})
+	return &"tidebreak_lobby" if not c.is_empty() and ResourceLoader.exists(String(c.get("path", ""))) else &"main_theme"
 
 
 ## A mission's music (StoryEffects' "music"): `id` once ("" fades what plays); not over a giant's fight.

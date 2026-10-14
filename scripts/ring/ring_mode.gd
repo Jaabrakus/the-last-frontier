@@ -245,6 +245,7 @@ func _init() -> void:
 func _ready() -> void:
 	add_to_group(GROUP)
 	process_physics_priority = 20            # (after the bodies and the rules: this frame's ring-out is this frame's)
+	UiSounds.install(get_tree())             # (the Esc menu's and the screens' buttons heard, when the ring was the first scene)
 	_seed = int(RingRules.num("seed", 7300))
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--")
