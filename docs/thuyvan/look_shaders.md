@@ -18,7 +18,7 @@ them are in `look_paint.md`, `rock_kit.md` and `village_kit.md`.
 
 ## Look directions
 
-`data/thuyvan/look_directions.json` is written by `tools/thuyvan_art/godot/write_look_directions.py` (`--check`
+`data/thuyvan_art/look_directions.json` is written by `tools/thuyvan_art/godot/write_look_directions.py` (`--check`
 verifies it). Edit the generator, not the JSON.
 
 **Sources:**

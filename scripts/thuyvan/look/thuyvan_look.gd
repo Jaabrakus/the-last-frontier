@@ -1,6 +1,6 @@
 class_name ThuyVanLook
 extends Node
-## Thủy Vân's light, sky, fog and grade (style_guide.md 5.4 and 10; data/thuyvan/look_directions.json, written by
+## Thủy Vân's light, sky, fog and grade (style_guide.md 5.4 and 10; data/thuyvan_art/look_directions.json, written by
 ## tools/thuyvan_art/godot/write_look_directions.py from the art director's palettes.json). Three directions (Jade Mist
 ## Morning, Bright Saturated Noon, Golden Lantern Dusk) and a night proposal; the owner chose a day cycle of all three
 ## (owner_answers.md 7), so a look is either one direction or the clock's blend of two.
@@ -22,7 +22,7 @@ extends Node
 ## Effect cards (tv_card.gdshader) and the backdrop karst (tv_rock_far.gdshader) register their materials
 ## (register_card / register_rank) so every apply keeps their tint and fog colour in step with the light.
 
-const DATA := "res://data/thuyvan/look_directions.json"
+const DATA := "res://data/thuyvan_art/look_directions.json"
 const SKY_SHADER := "res://shaders/thuyvan/tv_sky.gdshader"
 const Region := preload("res://scripts/world/world_region.gd")
 ## LUT blends are cached at this many steps between two directions.

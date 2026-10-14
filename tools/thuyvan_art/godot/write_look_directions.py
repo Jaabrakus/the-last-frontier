@@ -2,7 +2,7 @@
 
     python3 tools/thuyvan_art/godot/write_look_directions.py [--check]
 
-Writes data/thuyvan/look_directions.json, which ThuyVanLook (scripts/thuyvan/look/thuyvan_look.gd) applies to the
+Writes data/thuyvan_art/look_directions.json, which ThuyVanLook (scripts/thuyvan/look/thuyvan_look.gd) applies to the
 WorldEnvironment and the sun. Colours, angles, fog and mist heights come from the art director's palette
 (docs/thuyvan/plan/look/palettes.json "directions"; nobody retypes a hex value) and PAINT's notes
 (assets/thuyvan/paint/sky/sky.json, grade/grade.json, water/water.json). This file adds only what Godot needs on top:
@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 PALETTES = os.path.join(REPO, "docs", "thuyvan", "plan", "look", "palettes.json")
 PAINT = os.path.join(REPO, "assets", "thuyvan", "paint")
-OUT = os.path.join(REPO, "data", "thuyvan", "look_directions.json")
+OUT = os.path.join(REPO, "data", "thuyvan_art", "look_directions.json")
 RES_PAINT = "res://assets/thuyvan/paint/"
 
 DIRECTIONS = ["jade_mist_morning", "bright_saturated_noon", "golden_lantern_dusk"]

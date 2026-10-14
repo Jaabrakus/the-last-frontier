@@ -1,5 +1,5 @@
 extends SceneTree
-## Thủy Vân's look directions (data/thuyvan/look_directions.json, ThuyVanLook). Headless:
+## Thủy Vân's look directions (data/thuyvan_art/look_directions.json, ThuyVanLook). Headless:
 ##
 ##   Godot --headless --path . -s tests/thuyvan/test_look_directions.gd
 ##
