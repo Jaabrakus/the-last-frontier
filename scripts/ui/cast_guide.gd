@@ -24,6 +24,9 @@ const DASH_M := 0.4
 const RING_R := 0.32
 const LIFT_M := 0.05
 const STEP_S := 1.0 / 60.0
+## A dropping shot's flight in at most this many raycast segments (the browser's physics is slow: 2026-10-14, "aiming on the
+## web browser when casting it slowed": the Spike's 82 rays a frame cost 0.3 ms natively and several times that in a browser).
+const SEG_MAX := 24
 const LINE_A := 0.8
 const FILL_A := 0.2
 const LOBBED_G := 4.0
@@ -170,14 +173,16 @@ func _shot(bc: BendCaster, from: Vector3, v: Vector3, g: float, reach: float, co
 		if r is RID:
 			exl.append(r)
 	var pts := PackedVector3Array([from])
-	var pos := from
-	var vel := v
-	var went := 0.0
 	var normal := Vector3.ZERO
 	var on_body := false
-	for i in 600:
-		vel.y -= g * STEP_S
-		var q := pos + vel * STEP_S
+	var speed := maxf(v.length(), 0.1)
+	# (a straight shot: one ray; a dropping one: its flight's own curve, from + v t - g t^2 / 2, at most SEG_MAX rays)
+	var dt := (reach / speed) if g < 0.01 else maxf(STEP_S, reach / speed / float(SEG_MAX))
+	var pos := from
+	var went := 0.0
+	for i in SEG_MAX * 3:
+		var t := dt * float(i + 1)
+		var q := from + v * t + Vector3.DOWN * (0.5 * g * t * t)
 		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(pos, q, 0xFFFFFFFF, exl))
 		if not hit.is_empty():
 			pts.append(hit.position)
@@ -196,14 +201,20 @@ func _shot(bc: BendCaster, from: Vector3, v: Vector3, g: float, reach: float, co
 	var c_line := Color(col.r, col.g, col.b, LINE_A)
 	var end := pts[pts.size() - 1]
 	var up := normal if normal != Vector3.ZERO else (_cam_at - end).normalized()
+	var segs := PackedVector3Array()                   # (the pieces drawn, a pair each: the path's segments, or its dashes)
+	if lobbed:
+		var acc := 0.0
+		for j in pts.size() - 1:
+			acc = _dashes(pts[j], pts[j + 1], acc, segs)
+	else:
+		for j in pts.size() - 1:
+			segs.append(pts[j])
+			segs.append(pts[j + 1])
 	for pass_i in 2:                                   # (the dark edge under, then the colour over it)
 		var cc := EDGE if pass_i == 0 else c_line
 		var w := EDGE_W if pass_i == 0 else LINE_W
-		var acc := 0.0
-		for j in pts.size() - 1:
-			if not lobbed or int(acc / DASH_M) % 2 == 0:
-				_ribbon(pts[j], pts[j + 1], cc, w)
-			acc += pts[j].distance_to(pts[j + 1])
+		for k in range(0, segs.size(), 2):
+			_ribbon(segs[k], segs[k + 1], cc, w)
 		if not on_body:                                # (never a ring on a fighter: no target cues)
 			_ring_on(end + up * 0.02, up, RING_R, cc, w)
 	_im.surface_end()
@@ -291,6 +302,23 @@ func _fill_outline(poly: Array, col: Color) -> void:
 	_im.surface_end()
 
 
+## A lobbed shot's dashes (DASH_M on, DASH_M off) along its path from `a` to `b`, `acc` metres of the path laid before `a`,
+## put into `out` a pair each: the metres laid after `b`.
+func _dashes(a: Vector3, b: Vector3, acc: float, out: PackedVector3Array) -> float:
+	var seg := a.distance_to(b)
+	if seg < 1e-4:
+		return acc
+	var d := 0.0
+	while d < seg:
+		var into := fmod(acc + d, DASH_M * 2.0)
+		var run := minf((DASH_M - into) if into < DASH_M else (DASH_M * 2.0 - into), seg - d)
+		if into < DASH_M:
+			out.append(a.lerp(b, d / seg))
+			out.append(a.lerp(b, (d + run) / seg))
+		d += maxf(run, 1e-3)
+	return acc + seg
+
+
 ## A line from `a` to `b` facing the camera, `w` wide.
 func _ribbon(a: Vector3, b: Vector3, col: Color, w := LINE_W) -> void:
 	var along := b - a
@@ -328,6 +356,10 @@ func _ring_on(at: Vector3, up: Vector3, r: float, col: Color, w := LINE_W) -> vo
 
 
 func _quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, col: Color) -> void:
-	for v: Vector3 in [a, b, c, a, c, d]:
-		_im.surface_set_color(col)
-		_im.surface_add_vertex(v)
+	_im.surface_set_color(col)                         # (the colour holds for the vertices after it)
+	_im.surface_add_vertex(a)
+	_im.surface_add_vertex(b)
+	_im.surface_add_vertex(c)
+	_im.surface_add_vertex(a)
+	_im.surface_add_vertex(c)
+	_im.surface_add_vertex(d)
