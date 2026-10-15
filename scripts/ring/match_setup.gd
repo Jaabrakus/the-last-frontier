@@ -804,10 +804,11 @@ static func aim_pull() -> float:
 # ---------------------------------------------------------------- the cast style
 ## How a readied skill casts (the owner, 2026-10-13: "would we break the game if cast time is the cooldown ... after each click
 ## it does a mini refresh like how wow does", then "yea ... just global cooldowns we still have to click a number or highlight
-## and we can click ... to launch it or hold it longer for its bigger cast"): "tap" (a click casts it once its cast time is up,
-## then it waits its own cooldown and every skill a short shared one; held on, it grows as ever: SwayCaster's tap layer,
-## moves.json tap_cast) or "hold" (its lock held until full, then let go: as before). Kept (GameSettings); a script run (the
-## tests) keeps "hold" unless it asks (cast=tap).
+## and we can click ... to launch it or hold it longer for its bigger cast"): "tap" (a click casts it once its cast time is up;
+## held on, it grows as ever: SwayCaster's tap layer, moves.json tap_cast; no cooldowns since 2026-10-14) or "hold" (its lock
+## held until full while you aim, then let go; let go early: nothing). "hold" is the default again (the owner, 2026-10-14:
+## "the casting is just click to cast now and not the hold to cast aim"); Tap stays a choice (Esc, Controls). Kept
+## (GameSettings).
 const CAST_STYLES := ["tap", "hold"]
 const CAST_KEY := "cast_style"
 const CAST_NAMES := {"tap": "Tap", "hold": "Hold"}
@@ -816,7 +817,7 @@ static var _cast_style := ""
 
 static func cast_style() -> String:
 	if _cast_style == "":
-		var def := "hold" if SaveGame._is_script_run() else "tap"
+		var def := "hold"
 		var cf := ConfigFile.new()
 		cf.load(GameSettings.file())
 		var s := String(cf.get_value(SECTION, CAST_KEY, def))
