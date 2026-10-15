@@ -96,7 +96,7 @@ static func pnum(key: String, def: float) -> float:
 
 ## A practice word (screens.json practice.words).
 static func pword(key: String) -> String:
-	return String((((MatchSetup.screens().get("practice", {}) as Dictionary).get("words", {})) as Dictionary).get(key, key))
+	return KitWords.keyed(String((((MatchSetup.screens().get("practice", {}) as Dictionary).get("words", {})) as Dictionary).get(key, key)))
 
 
 ## The practice keys (R: reset positions, B: the dummy's way), made when missing (the player may rebind them).

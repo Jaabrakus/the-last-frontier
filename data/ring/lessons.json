@@ -29,7 +29,7 @@
   "words": {
     "kicker": "LESSON %d OF %d",
     "done": "Done",
-    "skip": "[lesson_skip] skip this lesson   ·   Esc: menu",
+    "skip": "[lesson_skip] skip this lesson   ·   [ui_cancel] menu",
     "finished_kicker": "LESSONS",
     "finished": "That is every lesson. The dummy stays: R puts you both back, B changes what it does.",
     "twice": "twice",

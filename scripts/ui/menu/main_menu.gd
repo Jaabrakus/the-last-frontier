@@ -1020,7 +1020,8 @@ func _open_practice() -> void:
 	_panel.add_child(box)
 	box.add_child(BroadcastUI.heading("Practice"))
 	var rule := BroadcastUI.label("A dummy at the far end: it stands, it blocks, or it throws at you. No clock, no rounds, no score.  "
-			+ "In the ring R puts you both back at your ends and B changes what the dummy does.", 17, BroadcastUI.DIM, true)
+			+ KitWords.keyed("In the ring {reset} puts you both back at your ends and {dummy} changes what the dummy does."), 17,
+			BroadcastUI.DIM, true)
 	rule.custom_minimum_size = Vector2(520, 0)
 	box.add_child(rule)
 	box.add_child(_gap(6))

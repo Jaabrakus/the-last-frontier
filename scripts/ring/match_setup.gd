@@ -442,7 +442,7 @@ static func practice_data() -> Dictionary:
 
 ## A Practice word (practice.json words).
 static func pword(key: String) -> String:
-	return String((practice_data().get("words", {}) as Dictionary).get(key, key))
+	return KitWords.keyed(String((practice_data().get("words", {}) as Dictionary).get(key, key)))   # ({reset}: R, a pad's View)
 
 
 ## A round-3 menu word (practice.json menu).
