@@ -1028,9 +1028,9 @@ func end_of(body: Node) -> int:
 
 
 # ---------------------------------------------------------------- input
-## Space in the pause after a round: the next round at once.
+## Space (a pad's A: the jump) in the pause after a round: the next round at once. A practice's keys (a pad's too: PadInput).
 func _unhandled_input(e: InputEvent) -> void:
-	if not (e is InputEventKey) or not e.is_pressed() or e.is_echo():
+	if not (e is InputEventKey or e is InputEventJoypadButton) or not e.is_pressed() or e.is_echo():
 		return
 	if practice and phase == "FIGHT":
 		if practice_ctl.key(e):
@@ -1038,7 +1038,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		return
 	if phase != "OVER":
 		return
-	if (e as InputEventKey).physical_keycode == KEY_SPACE:
+	if e.is_action_pressed(&"jump"):
 		_skip = true
 
 

@@ -21,6 +21,8 @@ extends Node
 ##   LB [L1] guard (E)      RB [R1] the next skill (F: keys 1, 2 and 3)
 ##   A [Cross] jump      B [Circle] dash with the stick (Shift)      X [Square] key 1      Y [Triangle] key 2
 ##   D-pad up key 4, down key 5, left key 3, right the readied skill onto the jab (Q)      Start [Options] the menu (Esc)
+##   in a practice View [Share] both back at their ends (R), R3 the dummy's way (B); in a lesson View skips it (Enter); after
+##   a round A the next at once (Space); in a menu A presses, B goes back
 
 ## Buttons on the game's actions (JOY_BUTTON_*).
 const BUTTONS := {
@@ -35,7 +37,15 @@ const BUTTONS := {
 	"bend_guard": [JOY_BUTTON_LEFT_SHOULDER],
 	"bend_quick_bind": [JOY_BUTTON_DPAD_RIGHT],
 	"crouch": [JOY_BUTTON_LEFT_STICK],
-	"ui_cancel": [JOY_BUTTON_START],
+	# (the practice: View puts both back at their ends (R), R3 steps the dummy's way (B); a lesson's skip (Enter) View too: the
+	# lesson takes it first, RingLessons._input)
+	"ring_reset": [JOY_BUTTON_BACK],
+	"ring_dummy": [JOY_BUTTON_RIGHT_STICK],
+	"lesson_skip": [JOY_BUTTON_BACK],
+	# (the menus: Godot's own ui_accept and ui_cancel have no pad button (Enter, Space; Escape): A presses, B goes back, Start
+	# opens and closes the Esc menus; the D-pad and the left stick move the focus as Godot's own ui_ directions already do)
+	"ui_accept": [JOY_BUTTON_A],
+	"ui_cancel": [JOY_BUTTON_START, JOY_BUTTON_B],
 }
 ## Sticks and triggers on the game's actions ([JOY_AXIS_*, its sign]), with each action's dead zone.
 const AXES := {
@@ -67,8 +77,10 @@ static func ensure() -> void:
 	if _bound:
 		return
 	_bound = true
-	InputSetup.ensure()                         # (their actions made with their keys first: InputSetup's, the guard's, Q)
-	SwayCaster.ensure_input()
+	InputSetup.ensure()                         # (their actions made with their keys first: InputSetup's, the guard's, Q,
+	SwayCaster.ensure_input()                   # the practice's R and B, the lessons' Enter)
+	RingPractice.ensure_keys()
+	RingLessons._ensure_keys()
 	for a: String in BUTTONS:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)
@@ -166,7 +178,7 @@ static func _use_pad(device: int) -> void:
 const NAMES := {
 	"xbox": {JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y", JOY_BUTTON_LEFT_SHOULDER: "LB",
 			JOY_BUTTON_RIGHT_SHOULDER: "RB", JOY_BUTTON_LEFT_STICK: "L3", JOY_BUTTON_RIGHT_STICK: "R3", JOY_BUTTON_BACK: "View",
-			JOY_BUTTON_START: "Menu", "lt": "LT", "rt": "RT"},
+			JOY_BUTTON_START: "Start", "lt": "LT", "rt": "RT"},
 	"playstation": {JOY_BUTTON_A: "Cross", JOY_BUTTON_B: "Circle", JOY_BUTTON_X: "Square", JOY_BUTTON_Y: "Triangle",
 			JOY_BUTTON_LEFT_SHOULDER: "L1", JOY_BUTTON_RIGHT_SHOULDER: "R1", JOY_BUTTON_LEFT_STICK: "L3",
 			JOY_BUTTON_RIGHT_STICK: "R3", JOY_BUTTON_BACK: "Share", JOY_BUTTON_START: "Options", "lt": "L2", "rt": "R2"},

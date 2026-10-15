@@ -105,7 +105,7 @@
 		"ways": {"stand": "stands still", "block": "blocks: its guards and its cover", "throw": "throws at you every few seconds"},
 		"words": {
 			"banner": "Practice",
-			"hint": "Practice  ·  a %s dummy that %s  ·  R: reset positions  ·  B: stand, block or throw  ·  Esc: menu",
+			"hint": "Practice  ·  a %s dummy that %s  ·  {reset}: reset positions  ·  {dummy}: stand, block or throw  ·  {menu}: menu",
 			"tally": "casts %d  ·  catches %d  ·  knock-backs %d",
 			"out": "Into the water: back to your ends",
 			"reset": "Positions reset",

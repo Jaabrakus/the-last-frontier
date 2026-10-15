@@ -173,14 +173,21 @@ static func slot_key(i: int) -> String:
 	return str(i + 1)
 
 
-## `t` with {guard}, {quick}, {aim}, {fire}, {wheel} and {jump} as bound now.
+## `t` with {guard}, {quick}, {aim}, {fire}, {wheel}, {jump}, {swap}, the practice's {reset} and {dummy}, and {menu} as bound
+## now.
 static func keyed(t: String) -> String:
 	if not t.contains("{"):
 		return t
 	RadialWheel.ensure_input()
 	return t.replace("{guard}", key(GUARD_ACTION)).replace("{quick}", key(SwayCaster.QUICK_BIND)).replace("{aim}", key(&"aim")) \
 			.replace("{fire}", key(&"fire")).replace("{wheel}", key(RadialWheel.ACTION)).replace("{jump}", key(&"jump")) \
-			.replace("{swap}", key(Hotbar.SWAP_ACTION))
+			.replace("{swap}", key(Hotbar.SWAP_ACTION)).replace("{reset}", key(RingPractice.RESET_ACTION)) \
+			.replace("{dummy}", key(RingPractice.DUMMY_ACTION)).replace("{menu}", menu_key())
+
+
+## The Esc menus' key as the player sees it: "Esc", or the pad's Start ("Menu", "Options") while a pad plays.
+static func menu_key() -> String:
+	return PadInput.button_name(&"ui_cancel") if PadInput.active else "Esc"
 
 
 # --- the lines -----------------------------------------------------------------------------------------------------
