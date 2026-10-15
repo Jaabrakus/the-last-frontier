@@ -147,8 +147,9 @@ extends Node
 ## cast_released(move, mode) at every release, air_cast(move, mode) (an airborne cast; not emitted until AIR).
 ## AIR (round 3's cast layer, spec §0, §4.4, §6, §8; r3(): RingRules.stock_on() or a RingMoves on the player, BendR3.on; the
 ## open world, the duel and the classic ring never take a branch below; air_rules in moves.json):
-##   key 3      key3_press (Hotbar.select hands it here, every scheme): never readies a move. In the air the air dodge at once
-##              (RingMoves.dodge, the keys held, held_world); on the deck its first move's lock on its own source SRC_DASH
+##   key 3      key3_press (Hotbar.select hands it here, every scheme): never readies a move. In the air too the movement spell,
+##              once an airtime (the owner, 2026-10-13), the air dodge (RingMoves.dodge, the keys held, held_world) only where
+##              that spell can't start; on the deck its first move's lock on its own source SRC_DASH
 ##              (no button: a click), going when full but no sooner than key3_min_s after the press, a second tap inside that
 ##              the travel move (its time kept); a running lock dropped free; in hitstun or landing lag kept for the first
 ##              free frame (_buf3)
@@ -797,8 +798,9 @@ func drop_all() -> void:
 
 
 ## Round 3 (spec §0, §4.5, §4.6): key 3 pressed with the gate on (Hotbar.select hands it here first; every scheme). It never
-## readies anything (the readied move stays). In the air: the air dodge at once (RingMoves.dodge along the keys held,
-## camera-relative and flat), a running lock dropped (free before its click). On the deck: its first move's lock begins at once
+## readies anything (the readied move stays). In the air: the movement spell as on the deck, once an airtime (the air dodge,
+## RingMoves.dodge along the keys held, camera-relative and flat, only where that spell can't start: _air_dodge), a running
+## lock dropped (free before its click). On the deck: its first move's lock begins at once
 ## on its own source (SRC_DASH: no button to hold, a click), going as soon as it fills but no sooner than key3_min_s after the
 ## press; a second tap inside that is the key's other move (the travel move: Lift, Surf, Jets, Leap), the time kept, its pose
 ## shown switch_hold_s. A running lock of another button is dropped (free before its click). In hitstun or landing lag the

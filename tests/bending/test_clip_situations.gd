@@ -7,7 +7,8 @@ extends SceneTree
 ## (BendKnock.knock with the % rules' launch) and the spout's ride (RingMoves.ride_spout, as a respawn). What shows is read
 ## off the bodies every frame: the player's SwayPose (its ring layer, its cast clip, its struck layer, its air legs; each on
 ## his ToolPose) and the bot's NpcBody (the clip its AnimationPlayer plays).
-##   movement    the double jump, the fall, the fast fall, controlled flight after a Rise, the air dodge, the landings
+##   movement    the double jump, the fall, the fast fall, controlled flight after a Rise, the air dodge (the bot's pad; the
+##               player's key 3 in the air is his movement spell, his dodge where it can't start), the landings
 ##               (light: a cast's landing lag; heavy: after a Rise), the teeter, the spout's ride and its step-off
 ##   the edge    the grab, the hang, the climb, the roll in, the jump, the attack, the scramble (a Rise up the face)
 ##   the deck    the rolls (forward, back, right, left) and the duck (E, then a direction or C)
@@ -550,12 +551,33 @@ func _movement(who: String) -> void:
 	_press(who, "down")
 	_expect(await _wait(who, "own-bend-fall-fast", 0.6, "the fast fall"), "%s: C falling: own-bend-fall-fast" % tag)
 	await _secs(0.6)
-	# the air dodge
+	# the air dodge: the bot's on its pad's dodge; the player's key 3 in the air is his movement spell as on the deck, once a
+	# jump (the owner, 2026-10-13: "the air dodge is lame i want it to use the shift spell like it is on the ground"), his air
+	# dodge only where that spell can't start: SwayCaster._air_dodge, brought about by its own call (every stock kit's
+	# movement spell starts in the air)
 	await _reset(who, _at(-6.0))
 	_press(who, "jump")
 	await _secs(0.2)
-	_press(who, "dodge")
-	_expect(await _wait(who, "own-bend-air-dodge", 0.6, "the air dodge"), "%s: key 3 in the air: own-bend-air-dodge" % tag)
+	if who == "p":
+		c.last_key3 = ""
+		_press(who, "dodge")
+		await _ticks(2)
+		var said := c.last_key3
+		var spell := c.move
+		var spent := not _rm(who).dodge_ready
+		await _secs(0.6)
+		var no_dodge := not (_seen.p as Dictionary).has("own-bend-air-dodge")
+		_expect(said == "dash" and spent and no_dodge, "%s: key 3 in the air: the movement spell (%s, %s), once a jump (spent %s), no air dodge (%s)"
+				% [tag, said, spell, spent, no_dodge])
+		await _reset(who, _at(-6.0))
+		_press(who, "jump")
+		await _secs(0.2)
+		c._air_dodge(_rm(who))
+		_expect(await _wait(who, "own-bend-air-dodge", 0.6, "the air dodge (where the movement spell can't start)"),
+				"%s: the air dodge where the movement spell can't start: own-bend-air-dodge" % tag)
+	else:
+		_press(who, "dodge")
+		_expect(await _wait(who, "own-bend-air-dodge", 0.6, "the air dodge"), "%s: key 3 in the air: own-bend-air-dodge" % tag)
 	await _secs(0.8)
 	# the landings: a cast's landing lag; the recovery landing after a controlled Rise
 	await _reset(who, _at(-6.0))

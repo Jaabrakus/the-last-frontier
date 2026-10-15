@@ -8,9 +8,10 @@ extends SceneTree
 ##   forms     a key-2 lock started on the deck and let go airborne is the Push; one started airborne is the Slam; landing
 ##             before its release calls it off for free; LMB started airborne is the air hit; LMB started on the deck and let
 ##             go airborne is the jab (decided at release); key 1 the same move either way
-##   key 3     in the air RingMoves.dodge at once; on the deck the Dash goes at max(lock, 0.22 s); a second tap inside that is
-##             the travel move; neither changes the readied move; air dodge, land, RMB casts the move readied before the jump;
-##             1 readied by ready_default (the start, a respawn)
+##   key 3     in the air the movement spell as on the deck, once an airtime (the owner, 2026-10-13; RingMoves.dodge only
+##             where it can't start); on the deck the Dash goes at max(lock, 0.22 s); a second tap inside that is the travel
+##             move; neither changes the readied move; the air's spell, land, RMB casts the move readied before the jump; 1
+##             readied by ready_default (the start, a respawn)
 ##   the Slam  its tag, set 0.30 s and -70 deg knock; bounce_once (earth 0.55) on a grounded body; the same space at pitch
 ##             +30 and -60; Downpour's puddle (a Geyser source); the Axe Kick's wave; Down Gust's lift once an airtime; the
 ##             Hammer with a held stone throws it
@@ -292,6 +293,7 @@ func _calm(el := "earth", at := Vector3.INF, face := Vector3.INF) -> void:
 		fm.air = false
 		fm.lag = false
 		fm.cast_ok = true
+		fm.dodge_ready = true                    # (the airtime's one move back, as a landing gives it: the fake never lands)
 		fm.dodges.clear()
 		fm.lags.clear()
 	if fr != null:
@@ -362,12 +364,20 @@ func _lift(h := 2.0) -> void:
 	await _ticks(2)
 
 
-## The camera's pitch turned onto the foe's chest (a player in the air aims down at him), or `below` m under it.
+## The camera's pitch turned onto the foe's chest (a player in the air aims down at him), or `below` m under it: turned again
+## each frame until the crosshair's ray passes within 2 cm of it (the camera swings on its arm as the pitch turns: one turn
+## left the ray a metre and more over him, and a cast flies along that ray at his depth since 2026-10-12,
+## PlayerBendCaster.flight_point).
 func _aim_foe(below := 0.0) -> void:
 	await _ticks(2)
-	var cam := p.camera
-	var d := NpcSenses.chest_of(foe) - Vector3.UP * below - cam.global_position
-	p.pitch = asin(clampf(d.normalized().y, -1.0, 1.0))
+	for i in 30:
+		var cam := p.camera
+		var d := NpcSenses.chest_of(foe) - Vector3.UP * below - cam.global_position
+		var fwd := -cam.global_basis.z
+		if i > 0 and (d - fwd * d.dot(fwd)).length() < 0.02:
+			break
+		p.pitch = asin(clampf(d.normalized().y, -1.0, 1.0))
+		await physics_frame
 	await _ticks(3)
 
 
@@ -492,23 +502,28 @@ func _key3() -> void:
 	await _near_foe("earth")
 	await _tap(0)
 	var before := _ready_now()
-	# in the air: the dodge at once, a running lock dropped, the readied move kept
+	# in the air: the element's movement spell as on the deck (the owner, 2026-10-13: "the air dodge is lame i want it to use
+	# the shift spell like it is on the ground"), a running lock dropped, the readied move kept, the airtime's one move spent;
+	# no dodge (only where that spell can't start: SwayCaster._air_dodge)
 	await _lift(2.0)
 	c.held_override = true
 	await _secs(0.2)
-	var locking := c.state != SwayCaster.State.IDLE
+	var locking := c.state != SwayCaster.State.IDLE and c.lock_src == SwayCaster.SRC_AIM
 	await _tap(2)
-	var dodged := fm.dodges.size() == 1 and c.state == SwayCaster.State.IDLE and c.last_key3 == "dodge"
-	_expect(locking and dodged and _ready_now() == before, "3 in the air: RingMoves.dodge at once, the running lock dropped, %s still readied (%s)" % [before, _ready_now()])
+	var air_move := c.last_key3 == "dash" and c.lock_src == SwayCaster.SRC_DASH and c.state != SwayCaster.State.IDLE \
+			and fm.dodges.is_empty() and not fm.dodge_ready
+	_expect(locking and air_move and _ready_now() == before,
+			"3 in the air: the movement spell (%s), the running lock dropped, the airtime's move spent, no dodge, %s still readied (%s)"
+			% [c.move, before, _ready_now()])
 	c.held_override = false
 	await _ticks(2)
-	# air dodge, land, RMB casts the move readied before the jump
+	# the air's movement spell, land, RMB casts the move readied before the jump
 	await _land()
 	await _rmb_full(3.0)
 	c.held_override = false
 	await _secs(0.4)
 	var r := _last_rel()
-	_expect(r[0] == "stone_form", "air dodge, land, right-click casts the move readied before the jump (%s)" % [r])
+	_expect(r[0] == "stone_form", "the air's movement spell, land, right-click casts the move readied before the jump (%s)" % [r])
 	# on the deck: the Dash at max(lock, 0.22)
 	await _near_foe("earth")
 	await _tap(0)
@@ -541,7 +556,7 @@ func _key3() -> void:
 	var rt := _last_rel()
 	_expect(rt[0] == "pillar" and c.last_key3 == "travel" and _ready_now() == "stone_form/spike",
 			"a second 3 inside 0.22 s is the travel move (%s), the readied move kept (%s)" % [rt, _ready_now()])
-	metrics["key3_keeps_ready_ok"] = dodged and _ready_now() == "stone_form/spike"
+	metrics["key3_keeps_ready_ok"] = air_move and _ready_now() == "stone_form/spike"
 	# 1 readied at the start and after a respawn: ready_default
 	await _near_foe("earth")
 	await _tap(1)
@@ -746,9 +761,15 @@ func _spike_follow() -> void:
 		if not start_in_air:
 			await _lift(1.5)
 		await _secs(0.1)
-		var held_y := th.stone.global_position.y - p.global_position.y if is_instance_valid(th) and is_instance_valid(th.stone) else -INF
-		_expect(full and absf(held_y - 1.3) < 0.15,
-				"Spike raised %s follows the airborne caster's hands (stone %.3f m above feet)" % ["in air" if start_in_air else "before takeoff", held_y])
+		# (a waiting stone eases after his hands, FormEffects.Throw._carry (the owner, 2026-10-13: "when i move and the spike is
+		# still the aiming of the spike is hard"): the 1.5 m lift, put in one frame, is caught up within half a second more)
+		var held_at := func() -> float:
+			return th.stone.global_position.y - p.global_position.y if is_instance_valid(th) and is_instance_valid(th.stone) else -INF
+		var caught := await _until(func() -> bool: return absf(float(held_at.call()) - 1.3) < 0.15, 0.5)
+		var held_y := float(held_at.call())
+		_expect(full and caught < INF,
+				"Spike raised %s follows the airborne caster's hands (stone %.3f m above feet, %.2f s more)"
+				% ["in air" if start_in_air else "before takeoff", held_y, caught])
 		c.held_override = false
 		var launched := await _until(func() -> bool: return is_instance_valid(th) and th.is_thrown, 0.6) < INF
 		var launch_at := th.stone.global_position if launched and is_instance_valid(th.stone) else Vector3.INF
@@ -1018,7 +1039,10 @@ func _air_fill() -> void:
 
 # ---------------------------------------------------------------- the hit info (spec §14.3)
 func _hit_info() -> void:
+	# (the crosshair on his chest: since 2026-10-12 a jab flies along the crosshair's line at his depth, so the stand-in pitch
+	# (-0.08) put the volleys over his head)
 	await _near_foe("earth", 6.0)
+	await _aim_foe()
 	c.quick_override = true
 	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 2.0)
 	c.quick_override = false
@@ -1031,6 +1055,7 @@ func _hit_info() -> void:
 				and String(inf.get("tag", "")) == "rock_jab/pebbles"
 	_expect(ok, "Pebbles: every hit carries from, air, its volley's id and n 3 (%d hits)" % hs.size())
 	await _near_foe("fire", 5.0)
+	await _aim_foe()
 	c.quick_override = true
 	await _until(func() -> bool: return c.state == SwayCaster.State.FULL, 2.0)
 	c.quick_override = false

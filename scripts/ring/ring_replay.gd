@@ -618,7 +618,7 @@ func note_event(k: int, at: Vector3, dir: Vector3, el: String, a := -1, b := -1)
 
 
 func slot_index(b: Variant) -> int:
-	if not (b is Node) or not is_instance_valid(b):
+	if not is_instance_valid(b) or not (b is Node):
 		return -1
 	return int(_slot_of.get((b as Node).get_instance_id(), -1))
 

@@ -46,7 +46,7 @@ extends Node
 ##                runs the key goes to the caster first (SwayCaster.key_tap: the same key switches the lock with its time
 ##                kept, another key ends it), the wheel too (SwayCaster.step_other)
 ##   round 3      in a stock-rules ring (RingRules.stock_on) key 3 acts at once and readies nothing, in every scheme
-##                (SwayCaster.key3_press: the dash on the deck, the air dodge in the air)
+##                (SwayCaster.key3_press: the movement spell, in the air too since 2026-10-13, once a jump)
 ##   F            the keys cycled, 1 -> 2 -> 3 -> 1 (SWAP_ACTION; the owner, 2026-10-11: "the F should toggle between 1 and 2";
 ##                2026-10-12: "f should cycle between those 1 2 3"): an element's fighter's readied move goes to the next key, as
 ##                that key's press would (swap_keys); 3 only where it is a move of its own (Bending.key3: water's Ice
@@ -625,7 +625,7 @@ func select(i: int) -> void:
 			var w3 := Bending.first_of(k3)
 			ready_move(2, String(w3.get("id", "")), String(w3.get("mode", "")))
 			return
-		# (round 3, spec §0: in the % ring 3 acts at once, a dash or the air dodge, and never readies a move: every scheme)
+		# (round 3, spec §0: in the % ring 3 acts at once, the movement spell, the air too, and never readies a move: every scheme)
 		var c3 := SwayCaster.of(player)
 		if c3 != null and c3.key3_press():
 			return

@@ -7,7 +7,8 @@ extends SceneTree
 ##   the chord    Shift held, then a direction (W too: no sprint breaks it): key 3's movement spell (the crosshair on the foe too) (SwayCaster.last_key3 "dash"); a direction held, then
 ##                Shift: the same; Shift + W tapped and let go before the move goes: still forward (PlayerBendCaster.latch_move);
 ##                Shift alone, a direction alone, Shift + Space, the guard held + Shift + a direction: never key 3; in the air
-##                Shift + a direction: the air dodge (last_key3 "dodge")
+##                Shift + a direction: the movement spell too, once a jump (the owner, 2026-10-13; last_key3 "dash", the air's
+##                move spent: RingMoves.dodge_ready)
 ##   no sprint    Shift and W held 2 s: the run's speed (movement.json physics.run), never the old sprint's
 ##   the words    the strip's key 3 shows Shift; F1 says Shift + a direction dashes
 ## The last line "SHIFT MOVES PASSED (<n> checks)" or "SHIFT MOVES FAILED (<f> of <n>)".
@@ -219,13 +220,17 @@ func _run() -> void:
 	_expect(await _press([InputSetup.GUARD_ACTION, &"sprint", &"move_back"], 3, 6) == "",
 			"the guard held + Shift + S: the guard's own Roll, not key 3 (%s)" % c.last_key3)
 	await _rest()
-	# ---- in the air: the air dodge
+	# ---- in the air: the movement spell as on the deck, once a jump (the owner, 2026-10-13: "the air dodge is lame i want it
+	# to use the shift spell like it is on the ground"); the dodge only where that spell can't start
 	ctl.set_held(&"jump", true)
 	await _ticks(10)
 	ctl.set_held(&"jump", false)
-	var air := RingMoves.of(p) != null and RingMoves.of(p).airborne()
+	var rmv := RingMoves.of(p)
+	var air := rmv != null and rmv.airborne()
 	var said := await _press([&"sprint", &"move_left"], 2, 3)
-	_expect(air and said == "dodge", "in the air, Shift + A: the air dodge (airborne %s, %s)" % [air, said])
+	var spent := rmv != null and rmv.airborne() and not rmv.dodge_ready
+	_expect(air and said == "dash" and spent,
+			"in the air, Shift + A: the movement spell, once a jump (airborne %s, %s, spent %s)" % [air, said, spent])
 	await _rest()
 	# ---- no sprint: Shift and W held 2 s (the dash it fires first is over by the end)
 	await _press([&"move_forward", &"sprint"], 4, 0)

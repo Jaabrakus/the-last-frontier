@@ -265,7 +265,7 @@ func set_ends(e0: int) -> void:
 func reset_round() -> void:
 	for id in state:
 		var st := state[id] as Dictionary
-		BendCombo.reset(st.get("body") as Node if st.get("body") is Node and is_instance_valid(st.get("body")) else null)
+		BendCombo.reset(st.get("body") as Node if is_instance_valid(st.get("body")) and st.get("body") is Node else null)
 		st["confined"] = 1
 		st["out"] = false
 		st["by"] = null
@@ -653,7 +653,7 @@ func credit(b: Node3D) -> Node:
 	if kn != null and kn.knocked_within(num("knock_credit_s", 6.0)):
 		return kn.last_knocker
 	var by: Variant = _st(b).get("by")
-	return by as Node if by is Node and is_instance_valid(by) else null
+	return by as Node if is_instance_valid(by) and by is Node else null
 
 
 func _out(b: Node3D, by: Node, why: String) -> void:
@@ -1594,7 +1594,7 @@ func _end_string(body: Node3D, st: Dictionary, now: float) -> void:
 	var sd := st.string as Dictionary
 	var hits := int(sd.get("hits", 0))
 	var by_v: Variant = sd.get("by")
-	var sby: Node = by_v as Node if by_v is Node and is_instance_valid(by_v) else null
+	var sby: Node = by_v as Node if is_instance_valid(by_v) and by_v is Node else null   # (valid first: a freed one errs)
 	if hits >= int(sub_num("breather", "min_hits", 4.0)):
 		st["breather_until"] = now + sub_num("breather", "s", 0.4)
 	st["string"] = {"hits": 0, "pct": 0.0, "by": null, "pop": false, "bounced": false, "m": 0}
@@ -1651,7 +1651,7 @@ func _zones_frame(dt: float) -> void:
 			(body as NpcFighter).arm_broken = ""   # (no running from the deck on a broken arm: the ring's no maims)
 		if pct_of(body) >= wind_pct():
 			var lb: Variant = st.get("last_by")
-			_zones_wind(body, lb as Node if lb is Node and is_instance_valid(lb) else null)
+			_zones_wind(body, lb as Node if is_instance_valid(lb) and lb is Node else null)
 			if not live:
 				return
 			if bool(st.out):

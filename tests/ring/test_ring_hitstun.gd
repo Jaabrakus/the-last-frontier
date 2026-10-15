@@ -11,7 +11,8 @@ extends SceneTree
 ##   the escape  hitstun_left counts the 0.6 s escape; the escape refused at 0.55, refused for a press made at 0.4, taken by
 ##               a fresh press at 0.6
 ##   steering    0.1 s after the hit the carry's yaw turns 15 deg, its pitch (vy) unchanged; held against the flight 0.6 +-
-##               0.05 m/s less carry; the player and a bot alike; last_steer_deg reports it
+##               0.05 m/s less carry once its window (from the hit-stop's end) is over; the player and a bot alike;
+##               last_steer_deg reports it
 ##   strings     decay on every hit (1, 0.8, 0.64, 0.512 ...), the Pop exempt (0.60), a jab after the Pop 0.10 s, the 6th
 ##               hit <= 0.10 s, the 0.4 s breather after a 4-hit string; counted on the victim across two attackers
 ##   refresh     a tumbling launch class refreshes the air moves (BendKnock.launched refresh); a jab, a flinch and the Slam
@@ -65,6 +66,11 @@ func _initialize() -> void:
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.incoming = true
+	# (the header's matchup without its args too, earth against water: the launch numbers below are the water foe's; the args,
+	# when given, still apply over it: MatchSetup.take)
+	MatchSetup.kind = "match"
+	MatchSetup.element = "earth"
+	MatchSetup.foes = ["water"]
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 
@@ -275,7 +281,7 @@ func _escape_checks() -> void:
 
 
 ## A launch of the body `b` by `by` at 100% (a Spike), steered at 0.1 s by `dir` (ZERO: none): [yaw turn, vy change at the
-## steer, carry 0.45 s after the hit].
+## steer, carry once the steer's window is over].
 func _steer_run(b: Node3D, by: Node3D, dir: Vector3) -> Array:
 	await _fresh()
 	rules.add_pct(b, 100.0, null, "")
@@ -289,12 +295,16 @@ func _steer_run(b: Node3D, by: Node3D, dir: Vector3) -> Array:
 		w = f0.normalized().cross(Vector3.UP)          # (across the flight)
 	elif dir == Vector3.BACK:
 		w = -f0.normalized()                          # (against it)
+	# (the carry read the same game time after the hit-stop's hold in every run, once the steer's window is over: the window
+	# counts from the hold's end (BendKnock.apply_di), and the hold grew to 0.2 s with the owner's "more impact" (2026-10-13,
+	# feel.json hitstop), so a read 0.35 s after the steer came part way through it)
+	var read_at := BendStatus.now() + kn.hold_left() + RingRules.stock_num("di_against_s", 0.3) + 0.05
 	if dir != Vector3.ZERO:
 		kn.apply_di(w)
 	var f1 := Vector3(kn.kv.x, 0.0, kn.kv.z)
 	var vy1 := (b as CharacterBody3D).velocity.y
 	var turn := rad_to_deg(f0.signed_angle_to(f1, Vector3.UP))
-	await _secs(0.35)
+	await _until(func() -> bool: return BendStatus.now() >= read_at, 2.0)
 	var carry := kn.kv.length()
 	await _until(func() -> bool: return (b as CharacterBody3D).is_on_floor(), 3.0)
 	return [turn, vy1 - vy0, carry]

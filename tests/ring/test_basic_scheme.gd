@@ -9,8 +9,9 @@ extends SceneTree
 ##                 roll), E + C (no duck), 3 in the air (no dodge, the dodge kept), the short hop (a cast let go, then Space:
 ##                 the full jump; Space, then a cast let go: not capped), 4 and 5 before the first win (nothing readied; after
 ##                 RingAssist.note_win: 4 readies the wall), the edge's E, click and C (no roll in, no attack, no let go)
-##   Full          the same inputs do what round 3 made them do: the crouch, the fast fall, the roll, the duck, the air
-##                 dodge, the short hop (0.8 m) both orders, 4 the wall, E on the edge rolls in
+##   Full          the same inputs do what round 3 made them do: the crouch, the fast fall, the roll, the duck, Shift + a
+##                 direction in the air the movement spell (once a jump, no dodge: the owner, 2026-10-13), the short hop
+##                 (0.8 m) both orders, 4 the wall, E on the edge rolls in
 ## Watchdog LIMIT_S; seed(1750); MatchSetup._aim_help pinned; GameSettings.path its own. Last line "BASIC SCHEME PASSED" or
 ## "BASIC SCHEME FAILED"; exit 0 only on a pass.
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_basic_scheme.gd
@@ -412,16 +413,22 @@ func _full_keys() -> void:
 	await _ticks(2)
 	p.controls.set_held(&"jump", false)
 	await _secs(0.15)
-	# (Shift + a direction: since 2026-10-12 water's 3 under Full is its Ice Tomahawk, Bending.key3; the dodge is Shift's)
+	# (Shift + a direction: since 2026-10-12 water's 3 under Full is its Ice Tomahawk, Bending.key3; the movement spell is
+	# Shift's, in the air too since 2026-10-13 (the owner: "the air dodge is lame i want it to use the shift spell like it is
+	# on the ground"), once a jump; the dodge only where that spell can't start: SwayCaster.key3_press)
+	c.last_key3 = ""
 	p.controls.set_held(&"sprint", true)
 	await _ticks(2)
 	p.controls.set_held(&"move_left", true)
+	await _ticks(2)
+	var air_said := c.last_key3
+	var air_spent := rm.airborne() and not rm.dodge_ready
 	await _secs(0.3)
 	p.controls.set_held(&"move_left", false)
 	p.controls.set_held(&"sprint", false)
-	var dodged := moved.has("dodge")
 	await _until(func() -> bool: return p.is_on_floor() and not rm.airborne(), 2.0)
-	_expect(dodged, "Full: Shift + a direction in the air dodges")
+	_expect(air_said == "dash" and air_spent and not moved.has("dodge"),
+			"Full: Shift + a direction in the air casts the movement spell (%s), once a jump (spent %s), no dodge (%s)" % [air_said, air_spent, moved])
 	await _reset()
 	await _key(&"weapon_1")
 	_jump_on_release = true

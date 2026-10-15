@@ -238,7 +238,9 @@ func _run() -> void:
 	await _secs(1.0)                                 # (the bots stay held to the end: no one's own fight in the checks below)
 
 	# the High Kick's blast to the crosshair: aimed 4 degrees over the foe's chest under the strong aim help (whose 6-degree cone
-	# takes him), it goes where the crosshair points, never bent onto his chest
+	# takes him), it goes where the crosshair points, never bent onto his chest. Where it points: its line at his depth
+	# (flight_point, since 2026-10-12 every cast's: from the foot to where the ray stops on the deck far behind him crossed the
+	# dot's line only there)
 	var help0 := MatchSetup._aim_help
 	MatchSetup._aim_help = "strong"
 	var pc := BendCaster.of(player)
@@ -246,7 +248,7 @@ func _run() -> void:
 	player.yaw = atan2(-dc.x, -dc.z)
 	player.pitch = (asin(clampf(dc.y, -1.0, 1.0)) + deg_to_rad(4.0)) * pitch_sign
 	await _ticks(4)
-	var cross := pc.aim_point()
+	var cross := pc.flight_point()
 	var helped := pc.aim_target()
 	var known := {}
 	for n in get_nodes_in_group(BendBolt.GROUP):
