@@ -173,7 +173,8 @@
 			"lock": "Hold: aim while it fills, let go to cast; let go early to call it off. Hold 2 longer: ▲ it grows.",
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
 			"web": "Water douses fire and fire boils water. Meeting elements fuse: earth and fire make magma, earth and water mud.",
-			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground."
+			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground.",
+			"combo": "Land a hit, then click a skill at once: it goes in a third of its time. Three jabs in a row that land: the third pops them up."
 		},
 		"passives": {
 			"earth": {"name": "Rooted", "line": "stand still and your locks fill faster, and you are pushed less."},

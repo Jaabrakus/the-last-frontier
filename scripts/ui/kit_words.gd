@@ -209,12 +209,16 @@ static func strip_help(s := "") -> String:
 	return t.substr(0, 1).to_upper() + t.substr(1) if t != "" else help_line(s)
 
 
-## F1's and the first-time panels' four rules: the lock, the guard, the counters, the floor and the air.
+## F1's and the first-time panels' four rules: the lock, the guard, the counters, the floor and the air; in a ring under the
+## combo rules (BendCombo.on) a fifth, the combo controls (the window's link and the jab string: the owner, 2026-10-15).
 static func rule_lines() -> Array:
 	var r: Dictionary = words().get("rules", {})
 	var rt: Dictionary = words().get("rules_tap", {}) if MatchSetup.tap_cast() else {}
 	var out: Array = []
-	for k in ["lock", "guard", "web", "dodge"]:
+	var keys: Array = ["lock", "guard", "web", "dodge"]
+	if BendCombo.on():
+		keys.append("combo")
+	for k in keys:
 		if rt.has(k):
 			out.append(keyed(String(rt[k])))         # (the tap style's own line: a click casts)
 		elif r.has(k):

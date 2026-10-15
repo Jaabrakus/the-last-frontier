@@ -83,11 +83,40 @@ static func head_start(n: Node) -> float:
 	return clampf(_num("combo", "fill", 0.0) * level(n), 0.0, HEAD_MAX)
 
 
-## A hit of `by` on `n` landed (RingRules.on_hit; its own judgement of what counts): his stack, `n`'s all gone.
+## A hit of `by` on `n` landed (RingRules.on_hit; its own judgement of what counts): his stack, `n`'s all gone, and his combo
+## window open (link_on).
 static func landed(by: Node, n: Node) -> void:
 	lose(n)
 	if by != null and is_instance_valid(by) and by != n and not BendCaster.same_team(by, n):
 		gain(by)
+		if on():
+			by.set_meta(LINK_META, BendStatus.now() + _num("combo", "link_s", 0.5))
+
+
+# ---------------------------------------------------------------- the combo window (the owner, 2026-10-15: "we can click a
+# button and trigger combos faster"; rules.json stock._link)
+const LINK_META := &"bend_link"
+
+
+## Whether `n`'s combo window is open: a hit of his landed within combo.link_s, not yet spent on a skill.
+static func link_on(n: Node) -> bool:
+	return n != null and is_instance_valid(n) and on() and BendStatus.now() < float(n.get_meta(LINK_META, -INF))
+
+
+## The share of its cast time a skill begun in the window takes (combo.link_share).
+static func link_share() -> float:
+	return _num("combo", "link_share", 0.34)
+
+
+## `n`'s window spent (a skill begun in it): the next hit opens another.
+static func spend_link(n: Node) -> void:
+	if n != null and is_instance_valid(n) and n.has_meta(LINK_META):
+		n.remove_meta(LINK_META)
+
+
+## Whether the jab casts on a click (combo.jab_click): its lock runs on and goes when full, so a string is three clicks.
+static func jab_clicks() -> bool:
+	return on() and bool(RingRules.stock_block("combo").get("jab_click", true))
 
 
 # ---------------------------------------------------------------- the guard's gauge
@@ -230,3 +259,5 @@ static func reset(n: Node) -> void:
 		n.remove_meta(GAUGE_META)
 	if n.has_meta(FOLLOW_META):
 		n.remove_meta(FOLLOW_META)
+	if n.has_meta(LINK_META):
+		n.remove_meta(LINK_META)

@@ -1855,7 +1855,18 @@ func _pick_src() -> void:
 ## Bending.rule("click_queue") (the owner, 2026-10-10: "we cant just click and it does we have to hold it no more click and
 ## forget": a cast is held until its lock is full, then let go; let go early, it is called off and nothing is spent).
 func _click_runs_on() -> bool:
-	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false)) or _tap_runs()
+	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false)) or _tap_runs() or _link \
+			or _jab_click()
+
+
+## This lock is a combo link (BendCombo.link_on when it began: a hit of his had just landed): a third of its cast time, and
+## a click runs on (the owner, 2026-10-15: "we can click a button and trigger combos faster").
+var _link := false
+
+
+## The jab casts on a click in the ring's combo rules (BendCombo.jab_clicks): three that land are its string and the third its Pop.
+func _jab_click() -> bool:
+	return lock_src == SRC_QUICK and BendCombo.jab_clicks() and BendR3.is_jab(move, mode_of(move))
 
 
 ## The tap style's aim and quick button: a click casts (MatchSetup.cast_style "tap").
@@ -2472,6 +2483,9 @@ func _try_begin(q: Dictionary) -> void:
 	_form_mode = ""
 	if r3():
 		_r3_form(m)
+	_link = elem() and lock_src == SRC_AIM and BendCombo.link_on(player) and not m in ["patch", "mend"]
+	if _link:
+		BendCombo.spend_link(player)              # (the window spent on this skill: the next hit opens another)
 	lock_s = _lock_time(m, t, dist, r)
 	_began()
 	var head_mode := _form_mode if _form_id == m and _form_mode != "" else mode_of(m)
@@ -2587,6 +2601,8 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
 		base = float(air_times.get(mode_of(m), base))
+	if _link:
+		base *= BendCombo.link_share()             # (a combo link: a third of its cast time)
 	# (the tap style keeps each skill's own cast time: the owner, 2026-10-14, "the cooldowns may be to fast... we need the cast
 	# times back"; a click goes when it is full, its cooldown after it, _tap_spent)
 	if elem() and lock_src == SRC_GUARD:
@@ -3640,6 +3656,7 @@ func _end_lock() -> void:
 	_switch_hold_until = -INF
 	raised = null                             # (thrown by the cast, or dropped loose by _break / _fizzle first)
 	_step_lock = false
+	_link = false
 	_form_id = ""
 	_form_mode = ""
 	if lock_src == SRC_DASH:

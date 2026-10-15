@@ -137,8 +137,8 @@ func _draw() -> void:
 		var full := caster.state == SwayCaster.State.FULL
 		var holding := caster.state == SwayCaster.State.HOLDING
 		var bright := col.lerp(Color.WHITE, 0.35) if full or holding else col
-		if BendCombo.follow_on(caster.player) and not BendCombo.knockup(caster.move, caster.mode_of(caster.move)):
-			bright = bright.lerp(Color.WHITE, 0.45)   # (a knock-up's follow-up: this lock fills faster, the ring glows)
+		if BendCombo.follow_on(caster.player) and not BendCombo.knockup(caster.move, caster.mode_of(caster.move)) or caster._link:
+			bright = bright.lerp(Color.WHITE, 0.45)   # (a knock-up's follow-up, or a combo link: this lock fills faster, it glows)
 		var strain := caster.hold.strain if holding and caster.hold != null and is_instance_valid(caster.hold) else 0.0
 		if strain > 0.0:
 			bright = bright.lerp(Color(1.0, 0.45, 0.25), strain)       # (the strain: it reddens and shakes)
@@ -170,6 +170,12 @@ func _draw() -> void:
 	elif caster.readied:
 		_ring(c, RADIUS, 1.0, Color(0, 0, 0, 0.2), shape, WIDTH + 1.0)
 		_ring(c, RADIUS, 1.0, Color(col.r, col.g, col.b, 0.16), shape, WIDTH * 0.7)
+	if not on and BendCombo.link_on(caster.player):
+		# (the combo window: a hit just landed; a click of a skill now goes in a third of its time. A bright ring at the
+		# crosshair, beating, for the half second: on the caster, never on a body)
+		var lw := 0.55 + 0.35 * absf(sin(_t * 18.0))
+		draw_arc(c, RADIUS, 0.0, TAU, 40, Color(0, 0, 0, 0.35 * lw), WIDTH + 2.0, true)
+		draw_arc(c, RADIUS, 0.0, TAU, 40, Color(1.0, 0.95, 0.75, lw), WIDTH, true)
 	if _pulse > 0.0 and on:
 		var pc := SwayMoves.art_color(_art).lerp(Color.WHITE, 0.5)
 		draw_arc(c, RADIUS - 8.0 + 3.0 * (1.0 - _pulse), 0.0, TAU, 32, Color(pc.r, pc.g, pc.b, 0.85 * _pulse), 2.0, true)
