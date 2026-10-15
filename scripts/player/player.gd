@@ -1158,23 +1158,6 @@ func _equip_drawn() -> void:
 	weapon.equip()
 
 
-## The view's look as the last physics step laid it (the body's yaw then, the camera's orbit about it, the bow's tremble): _process
-## turns the camera on from there to the newest yaw and pitch on every drawn frame.
-var _look_yaw := 0.0
-var _look_orbit := 0.0
-var _look_tremble := Vector2.ZERO
-
-
-## The view turned on every drawn frame, not only on a physics step (the owner, 2026-10-14: "the aiming is not fluid like in
-## the main game for web browser": a browser's frames fall between the 120 physics steps a second, and at 144 frames a second
-## the view stood still on 17% of them). The mouse moves yaw and pitch as it moves (_unhandled_input); the body still turns
-## on the physics step, the camera's orbit carrying the difference until it does.
-func _process(_delta: float) -> void:
-	if not is_local or camera_pivot == null:
-		return
-	camera_pivot.rotation = Vector3(pitch + _look_tremble.x, _look_tremble.y + _look_orbit + wrapf(yaw - _look_yaw, -PI, PI), 0)
-
-
 func _physics_process(delta: float) -> void:
 	_sway(delta)
 	_skirt_tuck(delta)
@@ -1205,9 +1188,6 @@ func _physics_process(delta: float) -> void:
 	if weapon is Bow:
 		tremble = (weapon as Bow).tremble_offset()
 	camera_pivot.rotation = Vector3(pitch + tremble.x, tremble.y + orbit, 0)
-	_look_yaw = yaw
-	_look_orbit = orbit
-	_look_tremble = tremble
 	_retry_held_switch()
 	if quick != null:
 		quick.tick(delta)
