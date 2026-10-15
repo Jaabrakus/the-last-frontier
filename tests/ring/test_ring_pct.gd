@@ -55,6 +55,8 @@ func _initialize() -> void:
 	(RingRules.data()["stock"] as Dictionary)["pct_scale"] = 1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
+	# (the launch's own numbers: the combo's finisher, a full meter's next hit launched as the Pop is, off here: BendCombo)
+	BendCombo.enabled = false
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.incoming = true

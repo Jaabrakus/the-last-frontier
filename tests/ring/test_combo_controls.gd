@@ -1,15 +1,20 @@
 extends SceneTree
-## The combo controls on the ring's combo rules (BendCombo.link_on, jab_clicks; the owner, 2026-10-15: "we can click a button
-## and trigger combos faster", picked both: the combo window and jab strings by clicks). In the ring (a practice, earth, the
-## standing dummy 4 m off, the crosshair kept on his chest, the hold style), the player's buttons through PlayerControls and
-## the caster's quick_override:
-##   jab click   a 0.1 s click of the jab button casts the jab (its lock runs on; before 2026-10-15 a click was called off)
-##   window      the jab landing opens the combo window (BendCombo.link_on)
-##   link        the Spike clicked inside it: a link (a third of its cast time: its lock against the Spike's held one), cast
-##               on the click; the window spent
-##   lapsed      the Spike clicked after the window: called off, nothing cast (hold to cast outside a combo)
-##   hold        the Spike held: its own cast time, cast as ever
-##   string      three jab clicks, each as soon as the last has left the hand, landing: the third is the Pop
+## The combo rules on the ring (BendCombo; the owner, 2026-10-15: "we can click a button and trigger combos faster", the combo
+## window; then, after playing the jab string, "to easy to spam", "people can just get close to the user", "chains are good if
+## you land and attack", picked: a hit worth its cast time, no repeats in a chain, a full meter's finisher, the rusher
+## answered). In the ring (a practice, earth, the standing fire dummy 4 m off, the crosshair kept on his chest, the hold
+## style), the player's buttons through PlayerControls and the caster's quick_override:
+##   jab        a 0.1 s click of the jab button: called off (no jab click: held to cast as every skill); held: it casts, and
+##              landing it fills combo.jab_worth and opens the window
+##   link       the Spike clicked inside the window: a link (link_share of its cast time), cast on the click; landing it fills
+##              its worth (its cast time over stack_s)
+##   repeat     the Spike again in the same chain: no link (a click called off), held it casts, landing it fills half its
+##              worth (combo.repeat_k; the owner, 2026-10-15: two Spikes "doesnt stack", picked "repeats add half") and opens
+##              the window
+##   finisher   a full combo: the Spike's hit launches as the Pop does (the Pop's set launch, its own tag) and the combo is
+##              spent; the jab at full is the Pop (its pose, its tag)
+##   rusher     the fire dummy's jab taken on the beat by the player's guard from 4 m: the dummy knocked back, the player's
+##              window open
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_combo_controls.gd
 ## The last line "COMBO CONTROLS PASSED (<n> checks)" or "COMBO CONTROLS FAILED (<f> of <n>)".
 
@@ -20,6 +25,8 @@ var c: SwayCaster
 var checks := 0
 var fails: Array[String] = []
 var released: Array = []
+## The ring's launches by the player on the dummy ([sv, stun, tag, at]).
+var hits: Array = []
 var aiming := false
 
 
@@ -80,8 +87,10 @@ func _until(cond: Callable, seconds: float) -> bool:
 	return cond.call()
 
 
+## Both fighters `d` m apart on the deck's long axis, whole, at 0%, both combos empty, no stone of his loose or in his hand.
 func _stage(d: float) -> void:
 	aiming = false
+	await _idle()
 	var g := RingMoves.arena_geo(mode.ring)
 	var xf: Transform3D = g.xf
 	var y := mode.ring.deck_y()
@@ -92,10 +101,17 @@ func _stage(d: float) -> void:
 	mode.rules.reset_pct(mode.foe, 0.0)
 	mode.make_whole(mode.foe)
 	mode.make_whole(p)
-	BendCombo.reset(p)
+	for st in FormStone.loose_of(p):
+		if is_instance_valid(st):
+			st.queue_free()
+	var held := BendZone.held_stone(p)
+	if held != null and is_instance_valid(held):
+		held.queue_free()
 	aiming = true
 	await _until(func() -> bool: return p.is_on_floor() and mode.foe.is_on_floor(), 2.0)
 	await _ticks(30)
+	BendCombo.reset(p)
+	BendCombo.reset(mode.foe)
 
 
 func _aim() -> void:
@@ -116,6 +132,14 @@ func _jab_click() -> void:
 	c.quick_override = false
 
 
+## The jab held to cast: down until its lock is full, then let go.
+func _jab_held() -> void:
+	c.quick_override = true
+	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], 2.0)
+	await _ticks(2)
+	c.quick_override = false
+
+
 ## A click of the aim button (down 0.1 s).
 func _aim_click() -> void:
 	p.controls.set_held(&"aim", true)
@@ -123,9 +147,24 @@ func _aim_click() -> void:
 	p.controls.set_held(&"aim", false)
 
 
+## The readied skill held to cast: the aim button down until its lock is full, then let go.
+func _aim_held() -> void:
+	p.controls.set_held(&"aim", true)
+	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], 3.0)
+	await _ticks(2)
+	p.controls.set_held(&"aim", false)
+
+
 func _idle() -> void:
 	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 4.0)
 	await _ticks(3)
+
+
+## Waits for the player's next hit on the dummy (the ring's launch of it): the hit ([sv, stun, tag, at]) or [] none.
+func _next_hit(seconds := 2.0) -> Array:
+	var n := hits.size()
+	await _until(func() -> bool: return hits.size() > n, seconds)
+	return hits[n] if hits.size() > n else []
 
 
 func _run() -> void:
@@ -145,80 +184,116 @@ func _run() -> void:
 	p.controls = PlayerControls.new(false)
 	c = SwayCaster.of(p)
 	c.cast_released.connect(func(m: String, md: String) -> void: released.append([m, md, BendStatus.now()]))
+	mode.rules.launched.connect(func(n: Node, sv: Vector3, stun: float, by: Node, tag: String) -> void:
+		if n == mode.foe and by == p:
+			hits.append([sv, stun, tag, BendStatus.now()]))
 	physics_frame.connect(_aim)
 	var jab := Bending.jab("earth")
-	var bc := BendCaster.of(p)
-	_expect(BendCombo.on() and BendCombo.jab_clicks() and String(jab.get("id", "")) != "", "the combo rules are on, the jab clicks (%s)" % [jab])
+	var jab_w := BendCombo.worth({"jab": true})
+	var spike_w := BendCombo.worth({"move": "stone_form", "mode": "spike"})
+	_expect(BendCombo.on() and BendCombo.finishers() and jab_w < 0.5 and spike_w > 1.5,
+			"the combo rules on, finishers on; a jab worth %.2f, the Spike %.2f" % [jab_w, spike_w])
 	await _stage(4.0)
-
-	# ---- the jab string: three clicks that land, the third the Pop
 	await _secs(1.0)
-	# (clicked as a player strings them: the next click as soon as the last jab has left the hand, not after it lands, so each
-	# lands while the one before still holds him; RingRules' string ends when he recovers, and the jab string with it)
-	var n_hits: Array = []
-	released = []
-	for k in 3:
-		var casts := released.size()
-		await _jab_click()
-		await _until(func() -> bool: return released.size() > casts, 1.5)
-		n_hits.append(int(bc.jab.get("hits", 0)))
-	await _until(func() -> bool: return bool(bc.jab.get("popped", false)), 1.5)
-	var popped := bool(bc.jab.get("popped", false))
-	_expect(popped and released.size() >= 3, "three jab clicks that land: the third is the Pop (%d jabs, hits as each left %s)" % [
-			released.size(), n_hits])
 
-	# (the Pop's stone out of his hand, the string and its window lapsed, before the window's checks)
-	await _idle()
-	var held := BendZone.held_stone(p)
-	if held != null and is_instance_valid(held):
-		held.queue_free()
-	await _stage(4.0)
-	await _secs(1.2)
-
-	# ---- a jab on a click, its hit opens the window
+	# ---- the jab: a click called off, held it casts; landing it fills a sliver and opens the window
 	released = []
-	var hits0 := int(bc.jab.get("hits", 0))
 	await _jab_click()
-	await _until(func() -> bool: return not released.is_empty(), 1.5)
-	_expect(not released.is_empty() and String(released[0][0]) == String(jab.id),
-			"a 0.1 s click of the jab button casts the jab (%s; last break '%s')" % [released, c.last_break])
-	var landed := await _until(func() -> bool: return BendCombo.link_on(p), 1.5)
-	_expect(landed, "the jab landing opens the combo window (hits %d -> %d)" % [hits0, int(bc.jab.get("hits", 0))])
+	await _secs(0.8)
+	_expect(released.is_empty() and c.last_break == "let go",
+			"a 0.1 s click of the jab: called off, nothing cast (%d, '%s')" % [released.size(), c.last_break])
+	await _idle()
+	await _jab_held()
+	var h0 := await _next_hit()
+	_expect(not h0.is_empty() and absf(BendCombo.level(p) - jab_w) < 0.05 and BendCombo.link_on(p),
+			"the jab held casts; landing it fills %.2f (its worth %.2f) and opens the window (%s)" % [BendCombo.level(p), jab_w,
+			BendCombo.link_on(p)])
 
-	# ---- the Spike clicked inside the window: a link, cast on the click
+	# ---- the Spike clicked inside it: a link, cast on the click; landing it fills its worth
 	p.hotbar.ready_move(0, "stone_form", "spike")
 	released = []
-	var t0 := BendStatus.now()
+	var lv0 := BendCombo.level(p)
 	await _aim_click()
 	var linked := c._link
 	var link_lock := c.lock_s
-	_expect(linked and not BendCombo.link_on(p), "the Spike clicked inside it is a link, the window spent (link %s)" % linked)
-	await _until(func() -> bool: return not released.is_empty(), 2.0)
-	var took := (float(released[0][2]) - t0) if not released.is_empty() else -1.0
-	_expect(not released.is_empty() and String(released[0][0]) == "stone_form", "the link casts on the click (%.2f s)" % took)
+	var h1 := await _next_hit()
+	var lv1 := BendCombo.level(p)
+	_expect(linked and not h1.is_empty() and absf(lv1 - lv0 - spike_w) < 0.08,
+			"the Spike clicked in the window: a link (%s, %.2f s), it lands and fills %.2f (its worth %.2f)" % [linked, link_lock,
+			lv1 - lv0, spike_w])
+	_expect(BendCombo.in_chain(p, "stone_form", "spike") and BendCombo.chain(p).size() == 2,
+			"the chain: the jab and the Spike (%s)" % [BendCombo.chain(p)])
 
-	# ---- after the window: a click calls it off
+	# ---- the Spike again in the same chain: no link; it fills half its worth and opens the window
 	await _idle()
-	await _secs(1.2)
 	released = []
 	await _aim_click()
-	await _secs(0.8)
-	_expect(released.is_empty() and c.last_break == "let go",
-			"the Spike clicked after the window: called off, nothing cast (%d, '%s')" % [released.size(), c.last_break])
-
-	# ---- held: its own cast time
-	await _idle()
+	var again_link := c._link
 	await _secs(0.6)
-	p.controls.set_held(&"aim", true)
+	_expect(not again_link and released.is_empty(), "the Spike again in the chain: no link, its click called off (%s, %d)" % [
+			again_link, released.size()])
+	await _idle()
+	var nh := hits.size()
+	var before := [BendCombo.level(p)]
+	await _aim_held()
+	await _until(func() -> bool:
+		if hits.size() > nh:
+			return true
+		before[0] = BendCombo.level(p)
+		return false, 2.0)
+	var lv3 := BendCombo.level(p)
+	var half := spike_w * float(RingRules.stock_block("combo").get("repeat_k", 0.5))
+	_expect(hits.size() > nh and absf(lv3 - float(before[0]) - half) < 0.05 and BendCombo.link_on(p),
+			"held, it casts and lands, filling %.2f (half its worth: %.2f) and opening the window (%s)" % [lv3 - float(before[0]), half,
+			BendCombo.link_on(p)])
+
+	# ---- the finisher: a full combo's next hit launches as the Pop does, the combo spent
+	await _stage(4.0)
+	await _secs(0.6)
+	p.hotbar.ready_move(0, "stone_form", "spike")
+	BendCombo.gain(p, 5.0)
+	_expect(BendCombo.finisher_ready(p), "a full combo: the finisher ready (%.2f)" % BendCombo.level(p))
+	await _aim_held()
+	var h3 := await _next_hit()
+	var pop_mps := float(BendR3.block("pop").get("set_mps", 9.0))
+	var sv3: Vector3 = h3[0] if not h3.is_empty() else Vector3.ZERO
+	_expect(not h3.is_empty() and String(h3[2]) == "stone_form/spike" and absf(sv3.length() - pop_mps) < 1.0 and sv3.y > pop_mps * 0.9
+			and is_zero_approx(BendCombo.level(p)) and not BendCombo.link_on(p),
+			"its Spike lands as the finisher: the Pop's launch (%.1f m/s, %.1f up), its own tag (%s), the combo spent (%.2f)" % [
+			sv3.length(), sv3.y, String(h3[2]) if not h3.is_empty() else "-", BendCombo.level(p)])
+
+	# ---- the jab at full: the Pop
+	await _stage(4.0)
+	await _secs(0.6)
+	BendCombo.gain(p, 5.0)
+	c.quick_override = true
 	await _until(func() -> bool: return c.state != SwayCaster.State.IDLE, 1.0)
-	var held_lock := c.lock_s
-	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], 3.0)
-	released = []
-	p.controls.set_held(&"aim", false)
-	await _until(func() -> bool: return not released.is_empty(), 1.5)
-	_expect(not released.is_empty() and held_lock > 0.0 and absf(link_lock / held_lock - BendCombo.link_share()) < 0.03,
-			"held, the Spike takes its own cast time (%.2f s); the link took %.2f of it (%.2f s)" % [held_lock,
-			link_lock / maxf(held_lock, 0.001), link_lock])
+	var popped := c._form_mode == "pop"
+	await _until(func() -> bool: return c.state in [SwayCaster.State.FULL, SwayCaster.State.HOLDING], 2.0)
+	await _ticks(2)
+	c.quick_override = false
+	var h4 := await _next_hit()
+	_expect(popped and not h4.is_empty() and String(h4[2]) == String(BendR3.block("pop").get("tag", "jab/pop"))
+			and is_zero_approx(BendCombo.level(p)),
+			"the jab at full: the Pop (its pose %s, its tag %s), the combo spent" % [popped, String(h4[2]) if not h4.is_empty() else "-"])
+
+	# ---- the rusher answered: the dummy's jab taken on the beat from 4 m
+	await _stage(4.0)
+	await _secs(0.6)
+	var fbc := BendCaster.of(mode.foe) as BodyBendCaster
+	fbc.scatter_deg = 0.0
+	fbc.lead = 0.0
+	fbc.target = p
+	var gspec: Dictionary = (SwayMoves.move("stone_catch").bend as Dictionary)["catch"]
+	var z := BendZone.make(p, "catch", p.global_position, gspec, BendCaster.of(p).facing())
+	var gap0 := (mode.foe.global_position - p.global_position).length()
+	BendCast.cast(fbc, String(Bending.jab("fire").id), String(Bending.jab("fire").mode))
+	var opened := await _until(func() -> bool: return BendCombo.link_on(p), 1.0)
+	await _secs(0.5)
+	var gap1 := (mode.foe.global_position - p.global_position).length()
+	_expect(z.results.has("perfect") and opened and gap1 > gap0 + 1.0,
+			"the dummy's jab guarded on the beat from %.1f m: the player's window open (%s), the dummy knocked back to %.1f m (%s)" % [
+			gap0, opened, gap1, z.results])
 
 	if fails.is_empty():
 		print("COMBO CONTROLS PASSED (%d checks)" % checks)

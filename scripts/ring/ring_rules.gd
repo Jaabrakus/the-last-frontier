@@ -899,6 +899,19 @@ static func launch_v(cls: Dictionary, pct_after: float, d: float, w: float, rang
 	return w * (base + growth * r * a * pct_after / 100.0 * (0.5 + d / 20.0))
 
 
+## Class `cls` as a finisher's (BendCombo.take_finisher, a full combo's next hit; the owner, 2026-10-15): its own % (d), the
+## Pop's launch (the jab/pop class's set speed, angle, way and stun), exempt from the string's decay as the Pop is.
+static func finisher_class(cls: Dictionary) -> Dictionary:
+	var pop := class_of(String(BendR3.block("pop").get("tag", "jab/pop")))
+	var out := cls.duplicate()
+	for k: String in ["slam", "pull", "float_s", "launcher", "no_flinch", "base_mult"]:
+		out.erase(k)
+	for k: String in ["base", "growth", "angle", "set", "set_stun", "dir", "pop"]:
+		if pop.has(k):
+			out[k] = pop[k]
+	return out
+
+
 ## Element `element`'s weight multiplier W = 2 / (1 + weight); raw weights come from stock.weights.
 static func weight_of(element: String) -> float:
 	var w := float(stock_block("weights").get(element, 1.0))
@@ -1298,6 +1311,8 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 		cls = _untagged_class(info)
 	if cls.has("d_of_strike"):
 		cls["d"] = float(cls.d_of_strike) * float(info.get("strike_d", 0.0))   # (a live reaction: its share of the strike's %)
+	if bool(info.get("finisher", false)) and not bool(cls.get("pop", false)):
+		cls = finisher_class(cls)                # (a full combo's next hit: its own %, the Pop's launch; BendCombo)
 	# (a class with once_s lands on the same body from the same attacker at most once a while: Fire Wall's entry pop)
 	var once := float(cls.get("once_s", 0.0))
 	if once > 0.0:
@@ -1343,7 +1358,7 @@ func on_hit(n: Node, by: Node, info: Dictionary) -> Dictionary:
 	var d_add := d / float(vn)
 	add_pct(n, d_add, by, String(cls.tag))
 	if first and not late and d_add > 0.0 and not bool(info.get("no_hurt", false)) and not bool(info.get("wall_tick", false)):
-		BendCombo.landed(by, n)                  # (the combo: a stack of the hitter's, all of the struck one's; the owner 2026-10-12)
+		BendCombo.landed(by, n, info)            # (the combo: its worth to the hitter's, all of the struck one's; the owner 2026-10-12)
 	var res := {"none": true, "d": d_add, "tag": String(cls.tag)}
 	if not first or bool(cls.get("no_flinch", false)):
 		return res

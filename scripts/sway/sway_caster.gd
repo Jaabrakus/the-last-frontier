@@ -986,6 +986,7 @@ func _key_index(m: String) -> int:
 func note_hit(_n: Node, info: Dictionary) -> void:
 	if not _out.is_empty() and float(info.get("released_at", -INF)) >= float(_out.get("released", INF)) - 0.001:
 		_out["hit"] = true
+	_link_held()
 	if not r3() or lock_src != SRC_QUICK or state != State.LOCKING or not BendR3.is_jab(move, mode_of(move)):
 		return
 	var bc := BendCaster.of(player)
@@ -1855,18 +1856,31 @@ func _pick_src() -> void:
 ## Bending.rule("click_queue") (the owner, 2026-10-10: "we cant just click and it does we have to hold it no more click and
 ## forget": a cast is held until its lock is full, then let go; let go early, it is called off and nothing is spent).
 func _click_runs_on() -> bool:
-	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false)) or _tap_runs() or _link \
-			or _jab_click()
+	return lock_src in [SRC_GUARD, SRC_DASH] or bool(Bending.rule("click_queue", false)) or _tap_runs() or _link
 
 
-## This lock is a combo link (BendCombo.link_on when it began: a hit of his had just landed): a third of its cast time, and
-## a click runs on (the owner, 2026-10-15: "we can click a button and trigger combos faster").
+## This lock is a combo link (BendCombo.link_on when it began: a hit of his had just landed; a skill not yet in his chain,
+## BendCombo.in_chain): a third of its cast time, and a click runs on (the owner, 2026-10-15: "we can click a button and
+## trigger combos faster").
 var _link := false
 
 
-## The jab casts on a click in the ring's combo rules (BendCombo.jab_clicks): three that land are its string and the third its Pop.
-func _jab_click() -> bool:
-	return lock_src == SRC_QUICK and BendCombo.jab_clicks() and BendR3.is_jab(move, mode_of(move))
+## The mode lock `m` casts at: its air or Pop form's when it took one (_r3_form), else its readied mode.
+func _cast_mode(m: String) -> String:
+	return _form_mode if _form_id == m and _form_mode != "" else mode_of(m)
+
+
+## A hit of his landing while a skill of his is already held (the aim button, not yet full): that one is the link (the window
+## it opened spent on it), its time to go cut to link_share from where it stands; a click let go of it now runs on.
+func _link_held() -> void:
+	if _link or not elem() or state != State.LOCKING or lock_src != SRC_AIM or move in ["patch", "mend"] \
+			or not BendCombo.link_on(player) or BendCombo.in_chain(player, move, _cast_mode(move)):
+		return
+	_link = true
+	BendCombo.spend_link(player)
+	var spent := fill * lock_s
+	lock_s = _lock_time(move, target, 0.0, range_of(move, target))
+	fill = clampf(spent / maxf(lock_s, MIN_LOCK_S), 0.0, 1.0)
 
 
 ## The tap style's aim and quick button: a click casts (MatchSetup.cast_style "tap").
@@ -2483,7 +2497,8 @@ func _try_begin(q: Dictionary) -> void:
 	_form_mode = ""
 	if r3():
 		_r3_form(m)
-	_link = elem() and lock_src == SRC_AIM and BendCombo.link_on(player) and not m in ["patch", "mend"]
+	_link = elem() and lock_src == SRC_AIM and BendCombo.link_on(player) and not m in ["patch", "mend"] \
+			and not BendCombo.in_chain(player, m, _cast_mode(m))      # (a skill counts once a chain: the owner, 2026-10-15)
 	if _link:
 		BendCombo.spend_link(player)              # (the window spent on this skill: the next hit opens another)
 	lock_s = _lock_time(m, t, dist, r)

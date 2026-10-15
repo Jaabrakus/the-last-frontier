@@ -714,6 +714,8 @@ func on_released(o: Dictionary, t: Node3D) -> void:
 
 ## The jab's lock under the step (spec §6.4): the next jab ready jab_step_s after the last left the hand, once it hit.
 func jab_lock(base: float) -> float:
+	if BendCombo.finishers():
+		return base                            # (the combo rules, the owner 2026-10-15: no jab string, no step)
 	var step := BendR3.num("jab_step_s", pnum("jab_step_s", 0.15))          # (AIR's moves.json air_rules.jab_step_s)
 	if _last_jab_hit and now() - _last_jab_release < 1.5:
 		return maxf(step - (now() - _last_jab_release), 1.0 / 60.0)

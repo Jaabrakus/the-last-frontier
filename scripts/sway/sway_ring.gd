@@ -236,6 +236,10 @@ func _draw_meters(c: Vector2) -> void:
 			var a := PI - METER_SPAN * 0.5 + METER_SPAN * float(i) / mx
 			var dv := Vector2(cos(a), sin(a))
 			draw_line(c + dv * (r - METER_W), c + dv * (r + METER_W), Color(0, 0, 0, 0.55 * _combo_a), 1.2, true)
+		if BendCombo.finisher_ready(caster.player):
+			# (full: the next hit that lands is the finisher, BendCombo; the owner, 2026-10-15. The bracket beats white-hot)
+			var fw := 0.55 + 0.45 * absf(sin(_t * 9.0))
+			_bracket(c, r + METER_W + 1.5, PI, 1.0, Color(1.0, 0.96, 0.8, 0.9 * fw * _combo_a), Color(0, 0, 0, 0.25 * _combo_a))
 	if _gauge_a > 0.005:
 		var g := clampf(_gauge_v, 0.0, 1.0)
 		var back_at := float(RingRules.stock_block("guard_gauge").get("back_at", 0.4))

@@ -74,6 +74,8 @@ func _initialize() -> void:
 	# (the merge: rules.json plays stock by default; AIR's stand-ins (FakeRules) are this test's gate, the ring itself classic;
 	# real=on plays the stock ring itself)
 	RingRules.rule_set_override = "stock" if real else "classic"
+	# (the jab string's own rules: the combo's finishers replace it in the ring since 2026-10-15, BendCombo.finishers; off here)
+	BendCombo.enabled = false
 	change_scene_to_file("res://scenes/ring.tscn")
 	_run.call_deferred()
 

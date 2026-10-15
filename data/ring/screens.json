@@ -174,7 +174,7 @@
 			"guard": "{guard}: on the beat it's yours. Late, half gets through. Earth always catches stone.",
 			"web": "Water douses fire and fire boils water. Meeting elements fuse: earth and fire make magma, earth and water mud.",
 			"dodge": "Attack while jumping. Walls and healing need ground. Jump over low fire; dash or guard high shots. Step off rising ground.",
-			"combo": "Land a hit, then click a skill at once: it goes in a third of its time. Three jabs in a row that land: the third pops them up."
+			"combo": "Hits fill the combo: a skill by its cast time, a jab a little, the same skill again half as much. Land a hit, then click a new skill: a third of its time. Full: your next hit launches them. Guard a jab on the beat up close and the jabber flies back."
 		},
 		"passives": {
 			"earth": {"name": "Rooted", "line": "stand still and your locks fill faster, and you are pushed less."},

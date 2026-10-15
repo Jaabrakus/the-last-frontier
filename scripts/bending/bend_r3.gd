@@ -152,8 +152,14 @@ static func deliver(n: Node, dmg: float, at: Vector3, dir: Vector3, by: Node, lo
 	var inf := info.duplicate()
 	_hit_n += 1
 	inf["hit_id"] = _hit_n
-	if stock() and bool(inf.get("jab", false)) and by != null:
-		kv = jab_hit(by, n, inf, kv, at)
+	if stock() and by != null:
+		if BendCombo.finishers():
+			# (the combo rules, the owner 2026-10-15: no jab string; a full combo's next hit is the finisher)
+			var fin := BendCombo.take_finisher(by, n, inf)
+			if fin != "":
+				kv = finish(by, n, inf, at, fin == "first")
+		elif bool(inf.get("jab", false)):
+			kv = jab_hit(by, n, inf, kv, at)
 	if gate == NetSpells.FORWARD:
 		NetSpells.forward("hit", n, [dmg, at, dir, by, lock_s, kv, inf])
 	else:
@@ -275,8 +281,10 @@ static func jab_guarded(by: Node) -> void:
 
 
 ## Whether `by`'s jab string on `victim` has its Pop armed (the next jab that hits is it): two hits, no Pop yet, the last
-## within jab_string_gap_s.
+## within jab_string_gap_s. Under the combo's finishers (BendCombo.finishers) his combo full instead: the jab is the Pop.
 static func pop_armed(by: Node, victim: Node = null) -> bool:
+	if BendCombo.finishers():
+		return BendCombo.finisher_ready(by)
 	var bc := BendCaster.of(by)
 	if bc == null:
 		return false
@@ -335,6 +343,24 @@ static func jab_hit(by: Node, victim: Node, inf: Dictionary, kv: Vector3, at: Ve
 		bc.jab_step_until = float(inf.get("released_at", now)) + num("jab_step_s")    # (the step: decided at the hit)
 	bc.jab = st
 	return kv_out
+
+
+## `by`'s finisher landing on `n` (BendCombo.take_finisher: his full combo's next hit; the owner, 2026-10-15, "your next skill
+## launches them the way the Pop does now, and the meter empties"; `first`: not the rest of its volley): the jab's is its Pop
+## (its tag; earth's stone left in his hand), any other skill keeps its own % and launches as the Pop does (info.finisher:
+## RingRules.finisher_class); the Pop's burst at the point. The knock: the Pop's.
+static func finish(by: Node, n: Node, inf: Dictionary, at: Vector3, first: bool) -> Vector3:
+	var pop := block("pop")
+	inf["finisher"] = true
+	if bool(inf.get("jab", false)):
+		_pop_info(inf, pop)
+	else:
+		inf["set_stun"] = float(pop.get("set_stun", 0.6))
+	if first:
+		_pop_look(by, at)
+		if bool(inf.get("jab", false)) and BendPoses.element_of(by) == "earth":
+			pop_stone(BendCaster.of(by))
+	return _pop_v(by, n, pop)
 
 
 static func _pop_info(inf: Dictionary, pop: Dictionary) -> void:

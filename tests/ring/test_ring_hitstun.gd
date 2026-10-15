@@ -60,6 +60,8 @@ func _initialize() -> void:
 	GameSettings.path = OWN_CFG
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
+	# (the launch's own numbers: the combo's finisher, a full meter's next hit launched as the Pop is, off here: BendCombo)
+	BendCombo.enabled = false
 	SwayCaster.free_override = true
 	InputSetup.ensure()
 	MatchSetup.incoming = true

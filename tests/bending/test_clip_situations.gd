@@ -69,6 +69,8 @@ func _initialize() -> void:
 	GameSettings.path = OWN_CFG
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	RingRules.rule_set_override = "stock"
+	# (the Pop armed by the jab string, its own rules: the combo's finishers replace it in the ring since 2026-10-15; off here)
+	BendCombo.enabled = false
 	SwayCaster.free_override = true
 	BendImpact.enabled_override = true
 	InputSetup.ensure()

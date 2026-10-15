@@ -7,10 +7,12 @@ extends SceneTree
 ##               tap; held past its window it drains; tapped over and over it breaks (the guard ended, the player in hitstun),
 ##               E raises nothing while broken, the bracket shown red;
 ##               it refills from refill_after_s and E works again at back_at; a bot whose gauge is broken starts no guard
-##   the combo   a gauge: a hit that lands (RingRules.on_hit) a stack's worth of the hitter's, the struck one's emptied; never
-##               past max; a tick (no_hurt) none; a perfect guard (BendStatus.parry_reward) a stack; after grace_s it drains
-##               drain_s a second, down to none; each stack fill of his locks as they begin (BendCombo.head_start, the level as it
-##               drains; their time their own), a hit landing mid-lock fill more at once;
+##   the combo   a gauge: a hit that lands (RingRules.on_hit) its worth of the hitter's (BendCombo.worth: the Spike's cast time
+##               over stack_s; 2026-10-15), the same skill again in the chain half of what it did before (repeat_k), the struck
+##               one's emptied; never past max; a
+##               tick (no_hurt) none; a perfect guard (BendStatus.parry_reward) a stack; after grace_s it drains drain_s a second,
+##               down to none; each stack fill of his locks as they begin (BendCombo.head_start, the level as it drains; their
+##               time their own), a hit landing mid-lock fill a stack more at once (its worth's);
 ##               the crosshair's left bracket shown while there is any
 ##   Godot --headless --fixed-fps 60 --path . -s tests/ring/test_combo_gauge.gd
 ## The last line "COMBO GAUGE PASSED (<n> checks)" or "COMBO GAUGE FAILED (<f> of <n>)".
@@ -110,8 +112,15 @@ func _rest() -> void:
 	await _ticks(3)
 
 
+var _hit_n := 0
+
+
+## A hit of `by` landing on `on` (RingRules.on_hit) as the Spike's: each one another skill unless `extra` names its mode (a mode
+## of its own: no repeat in the chain, BendCombo.in_chain), worth the Spike's cast time (BendCombo.worth).
 func _hit(on: Node, by: Node, extra := {}) -> void:
-	var info := {"tag": "stone_form/spike", "move": "stone_form", "at": (on as Node3D).global_position + Vector3.UP}
+	_hit_n += 1
+	var info := {"tag": "stone_form/spike", "move": "stone_form", "mode": "test%d" % _hit_n,
+			"at": (on as Node3D).global_position + Vector3.UP}
 	info.merge(extra, true)
 	rm.rules.on_hit(on, by, info)
 
@@ -204,15 +213,21 @@ func _run() -> void:
 	BendCombo.reset(p)
 	_expect(BendCombo.stacks(p) == 0 and is_equal_approx(BendStatus.cast_mult(p), 1.0) and is_zero_approx(BendCombo.head_start(p)),
 			"no combo at first")
-	_hit(foe, p)
-	_expect(BendCombo.stacks(p) == 1 and BendCombo.stacks(foe) == 0, "his hit lands: a stack (%d)" % BendCombo.stacks(p))
+	var w := BendCombo.worth({"move": "stone_form", "mode": "spike"})
+	_hit(foe, p, {"mode": "spike"})
+	_expect(absf(BendCombo.level(p) - w) < 0.01 and BendCombo.stacks(foe) == 0,
+			"his Spike lands: its worth, %.2f stacks (%.2f)" % [w, BendCombo.level(p)])
+	_hit(foe, p, {"mode": "spike"})
+	var rk := _num("combo", "repeat_k")
+	_expect(absf(BendCombo.level(p) - w * (1.0 + rk)) < 0.01, "the Spike again in the chain: %.2f of its worth more (%.2f)" % [rk,
+			BendCombo.level(p)])
 	for i in 6:
 		_hit(foe, p)
 	var mx := int(_num("combo", "max"))
 	var fl := _num("combo", "fill")
 	_expect(BendCombo.stacks(p) == mx and absf(BendCombo.head_start(p) - fl * float(mx)) < 0.005
 			and is_equal_approx(BendStatus.cast_mult(p), 1.0),
-			"seven hits: %d stacks, never past %d; his locks begin %.0f%% full, their time their own (%.2f)"
+			"seven skills: %d stacks, never past %d; his locks begin %.0f%% full, their time their own (%.2f)"
 			% [BendCombo.stacks(p), mx, BendCombo.head_start(p) * 100.0, BendStatus.cast_mult(p)])
 	await _ticks(12)
 	var mc: Dictionary = ring.meters() if ring != null else {}
@@ -221,8 +236,8 @@ func _run() -> void:
 	_hit(foe, p, {"no_hurt": true})
 	_expect(BendCombo.stacks(p) == mx, "a tick (no_hurt) adds nothing and takes nothing")
 	_hit(p, foe)
-	_expect(BendCombo.stacks(p) == 0 and BendCombo.stacks(foe) == 1 and is_zero_approx(BendCombo.head_start(p)),
-			"a hit taken: his combo gone, the hitter's a stack (%d, %d)" % [BendCombo.stacks(p), BendCombo.stacks(foe)])
+	_expect(BendCombo.stacks(p) == 0 and absf(BendCombo.level(foe) - w) < 0.01 and is_zero_approx(BendCombo.head_start(p)),
+			"a hit taken: his combo gone, the hitter's its worth (%d, %.2f)" % [BendCombo.stacks(p), BendCombo.level(foe)])
 	BendStatus.parry_reward(p, foe)
 	BendStatus.spend_cast_mult(p)
 	_expect(BendCombo.stacks(p) == 1, "a perfect guard: a stack (%d)" % BendCombo.stacks(p))
@@ -257,9 +272,9 @@ func _head_start_live() -> void:
 	BendCombo.reset(foe)
 	p.hotbar.ready_move(0, "stone_form", "spike")
 	await _ticks(5)
-	for i in 3:
-		_hit(foe, p)
+	BendCombo.gain(p, 3.0)
 	var fl := _num("combo", "fill")
+	var w := BendCombo.worth({"move": "stone_form", "mode": "spike"})
 	c.held_override = true
 	await _until(func() -> bool: return c.state == SwayCaster.State.LOCKING, 1.0)
 	var f0 := c.fill
@@ -271,7 +286,8 @@ func _head_start_live() -> void:
 	c.drop_all()
 	await _until(func() -> bool: return c.state == SwayCaster.State.IDLE, 2.0)
 	_expect(f0 >= 3.0 * fl - 0.01 and f0 < 3.0 * fl + 0.06, "three stacks: his Spike's lock begins %.2f full (want %.2f)" % [f0, 3.0 * fl])
-	_expect(absf((f2 - f1) - fl) < 0.01, "a hit of his landing mid-lock fills it %.2f more at once (want %.2f)" % [f2 - f1, fl])
+	_expect(absf((f2 - f1) - fl * w) < 0.01, "a hit of his landing mid-lock fills it %.2f more at once (want %.2f: a stack's fill, its worth)" % [
+			f2 - f1, fl * w])
 	BendCombo.reset(p)
 
 

@@ -994,10 +994,22 @@ func _aside(b: BendBolt) -> void:
 ## True when it acted (a bolt it lets pass, or one it halved already: false). Round 3, the % ring (BendR3.stock): every
 ## guard a shield (spec §2.5): a cell the matrix lets pass is stopped on the beat (nothing through, no reward) and halved
 ## late as a slide (_shield_bolt); earth's catch is a full catch within its window_s of standing and late after it, the
-## stone dropped loose at his feet (_late_drop); a jab it took ends its sender's string (BendR3.jab_guarded).
+## stone dropped loose at his feet (_late_drop); a jab it took ends its sender's string (BendR3.jab_guarded), and a jab it
+## took on the beat answers the rusher (BendCombo.rush_answer: the combo rules).
 func _guard_bolt(b: BendBolt) -> bool:
 	if b.guarded_by.has(get_instance_id()):
 		return false
+	var jab := BendR3.stock() and bool(b.info.get("jab", false))
+	var jabber := b._by()
+	var n0 := results.size()
+	var acted := _guard_bolt_on(b)
+	if acted and jab and results.size() > n0 and String(results.back()) == "perfect":
+		BendCombo.rush_answer(owner_node, jabber)
+	return acted
+
+
+## _guard_bolt's answer to `b` by this guard's kind (see there).
+func _guard_bolt_on(b: BendBolt) -> bool:
 	var what := b.kind
 	var perfect := t <= perfect_s
 	var stock := BendR3.stock()
@@ -2049,6 +2061,8 @@ static func guard_take(body: Node, what: String, by: Node, info: Dictionary) -> 
 		bz._result("perfect" if perfect else "late", what, by)
 		if bool(info.get("jab", false)):
 			BendR3.jab_guarded(by)
+			if perfect:
+				BendCombo.rush_answer(body, by)      # (a jab on the beat: the rusher answered, the combo rules)
 		if perfect:
 			if what == "air" and bz.kind in ["air_shield", "wind_guard"]:
 				carry_wind(body, AirTalents.guard_carry_s(body))
