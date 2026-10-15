@@ -4,7 +4,8 @@ extends RefCounted
 ## graphics panel's [graphics] section (read, changed and written back whole: its keys are kept):
 ##   [audio]     master, effects, ambience, music (0..1 of full volume; the buses SFX and Ambience once Sfx has made
 ##               them, Music once MusicDirector has)
-##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y
+##   [controls]  mouse (the look's sensitivity, FrontierPlayer.cs_sensitivity), invert_y, pad (the right stick's look speed,
+##               FrontierPlayer.pad_look: PadInput)
 ##   [display]   fullscreen, vsync
 ##   [game]      iron_man (Iron Man: injuries stay; see iron_man())
 ##   [look]      character: the Look (characters and world), "soft" (the default) or "classic" (SoftLook, SoftWorld)
@@ -21,7 +22,7 @@ static var path := PATH
 const TEST_PATH := "user://settings_test_runs.cfg"
 const DEFAULTS := {
 	"audio": {"master": 1.0, "effects": 1.0, "ambience": 1.0, "music": 1.0},
-	"controls": {"mouse": 2.0, "invert_y": false},
+	"controls": {"mouse": 2.0, "invert_y": false, "pad": 1.0},
 	"display": {"fullscreen": false, "vsync": true, "cap_60": true},
 	"game": {"iron_man": false},
 	# (the Character look: SoftLook's "soft" (the owner's choice, 2026-10-10) or "classic", the look as it was)
@@ -143,6 +144,7 @@ static func apply_to(player: Node) -> void:
 		return
 	player.set("cs_sensitivity", float(get_value("controls", "mouse")))
 	player.set("invert_y", bool(get_value("controls", "invert_y")))
+	player.set("pad_look", float(get_value("controls", "pad")))
 
 
 ## A row of one choice among a few words (the Look): the label and the words; `changed` gets the index picked. The
@@ -199,6 +201,11 @@ static func rows(player: Node = null, broadcast := false) -> VBoxContainer:
 				set_value("controls", "mouse", x)
 				if player:
 					player.set("cs_sensitivity", x)))
+	v.add_child(slider.call("Controller", 0.3, 3.0, 0.1, float(get_value("controls", "pad")),
+			func(x: float) -> String: return "%.1f" % x, func(x: float) -> void:
+				set_value("controls", "pad", x)
+				if player:
+					player.set("pad_look", x)))
 	v.add_child(toggle.call("Invert the look", bool(get_value("controls", "invert_y")), func(on: bool) -> void:
 		set_value("controls", "invert_y", on)
 		if player:

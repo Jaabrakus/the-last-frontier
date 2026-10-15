@@ -596,7 +596,7 @@ func blocks(_w: Weapon) -> bool:
 
 
 func _can_use_keys() -> bool:
-	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture
+	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture or PadInput.active
 
 
 # --- internals ----------------------------------------------------------------------------------------------

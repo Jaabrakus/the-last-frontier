@@ -234,6 +234,7 @@ static func parse(args: PackedStringArray) -> bool:
 			"aim", "aim_help":
 				if v in AIMS:
 					_aim_help = v                # (for the run: not kept)
+					_aim_chosen = true
 			"cast", "cast_style":
 				if v in CAST_STYLES:
 					_cast_style = v              # (for the run: not kept)
@@ -670,6 +671,7 @@ static func next_scheme(s := "") -> String:
 static func reload_scheme() -> void:
 	_scheme = ""
 	_aim_help = ""
+	_aim_chosen = false
 	_controls = ""
 	_cast_style = ""
 	_guides = ""
@@ -767,6 +769,8 @@ const AIM_PULL := {"off": 0.0, "light": 1.0, "strong": 1.0}
 ## The words a choice is shown by (the data's "light" is Normal to the player).
 const AIM_NAMES := {"off": "Off", "light": "Normal", "strong": "Strong"}
 static var _aim_help := ""
+## Whether the help was chosen (kept in the settings, set, or a launch's): a pad's Strong never overrides it.
+static var _aim_chosen := false
 
 
 static func aim_help() -> String:
@@ -775,8 +779,12 @@ static func aim_help() -> String:
 		cf.load(GameSettings.file())
 		# (on a touch screen Strong unless chosen: a thumb aims coarser than a mouse; the owner, 2026-10-13, picked the plan)
 		var def := "strong" if "strong" in AIMS and TouchControls.wanted() else String(AIMS[0])
+		_aim_chosen = cf.has_section_key(SECTION, AIM_KEY)
 		var a := String(cf.get_value(SECTION, AIM_KEY, def))
 		_aim_help = a if a in AIMS else def
+	# (a pad playing: Strong unless chosen, as on a touch screen: a stick aims coarser than a mouse; PadInput)
+	if PadInput.active and not _aim_chosen and "strong" in AIMS:
+		return "strong"
 	return _aim_help
 
 
@@ -784,6 +792,7 @@ static func set_aim_help(a: String) -> bool:
 	if not a in AIMS:
 		return false
 	_aim_help = a
+	_aim_chosen = true
 	GameSettings.set_value(SECTION, AIM_KEY, a)
 	return true
 

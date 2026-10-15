@@ -489,7 +489,7 @@ func column(i: int) -> Dictionary:
 			"other": "", "other_label": "", "modes": [], "mode_i": -1, "readied": false, "icon_id": "", "icon_mode": ""}
 	var ms := KitWords.key_moves(el, i, player)        # (his worn talent's mode on an empty double tap too: the Sulphur Vent)
 	var heads := {0: "W / 1", 2: "A D / 3", 3: "S / 4"}
-	var k := String(heads.get(i, str(i + 1))) if s == "direction" else str(i + 1)
+	var k := String(heads.get(i, str(i + 1))) if s == "direction" and not PadInput.active else KitWords.slot_key(i)
 	var k3 := Bending.key3(el) if i == 2 and RingRules.stock_on() else []
 	if not k3.is_empty():
 		ms = [Bending.first_of(k3)]          # (key 3's own move, water's Ice Tomahawk: "3", Shift's movement spell in F1 and the lessons)
@@ -659,7 +659,7 @@ func chip(kind: String) -> Dictionary:
 	if q.is_empty():
 		q = KitWords.jab(el)
 	var on := c != null and c.lock_src == SwayCaster.SRC_QUICK and c.state != SwayCaster.State.IDLE
-	return {"head": "%s%s%s" % [CHIP, SEP, KitWords.w("role_jab", KitWords.ROLE_JAB)], "id": String(q.get("id", "")),
+	return {"head": "%s%s%s" % [KitWords.jab_key(), SEP, KitWords.w("role_jab", KitWords.ROLE_JAB)], "id": String(q.get("id", "")),
 			"mode": String(q.get("mode", "")), "label": KitWords.move_name(String(q.get("id", "")), String(q.get("mode", ""))),
 			"sub": q_line(), "lit": on, "icon_id": String(q.get("id", "")), "icon_mode": String(q.get("mode", ""))}
 
@@ -709,6 +709,8 @@ func help_line() -> String:
 	if TouchControls.up(player):
 		# (the touch layer up: the thumbs' words, not the keys' (its mouse buttons are taken off: "(no key)"))
 		return String(KitWords.words().get("help_strip_touch", ""))    # (a hold and let go casts, in either cast style)
+	if PadInput.active and KitWords.words().has("help_strip_pad"):
+		return KitWords.keyed(String(KitWords.words().help_strip_pad))   # (a pad playing: its buttons, PadInput)
 	if basic_strip():
 		# (round 4's merge: Basic's line held to HUD's rule, one line of help_max_chars or fewer, its first letter a capital)
 		var t := KitWords.keyed(MatchSetup.scheme_text("strip", "basic"))
@@ -763,7 +765,7 @@ func _quick_sig() -> String:
 	var g := InputMap.has_action(KitWords.GUARD_ACTION) and Input.is_action_pressed(KitWords.GUARD_ACTION)
 	return "%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [g, c.lock_src, c.state, c.readied_spell, c.base_mode_of(c.readied_spell),
 			c.quick_id(), c.quick_mode(), c.scheme(), _element(), first_match(), BendZone.held_stone(player) != null,
-			airborne() if stock_strip() else false, c.grown, layout()]
+			airborne() if stock_strip() else false, c.grown, layout() + ("|pad:" + PadInput.layout if PadInput.active else "")]
 
 
 ## What it shows, as one string (a change redraws it).

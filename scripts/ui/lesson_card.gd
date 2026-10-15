@@ -54,10 +54,14 @@ func _ready() -> void:
 # --- the keys as the player has them --------------------------------------------------------------------------------
 
 ## Action `a`'s first binding as a cap's label: a key's name ("W", "Tab", "Enter", "1"), "LMB" / "RMB" / "MMB" / "Wheel" for
-## the mouse; "" when it has none (unbound, or no such action).
+## the mouse; a pad's button while a pad plays (PadInput.active); "" when it has none (unbound, or no such action).
 static func glyph(a: StringName) -> String:
 	if not InputMap.has_action(a):
 		return ""
+	if PadInput.active:
+		var pn := PadInput.button_name(a)       # (a pad playing: its button, "LT", "D-pad up": PadInput)
+		if pn != "":
+			return pn
 	for e in InputMap.action_get_events(a):
 		var k := e as InputEventKey
 		if k != null:

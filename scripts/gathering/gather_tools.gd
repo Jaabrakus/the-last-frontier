@@ -673,7 +673,7 @@ func _fire_held() -> bool:
 		return player.controls.pressed(&"fire")       # (driven by an AI or the network: no mouse to capture)
 	if not InputMap.has_action(&"fire"):
 		return false
-	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture
+	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture or PadInput.active
 	return captured and Input.is_action_pressed(&"fire")
 
 

@@ -121,7 +121,7 @@ func can_open() -> bool:
 	var p := _player()
 	if p == null or p.is_dead or get_tree().paused or caster.quick_element() == "" or caster.scheme() != "radial":
 		return false
-	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or p.ignore_mouse_capture
+	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or p.ignore_mouse_capture or PadInput.active
 
 
 func can_stay() -> bool:

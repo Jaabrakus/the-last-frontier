@@ -1806,7 +1806,7 @@ func _src_held(src: String) -> bool:
 func _quick_input_ok() -> bool:
 	if player.controls == null or not player.controls.from_input:
 		return true
-	if not (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture):
+	if not (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture or PadInput.active):
 		return false
 	if player.get("equip_wheel") != null and player.equip_wheel.blocks_fire():
 		return false

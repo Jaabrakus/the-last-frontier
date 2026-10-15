@@ -69,6 +69,8 @@ const JOG_AIM_PACE := 0.7
 ## Same units as CS sensitivity (yaw per mouse count = sens * 0.022 degrees).
 @export var cs_sensitivity := 2.0
 @export var invert_y := false
+## The right stick's look speed (PadInput.look; GameSettings controls.pad).
+var pad_look := 1.0
 @export var pitch_limit_deg := 80.0
 
 @export_group("Camera")
@@ -851,6 +853,9 @@ func _web_mouse(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local:
 		return
+	if PadInput.from_pad(event) and event.is_pressed() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED \
+			and not OS.has_feature("web") and not get_tree().paused:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED   # (a pad playing: the cursor away, as a click takes it; the press acts too)
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var k := deg_to_rad(cs_sensitivity * 0.022)
 		# Zoomed steady aim turns proportionally slower.
@@ -860,7 +865,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		pitch = clampf(pitch, -deg_to_rad(pitch_limit_deg), deg_to_rad(pitch_limit_deg))
 		if ring_moves != null:
 			ring_moves.note_mouse()               # (the ring's recovery turn stops for his own mouse)
-	elif event.is_action_pressed("ui_cancel"):
+	elif event.is_action_pressed("ui_cancel") and not PadInput.from_pad(event):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -1169,6 +1174,8 @@ func _physics_process(delta: float) -> void:
 	yaw -= back.y * 0.75
 	if is_local and OS.has_feature("web"):
 		_web_mouse(delta)
+	if is_local:
+		PadInput.look(self, delta)                # (the right stick: PadInput)
 
 	# Dead: the body keeps its facing and the camera orbits it; input is ignored until respawn().
 	# (the % ring: the recovery turn eases the view toward the deck; hanging, the body faces the deck and the camera orbits)

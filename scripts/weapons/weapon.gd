@@ -343,4 +343,4 @@ func _fire_input_enabled() -> bool:
 			and not (player != null and player.get("traversal") != null and player.traversal.showing) \
 			and not (player != null and player.get("equip_wheel") != null and player.equip_wheel.blocks_fire()) \
 			and not (player != null and player.get("torch") != null and player.torch.blocks_fire()) \
-			and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture)
+			and (Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture or PadInput.active)

@@ -114,3 +114,5 @@ static func ensure() -> void:
 			d.physical_keycode = key & KEY_CODE_MASK
 			d.shift_pressed = (key & KEY_MASK_SHIFT) != 0
 			InputMap.action_add_event(action, d)
+	# (a controller's buttons and sticks on the same actions, and its listener: PadInput)
+	PadInput.install(Engine.get_main_loop() as SceneTree)

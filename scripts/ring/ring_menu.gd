@@ -406,7 +406,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			close()
 		get_viewport().set_input_as_handled()
-	elif _can_open():
+	elif _can_open() and PadInput.opens_menu(event):     # (a pad's B goes back but never opens it: Start does)
 		open()
 		get_viewport().set_input_as_handled()
 

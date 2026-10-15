@@ -165,6 +165,7 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	UiSounds.install(get_tree())             # (every button and slider heard: the menus' own sounds)
+	PadInput.install(get_tree())             # (a controller's buttons on the menus and the game: PadInput)
 	# (the menus are drawn for 1280 x 720 and up: below it the wordmark runs into its subtitle and the foot's keys are cut)
 	var win := get_window()
 	if win != null and win == get_tree().root:

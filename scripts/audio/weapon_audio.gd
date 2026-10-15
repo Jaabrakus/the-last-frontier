@@ -254,7 +254,7 @@ static func pan_point(f: Firearm) -> Vector3:
 
 
 func _fire_enabled() -> bool:
-	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture
+	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or player.ignore_mouse_capture or PadInput.active
 
 
 # --- Bow draw and creak loop -------------------------------------------------------------------

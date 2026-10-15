@@ -135,12 +135,17 @@ static func ensure_guard_action() -> void:
 	InputSetup.ensure_guard()
 
 
-## Action `a`'s first binding as the player sees it, "(no key)" when it has none; the mouse's buttons as words.
+## Action `a`'s first binding as the player sees it, "(no key)" when it has none; the mouse's buttons as words; a pad's
+## button while a pad plays (PadInput.active: "LT", "R1").
 static func key(a: StringName) -> String:
 	if a == GUARD_ACTION:
 		ensure_guard_action()
 	elif a == SwayCaster.QUICK_BIND:
 		SwayCaster.ensure_input()            # (before any caster made it: the menus, F1 at the start)
+	if PadInput.active:
+		var pn := PadInput.button_name(a)
+		if pn != "":
+			return pn
 	if InputMap.has_action(a):
 		for e in InputMap.action_get_events(a):
 			var mb := e as InputEventMouseButton
@@ -152,6 +157,20 @@ static func key(a: StringName) -> String:
 						return "right click"
 	var k := SwayCaster.key_name(a)
 	return k if k != "" else "(no key)"
+
+
+## The jab's button as the player sees it: "LMB", or the pad's ("RT") while a pad plays.
+static func jab_key() -> String:
+	return PadInput.button_name(&"fire") if PadInput.active else JAB_KEY
+
+
+## Key `i`'s (0-based) name as the player sees it: "1".."5", or the pad's button for it ("X", "D-pad up") while a pad plays.
+static func slot_key(i: int) -> String:
+	if PadInput.active:
+		var pn := PadInput.button_name(StringName("weapon_%d" % (i + 1)))
+		if pn != "":
+			return pn
+	return str(i + 1)
 
 
 ## `t` with {guard}, {quick}, {aim}, {fire}, {wheel} and {jump} as bound now.
@@ -235,7 +254,7 @@ static func kit_lines(el: String, s := "", compact := false) -> Array:
 	var j := jab(el)
 	var g := guard(el)
 	# (the jab is the left button's whatever the bindings: LMB; the guard's key as bound)
-	var jl := "%s   %s   %s" % [JAB_KEY, w("role_jab", ROLE_JAB), move_name(String(j.get("id", "")), String(j.get("mode", "")))]
+	var jl := "%s   %s   %s" % [jab_key(), w("role_jab", ROLE_JAB), move_name(String(j.get("id", "")), String(j.get("mode", "")))]
 	var gl := "%s   %s   %s" % [key(GUARD_ACTION), w("role_guard", ROLE_GUARD), move_name(String(g.get("id", "")), String(g.get("mode", "")))]
 	if compact:
 		out.append(jl + "      " + gl)              # (the element pick: one line for both, the panel kept in view)
@@ -247,7 +266,7 @@ static func kit_lines(el: String, s := "", compact := false) -> Array:
 		var ms := key_moves(el, i)
 		if ms.is_empty():
 			continue
-		var head := String(dir_heads.get(i, str(i + 1))) if k == "direction" else str(i + 1)
+		var head := String(dir_heads.get(i, str(i + 1))) if k == "direction" and not PadInput.active else slot_key(i)
 		var line := "%s   %s   %s" % [head, role(el, i), move_name(String(ms[0].id), String(ms[0].mode))]
 		var gn := grown_name(el, i)
 		if gn != "":
