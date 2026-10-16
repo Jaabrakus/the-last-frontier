@@ -55,6 +55,22 @@ sumo raises his wall with a stomp, a capoeirista with a cartwheel).
 | **Mobility** | locks fill better on the move, dashes feel lighter | heavier | `moving_mult`, dash distance and recovery |
 | **Defence** | a longer perfect guard window | shorter | `guard_rules.perfect_s` (0.30 s +/- 0.03) |
 
+**Live since 2026-10-16** (the owner: "each fighting style should have different perks"), for the wearer of a live style
+only, on the body moves, in `scripts/bending/bend_loadout.gd` (the section "a style's levers"; the switch
+`data/bending/loadout_apply.json style_levers`; `tests/ring/test_style_perks.gd` reads each live style's four worn and not
+worn): Speed scales the lock of the jab, the guard and key 1's and key 2's first mode (x0.9 / x1.1; the tap-twice casts keep
+theirs); Power the knock (base and growth, never the %) of the grown and tap-twice casts of keys 1 and 2 (x1.1 / x0.9);
+Reach `range_m` and `mps` of the jab's, key 1's and key 2's specs, the grow too (x1.1 / x0.9); Width `width_m` and `deg` of
+the same; Mobility the dash's lock (x0.9 / x1.1) and `fwd_mps` every way (x1.1 / x0.9) and the fill on the move of every
+body move (x1.1 / x0.9, never past full); Defence the guard's `perfect_s` (+0.03 / -0.03 s). The element's own style (canon)
+has levers in the data too, but no canon style is live in BendLoadout (its clips are the element's own), so Classic and a
+bot read today's numbers. Not soaked: the design's starting 10%.
+
+**The pick** (the same day: "allow the ability to pick the fighting style"): the match setup's STYLE chips under the element
+cards and the ring's Esc menu `Style` row (Match setup) pick a style for the element, kept in the Advancement save for
+Classic and the worn loadout alike (`AdvancementStore.pick_style`); `classic_style` is on, so the pick plays with no
+loadout worn. The Advancement window's class picker still does the same for a loadout.
+
 Each style also has:
 - **a jab string flavour**: the true string stays jab, jab, Pop (bending_design.md "True strings"); the style changes how
   the hits look and which way the Pop launches;

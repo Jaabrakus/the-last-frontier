@@ -7,8 +7,9 @@
     "What a worn Advancement loadout changes in a real match (BendLoadout; docs/tidebreak/loadouts_live.md). Read at every match start (RingMode.restart): the loadout worn for the player's element (AdvancementStore, read only) puts its live nodes' numbers and its live fighting style on the player's body; a bot never wears one. Classic (nothing worn) changes nothing.",
     "enabled: the master switch. Off, no node number and no style applies anywhere. On is safe by default: with nothing worn every number is today's.",
     "live: the node ids that may apply (the eight number-only nodes of the plan's B2, less those refused): air.ball.dense, air.gust.full_sail, air.slice.keen, earth.burrow.lie_low, fire.step.quick, earth.wall.thick, water.wall.thick_ice. Each node's numbers are read from data/sway/skill_tree.json changes[]; a node applies only when every change in it can be applied per wearer and the data still holds its `from`.",
-    "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing (fire) and, since 2026-10-16, Taekwondo (air) and Muay Thai (fire); Capoeira is parked and never plays. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
-    "classic_style: false means a class picked with Classic worn (AdvancementStore.set_style, worn index -1) is not played: Classic plays exactly as before. true would play the picked class's clips (animation only) with no loadout worn.",
+    "styles_live: the fighting styles whose clips play (state animated in data/bending/fighting_styles.json and poses in data/bending/style_poses.json). Boxing (fire) and, since 2026-10-16, Taekwondo (air), Muay Thai (fire), Karate (earth) and Wing Chun (water); Capoeira, Wrestling and Judo are parked and never play. A style is animation only: its picks are timed as the element's own (BendPoses._timed_as).",
+    "classic_style: true (since 2026-10-16, the owner: \"allow the ability to pick the fighting style\") plays the class picked for the element (AdvancementStore.pick_style: the match setup's Style row, the ring's Esc menu, the advancement window) with Classic worn, no loadout needed; false kept Classic exactly as before (the class picked with it not played). The element's own style (canon: Hung Gar, Tai Chi, Northern Shaolin, Baguazhang) is the element's own clips and no lever either way.",
+    "style_levers: the styles' perks (2026-10-16, the owner: \"each fighting style should have different perks\"): a live style's two + and two - levers (fighting_styles.json levers; docs/fighting_styles_design.md's six) are 10% each on the body moves of its wearer (BendLoadout, the section \"a style's levers\": speed the quick casts' locks, power the knock of grown and tap-twice casts of keys 1 and 2, reach range_m and mps, width width_m and deg, mobility the dash and the fill on the move, defence the guard's perfect window +/- 0.03 s). false switches every lever off (the clips still play). tests/ring/test_style_perks.gd reads each live style's levers worn and not worn. Not soaked: the design's starting 10%.",
     "fire.lightning.pistol (Lightning Pistol, 2026-10-11 to 2026-10-12): taken out of the tree by the owner (\"the lightning pistol... we dont have that skill and use that animation for the ice or water rifle spear for water? and we keep the orignal lightning animation\"); its pistol aim is now the Ice Spear's own clip (data/bending/poses.json frontier-pistol-ice), Lightning the original for everyone.",
     "The class numbers (2026-10-11, the owner on the tree: \"fix it\"): a node's change class:<tag>+<variant>.<key> sets one number (d, base, growth, angle, set_stun; volley_n only beside the node's own spec count) of the % ring class of the wearer's own hits with that tag (BendLoadout's class part, RingRules.on_hit through BendLoadout.hit_class); the hit keeps its tag, so staling and the range exemption still see the move. That made nine more nodes whole, live on the owner's word and NOT yet through the soak (their numbers are the tree's starting values): earth.fissure.deep (Deep Fissure), water.spear.cold_hands (Cold Hands), water.spear.heavy (Heavy Spear), water.downpour.pooling (Pooling Downpour), fire.punch.snap (Snap Punch), fire.lightning.short_fuse (Short Fuse), fire.embers.tight (Tight Embers), air.palm.shoving (Shoving Palm), air.gust.rising (Rising Gust). water.mud.lash is not live: it requires the Mud set (new mud pools, not numbers) and its smother is not in its changes; a node whose required node is not live is refused (BendLoadout.why_not).",
     "The binds (2026-10-11, the owner: \"i think each element should have binds and finishers and how they build team comps is on them right?\"; his answers: the feet only, as a skill tree twist, fire's a lightning shock): Stone Grip (earth.column.grip), Frost Geyser (water.geyser.frost), Static Shock (fire.lightning.shock) and Tripwind (air.pull.trip). Each sets its move's new spec key bind_s (from none: BendLoadout.NEW_SPEC_KEYS) to 0.7: its hit holds the feet (BendStatus.bind: no run, jump, roll, dodge or dash; aim, casts and the guard free; weaker each time on the same body, rules.json stock.bind) in place of its launch, and lowers its %. Live on the owner's word, not yet soaked.",
@@ -27,7 +28,8 @@
     "beat_on air.slice.carry_edge, air.gust.carrying and air.leap.peak_wind [] (2026-10-12, the lanes' merge): air's own Beat techniques pay through AirTalents (beat_worn, bot_beat, the key-3 watch for Peak Wind); the general Beat leaves them alone, so each release pays once."
   ],
   "enabled": true,
-  "classic_style": false,
+  "classic_style": true,
+  "style_levers": true,
   "nodes": {
     "air.ball.dense": true,
     "air.gust.full_sail": true,
@@ -331,6 +333,8 @@
   "styles_live": [
     "boxing",
     "taekwondo",
-    "muay_thai"
+    "muay_thai",
+    "karate",
+    "wing_chun"
   ]
 }

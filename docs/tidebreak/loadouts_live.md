@@ -130,8 +130,13 @@ The `root` key of a Boxing pick is the element's (the kick and high kick root th
 - `enabled` (master): `false` and no node number and no style applies anywhere.
 - `nodes.<id>`: `false` takes that node out; it then reads as the move's own numbers. Absent counts as on. A node id in place of `true` (2026-10-12) turns it on while that node is live (`BendLoadout.why_not` "waits for ...", the window's dot the same): Washout and Cleanse wait for `earth.set.sulphur`, the only maker of the gas they wash (the test forces every node on for its own checks).
 - `live`: the ids that may apply at all (the plan's resolvable ones and every talent built since: the tuning, class, bind and behaviour talents).
-- `styles_live`: `["boxing"]`. Empty and no style plays.
-- `classic_style`: see "How a loadout becomes live" step 4.
+- `styles_live`: `["boxing", "taekwondo", "muay_thai", "karate", "wing_chun"]` (2026-10-16). Empty and no style plays.
+- `classic_style`: see "How a loadout becomes live" step 4. **On since 2026-10-16**: the style picked for an element
+  (the match setup's STYLE chips, the ring's Esc menu `Style` row, the window; `AdvancementStore.pick_style` sets Classic's
+  class and the worn slot's) plays with Classic worn.
+- `style_levers` (2026-10-16): the styles' perks, the design's six levers at 10% on the wearer's body moves
+  (`BendLoadout.style_lock`, `style_moving`, `style_spec`, `style_class`; `docs/fighting_styles_design.md` "Live since
+  2026-10-16"; `tests/ring/test_style_perks.gd`). `false` and the clips still play, no lever does.
 
 `BendLoadout.live_ids()` and `BendLoadout.live_styles()` return what is live now (switches on, numbers resolved) so the window can mark them; `BendLoadout.why_not(id)` says why a node is not.
 

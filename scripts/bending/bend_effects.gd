@@ -119,6 +119,7 @@ static func apply(c: Variant, m: String, mode: String, spec: Dictionary, _t: Nod
 		return
 	spec = resolved(m, spec)
 	spec = BendLoadout.spec(bc.body, m, mode, spec)          # (a worn loadout's numbers over the spec, before the grow merge)
+	spec = BendLoadout.style_spec(bc.body, m, mode, spec)    # (his fighting style's Reach, Width, Mobility and Defence; Classic as is)
 	var grew := bc.grown and spec.get("grow") is Dictionary
 	if grew:
 		spec.merge(spec.grow as Dictionary, true)

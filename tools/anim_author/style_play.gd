@@ -17,6 +17,10 @@ const KEYS := {
 	"boxing": "BOXING (fire, test)   Left click: jab, cross (the 3rd of a string: the hook)   1: Punch   1 twice: Lightning   2: Ground punch   2 twice: Uppercut   3: Step   E: Slip (on the beat)",
 	"taekwondo": "TAEKWONDO (air, test)   Left click: snap kick (the 3rd of a string: a jumping kick)   1: Side kick (the Slice)   2: Spinning heel kick (the Gust)   2 in the air: Axe kick (the Slam)   Space twice, click: jumping spin kick (the Leap)   E: Knee guard (held: kept up)",
 	"muay_thai": "MUAY THAI (fire, test)   Left click: elbows (the 3rd of a string: the clinch knee)   1: Cross   1 held: Fireball off the cross   2: Body kick   2 held: Teep   2 twice: High roundhouse   Shift + a direction: step and slide   E: Shin check (on the beat)",
+	"wrestling": "WRESTLING (earth, test)   Left click: single-leg shot (the 3rd of a string: the lift)   2: Double-leg shot (the Push)   Shift + a direction: the low shuffle   E: Sprawl (on the beat)",
+	"judo": "JUDO (water, test)   Left click: grip and pull (the 3rd of a string: the hip throw)   1: Ankle sweep (the Whip)   Shift + a direction: tsugi-ashi   E: Grip and turn (held: the grip kept)",
+	"karate": "KARATE (earth, test)   Left click: lead punch (the 3rd of a string: the reverse punch)   1: Lunge punch (the Spike)   2: Double palm thrust (the Push)   Shift + a direction: sliding step   E: Low block (on the beat)",
+	"wing_chun": "WING CHUN (water, test)   Left click: chain punches (the 3rd of a string: the palm)   1: Trap and punch (the Whip)   2: Double palm (the Wave)   Shift + a direction: arrow step   E: Bong sau (held: the hands on the line)",
 }
 
 

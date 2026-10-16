@@ -15,7 +15,8 @@ its moments (hold_s the chamber held while the lock fills, strike_s, back_s), a 
 higher than cap m, the leg swung down about the hip, its knee and foot as they were), an airborne part's lift taken off (the
 game's jump carries the body), a spin made whole (its heading back to its start, a full turn more), a travelling move held in place
 (`pin`: the hips' drift across the deck taken off every frame, its lift kept: a jumping kick cast standing), a knee
-brought up (`lift`: the leg swung up about the hip so its ankle is at least lift m, the clinch knee's). Mirrored twins from
+brought up (`lift`: the leg swung up about the hip so its ankle is at least lift m, the clinch knee's), a clip played
+backwards (`reverse`: the span's last frame first: a stand-up from a sprawl becomes the drop into it). Mirrored twins from
 the BVH mirrored (left for right) before the retarget.
 Taekwondo (air's fighting style, 2026-10-16; data/bending/style_poses.json "taekwondo"): five of the pack's Taekwondo kicks, the
 style's own clips (tkd_*: a snap kick for the Palm and its twin, a jumping front kick for the Pop, a side kick for the Slice, a
@@ -24,6 +25,10 @@ spinning heel kick for the Gust, an axe kick for the Slam); the style's stance a
 Muay Thai (fire's fighting style, 2026-10-16; style_poses.json "muay_thai"): the elbow cut for the jab string, the clinch knee
 (its knee lifted) for the string's Pop, the body kick, the full teep and the full-height roundhouse for the Kick, its grow and
 the High Kick, the push-kick check for the Parry; the stance, the cross and the steps are our own (style_muay_thai.py).
+Wrestling (earth's style, 2026-10-16; style_poses.json "wrestling"): the single-leg shot for the jab, the body slam's lift for the
+Pop, the double-leg shot for the Push, the stand-up defence played backwards for the Catch (a sprawl); the stance and the
+shuffle steps are our own (style_wrestling.py). Judo (water's style): the hip throw for the Pop and the ankle sweep for the Lash;
+the grips, the stance, the grip-and-turn and the steps are our own (style_judo.py).
     blender -b --factory-startup -P tools/anim_author/blender/motifect_clips.py -- --out /tmp/motifect.json
         [--bvh-dir ~/Downloads/Motifect_martial_arts_v1_0/BVH] [--clips kick_low,...] [--report]
 """
@@ -125,6 +130,29 @@ CLIPS = {
     # the Parry: the shin check (the lead knee raised against a push kick, then set down)
     "mt_check": {"src": "muay_thai_push_kick_defense", "span": [0, 30], "hold": 7, "strike": 11, "back": 18,
                  "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}},
+
+    # ---- Wrestling (earth's style; picked through style_poses.json, timed as earth's own)
+    # the jab (the Pebbles): a single-leg shot, the level dropped and the hands driven in low (held in place)
+    "wr_shot": {"src": "wrestling_single_leg_takedown", "span": [50, 104], "hold": 60, "strike": 72, "back": 90,
+                "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True},
+    # the Pop: the lift (the body slam's grab and hop up with the load; the slam that follows is too slow for a cast)
+    "wr_lift": {"src": "wrestling_body_slam", "span": [20, 60], "hold": 30, "strike": 41, "back": 52,
+                "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True},
+    # the Push: the double-leg shot (the level change and the drive; it ends low, the game's blend stands him up)
+    "wr_double": {"src": "wrestling_double_leg_takedown", "span": [4, 34], "hold": 12, "strike": 22, "back": 30,
+                  "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True},
+    # the Catch: the sprawl, low to the deck (the stand-up defence played backwards: standing into the sprawl)
+    "wr_sprawl": {"src": "wrestling_stand_up_defense", "span": [28, 76], "hold": 60, "strike": 46, "back": 36,
+                  "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True, "reverse": True},
+
+    # ---- Judo (water's style; picked through style_poses.json, timed as water's own)
+    # the Pop: the hip throw (the turn-in loaded, the throw over the hip; held in place, the thrown one is the water)
+    "jd_hip_throw": {"src": "judo_hip_throw", "span": [34, 84], "hold": 44, "strike": 60, "back": 74,
+                     "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True},
+    # the Lash: the ankle sweep (the sweeping foot kept low: a foot sweep, cap over its high follow-through)
+    "jd_sweep": {"src": "judo_ankle_sweep", "span": [44, 94], "hold": 56, "strike": 66, "back": 80,
+                 "meta": {"hand": "foot_l", "mask": "full", "root": "place", "legs_always": 1.0},
+                 "cap": ["l", 0.45, [61, 66], [78, 86]], "pin": True, "mirror": True},
 }
 
 NAMES = {"fire_kick_low": "motifect-fire-kick-low", "fire_kick_high": "motifect-fire-kick-high", "fire_teep": "motifect-fire-teep",
@@ -132,7 +160,9 @@ NAMES = {"fire_kick_low": "motifect-fire-kick-low", "fire_kick_high": "motifect-
          "tkd_snap_kick": "motifect-tkd-snap-kick", "tkd_jump_kick": "motifect-tkd-jump-kick", "tkd_side_kick": "motifect-tkd-side-kick",
          "tkd_heel_kick": "motifect-tkd-heel-kick", "tkd_axe_kick": "motifect-tkd-axe-kick",
          "mt_elbow": "motifect-mt-elbow", "mt_knee": "motifect-mt-knee", "mt_body_kick": "motifect-mt-body-kick",
-         "mt_teep": "motifect-mt-teep", "mt_round_high": "motifect-mt-round-high", "mt_check": "motifect-mt-check"}
+         "mt_teep": "motifect-mt-teep", "mt_round_high": "motifect-mt-round-high", "mt_check": "motifect-mt-check",
+         "wr_shot": "motifect-wr-shot", "wr_lift": "motifect-wr-lift", "wr_double": "motifect-wr-double", "wr_sprawl": "motifect-wr-sprawl",
+         "jd_hip_throw": "motifect-jd-hip-throw", "jd_sweep": "motifect-jd-sweep"}
 
 
 # ---------------------------------------------------------------- the BVH (read as text: data only)
@@ -356,14 +386,17 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
     # the BVH hips' height standing at its rest (the lowest foot point on the deck)
     floor_m = min(rest[n][0].y for n in rest if "Foot" in n or "ToeBase" in n)
     a, b = spec["span"]
-    first = fk(joints, rows[a])
+    order = list(range(a, b + 1))
+    if spec.get("reverse"):
+        order.reverse()           # (played backwards: the span's last frame first; the moments below are BVH frames still)
+    first = fk(joints, rows[order[0]])
     if mirror:
         first = mirrored(first)
     # (the hips' height over the deck at the BVH's rest, standing: its feet's lowest point below the hips there; the motion's
     # deck is at 0)
     hips_ref = Vector((first["Hips"][0].x, rest["Hips"][0].y - floor_m, first["Hips"][0].z))
     out_rots, out_roots = [], []
-    for f in range(a, b + 1):
+    for f in order:
         fr = fk(joints, rows[f])
         if mirror:
             fr = mirrored(fr)
@@ -371,6 +404,8 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
         out_rots.append(rots)
         out_roots.append(root)
     n = len(out_roots)
+    # (a BVH frame's place in the clip: its index in the order played)
+    at = {f: i for i, f in enumerate(order)}
     # set down: the first frame's lowest foot point on the deck as our rest's
     drop = lowest(out_rots[0], out_roots[0]) - lowest(dict(bc.REST), bc.ROOT_REST)
     # the drift across the deck taken back by the end (a cast in place: it ends where it began)
@@ -394,14 +429,14 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
         if mirror:
             side = "l" if side == "r" else "r"
         for i in range(n):
-            cap_leg(out_rots[i], out_roots[i], side, cap_y, _win(a + i, c0, c1, c2, c3))
+            cap_leg(out_rots[i], out_roots[i], side, cap_y, _win(order[i], c0, c1, c2, c3))
     if "lift" in spec:
         # (a knee brought up: the leg swung up about its hip so the ankle is at least lift m over the deck)
         side, lift_y, (c0, c1), (c2, c3) = spec["lift"]
         if mirror:
             side = "l" if side == "r" else "r"
         for i in range(n):
-            cap_leg(out_rots[i], out_roots[i], side, lift_y, _win(a + i, c0, c1, c2, c3), True)
+            cap_leg(out_rots[i], out_roots[i], side, lift_y, _win(order[i], c0, c1, c2, c3), True)
     if "air" in spec:
         # (airborne from its takeoff: its lift off the deck taken off, the game's jump carries the body; its crouches kept)
         t0, t1 = spec["air"]
@@ -440,12 +475,12 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
     meta = dict(spec["meta"])
     if mirror and isinstance(meta.get("hand"), str):
         meta["hand"] = {"foot_r": "foot_l", "foot_l": "foot_r", "r": "l", "l": "r"}.get(meta["hand"], meta["hand"])
-    meta["hold_s"] = (spec["hold"] - a) / FPS
-    meta["strike_s"] = (spec["strike"] - a) / FPS
-    meta["back_s"] = (spec["back"] - a) / FPS
+    meta["hold_s"] = at[spec["hold"]] / FPS
+    meta["strike_s"] = at[spec["strike"]] / FPS
+    meta["back_s"] = at[spec["back"]] / FPS
     meta["length_frames"] = n - 1
-    meta["source"] = "Motifect martial arts pack (AI-generated BVH, licensed for commercial use): %s.bvh frames %d-%d%s" % (
-        spec["src"], a, b, ", mirrored" if mirror else "")
+    meta["source"] = "Motifect martial arts pack (AI-generated BVH, licensed for commercial use): %s.bvh frames %d-%d%s%s" % (
+        spec["src"], a, b, ", mirrored" if mirror else "", ", played backwards" if spec.get("reverse") else "")
     if report:
         for i in range(0, n, 3):
             P, _ = SK.fk(out_rots[i], out_roots[i])

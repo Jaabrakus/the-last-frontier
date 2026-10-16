@@ -2615,6 +2615,7 @@ func _lock_time(m: String, t: Node3D, dist: float, r: float) -> float:
 	if not holds_stone(m, t):
 		base = BendLoadout.talent_lock(player, m, mode_of(m), base)   # (a worn new skill's own lock: the Sulphur Vent's)
 		base = BendLoadout.lock(player, m, mode_of(m), base)      # (a worn loadout's own lock for this mode; Classic: base)
+		base = BendLoadout.style_lock(player, m, mode_of(m), base)   # (his fighting style's Speed on a quick cast, its Mobility on the dash)
 	if r3() and airborne():
 		var air_times: Dictionary = d.get("mode_air_lock_s", {})
 		base = float(air_times.get(mode_of(m), base))
@@ -2977,7 +2978,7 @@ func _moving_mult(m: String) -> float:
 		# (Footwork: full speed on the move; a worn Hot Feet or Dancing Feet its own, BendLoadout.tune)
 		var fb := float(Bending.passive("fire").get("moving_mult", 1.0))
 		k = maxf(k, FireTalents.moving_mult(player, BendLoadout.tune_f(player, "rules:passives.fire.moving_mult", fb), fb))
-	return k
+	return BendLoadout.style_moving(player, m, k)         # (his fighting style's Mobility on a body move's fill, never past full)
 
 
 ## The fill's rate from the element's passive now: Rooted (earth, standing still on the ground: fill_mult), else 1.

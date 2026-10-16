@@ -651,6 +651,57 @@ from standard Muay Thai mechanics.
   fire's own clip for that move. `style_kit.game_name` now dashes a two-word style's name (`own-style-muay-thai-...`), as
   `BendPoses._style_library_of` looks it up.
 
+## Fighting style clips: Karate for earth and Wing Chun for water (`Frontier_Style_Karate.res`, `Frontier_Style_Wing_chun.res`)
+
+Recorded 2026-10-16 from the generator code (observations, not an independent audit of the binary libraries). Earth's and
+water's fighting styles, picked by the owner in place of Wrestling and Judo. The Motifect pack has no karate or Wing Chun
+motion, so every clip is our own, keyed by hand as Boxing's were, from standard karate and Wing Chun mechanics; no video was
+watched (straight strikes, blocks and sliding steps are plain standing motions). Wing Chun's stance types water's own
+Wing Chun idle again (bend_clips.py `stance_water_wing_chun`, the owner's pick of 2026-10-12) rather than reading it.
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-karate-stance` | 2026-10-16 | `tools/anim_author/blender/style_karate.py` (`stance`, a loop, `stance_at`) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-karate-jab`, `-reverse` | 2026-10-16 | `style_karate.py` (`jab`, `reverse`: the jab string) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-karate-lunge`, `-lunge-l` | 2026-10-16 | `style_karate.py` (`lunge`, the Spike; the twin mirrored by `bend_clips.mirror_clip`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-karate-palm-thrust`, `-palm-thrust-l` | 2026-10-16 | `style_karate.py` (`palm_thrust`, the Push; mirrored twin) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-karate-block` | 2026-10-16 | `style_karate.py` (`block`, the Catch) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-karate-step-in`, `-step-back`, `-step-side` | 2026-10-16 | `style_karate.py` (the Shift movement, earth's Burrow / Skate / Slide) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-wing-chun-stance` | 2026-10-16 | `tools/anim_author/blender/style_wing_chun.py` (`stance`, a loop, `stance_at`) | the rig's rest pose; keys typed in the generator (water's own stance numbers typed again) | none |
+| `own-style-wing-chun-chain`, `-chain-l` | 2026-10-16 | `style_wing_chun.py` (`chain`, the Splash; mirrored twin) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-wing-chun-palm` | 2026-10-16 | `style_wing_chun.py` (`palm`, the Pop) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-wing-chun-trap-punch`, `-trap-punch-l` | 2026-10-16 | `style_wing_chun.py` (`trap_punch`, the Whip and Lash; mirrored twin) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-wing-chun-double-palm` | 2026-10-16 | `style_wing_chun.py` (`double_palm`, the Wave) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-wing-chun-bong`, `-guard` | 2026-10-16 | `style_wing_chun.py` (`bong`, the Turn; `guard`, the Turn held, a loop) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-wing-chun-step-in`, `-step-back`, `-step-side` | 2026-10-16 | `style_wing_chun.py` (the Shift movement, water's Skate) | the rig's rest pose; keys typed in `CLIPS` | none |
+
+- Made and installed as the Taekwondo clips above, and played only for a body wearing the style (`style_poses.json`
+  "karate" / "wing_chun", `loadout_apply.json` `styles_live`), each cast timed as its element's own clip for that move.
+
+## Fighting style clips: Wrestling for earth and Judo for water (`Frontier_Style_Wrestling.res`, `Frontier_Style_Judo.res`)
+
+Recorded 2026-10-16 from the generator code (observations, not an independent audit of the binary libraries). Built as earth's and
+water's first fighting styles (the owner: "add the wrestling and judo") and PARKED the same day (the owner: "the wrestling for
+earth is lame ... judo i think we need different ones"): the libraries stay, mapped nowhere (`style_poses.json` has no entry,
+`fighting_styles.json` state parked), as Capoeira's. The shots, the lift, the sprawl, the hip throw and the
+ankle sweep are NOT in these libraries: they are the Motifect pack's wrestling and judo clips, cut and retargeted
+(`motifect-wr-*`, `motifect-jd-*` in `Frontier_Motifect.res`, the Motifect section below). These libraries hold the standing
+clips the pack has no motion for, keyed by hand like Boxing's; no video was watched (a stance, a grip, a shuffle are plain
+standing motions, keyed from standard wrestling and judo mechanics).
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-wrestling-stance` | 2026-10-16 | `tools/anim_author/blender/style_wrestling.py` (`stance`, a loop typed as a function, `stance_at`) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-wrestling-step-in`, `-step-back`, `-step-side` | 2026-10-16 | `style_wrestling.py` (`step_in`, `step_back`, `step_side`: the Shift movement, earth's Burrow / Skate / Slide) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-judo-stance` | 2026-10-16 | `tools/anim_author/blender/style_judo.py` (`stance`, a loop, `stance_at`) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-judo-grip`, `-grip-l` | 2026-10-16 | `style_judo.py` (`grip`, the jab string's Splash; its twin mirrored by `bend_clips.mirror_clip`) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-judo-grip-turn` | 2026-10-16 | `style_judo.py` (`grip_turn`, the Turn) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-judo-grip-hold` | 2026-10-16 | `style_judo.py` (`grip_hold`, the Turn held, a loop) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-judo-step-in`, `-step-back`, `-step-side` | 2026-10-16 | `style_judo.py` (`step_in`, `step_back`, `step_side`: the Shift movement, water's Skate) | the rig's rest pose; keys typed in `CLIPS` | none |
+
+- Made and installed as the Taekwondo clips above, and played only for a body wearing the style (`style_poses.json`
+  "wrestling" / "judo", `loadout_apply.json` `styles_live`), each cast timed as its element's own clip for that move.
+
 ## Motifect-derived clips (`animations_extra/Frontier_Motifect.res`)
 
 Recorded 2026-10-12 from the generator code (observations, not an independent audit of the library). These are NOT our own
@@ -688,6 +739,13 @@ as text, when it bakes.
 | `motifect-mt-round-high` | 2026-10-16 | `motifect_clips.py` (`mt_round_high`; Muay Thai's High Kick) | `muay_thai_roundhouse.bvh` f56-106 | none (fire's own `motifect-fire-kick-low` is this cut capped to the shin) |
 | `motifect-mt-round-high-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
 | `motifect-mt-check` | 2026-10-16 | `motifect_clips.py` (`mt_check`; Muay Thai's Parry) | `muay_thai_push_kick_defense.bvh` f0-30 | none |
+| `motifect-wr-shot` | 2026-10-16 | `motifect_clips.py` (`wr_shot`; Wrestling's Pebbles) | `wrestling_single_leg_takedown.bvh` f50-104 | held in place (`pin`) |
+| `motifect-wr-lift` | 2026-10-16 | `motifect_clips.py` (`wr_lift`; Wrestling's Pop) | `wrestling_body_slam.bvh` f20-60 (the grab and the lift; the slam after it is left out) | held in place (`pin`, its hop kept) |
+| `motifect-wr-double` | 2026-10-16 | `motifect_clips.py` (`wr_double`; Wrestling's Push) | `wrestling_double_leg_takedown.bvh` f4-34 (the level change and the drive) | held in place (`pin`) |
+| `motifect-wr-sprawl` | 2026-10-16 | `motifect_clips.py` (`wr_sprawl`; Wrestling's Catch) | `wrestling_stand_up_defense.bvh` f28-76 | played backwards (`reverse`: standing into the sprawl), held in place (`pin`) |
+| `motifect-jd-hip-throw` | 2026-10-16 | `motifect_clips.py` (`jd_hip_throw`; Judo's Pop) | `judo_hip_throw.bvh` f34-84 (the turn-in and the throw) | held in place (`pin`) |
+| `motifect-jd-sweep` | 2026-10-16 | `motifect_clips.py` (`jd_sweep`; Judo's Whip and Lash) | `judo_ankle_sweep.bvh` f44-94 | the sweeping (left) leg kept low over its high follow-through (`cap` 0.45 m, in over f61-66, out over f78-86); held in place (`pin`) |
+| `motifect-jd-sweep-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | as its original, on the right leg |
 
 - The retarget, per frame: the BVH's global joint rotations (its rest is a T-pose, every joint unrotated) carried onto
   Actor_B's bones (`assets/character/actor_b_body.glb`, `rigkit.SK`) through each mapped bone's rest frame (our rest bone's
@@ -702,6 +760,6 @@ as text, when it bakes.
   `authored` meta naming the generator and a `source` meta naming the pack's clip and frames, so the library itself says what
   each clip was made from.
 - The game plays one only as `data/bending/poses.json` lists it by name in `motifect` (`BendPoses.motifect`, `usable`):
-  fire's Kick and its twin, the Kick held long (its `grow`: the teep), the High Kick and its twin, air's Leap. The `motifect-tkd-*` and `motifect-mt-*` clips (2026-10-16) are listed there too but played only through `data/bending/style_poses.json` for a body wearing the Taekwondo (air's) or Muay Thai (fire's) style (`BendPoses._style_pick`), never by the element's own poses. Each is timed as
+  fire's Kick and its twin, the Kick held long (its `grow`: the teep), the High Kick and its twin, air's Leap. The `motifect-tkd-*` and `motifect-mt-*` clips (2026-10-16) are listed there too but played only through `data/bending/style_poses.json` for a body wearing the Taekwondo (air's), Muay Thai (fire's), Wrestling (earth's, `motifect-wr-*`) or Judo (water's, `motifect-jd-*`) style (`BendPoses._style_pick`), never by the element's own poses. Each is timed as
   the move's own clip it replaces (`timed_as`: its hold, strike, back and end exactly the old ones, so the move's gameplay is
   unchanged) and that own clip stands in when the library is missing.

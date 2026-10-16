@@ -46,6 +46,8 @@ extends RefCounted
 ##   overlay_of(body), picks_of(body), style_meta(body), clear(body)
 ##   spec(body, m, mode, spec), lock(body, m, mode, base), wall_numbers(body, kind, base, matter), hit_class(body, cls)
 ##                                 the readers' seams
+##   style_lock, style_moving, style_spec, style_class, lever(body, k)
+##                                 his fighting style's levers, its perks (2026-10-16; the section "a style's levers")
 ##   modes_added(body, m), new_mode(body, m, mode), new_spec(body, m, mode), new_mode_label(m, mode)
 ##                                 a new mode a worn behaviour talent adds (its "new:<what>.spec": Mire on water's 4)
 ##   enabled(), live_ids(), live_styles(), why_not(id), resolve(id), style_ok(style, element)
@@ -872,6 +874,205 @@ static func style_meta(body: Object) -> String:
 	return String((body as Node).get_meta(STYLE_META))
 
 
+# ---------------------------------------------------------------- a style's levers (its perks)
+## The six levers of docs/fighting_styles_design.md, live per wearer (the owner, 2026-10-16: "each fighting style should have
+## different perks"): a style's two + and two - (data/bending/fighting_styles.json levers) are 10% each (LEVER_STEP, the design's
+## start; the soak retunes) on the BODY MOVES only (the design: the jab, key 1 STRIKE, key 2 PUSH, key 3 DASH and the E guard;
+## the walls, the heals, the rise and the passive keep their numbers), each read where the game reads that number for him.
+## Classic (no style) and every bot read today's data; loadout_apply.json style_levers false switches every lever off (the
+## clips still play). A lever never changes a move's identity, never slows anyone's run or hurts anyone's aim.
+##   speed      the lock of the quick casts (the jab, the guard, key 1's and key 2's first mode): x0.9 / x1.1
+##              (style_lock; SwayCaster._lock_time)
+##   power      the knock (base and growth) of the grown and tap-twice casts of keys 1 and 2: x1.1 / x0.9 (hit_class)
+##   reach      range_m and mps (a bolt's speed, a push's travel) of the jab's, key 1's and key 2's specs, the grow too:
+##              x1.1 / x0.9 (style_spec; BendEffects.apply)
+##   width      width_m and deg (a cone, an arc, a push) of the same: x1.1 / x0.9 (style_spec)
+##   mobility   the dash: its lock x0.9 / x1.1 and its fwd_mps x1.1 / x0.9, every way of it (style_lock, style_spec); the fill
+##              of every body move's lock on the move x1.1 / x0.9, never past full (style_moving; SwayCaster._moving_mult)
+##   defence    the guard's perfect window +0.03 s / -0.03 s (DEFENCE_STEP_S: the design's 0.30 +/- 0.03; style_spec sets
+##              perfect_s, BendZone.make reads it)
+const LEVERS := ["speed", "power", "reach", "width", "mobility", "defence"]
+const LEVER_STEP := 0.1
+const DEFENCE_STEP_S := 0.03
+const REACH_KEYS := ["range_m", "mps"]
+const WIDTH_KEYS := ["width_m", "deg"]
+const DASH_KEYS := ["fwd_mps"]
+
+
+## The style whose levers `body` plays with ("" none: Classic, no style on him, the style not live, or the levers switched off).
+static func lever_style(body: Object) -> String:
+	var st := style_meta(body)
+	if st == "" or not bool(config().get("style_levers", true)):
+		return ""
+	return st if style_ok(st, String(_style_def(st).get("element", ""))) else ""
+
+
+## The style's lever `k` for `body`: +1, -1 or 0 (0 Classic, or a lever the style leaves alone).
+static func lever(body: Object, k: String) -> int:
+	var st := lever_style(body)
+	if st == "":
+		return 0
+	return clampi(int((_style_def(st).get("levers", {}) as Dictionary).get(k, 0)), -1, 1)
+
+
+## 1 + LEVER_STEP x the lever's sign: what a "more is better" number is scaled by (1 Classic).
+static func lever_mult(body: Object, k: String) -> float:
+	return 1.0 + LEVER_STEP * float(lever(body, k))
+
+
+## 1 - LEVER_STEP x the lever's sign: what a "less is better" number (a lock) is scaled by (1 Classic).
+static func lever_down(body: Object, k: String) -> float:
+	return 1.0 - LEVER_STEP * float(lever(body, k))
+
+
+## Which body move of element `el` move `m` is: "jab", "guard", "key1", "key2" or "dash" ("" none: a wall, a heal, the rise, a
+## number-3 key's own move).
+static func body_key(el: String, m: String) -> String:
+	if m == "" or el == "":
+		return ""
+	if m == String(Bending.jab(el).get("id", "")):
+		return "jab"
+	if m == String(Bending.guard(el).get("id", "")):
+		return "guard"
+	var keys: Array = Bending.keys(el)
+	for i in mini(3, keys.size()):
+		if (keys[i] as Array).has(m):
+			return ["key1", "key2", "dash"][i]
+	return ""
+
+
+## Whether `m` at `mode` is a key's second: the move a second tap readies (Boulder, Spear, Column, Spout, High Kick, Ball, Pull),
+## or key 1's second move (water's Ice Spear). Keys 1 and 2 only.
+static func _second(el: String, m: String, mode: String) -> bool:
+	var keys: Array = Bending.keys(el)
+	for i in mini(2, keys.size()):
+		var k: Array = keys[i]
+		if not k.has(m):
+			continue
+		if String(k[0]) != m:
+			return true
+		var modes: Array = SwayMoves.move(m).get("modes", [])
+		return modes.size() >= 2 and mode != String(modes[0]) and mode in modes
+	return false
+
+
+## Whether `m` at `mode` is a quick cast of element `el`: the jab, the guard, or key 1's or key 2's first move at its first mode (a
+## hidden mode of it counts as it: the Pop's jab, the air hit).
+static func _quick(el: String, m: String, mode: String) -> bool:
+	match body_key(el, m):
+		"jab", "guard":
+			return true
+		"key1", "key2":
+			return not _second(el, m, mode)
+	return false
+
+
+## Whether a hit tagged `tag` ("id/mode", "id/mode.grown") is a grown or tap-twice cast of key 1 or 2 of element `el` (Power's);
+## never a returned shot's.
+static func _big(el: String, tag: String) -> bool:
+	if el == "" or not tag.contains("/") or tag.contains(".return"):
+		return false
+	var id := tag.get_slice("/", 0)
+	var rest := tag.get_slice("/", 1)
+	var key := body_key(el, id)
+	if key != "key1" and key != "key2":
+		return false
+	return rest.ends_with(".grown") or _second(el, id, rest.get_slice(".", 0))
+
+
+static func _lever_element(body: Object) -> String:
+	var st := lever_style(body)
+	return String(_style_def(st).get("element", "")) if st != "" else ""
+
+
+## Move `m`'s lock at `mode` for `body` with the style's Speed (a quick cast) or Mobility (the dash) on it; `base` for Classic
+## and for every other move. After a worn node's own lock (lock()): a node sets the number, the style scales it.
+static func style_lock(body: Object, m: String, mode: String, base: float) -> float:
+	var el := _lever_element(body)
+	if el == "":
+		return base
+	match body_key(el, m):
+		"dash":
+			return base * lever_down(body, "mobility")
+		"jab", "guard", "key1", "key2":
+			return base * lever_down(body, "speed") if _quick(el, m, mode) else base
+	return base
+
+
+## The fill of move `m`'s lock on the move for `body`: `k` (the move's own moving fill, the passive's) x the style's Mobility on a
+## body move, never past full (1); `k` for Classic.
+static func style_moving(body: Object, m: String, k: float) -> float:
+	var el := _lever_element(body)
+	if el == "" or body_key(el, m) == "":
+		return k
+	return minf(k * lever_mult(body, "mobility"), 1.0)
+
+
+## Spec `spec` of move `m` at `mode` cast by `body` with the style's Reach, Width, Mobility and Defence over it (`spec` itself for
+## Classic or a move no lever touches: no copy; `spec` is never changed). Reach scales range_m and mps and Width width_m and deg
+## of the jab, key 1 and key 2, their grow block too (BendEffects.apply merges it after, so a grown cast keeps the lever);
+## Mobility the dash's fwd_mps, every way of it (its fwd, back and side blocks); Defence the guard's perfect_s.
+static func style_spec(body: Object, m: String, mode: String, spec: Dictionary) -> Dictionary:
+	var el := _lever_element(body)
+	if el == "":
+		return spec
+	match body_key(el, m):
+		"jab", "key1", "key2":
+			var r := lever_mult(body, "reach")
+			var w := lever_mult(body, "width")
+			if is_equal_approx(r, 1.0) and is_equal_approx(w, 1.0):
+				return spec
+			var out := spec.duplicate()
+			_scale(out, REACH_KEYS, r)
+			_scale(out, WIDTH_KEYS, w)
+			if out.get("grow") is Dictionary:
+				var g: Dictionary = (out.grow as Dictionary).duplicate()
+				_scale(g, REACH_KEYS, r)
+				_scale(g, WIDTH_KEYS, w)
+				out["grow"] = g
+			return out
+		"dash":
+			var mb := lever_mult(body, "mobility")
+			if is_equal_approx(mb, 1.0):
+				return spec
+			var out := spec.duplicate()
+			_scale(out, DASH_KEYS, mb)
+			for way: String in ["fwd", "back", "side"]:
+				if out.get(way) is Dictionary:
+					var sub: Dictionary = (out[way] as Dictionary).duplicate()
+					_scale(sub, DASH_KEYS, mb)
+					out[way] = sub
+			return out
+		"guard":
+			var d := lever(body, "defence")
+			if d == 0 or mode != String(Bending.guard(el).get("mode", mode)):
+				return spec
+			var out := spec.duplicate()
+			out["perfect_s"] = float(spec.get("perfect_s", Bending.rule("perfect_s", 0.3))) + DEFENCE_STEP_S * float(d)
+			return out
+	return spec
+
+
+## `keys` of `d` that are numbers, x `k`.
+static func _scale(d: Dictionary, keys: Array, k: float) -> void:
+	for key: String in keys:
+		if d.get(key) is float or d.get(key) is int:
+			d[key] = float(d[key]) * k
+
+
+## Class `cls` of a hit by `body` with the style's Power on it: the knock (base and growth) of a grown or tap-twice cast of key 1
+## or 2 x1.1 / x0.9 (`cls` itself otherwise: no copy). The % (d) and the angle stay: harder, not more.
+static func style_class(body: Object, cls: Dictionary) -> Dictionary:
+	var pw := lever(body, "power")
+	if pw == 0 or cls.is_empty() or not _big(_lever_element(body), String(cls.get("tag", ""))):
+		return cls
+	var out := cls.duplicate()
+	var k := 1.0 + LEVER_STEP * float(pw)
+	out["base"] = float(out.get("base", 0.0)) * k
+	out["growth"] = float(out.get("growth", 0.0)) * k
+	return out
+
+
 # ---------------------------------------------------------------- the match start
 ## Whether the match may read the store now: in the game (the player's own save), not in a script run (-s: the store would be the
 ## test file) unless a test or tool says so.
@@ -952,7 +1153,12 @@ static func pose_of(body: Object, m: String, mode: String) -> String:
 ## over that (info.beat, sent on the Beat by SwayCaster's release and BendR3.info_for: Heave's Column; info.avalanche: the
 ## Avalanche's rolling stones, GustLift._avalanche). A returned hit's class (RingRules.return_class: its tag
 ## "<origin>.return", which no node's class change names) asks here too: only a Kiln Stone's heat reaches it (info.heated).
+## His fighting style's Power last (style_class: a grown or tap-twice cast of key 1 or 2 knocks x1.1 / x0.9; Classic as is).
 static func hit_class(body: Object, cls: Dictionary, info := {}) -> Dictionary:
+	return style_class(body, _worn_class(body, cls, info))
+
+
+static func _worn_class(body: Object, cls: Dictionary, info: Dictionary) -> Dictionary:
 	if cls.is_empty() or not _wears(body):
 		return cls
 	var ov := overlay_of(body)

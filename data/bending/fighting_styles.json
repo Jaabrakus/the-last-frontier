@@ -81,7 +81,7 @@
    "element": "earth",
    "label": "Karate",
    "canon": false,
-   "state": "coming",
+   "state": "animated",
    "known": "Deep stances, straight strikes, one decisive blow.",
    "levers": {
     "power": 1,
@@ -118,7 +118,9 @@
     "bo",
     "sai",
     "tonfa"
-   ]
+   ],
+   "library": "res://animations_extra/Frontier_Style_Karate.res",
+   "poses": "karate"
   },
   "sumo": {
    "element": "earth",
@@ -162,7 +164,7 @@
    "element": "earth",
    "label": "Wrestling",
    "canon": false,
-   "state": "coming",
+   "state": "parked",
    "known": "Takedowns, lifts and slams.",
    "levers": {
     "speed": 1,
@@ -194,7 +196,8 @@
      "line": "A sprawl catch, low to the deck."
     }
    ],
-   "home_weapons": []
+   "home_weapons": [],
+   "library": "res://animations_extra/Frontier_Style_Wrestling.res"
   },
   "tai_chi": {
    "element": "water",
@@ -284,7 +287,7 @@
    "element": "water",
    "label": "Judo",
    "canon": false,
-   "state": "coming",
+   "state": "parked",
    "known": "Throws from off-balancing.",
    "levers": {
     "power": 1,
@@ -317,13 +320,14 @@
      "perfect": "A perfect readies your jab at once."
     }
    ],
-   "home_weapons": []
+   "home_weapons": [],
+   "library": "res://animations_extra/Frontier_Style_Judo.res"
   },
   "wing_chun": {
    "element": "water",
    "label": "Wing Chun",
    "canon": false,
-   "state": "coming",
+   "state": "animated",
    "known": "The centreline, chain punches, sticky hands, trapping.",
    "levers": {
     "speed": 1,
@@ -359,7 +363,9 @@
    "home_weapons": [
     "butterfly_swords",
     "long_pole"
-   ]
+   ],
+   "library": "res://animations_extra/Frontier_Style_Wing_chun.res",
+   "poses": "wing_chun"
   },
   "northern_shaolin": {
    "element": "fire",

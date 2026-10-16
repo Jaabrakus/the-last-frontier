@@ -289,6 +289,23 @@ static func set_style(el: String, style_id: String) -> String:
 	return ""
 
 
+## The menus' pick (the match setup's Style row, the ring's Esc menu; the owner, 2026-10-16: "allow the ability to pick the fighting
+## style"): the class worn with Classic AND the worn slot's (a valid one: its padlock refuses, as save_slot's), so that what plays
+## next is the pick whatever is worn (loadout_apply.json classic_style plays it with Classic). "" or the reason it was refused.
+static func pick_style(el: String, style_id: String) -> String:
+	var i := worn_index(el)
+	var s := _slot_rec(el, i)
+	if i >= 0 and not s.is_empty() and not s.has("invalid") and bool(s.get("keep", false)) and String(s.get("style", "")) != style_id:
+		return AdvancementData.word("slot_state.kept")
+	var why := set_style(el, style_id)
+	if why != "":
+		return why
+	if i >= 0 and not s.is_empty() and not s.has("invalid") and String(s.get("style", "")) != style_id:
+		s["style"] = style_id
+		save()
+	return ""
+
+
 ## A slot's name on the screen: its own, else "Loadout 2".
 static func slot_name(el: String, i: int) -> String:
 	if i < 0:

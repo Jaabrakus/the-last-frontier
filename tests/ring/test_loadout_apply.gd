@@ -16,7 +16,8 @@ extends SceneTree
 ##                   hold_s, strike_s, back_s, root and end (a cast takes the Classic time) and a warp that puts the clip's own
 ##                   hold, strike and back on them; the Boxing library is loaded only when a style clip is first asked for
 ##   the match       (the ring scene) RingMode.restart reads the Advancement save: the worn slot's live nodes and class go on the
-##                   player's body and on nobody else's; Classic (or a class picked with Classic worn) puts nothing on it; a
+##                   player's body and on nobody else's; Classic puts nothing on it (a class picked with Classic worn plays its
+##                   clips only when loadout_apply.json classic_style says so: on since 2026-10-16, checked both ways here); a
 ##                   script run ignores the save unless asked (so every other test plays Classic); the save file is never
 ##                   written; real casts (bolts, dashes, the walls, the locks) of the wearer and of a bot side by side
 ## Ends with "LOADOUT APPLY TEST PASSED (n checks)" or "... FAILED"; exit 0 only on a pass.
@@ -165,7 +166,7 @@ func _run() -> void:
 			"Skate's Wet Trail is live: the Skate's puddles are made for its wearer alone (2026-10-11, BendEffects._wet_trail) (%s)" % BendLoadout.why_not("water.skate.wet_trail"))
 	_expect("earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") == "",
 			"Earth's Steady Point is live (2026-10-11: its release and sputter read per wearer, its own Spike lock)")
-	_expect(BendLoadout.live_styles() == ["boxing", "taekwondo", "muay_thai"], "the live styles are Boxing, Taekwondo and Muay Thai (%s)" % [BendLoadout.live_styles()])
+	_expect(BendLoadout.live_styles() == ["boxing", "taekwondo", "muay_thai", "karate", "wing_chun"], "the live styles are Boxing, Taekwondo, Muay Thai, Karate and Wing Chun (%s)" % [BendLoadout.live_styles()])
 	_expect(not BendPoses._libs.has(BOXING_LIB), "the Boxing library is not loaded before a style clip is asked for")
 
 	# ---------------------------------------------------------------- the switches
@@ -601,10 +602,12 @@ func _run() -> void:
 	_expect(FileAccess.get_file_as_string(OWN_STORE) == before and FileAccess.get_modified_time(OWN_STORE) == mtime,
 			"the match never wrote the save")
 
-	# Classic worn, with a class picked: nothing, unless the switch says
+	# Classic worn, with a class picked: nothing with the classic_style switch off (the file says on since 2026-10-16: the owner picks
+	# the style in the menus; the style's own levers are tests/ring/test_style_perks.gd's)
 	AdvancementStore.wear("fire", -1)
 	before = FileAccess.get_file_as_string(OWN_STORE)
 	mtime = FileAccess.get_modified_time(OWN_STORE)
+	BendLoadout.config_override = {"classic_style": false, "nodes": all_on}
 	mode.restart()
 	await _ticks(10)
 	_expect(BendLoadout.overlay_of(player).is_empty() and BendLoadout.style_meta(player) == "" and BendPoses.pick("fire_jab", "embers", "fire", player).get("from") != "style",
@@ -659,7 +662,15 @@ func _raw_store_checks() -> void:
 	_expect((ov.ids as Array) == ["fire.step.quick"], "...and it is the live Quick Step")
 	AdvancementStore.element_doc("fire")["worn"] = 1           # (in memory: the store is not written)
 	var w1 := BendLoadout.worn("fire")
-	_expect((w1.picks as Array).is_empty() and String(w1.style) == "" and int(w1.slot) == -1, "a slot that breaks a rule is read as Classic: nothing worn (%s)" % [w1])
+	# (Classic plays the class picked for the element since classic_style is on, 2026-10-16: the slot's picks are not worn, its
+	# style is the element's own pick as for Classic, AdvancementStore.style_of)
+	_expect((w1.picks as Array).is_empty() and String(w1.style) == AdvancementStore.style_of("fire") and int(w1.slot) == -1,
+			"a slot that breaks a rule is read as Classic: no picks, the element's picked class (%s)" % [w1])
+	var keep := BendLoadout.config_override
+	BendLoadout.config_override = keep.merged({"classic_style": false}, true)
+	var w2 := BendLoadout.worn("fire")
+	_expect((w2.picks as Array).is_empty() and String(w2.style) == "" and int(w2.slot) == -1, "...and with classic_style off, nothing at all (%s)" % [w2])
+	BendLoadout.config_override = keep
 	_expect(FileAccess.get_file_as_string(OWN_STORE) == before, "reading the save wrote nothing")
 
 
