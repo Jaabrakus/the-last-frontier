@@ -1,0 +1,14 @@
+# Clips the web build leaves uncompressed (tools/web/compress_anims.gd): the loops the player's animation tree closes at load.
+# The graph loops each of them although its first and last poses differ (animations/actor_b_clip_metrics.json: loop = false;
+# walk-fw-rt, sprint-bw-rt and -lt pop 0.12-0.24 rad at a foot at every wrap), so TreeBuilder._note_loop calls close_seam, which eases
+# the last 0.2 s of the clip's keys into its first frame. A compressed track can't be edited (close_seam answers -1 and the loop
+# pops), so these stay as the desktop game has them and the browser closes their seams the same way.
+# One per line, "<AnimationPlayer library>/<clip>" as TreeIndex.loop_seams[...].anim names it (compress_anims.gd maps the library to
+# its file). tests/anim/test_loop_seams.gd fails when the tree closes a clip that is not listed here.
+frontier_downgraded/actor_b-p-walk-fw-rt
+actor_b/actor_b-p-sprint-bw-lt
+actor_b/actor_b-p-sprint-bw-rt
+# Closed only with options.aim_walk on (off in the game today): listed so that turning it on does not pop on the web.
+frontier_downgraded/actor_b-p-bow-aim-crouch-walk-fw-lt
+frontier_locomotion/own-aimwalk-rifle-bw-rt
+actor_b/actor_b-p-rifle-aim-crouch-walk-bw-rt

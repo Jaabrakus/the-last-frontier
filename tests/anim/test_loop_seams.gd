@@ -7,7 +7,10 @@ extends AnimTestSuite
 ##   - before the last SEAM_S the clip is the file's (a fresh copy of the scene, the cache ignored; 2e-3 rad: angle_to's float floor);
 ##   - inside the window no key step on any bone is steeper than the clip's own steepest step (the file's, inside or outside
 ##     the window) by more than STEP_SPREAD_RAD: the seam is spread over the window, not moved into it;
-##   - a second build changes nothing (already closed: 0 tracks).
+##   - a second build changes nothing (already closed: 0 tracks);
+##   - the web build leaves exactly these clips uncompressed, as tools/web/seam_clips.txt lists them (a compressed track cannot be
+##     closed: in the browser the loop would pop at every wrap): every clip the tree closes, with the aim-walk inputs on as well, is in
+##     the list, and every listed clip is one the player plays.
 
 ## How much steeper (rad) a key step inside the window may be than the clip's own steepest: the seam (at most 0.24 rad)
 ## spread by smoothstep over the window's keys adds at most a fraction of it to any one step.
@@ -60,7 +63,32 @@ func run(ctx: AnimTestContext) -> void:
 	for clip: String in idx2.loop_seams:
 		again += int((idx2.loop_seams[clip] as Dictionary).get("closed_tracks", 0))
 	ctx.check(again == 0, "a second build changes nothing (%d tracks)" % again)
+	# (options.aim_walk is off in the game; with it on the tree loops three more)
+	var aim := TreeBuilder.build(data, rig.ap, rig.sk, {"aim_move": true})
+	var listed := _web_seam_list()
+	var unlisted := []
+	for found: Dictionary in [seams, aim.loop_seams]:
+		for clip: String in found:
+			var an := String((found[clip] as Dictionary).get("anim", ""))
+			if not listed.has(an) and not unlisted.has(an):
+				unlisted.append(an)
+	ctx.check(not listed.is_empty() and unlisted.is_empty(), "tools/web/seam_clips.txt lists every clip the tree closes (the web build keeps them uncompressed): missing %s" % [unlisted])
+	var unknown := []
+	for an: String in listed:
+		if not rig.ap.has_animation(StringName(an)):
+			unknown.append(an)
+	ctx.check(unknown.is_empty(), "every clip in tools/web/seam_clips.txt is one the player plays (%d listed): unknown %s" % [listed.size(), unknown])
 	fresh.free()
+
+
+## The clips tools/web/seam_clips.txt names ("<library>/<clip>" a line, # starts a comment): {name: true}.
+func _web_seam_list() -> Dictionary:
+	var out := {}
+	for line in FileAccess.get_file_as_string("res://tools/web/seam_clips.txt").split("\n", false):
+		var s := line.strip_edges()
+		if s != "" and not s.begins_with("#"):
+			out[s] = true
+	return out
 
 
 ## The file's own copy of clip `an` ("lib/clip"): the fresh scene's, else its override library (AnimGraphData.OVERRIDE_LIBS:
