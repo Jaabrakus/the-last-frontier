@@ -93,8 +93,18 @@ static var zones_deck := false
 ## The team format's deck ("1v1": the base; "2v2", "4v4": ring.json formats over the base and the mode's overlay; the owner,
 ## 2026-10-10: team arenas "big enough"; docs/tidebreak/team_formats_and_arenas.md).
 static var format := "1v1"
+## THE ARENAS (the owner, 2026-10-16: a new arena from headless Blender, "like earth not the wood", "closer to the water maybe a
+## oval shape"; his pick "ruin and crater"): ring.json arenas[arena] over the mode's and the format's numbers (set_arena:
+## MatchSetup.arena). An arena with a `mesh` is built in Blender (tools/environment/arena/arena_build.py) and loaded as a
+## scene under this node (use_mesh): the colliders, the grates, the water and every rule stay this script's, its own kit visuals
+## are skipped. shape "oval": the deck's lip is the ellipse of deck_l x deck_w: on_deck, is_out, nearest_lip, wall_place_ok,
+## lantern_spots, the piers and the deck's colliders (a convex slice of the ellipse a zone) read it, and inside_deck,
+## clamp_inside and edge_x give the rules and the bots the same shape (RingRules.clamp_for, BendR3.keep_on_deck).
+static var arena := "classic"
 
 var visuals := true
+## The arena's mesh scene is in use (visuals, a mesh named, its file there): no kit visuals of this script's own.
+var use_mesh := false
 var water: RingWater
 var decks: Array[StaticBody3D] = []
 var grates: Array[Node3D] = []
@@ -112,13 +122,14 @@ static func data() -> Dictionary:
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 		_data = d if d is Dictionary else {}
 	var fov: Variant = (_data.get("formats", {}) as Dictionary).get(format, null)
-	if mode == "classic" and not (fov is Dictionary):
+	var aov: Variant = (_data.get("arenas", {}) as Dictionary).get(arena, null) if arena != "classic" else null
+	if mode == "classic" and not (fov is Dictionary) and not (aov is Dictionary):
 		return _data
 	if _merged.is_empty():
 		_merged = _data.duplicate(true)
 		var ov: Variant = ((_data.get("modes", {}) as Dictionary).get(mode, {})) if mode != "classic" else null
 		var zov: Variant = ((_data.get("modes", {}) as Dictionary).get("zones", {})) if mode == "stock" and zones_deck else null
-		for o: Variant in [ov, zov, fov]:
+		for o: Variant in [ov, zov, fov, aov]:
 			if not (o is Dictionary):
 				continue
 			for k: String in (o as Dictionary):
@@ -151,6 +162,52 @@ static func set_format(f: String) -> void:
 		_merged = {}
 
 
+## The arena from now on (`a` one of ring.json arenas, else classic).
+static func set_arena(a: String) -> void:
+	var want := a if (_raw().get("arenas", {}) as Dictionary).has(a) and not a.begins_with("_") else "classic"
+	if want != arena:
+		arena = want
+		_merged = {}
+
+
+## The arenas' names, classic first (the match setup's choice).
+static func arena_names() -> Array:
+	var out: Array = ["classic"]
+	for k: String in (_raw().get("arenas", {}) as Dictionary):
+		if not k.begins_with("_") and k != "classic":
+			out.append(k)
+	return out
+
+
+## Arena `a`'s block (ring.json arenas; {} for one not there).
+static func arena_def(a := "") -> Dictionary:
+	var d: Variant = (_raw().get("arenas", {}) as Dictionary).get(a if a != "" else arena, {})
+	return d if d is Dictionary else {}
+
+
+## The deck's shape: "rect" (the rules' rectangle) or "oval" (the ellipse of deck_l x deck_w).
+static func shape() -> String:
+	return String(arena_def().get("shape", "rect"))
+
+
+static func oval() -> bool:
+	return shape() == "oval"
+
+
+## Whether `part` of the dressing is kept with this arena (ring.json arenas.<a>.dressing; everything with classic).
+static func dressing_on(part: String) -> bool:
+	var d: Variant = arena_def().get("dressing", {})
+	return bool((d as Dictionary).get(part, true)) if d is Dictionary else true
+
+
+## The arena's mesh scene for this deck ("" none: classic, or the arena has no mesh).
+func mesh_path() -> String:
+	var m := String(arena_def().get("mesh", ""))
+	if m == "":
+		return ""
+	return m % ("%dx%d" % [int(round(num("deck_w", 14.0))), int(round(num("deck_l", 34.0)))]) if m.contains("%s") else m
+
+
 static func _raw() -> Dictionary:
 	if _data.is_empty():
 		data()
@@ -175,6 +232,7 @@ static func num(key: String, def := 0.0) -> float:
 static func make(parent: Node, xf := Transform3D.IDENTITY) -> RingArena:
 	set_mode(RingRules.pick_rule_set())
 	set_format(MatchSetup.format if not MatchSetup.practice() else "1v1")
+	set_arena(MatchSetup.arena)
 	var a := RingArena.new()
 	a.name = "RingArena"
 	a.transform = xf
@@ -190,6 +248,15 @@ func _ready() -> void:
 	add_to_group(GROUP)
 	set_mode(RingRules.pick_rule_set())
 	visuals = DisplayServer.get_name() != "headless"
+	var mp := mesh_path()
+	if mp != "" and not FileAccess.file_exists(mp):
+		# (an arena whose mesh is not built for this deck's size: the classic deck instead, whole, shape and all)
+		push_warning("RingArena: arena '%s' has no mesh for this deck (%s): classic instead" % [arena, mp])
+		set_arena("classic")
+		mp = ""
+	use_mesh = visuals and mp != "" and ResourceLoader.exists(mp)
+	if visuals and mp != "" and not use_mesh:
+		push_warning("RingArena: arena '%s' names a mesh that is not imported (%s): its colliders alone" % [arena, mp])
 	if visuals:
 		_materials()
 	_stones = Node3D.new()
@@ -201,12 +268,90 @@ func _ready() -> void:
 	_collars()
 	_layout()
 	_surround()
+	if use_mesh:
+		_mesh(mp)
 	water = RingWater.new()
 	water.name = "RingWater"
 	add_child(water)
 	water.setup(self)
 	_catch_floor()
 	rebuild()
+
+
+## The arena's own mesh scene (an arena built in Blender), under this node: its decks, stands, walls and props; the game's
+## own water, grates' water, lanterns and crowd go with it.
+func _mesh(path: String) -> void:
+	var ps := load(path) as PackedScene
+	if ps == null:
+		push_warning("RingArena: the arena mesh did not load: " + path)
+		use_mesh = false
+		return
+	var inst := ps.instantiate()
+	inst.name = "ArenaMesh"
+	add_child(inst)
+
+
+# ---------------------------------------------------------------- the deck's shape
+## Whether local (x, z) lies on the deck's top, `inset` m inside its lip: the rectangle, or the ellipse (oval).
+func inside_deck(x: float, z: float, inset := 0.0) -> bool:
+	var hl := maxf(half_l() - inset, 0.0)
+	var hw := maxf(half_w() - inset, 0.0)
+	if not oval():
+		return absf(x) <= hl and absf(z) <= hw
+	if hl <= 0.0 or hw <= 0.0:
+		return false
+	return (x / hl) * (x / hl) + (z / hw) * (z / hw) <= 1.0
+
+
+## Local `l` kept `inset` m inside the deck's lip (its y as given): clamped into the rectangle, or drawn straight in to the
+## ellipse along the line from the deck's middle.
+func clamp_inside(l: Vector3, inset := 0.0) -> Vector3:
+	var hl := maxf(half_l() - inset, 0.0)
+	var hw := maxf(half_w() - inset, 0.0)
+	if not oval():
+		return Vector3(clampf(l.x, -hl, hl), l.y, clampf(l.z, -hw, hw))
+	if hl <= 0.0 or hw <= 0.0:
+		return Vector3(0.0, l.y, 0.0)
+	var r := sqrt((l.x / hl) * (l.x / hl) + (l.z / hw) * (l.z / hw))
+	if r <= 1.0:
+		return l
+	return Vector3(l.x / r, l.y, l.z / r)
+
+
+## The deck's half length at local z, `inset` m inside the lip: half_l less the inset (rect), or the ellipse's x there (oval;
+## 0 past its width).
+func edge_x(z: float, inset := 0.0) -> float:
+	var hl := maxf(half_l() - inset, 0.0)
+	if not oval():
+		return hl
+	var hw := maxf(half_w() - inset, 0.0)
+	if hw <= 0.0 or absf(z) >= hw:
+		return 0.0
+	return hl * sqrt(1.0 - (z / hw) * (z / hw))
+
+
+## The metres along flat local direction `d` (unit) from local `l` to the deck's lip (0 outside it already; INF never).
+func edge_along_local(l: Vector3, d: Vector3) -> float:
+	var hl := half_l()
+	var hw := half_w()
+	if not oval():
+		var tx := ((signf(d.x) * hl - l.x) / d.x) if absf(d.x) > 1e-4 else INF
+		var tz := ((signf(d.z) * hw - l.z) / d.z) if absf(d.z) > 1e-4 else INF
+		return maxf(minf(tx, tz), 0.0)
+	# ((l + t d) on the ellipse: a t^2 + b t + c = 0 in the ellipse's own units)
+	var px := l.x / hl
+	var pz := l.z / hw
+	var dx := d.x / hl
+	var dz := d.z / hw
+	var qa := dx * dx + dz * dz
+	var qb := 2.0 * (px * dx + pz * dz)
+	var qc := px * px + pz * pz - 1.0
+	if qa < 1e-9:
+		return INF
+	var disc := qb * qb - 4.0 * qa * qc
+	if disc < 0.0:
+		return 0.0
+	return maxf((-qb + sqrt(disc)) / (2.0 * qa), 0.0)
 
 
 func _exit_tree() -> void:
@@ -288,7 +433,7 @@ func line_s(_side: int, k: int) -> float:
 
 func on_deck(pos: Vector3) -> bool:
 	var l := to_local(pos)
-	return absf(l.x) <= half_l() and absf(l.z) <= half_w() and l.y >= top() - num("out_drop_m", 0.6)
+	return inside_deck(l.x, l.z) and l.y >= top() - num("out_drop_m", 0.6)
 
 
 func is_out(pos: Vector3) -> bool:
@@ -325,6 +470,8 @@ func nearest_lip(pos: Vector3) -> Dictionary:
 	var l := to_local(pos)
 	var hl := half_l()
 	var hw := half_w()
+	if oval():
+		return _oval_lip(l, hl, hw)
 	var ex := absf(l.x) - hl                    # (past the end's lip: +, inside: -)
 	var ez := absf(l.z) - hw
 	var side := LIP_END_0
@@ -362,6 +509,29 @@ func nearest_lip(pos: Vector3) -> Dictionary:
 	return {"point": to_global(p), "normal": wn.normalized(), "out_m": out_m, "side": side, "along": along}
 
 
+## nearest_lip on the oval: the lip point along the line from the deck's middle (the ellipse's point on that ray), out_m the
+## metres along it (negative inside), the normal the ellipse's outward normal there, the side by which axis the point leans
+## to (an end past |x / hl| >= |z / hw|), along the lip point's other coordinate.
+func _oval_lip(l: Vector3, hl: float, hw: float) -> Dictionary:
+	var r := sqrt((l.x / hl) * (l.x / hl) + (l.z / hw) * (l.z / hw))
+	var p := Vector3(l.x, top(), l.z)
+	var out_m := 0.0
+	if r < 1e-4:
+		p = Vector3(0.0, top(), hw)              # (the very middle: the near long side)
+		out_m = -hw
+	else:
+		p = Vector3(l.x / r, top(), l.z / r)
+		out_m = (r - 1.0) * Vector2(p.x, p.z).length()
+	var end := absf(p.x / hl) >= absf(p.z / hw)
+	var side := (LIP_END_1 if p.x > 0.0 else LIP_END_0) if end else (LIP_LONG_POS if p.z > 0.0 else LIP_LONG_NEG)
+	var n := Vector3(p.x / (hl * hl), 0.0, p.z / (hw * hw))
+	n = n.normalized() if n.length_squared() > 1e-9 else Vector3(0.0, 0.0, 1.0)
+	var along := p.z if end else p.x
+	var wn := global_basis * n
+	wn.y = 0.0
+	return {"point": to_global(p), "normal": wn.normalized(), "out_m": out_m, "side": side, "along": along}
+
+
 ## The lip's height (the deck top, world).
 func lip_y() -> float:
 	return deck_y()
@@ -387,10 +557,7 @@ func wall_place_ok(pos: Vector3) -> Vector3:
 	if not stock():
 		return pos
 	var c := num("wall_lip_clear_m", 3.5)
-	var l := to_local(pos)
-	l.x = clampf(l.x, -maxf(half_l() - c, 0.0), maxf(half_l() - c, 0.0))
-	l.z = clampf(l.z, -maxf(half_w() - c, 0.0), maxf(half_w() - c, 0.0))
-	return to_global(l)
+	return to_global(clamp_inside(to_local(pos), c))
 
 
 func rect_for(side: int, min_zone: int, max_zone: int) -> AABB:
@@ -576,8 +743,8 @@ func _materials() -> void:
 
 
 func _commit(parent: Node3D, kit: StructureMeshKit, nm: String) -> MeshInstance3D:
-	if not visuals or kit.is_empty():
-		return null
+	if not visuals or use_mesh or kit.is_empty():
+		return null                              # (an arena mesh in use: its scene draws the deck, the tank and the surround)
 	var mi := MeshInstance3D.new()
 	mi.name = nm
 	mi.mesh = kit.commit(mats)
@@ -701,10 +868,14 @@ func _deck() -> void:
 		b.set_meta(&"form_matter", matter)
 		b.set_meta(&"surface", "wood" if wood else String(data().get("deck_surface", "stone")))
 		var cs := CollisionShape3D.new()
-		var box := BoxShape3D.new()
-		box.size = Vector3(x1 - x0, y - floor_y, hw * 2.0)
-		cs.shape = box
-		cs.position = Vector3((x0 + x1) * 0.5, (y + floor_y) * 0.5, 0.0)
+		if oval():
+			# (the zone's slice of the ellipse, a convex prism from the slab's foot to its top)
+			cs.shape = _slice_shape(x0, x1, floor_y, y)
+		else:
+			var box := BoxShape3D.new()
+			box.size = Vector3(x1 - x0, y - floor_y, hw * 2.0)
+			cs.shape = box
+			cs.position = Vector3((x0 + x1) * 0.5, (y + floor_y) * 0.5, 0.0)
 		b.add_child(cs)
 		root.add_child(b)
 		decks.append(b)
@@ -745,6 +916,23 @@ func _deck() -> void:
 		_commit(root, kit, "DeckMesh")
 
 
+## The slice of the oval deck between local x0 and x1 as a convex shape (local; the ellipse's arc sampled, top and bottom).
+func _slice_shape(x0: float, x1: float, y0: float, y1: float) -> ConvexPolygonShape3D:
+	var hl := half_l()
+	var hw := half_w()
+	var pts := PackedVector3Array()
+	var n := 10
+	for i in n + 1:
+		var x := clampf(lerpf(x0, x1, float(i) / float(n)), -hl, hl)
+		var z := hw * sqrt(maxf(1.0 - (x / hl) * (x / hl), 0.0))
+		for zz: float in [-z, z]:
+			pts.append(Vector3(x, y0, zz))
+			pts.append(Vector3(x, y1, zz))
+	var s := ConvexPolygonShape3D.new()
+	s.points = pts
+	return s
+
+
 ## The stock overlay's deck under its laying (spec §5.1): a stone face (masonry, grabbable: the deck parts' own boxes reach
 ## face_depth_m down), piers to the tank's floor (colliders: nothing passes under the slab), the pale coping along the four
 ## lips (drawn only: 4 cm proud with a rounded nose, its collider the deck's own, flush) and the lanterns' piers just outside
@@ -769,6 +957,8 @@ func _stock_deck(root: Node3D, kit: StructureMeshKit, face_bottom: float) -> voi
 	for zs: float in [-(hw - inset), 0.0, hw - inset]:
 		for i in nx:
 			var x := -hl + inset + float(i) * (2.0 * (hl - inset)) / float(maxi(nx - 1, 1))
+			if not inside_deck(x, zs, 0.6):
+				continue                         # (oval: no pier past the lip)
 			boxes.append(AABB(Vector3(x - pw * 0.5, floor_y, zs - pw * 0.5), Vector3(pw, face_bottom - floor_y, pw)))
 	for a in boxes:
 		_box_shape(piers, a)
@@ -822,6 +1012,12 @@ func lantern_spots() -> Array[Vector3]:
 	var o := float(block("lanterns").get("out_m", 0.45))
 	var hl := half_l()
 	var hw := half_w()
+	if oval():
+		# (round the ellipse, just outside the lip: twelve, none on the very ends or sides' middles)
+		for i in 12:
+			var t := TAU * (float(i) + 0.5) / 12.0
+			out.append(to_global(Vector3((hl + o) * cos(t), top(), (hw + o) * sin(t))))
+		return out
 	for p: Vector2 in [Vector2(-hl - o, -hw - o), Vector2(hl + o, -hw - o), Vector2(hl + o, hw + o), Vector2(-hl - o, hw + o),
 			Vector2(-hl - o, 0.0), Vector2(hl + o, 0.0), Vector2(0.0, -hw - o), Vector2(0.0, hw + o)]:
 		out.append(to_global(Vector3(p.x, top(), p.y)))

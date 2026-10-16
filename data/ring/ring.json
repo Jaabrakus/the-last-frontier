@@ -162,5 +162,33 @@
 			"lip_sound": {"near_m": 4.0, "loud_db": -4.0, "quiet_db": -34.0, "stream": "res://audio/sfx/ambience/river_flow_loop_01.wav"},
 			"curtain_sound": {"db": -16.0, "stream": "res://audio/sfx/ambience/river_rapids_loop_01.wav"}
 		}
+	},
+	"arenas": {
+		"_about": "The arenas (the owner, 2026-10-16: 'build a new and better arena with a headless blender ... like earth not the wood ... closer to the water maybe a oval shape'; his pick: 'ruin and crater'). The match setup's Arena choice (MatchSetup.arena; RingArena.set_arena): an arena's numbers go over the rule set's and the format's, like modes.stock. classic: today's stone deck in its deep tank, built by RingArena itself. The others are built in Blender by tools/environment/arena/arena_build.py (our own procedural materials baked to textures, nothing third party) and loaded as a mesh (`mesh`, with %s the deck's size: 14x34, 12x28); RingArena keeps every collider and rule and skips its own kit visuals. shape oval: the deck's lip is the ellipse of deck_l x deck_w (on_deck, is_out, nearest_lip, wall_place_ok, the bots' clamps all read it); the zones still run along X. water_y: the deck 2 m over the water ('closer to the water'), out_drop_m with it: a body that far under the deck's top is in the water and out. dressing: the parts of RingDressing kept (the stands' awnings and piers, the gatehouses, the deck's brass trim and caustics are the classic deck's; the lanterns are the arena's own when it has braziers).",
+		"classic": {"label": "Classic", "line": "the stone deck in its deep tank, as before"},
+		"ruin": {
+			"label": "Ruin",
+			"line": "an oval of earth and stone on a plateau ruin over a lake",
+			"mesh": "res://assets/arena/ruin/arena_%s.gltf",
+			"shape": "oval",
+			"water_y": -2.0,
+			"floor_y": -5.0,
+			"face_depth_m": 1.9,
+			"out_drop_m": 2.0,
+			"water": {"flow": [0.8, 0.35], "flow_speed": 0.1, "deep_color": [0.02, 0.09, 0.08], "shallow_tint": [0.5, 0.78, 0.7], "absorb": 0.6, "ripple_strength": 0.25, "water_roughness": 0.1, "grid_m": 2.0, "splash_n": 46, "splash_mps": 6.5},
+			"dressing": {"stands": false, "gates": false, "plinth": false, "caustics": false, "lanterns": true}
+		},
+		"crater": {
+			"label": "Crater",
+			"line": "an oval of basalt and ash on a crater rim, braziers lit, the lake of fire below",
+			"mesh": "res://assets/arena/crater/arena_%s.gltf",
+			"shape": "oval",
+			"water_y": -2.0,
+			"floor_y": -5.0,
+			"face_depth_m": 1.9,
+			"out_drop_m": 2.0,
+			"water": {"flow": [0.8, 0.35], "flow_speed": 0.08, "deep_color": [0.06, 0.02, 0.015], "shallow_tint": [0.55, 0.22, 0.1], "absorb": 0.7, "ripple_strength": 0.25, "water_roughness": 0.08, "grid_m": 2.0, "splash_n": 46, "splash_mps": 6.5},
+			"dressing": {"stands": false, "gates": false, "plinth": false, "caustics": false, "lanterns": false}
+		}
 	}
 }

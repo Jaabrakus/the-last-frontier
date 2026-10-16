@@ -42,6 +42,17 @@ files extracted from the Zelda disc (`artifacts/world_reference`, `tools/referen
 Ring-outs stay "into the water", so every arena keeps water below: a plateau ruin over a lake (earth), a river ford
 (water), a crater rim over a crater lake (fire), a cliff-top over the sea (air).
 
+## Built 2026-10-16: the Ruin and Crater arenas
+
+The owner: "we can build a new and better arena with a headless blender", "like earth not the wood", "closer to the water
+maybe a oval shape"; from a look board of four he picked **ruin and crater**. `tools/environment/arena/` (README there)
+builds them in Blender from `ring.json`'s numbers with our own procedural materials baked to textures, and exports a glTF
+per deck size (`assets/arena/<look>/`). `ring.json arenas` lays each over the rule set's numbers (an oval deck 2 m over
+the water, the dressing's stands and gates left to the mesh); the match setup's ARENA chips and the Esc menu's Arena row
+pick one (Classic stays). The oval's lip is the ellipse everywhere the rules and the bots read it
+(`tests/ring/test_arena_shape.gd`). The 2v2 and 4v4 decks (and their Ruins layout pieces) are not built in Blender yet:
+those formats play the classic deck until they are.
+
 ## Built (team modes)
 
 - `MatchSetup` formats 1v1, 2v2, 4v4 (`team_size`, `lineup`): your side's other fighters and the other side beyond the chosen

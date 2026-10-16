@@ -185,8 +185,9 @@ func set_mood(name: String) -> void:
 	(mats[&"void"] as StandardMaterial3D).albedo_color = m["tunnel"]
 	_flame_mat.set_shader_parameter(&"intensity", float(m.flame))
 	_halo_mat.set_shader_parameter(&"strength", float(m.halo))
-	_caustic_mat.set_shader_parameter(&"strength", float(m.caustic))
-	_caustic_mat.set_shader_parameter(&"tint", m.caustic_tint)
+	if _caustic_mat != null:                      # (none with an oval arena: its water's light is the mesh's own)
+		_caustic_mat.set_shader_parameter(&"strength", float(m.caustic))
+		_caustic_mat.set_shader_parameter(&"tint", m.caustic_tint)
 	if crowd != null:
 		crowd.set_cheer(float(m.cheer), true)
 		crowd.set_light(mood)
@@ -345,14 +346,19 @@ func _build() -> void:
 		xs.append(-ox + float(k) * 2.0 * ox / float(BAYS))
 	_materials()
 	var kit := StructureMeshKit.new()
-	for sz: float in [-1.0, 1.0]:
-		_stand(kit, sz)
-	for sg: float in [-1.0, 1.0]:
-		_gate(kit, sg)
-	_plinth(kit)
+	# (an arena built in Blender brings its own stands, gates, deck trim and, with braziers, its own lights: ring.json
+	# arenas.<a>.dressing says what of this is kept; classic keeps all)
+	if RingArena.dressing_on("stands"):
+		for sz: float in [-1.0, 1.0]:
+			_stand(kit, sz)
+	if RingArena.dressing_on("gates"):
+		for sg: float in [-1.0, 1.0]:
+			_gate(kit, sg)
+	if RingArena.dressing_on("plinth"):
+		_plinth(kit)
 	_braziers(kit)
 	_posts(kit)
-	if RingArena.stock():
+	if RingArena.stock() and RingArena.dressing_on("lanterns"):
 		_lanterns(kit)
 	board = RingBoard.new()
 	board.build(self, kit, Vector3(0.0, y0, -(back + 0.2 + 2.35)), 1.0)
@@ -1109,8 +1115,8 @@ func _lanterns(kit: StructureMeshKit) -> void:
 	for wp in ring.lantern_spots():
 		# (round 4: the deck's corners only; the mid-side and mid-end ones go)
 		var rl := ring.to_local(wp)
-		if absf(rl.x) < ring.half_l() or absf(rl.z) < ring.half_w():
-			continue
+		if not RingArena.oval() and (absf(rl.x) < ring.half_l() or absf(rl.z) < ring.half_w()):
+			continue                             # (the oval's twelve stand round its lip, every one)
 		var p := to_local(wp)
 		p.y = y0 - 0.06
 		prism(kit, &"paint", p, 0.075, 0.06, h, 8, timber)
@@ -1144,7 +1150,8 @@ func _water(t: Vector2) -> void:
 	var w := ring.water
 	if w == null:
 		return
-	if w.material != null:
+	if w.material != null and not RingArena.arena_def().has("water"):
+		# (an arena with its own water colours keeps them: the crater's lake of fire, the ruin's green lake)
 		w.material.set_shader_parameter(&"deep_color", Color(0.035, 0.07, 0.1))
 		w.material.set_shader_parameter(&"shallow_tint", Color(0.55, 0.67, 0.74))
 		w.material.set_shader_parameter(&"absorb", 0.95)
@@ -1152,6 +1159,8 @@ func _water(t: Vector2) -> void:
 	var wy := RingArena.num("water_y", -1.4)
 	var fh := ring.foot_half()
 	var stock := RingArena.stock()
+	if not RingArena.dressing_on("caustics"):
+		return                                   # (an oval deck: the foam and the water's light are laid for the rectangle)
 	# foam: bands on the water along the tank's walls (inward) and round the plinth's foot (outward); stock: the curtain's
 	# white water at its foot, wider
 	var st := SurfaceTool.new()

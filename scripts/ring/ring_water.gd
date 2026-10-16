@@ -321,8 +321,8 @@ func _stock_tank() -> void:
 		cs.shape = box
 		cs.position = a.get_center()
 		body.add_child(cs)
-	if not visuals:
-		return
+	if not visuals or arena.use_mesh:
+		return                                   # (an arena mesh draws its own tank and rim)
 	var looks: Dictionary = RingArena.data().get("looks", {})
 	var tint := RingArena._tint((looks.get("tank", {}) as Dictionary).get("tint"), Color(0.5, 0.52, 0.5))
 	var cd := RingArena.block("curtain")
@@ -580,7 +580,11 @@ func _surface() -> void:
 			var z1 := minf(z0 + g, t.y)
 			var cx := (x0 + x1) * 0.5
 			var cz := (z0 + z1) * 0.5
-			if absf(cx) < d.x and absf(cz) < d.y:
+			if arena != null and RingArena.oval():
+				# (the oval deck: a cell is left out only when all of it lies under the deck; the rest of the water is whole)
+				if arena.inside_deck(x0, z0, 0.3) and arena.inside_deck(x1, z0, 0.3) and arena.inside_deck(x1, z1, 0.3) and arena.inside_deck(x0, z1, 0.3):
+					continue
+			elif absf(cx) < d.x and absf(cz) < d.y:
 				continue
 			pts.append_array([Vector3(x0, level_y, z0), Vector3(x1, level_y, z0), Vector3(x1, level_y, z1), Vector3(x0, level_y, z1)])
 	surface = MeshInstance3D.new()

@@ -454,10 +454,8 @@ func edge_along(pos: Vector3, dir: Vector3) -> float:
 		return INF
 	d = d.normalized()
 	if rule_set in NEW_RING:
-		# (stock, zones: all four sides open, no ropes: the metres to the deck's rectangle along dir)
-		var tx := ((signf(d.x) * ring.half_l() - l.x) / d.x) if absf(d.x) > 1e-4 else INF
-		var tz := ((signf(d.z) * ring.half_w() - l.z) / d.z) if absf(d.z) > 1e-4 else INF
-		return maxf(minf(tx, tz), 0.0)
+		# (stock, zones: all four sides open, no ropes: the metres to the deck's lip along dir, its rectangle or its oval)
+		return ring.edge_along_local(l, d)
 	if absf(d.x) < 1e-4:
 		return INF
 	var t := (signf(d.x) * ring.half_l() - l.x) / d.x
@@ -483,6 +481,7 @@ func clamp_for(pos: Vector3, body: Node3D) -> Vector3:
 			var s0 := clampf(ls.x * sg0, forward_limit(body) + 0.2, ring.half_l() - 0.6)
 			ls.x = s0 * sg0
 		ls.z = clampf(ls.z, -ring.half_w() + 0.6, ring.half_w() - 0.6)
+		ls = ring.clamp_inside(ls, 0.6)         # (an oval deck: inside its lip too)
 		# (a team arena's raised pieces: a bot on the deck is sent round them, never into a wall; one up on a perch keeps its
 		# place there)
 		if not ring.pieces().is_empty() and ring.floor_at(body.global_position) < 0.5:
@@ -619,7 +618,7 @@ func _walls(b: Node3D, e: int, dt: float) -> void:
 		moved = step
 		_stop(b, back)
 	elif rule_set != "zones":                # (zones: no edge guard, MOVE's teeter keeps a walker on as in Lives)
-		var edge := ring.half_l() - num("edge_guard_m", 0.35)
+		var edge := ring.edge_x(ring.to_local(b.global_position).z) - num("edge_guard_m", 0.35)
 		if s > edge and not _knocked(b) and ring.on_deck(b.global_position):
 			var over := s - edge
 			var step := minf(over, num("soft_wall_mps", 2.5) * dt)

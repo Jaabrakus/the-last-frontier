@@ -427,12 +427,9 @@ static func keep_on_deck(tree: SceneTree, p: Vector3, inset: float) -> Vector3:
 	if ar == null:
 		return p
 	var l := ar.to_local(p)
-	var hl := maxf(ar.half_l() - inset, 0.0)
-	var hw := maxf(ar.half_w() - inset, 0.0)
-	if absf(l.x) <= hl and absf(l.z) <= hw and absf(l.y - ar.top()) < 1.0:
+	if ar.inside_deck(l.x, l.z, inset) and absf(l.y - ar.top()) < 1.0:
 		return p
-	l.x = clampf(l.x, -hl, hl)
-	l.z = clampf(l.z, -hw, hw)
+	l = ar.clamp_inside(l, inset)
 	l.y = ar.top()
 	return ar.to_global(l)
 
@@ -445,10 +442,6 @@ static func off_lip(tree: SceneTree, p: Vector3, clear: float) -> Vector3:
 		return p
 	p = ar.wall_place_ok(p)
 	var l := ar.to_local(p)
-	var hl := maxf(ar.half_l() - clear, 0.0)
-	var hw := maxf(ar.half_w() - clear, 0.0)
-	if absf(l.x) <= hl and absf(l.z) <= hw:
+	if ar.inside_deck(l.x, l.z, clear):
 		return p
-	l.x = clampf(l.x, -hl, hl)
-	l.z = clampf(l.z, -hw, hw)
-	return ar.to_global(l)
+	return ar.to_global(ar.clamp_inside(l, clear))
