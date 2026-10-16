@@ -394,10 +394,13 @@ static func bolts(c: Variant, a: Dictionary, spec: Dictionary) -> void:
 			var from: Vector3 = a2.from
 			if low:
 				from = Vector3(from.x, p.global_position.y + 0.45, from.z)
+			var bolt: BendBolt = null
 			if every > 0.0 and i > 0:
-				NetSpells.with(nctx, func() -> void: BendBolt.launch(p, from, dir, spec))
+				NetSpells.with(nctx, func() -> void: bolt = BendBolt.launch(p, from, dir, spec))
 			else:
-				BendBolt.launch(p, from, dir, spec)
+				bolt = BendBolt.launch(p, from, dir, spec)
+			if bolt != null and a2.target is Node3D:
+				bolt.steer_target = a2.target        # (Flowing bends a helped bolt toward the fighter the help took)
 		if every > 0.0 and i > 0:
 			p.get_tree().create_timer(every * i, false).timeout.connect(fire)
 		else:
@@ -426,7 +429,7 @@ static func floor_wave(c: Variant, _a: Dictionary, spec: Dictionary) -> BendBolt
 
 
 ## Air's Gust and Pull (spec do "wind_wave"; §3.4): a visible wave of wind width_m wide (2 m) going out along the aim at
-## mps (18 m/s), range_m; never locked on a man (the aim's own line, no aim help) and never at once. `pull`: whom it meets
+## mps (18 m/s), range_m; the aim's help takes a fighter in the ring's circle (since 2026-10-16: led at its speed) else the crosshair's own line, and never at once. `pull`: whom it meets
 ## is knocked toward the caster. The bolt (kind air).
 static func wind_wave(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	var bc := BendCaster.wrap(c)
@@ -440,6 +443,10 @@ static func wind_wave(c: Variant, a: Dictionary, spec: Dictionary) -> BendBolt:
 	s["mps"] = float(spec.get("mps", 18.0))
 	s["range_m"] = float(spec.get("range_m", 14.0))
 	var point: Vector3 = bc.flight_point()
+	if a.target is Node3D and a.point is Vector3 and (a.point as Vector3).is_finite():
+		# (the aim's help, 2026-10-16, the owner: "the aim assist isnt good with ... air": the Gust takes the fighter the help took,
+		# led at its own speed, as the Slice and the Ball do; with none in the ring's circle, the crosshair's own line as ever)
+		point = a.point
 	var from: Vector3 = a.from
 	var dir: Vector3 = (point - from).normalized() if point.is_finite() and point.distance_to(from) > 0.5 else (a.dir as Vector3)
 	var b := BendBolt.launch(p, from, dir, s)

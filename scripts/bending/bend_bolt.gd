@@ -152,6 +152,10 @@ var steer_dps := 0.0
 var steer_max_deg := 0.0
 var steer_s := 0.0
 var _steered := 0.0
+## The fighter the cast's aim help took (BendEffects.aim's target): Flowing then bends the bolt toward him, led as the cast
+## led him, not toward the raw crosshair (the owner, 2026-10-16: "the aim assist isnt good with water": the steer pulled a helped
+## shot back to the crosshair and undid its lead). null: no help took one, the crosshair's place as ever.
+var steer_target: Node3D = null
 var age := 0.0
 ## A Turn's swing: the guard it swings round, for how long, its radius, the factor it leaves with; 0..1 of it done.
 var _swing_by: Node3D
@@ -711,6 +715,11 @@ func _steer(dt: float) -> void:
 	if bc == null or not bc.valid():
 		return
 	var aim: Vector3 = bc.flight_point([], Vector3.INF)
+	if steer_target != null and is_instance_valid(steer_target) and steer_target.is_inside_tree() and NpcSenses.can_fight(steer_target):
+		# (a helped cast keeps homing on the fighter the help took: his chest, led by his run over the bolt's flight)
+		var at := NpcSenses.chest_of(steer_target)
+		var vt := NpcSenses.velocity_of(steer_target)
+		aim = at + Vector3(vt.x, 0.0, vt.z) * at.distance_to(global_position) / maxf(velocity.length(), 1.0)
 	if not aim.is_finite():
 		return
 	var want := aim - global_position
