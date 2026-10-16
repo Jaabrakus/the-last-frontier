@@ -118,9 +118,10 @@ def all_clips(clips):
 
 
 def game_name(style, key):
+    st = style.replace("_", "-")     # (a two-word style, muay_thai: own-style-muay-thai-..., as BendPoses._style_library_of looks it up)
     if key.endswith("_l"):
-        return "own-style-%s-%s-l" % (style, key[:-2].replace("_", "-"))
-    return "own-style-%s-%s" % (style, key.replace("_", "-"))
+        return "own-style-%s-%s-l" % (st, key[:-2].replace("_", "-"))
+    return "own-style-%s-%s" % (st, key.replace("_", "-"))
 
 
 def main(style, element, clips, generator=None):

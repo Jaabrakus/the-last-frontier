@@ -165,7 +165,7 @@ func _run() -> void:
 			"Skate's Wet Trail is live: the Skate's puddles are made for its wearer alone (2026-10-11, BendEffects._wet_trail) (%s)" % BendLoadout.why_not("water.skate.wet_trail"))
 	_expect("earth.spike.steady_point" in live and BendLoadout.why_not("earth.spike.steady_point") == "",
 			"Earth's Steady Point is live (2026-10-11: its release and sputter read per wearer, its own Spike lock)")
-	_expect(BendLoadout.live_styles() == ["boxing"], "the live styles are Boxing only (%s)" % [BendLoadout.live_styles()])
+	_expect(BendLoadout.live_styles() == ["boxing", "taekwondo", "muay_thai"], "the live styles are Boxing, Taekwondo and Muay Thai (%s)" % [BendLoadout.live_styles()])
 	_expect(not BendPoses._libs.has(BOXING_LIB), "the Boxing library is not loaded before a style clip is asked for")
 
 	# ---------------------------------------------------------------- the switches
@@ -410,8 +410,8 @@ func _run() -> void:
 	# ---------------------------------------------------------------- the styles
 	_expect(BendLoadout.style_ok("boxing", "fire") and not BendLoadout.style_ok("boxing", "earth") and not BendLoadout.style_ok("boxing", ""),
 			"Boxing plays for fire only")
-	BendLoadout.config_override = {"styles_live": ["boxing", "capoeira", "muay_thai", "hung_gar", "northern_shaolin"], "nodes": all_on}
-	_expect(not BendLoadout.style_ok("capoeira", "air") and not BendLoadout.style_ok("muay_thai", "fire") and not BendLoadout.style_ok("hung_gar", "earth")
+	BendLoadout.config_override = {"styles_live": ["boxing", "capoeira", "kickboxing", "hung_gar", "northern_shaolin"], "nodes": all_on}
+	_expect(not BendLoadout.style_ok("capoeira", "air") and not BendLoadout.style_ok("kickboxing", "fire") and not BendLoadout.style_ok("hung_gar", "earth")
 			and not BendLoadout.style_ok("northern_shaolin", "fire") and BendLoadout.live_styles() == ["boxing"],
 			"Capoeira (parked), a style still coming and a canon style never play, even listed as live")
 	var cap := _body()

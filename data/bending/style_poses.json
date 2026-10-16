@@ -1,7 +1,7 @@
 {
   "format": "tidebreak-style-poses",
   "version": 1,
-  "_doc": "Fighting styles' poses (docs/fighting_styles_design.md: each element keeps its moves, a style re-animates how the body performs them). Per style: its element, its clip library (tools/anim_author/install_style.gd), its stance and held-guard loop, and the moves' modes it re-poses (data/bending/poses.json's shape: a clip name, or {clip, alt}); the modes it leaves out keep the element's own. Read by BendPoses per body (2026-10-10, B1 of the Advancement window, docs/tidebreak/loadouts_live.md): a body whose meta fighting_style names a live style (data/bending/loadout_apply.json styles_live, animated in fighting_styles.json; RingMode.restart sets it on the player from the worn loadout, never on a bot) is picked from these entries first, the element's own for any move or mode left out. A style is animation only: every pick is timed as the element's own pose for that move and mode (the same hold_s, strike_s and back_s, the same end and the same root, BendPoses._timed_as), the style's clip shown on that timeline by a warp, so a cast, its hit and the caster's root take exactly the Classic time; the clips' own times (their metas) only say where the style's clip wants to wind up, strike and recover. tools/anim_author/style_play.gd still puts a style over poses.json through BendPoses' test hooks for the owner to play it (its own timings, global). Boxing (fire), 2026-10-09: the left click's Embers alternates the jab and the cross (alt, the combo window) and the string's Pop is the lead hook; key 1's Punch the stepped straight right, its tap twice Lightning the charged straight; key 2's Kick the ground punch and its High Kick the rising uppercut (the owner's choices); key 3's Step one boxer's step (the pose is picked by the mode, not by the direction held); E's Parry the slip and counter jab, E held the guard loop. The overhand Fireball (the grown Punch) and the 1-2 flurry have clips but no pose the keys reach yet: the game plays a pose's grow clip nowhere so far. Capoeira (air) was tried on 2026-10-09 and parked (the owner: \"the animations for the caporia looks whack ... keep it simple for now\"): its clips stay in animations_extra/Frontier_Style_Capoeira.res, mapped nowhere.",
+  "_doc": "Fighting styles' poses (docs/fighting_styles_design.md: each element keeps its moves, a style re-animates how the body performs them). Per style: its element, its clip library (tools/anim_author/install_style.gd), its stance and held-guard loop, and the moves' modes it re-poses (data/bending/poses.json's shape: a clip name, or {clip, alt}); the modes it leaves out keep the element's own. Read by BendPoses per body (2026-10-10, B1 of the Advancement window, docs/tidebreak/loadouts_live.md): a body whose meta fighting_style names a live style (data/bending/loadout_apply.json styles_live, animated in fighting_styles.json; RingMode.restart sets it on the player from the worn loadout, never on a bot) is picked from these entries first, the element's own for any move or mode left out. A style is animation only: every pick is timed as the element's own pose for that move and mode (the same hold_s, strike_s and back_s, the same end and the same root, BendPoses._timed_as), the style's clip shown on that timeline by a warp, so a cast, its hit and the caster's root take exactly the Classic time; the clips' own times (their metas) only say where the style's clip wants to wind up, strike and recover. tools/anim_author/style_play.gd still puts a style over poses.json through BendPoses' test hooks for the owner to play it (its own timings, global). Boxing (fire), 2026-10-09: the left click's Embers alternates the jab and the cross (alt, the combo window) and the string's Pop is the lead hook; key 1's Punch the stepped straight right, its tap twice Lightning the charged straight; key 2's Kick the ground punch and its High Kick the rising uppercut (the owner's choices); key 3's Step one boxer's step (the pose is picked by the mode, not by the direction held); E's Parry the slip and counter jab, E held the guard loop. The overhand Fireball (the grown Punch) and the 1-2 flurry have clips but no pose the keys reach yet: the game plays a pose's grow clip nowhere so far. Capoeira (air) was tried on 2026-10-09 and parked (the owner: \"the animations for the caporia looks whack ... keep it simple for now\"): its clips stay in animations_extra/Frontier_Style_Capoeira.res, mapped nowhere. Taekwondo (air), 2026-10-16: the kicks are the Motifect pack's Taekwondo clips cut and retargeted (tools/anim_author/blender/motifect_clips.py tkd_*, in Frontier_Motifect.res, listed in poses.json \"motifect\" so they are usable), the stance and the lifted-knee guard our own (style_taekwondo.py, Frontier_Style_Taekwondo.res): the left click's Palm a snap kick (clip/alt the two legs) and the string's Pop a jumping front kick; key 1's Slice a side kick; key 2's Gust a spinning heel kick and the Slam in the air an axe kick; E's Wind Guard the lifted knee, E held the knee kept up. The Leap stays the element's own (already the pack's jumping spin kick for every airbender); the Slip, the Wall, the Patch, the air hit, the twists keep air's clips. The Shift movement (the owner, 2026-10-16: \"each one needs its own shift movement as well\"): Taekwondo's Slip is its skip step (own-style-taekwondo-skip; the backstep and sidestep modes and the air dash its back and side skips), one clip a mode as Boxing's steps (the pose is picked by the mode, not by the direction held: a backward Slip shows the forward skip). The Spin stays air's own. Muay Thai (fire), 2026-10-16: the strikes are the Motifect pack's Muay Thai clips (motifect_clips.py mt_*), the stance, the cross and the steps our own (style_muay_thai.py): the left click's jab string a cutting elbow (clip/alt the two elbows) and its Pop the clinch knee (the pack's knee lifted); key 1's Punch the cross and its grown Fireball the same cross; key 2's Kick the body kick, held to grow it the teep at full height, and the High Kick the roundhouse at full height (fire's own Kick is that roundhouse capped to the shin); E's Parry the shin check; Shift the step-and-slide. Lightning, Embers, Fire Wall, Breath and Patch keep fire's clips.",
   "styles": {
     "boxing": {
       "element": "fire",
@@ -56,6 +56,94 @@
           "root": true
         }
       }
+    },
+    "taekwondo": {
+      "element": "air",
+      "library": "res://animations_extra/Frontier_Style_Taekwondo.res",
+      "stance": "own-style-taekwondo-stance",
+      "guard_hold": "own-style-taekwondo-knee-hold",
+      "modes": {
+        "air_palm": {
+          "palm": {
+            "clip": "motifect-tkd-snap-kick",
+            "alt": "motifect-tkd-snap-kick-l"
+          },
+          "pop": {
+            "clip": "motifect-tkd-jump-kick",
+            "alt": "motifect-tkd-jump-kick-l"
+          }
+        },
+        "air_blast": {
+          "slice": {
+            "clip": "motifect-tkd-side-kick",
+            "alt": "motifect-tkd-side-kick-l"
+          }
+        },
+        "air_gust": {
+          "gust": "motifect-tkd-heel-kick",
+          "slam": "motifect-tkd-axe-kick"
+        },
+        "air_shield": {
+          "shield": "own-style-taekwondo-knee-guard"
+        },
+        "evade": {
+          "slip": "own-style-taekwondo-skip",
+          "backstep": "own-style-taekwondo-skip-back",
+          "sidestep": "own-style-taekwondo-skip-side"
+        },
+        "air_jump": {
+          "dash": "own-style-taekwondo-skip"
+        }
+      },
+      "clips": {}
+    },
+    "muay_thai": {
+      "element": "fire",
+      "library": "res://animations_extra/Frontier_Style_Muay_thai.res",
+      "stance": "own-style-muay-thai-stance",
+      "guard_hold": "own-style-muay-thai-stance",
+      "modes": {
+        "fire_jab": {
+          "jab": {
+            "clip": "motifect-mt-elbow",
+            "alt": "motifect-mt-elbow-l"
+          },
+          "pop": "motifect-mt-knee"
+        },
+        "fire_blast": {
+          "punch": {
+            "clip": "own-style-muay-thai-cross",
+            "grow": {
+              "clip": "own-style-muay-thai-cross"
+            }
+          },
+          "fireball": "own-style-muay-thai-cross"
+        },
+        "fire_kick": {
+          "kick": {
+            "clip": "motifect-mt-body-kick",
+            "alt": "motifect-mt-body-kick-l",
+            "grow": {
+              "clip": "motifect-mt-teep",
+              "alt": "motifect-mt-teep-l"
+            }
+          },
+          "high_kick": {
+            "clip": "motifect-mt-round-high",
+            "alt": "motifect-mt-round-high-l"
+          }
+        },
+        "fire_parry": {
+          "parry": "motifect-mt-check"
+        },
+        "footwork": {
+          "step": "own-style-muay-thai-step-in",
+          "ignite_step": "own-style-muay-thai-step-in",
+          "back_flip": "own-style-muay-thai-step-back",
+          "hop": "own-style-muay-thai-step-side"
+        }
+      },
+      "clips": {}
     }
   }
 }

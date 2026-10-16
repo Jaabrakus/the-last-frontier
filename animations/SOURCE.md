@@ -602,6 +602,55 @@ and stay outside the project animation libraries. See
 conversion boundaries and validation.
 Spellbreak licence (2026-10-08): Proletariat licensed all Spellbreak assets for use in Tidebreak, including public release. Written grant: [where you keep it].
 
+## Fighting style clips: Taekwondo for air (`animations_extra/Frontier_Style_Taekwondo.res`)
+
+Recorded 2026-10-16 from the generator code (observations, not an independent audit of the binary library). Air's fighting
+style (docs/fighting_styles_design.md; the owner, 2026-10-16, picked Taekwondo next). Its kicks are NOT in this library: they
+are the Motifect pack's Taekwondo clips, cut and retargeted (`motifect-tkd-*` in `Frontier_Motifect.res`, the Motifect section
+below). This library holds only the standing clips the pack has no motion for (the stance, the knee guard and its hold, the three skip steps of the Shift movement), keyed by hand like Boxing's. No video was
+watched for them: a sparring stance and a lifted-knee guard are plain standing poses, keyed from standard Taekwondo sparring
+mechanics (the kyorugi stance); the acrobatics the Capoeira lesson warned about (2026-10-09) are left to the pack's real motion.
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-taekwondo-stance` | 2026-10-16 | `tools/anim_author/blender/style_taekwondo.py` (`stance`, a loop typed as a function, `stance_at`) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-taekwondo-knee-guard` | 2026-10-16 | `style_taekwondo.py` (`knee_guard`, the Wind Guard) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-taekwondo-knee-hold` | 2026-10-16 | `style_taekwondo.py` (`knee_hold`, the guard held, a loop) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-taekwondo-skip`, `-skip-back`, `-skip-side` | 2026-10-16 | `style_taekwondo.py` (`skip`, `skip_back`, `skip_side`: the Shift movement, air's Slip) | the rig's rest pose; keys typed in `CLIPS` | none |
+
+- `style_taekwondo.py` keys its poses in bend_clips.py's channels and poses and bakes them through `style_kit.py` (the
+  shared kit of the style generators: bend_clips.py's own solver and bake, imported; the closed-fist curl and thumb fold of
+  the Boxing clips, here at grip 0.85 for the stance's loose fists) on the skeleton of `assets/character/actor_b_body.glb`
+  in Blender. It reads no library clip, no `dump_move.gd` / `dump_pose.gd` output, no `rigkit.Native` / `MirrorNative` and
+  nothing from the Motifect pack. Every clip starts and ends on the sparring stance, the stance loop's first frame, keyed
+  from the rig's rest pose. No mirrored twins (the stance leads left, as the pack's kicks do).
+- `tools/anim_author/install_style.gd` installs them as the Boxing clips (the track path prefix from `own-form-release` in
+  `Frontier_Form.res`; no `native_asset_id`, `source_attribution` or `original_name`; an `authored` meta naming the
+  generator; the stance and the hold looping).
+- The game plays them only for a body wearing the Taekwondo style (`data/bending/style_poses.json` "taekwondo";
+  `data/bending/loadout_apply.json` `styles_live`; `BendPoses.stance_pose`, `guard_hold_pose`, `_style_pick`), each cast
+  timed as air's own clip for that move (`_timed_as`: the move's gameplay unchanged); every other airbender plays air's own.
+
+## Fighting style clips: Muay Thai for fire (`animations_extra/Frontier_Style_Muay_thai.res`)
+
+Recorded 2026-10-16 from the generator code (observations, not an independent audit of the binary library). Fire's second
+fighting style (after Boxing). Its strikes are NOT in this library: they are the Motifect pack's Muay Thai clips, cut and
+retargeted (`motifect-mt-*` in `Frontier_Motifect.res`, the Motifect section below). This library holds the standing clips
+the pack has no motion for: the stance, the cross (key 1's Punch) and the three step-and-slide steps of the Shift movement,
+keyed by hand like Boxing's. No video was watched: a guard, a straight punch and a step are plain standing motions, keyed
+from standard Muay Thai mechanics.
+
+| Clip | Added | Generator | Inputs | Visual references watched |
+| --- | --- | --- | --- | --- |
+| `own-style-muay-thai-stance` | 2026-10-16 | `tools/anim_author/blender/style_muay_thai.py` (`stance`, a loop typed as a function, `stance_at`) | the rig's rest pose; keys typed in the generator | none |
+| `own-style-muay-thai-cross` | 2026-10-16 | `style_muay_thai.py` (`cross`, the Punch) | the rig's rest pose; keys typed in `CLIPS` | none |
+| `own-style-muay-thai-step-in`, `-step-back`, `-step-side` | 2026-10-16 | `style_muay_thai.py` (`step_in`, `step_back`, `step_side`: the Shift movement, fire's Step) | the rig's rest pose; keys typed in `CLIPS` | none |
+
+- Made and installed as the Taekwondo clips above (`style_kit.py`, `install_style.gd`), and played only for a body wearing
+  the Muay Thai style (`data/bending/style_poses.json` "muay_thai", `loadout_apply.json` `styles_live`), each cast timed as
+  fire's own clip for that move. `style_kit.game_name` now dashes a two-word style's name (`own-style-muay-thai-...`), as
+  `BendPoses._style_library_of` looks it up.
+
 ## Motifect-derived clips (`animations_extra/Frontier_Motifect.res`)
 
 Recorded 2026-10-12 from the generator code (observations, not an independent audit of the library). These are NOT our own
@@ -621,6 +670,24 @@ as text, when it bakes.
 | `motifect-fire-teep` | 2026-10-12 | `motifect_clips.py` (`fire_teep`) | `muay_thai_teep.bvh` f2-52 | the kicking leg's ankle at most 0.78 m (in over f19-23, out over f31-38): a push kick to the belly |
 | `motifect-fire-teep-l` | 2026-10-12 | the same (`mirror`) | the same, mirrored | as its original, on the left leg |
 | `motifect-air-jump-spin-kick` | 2026-10-12 | `motifect_clips.py` (`air_jump_spin_kick`) | `tkd_jump_spinning_kick.bvh` f34-72 (cut before its landing) | its lift off the deck taken off from its takeoff (f54: the game's jump carries the body); its heading made a whole turn by f72 (the turn short of it spread over f46-72) |
+| `motifect-tkd-snap-kick` | 2026-10-16 | `motifect_clips.py` (`tkd_snap_kick`; Taekwondo's Palm, `data/bending/style_poses.json`) | `tkd_front_kick_high.bvh` f4-34 | none |
+| `motifect-tkd-snap-kick-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-tkd-jump-kick` | 2026-10-16 | `motifect_clips.py` (`tkd_jump_kick`; Taekwondo's Pop) | `tkd_jump_front_kick.bvh` f30-58 (from the push-off to the landing) | held in place (`pin`: the pack's run-up travel taken off every frame, its jump kept) |
+| `motifect-tkd-jump-kick-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | as its original |
+| `motifect-tkd-side-kick` | 2026-10-16 | `motifect_clips.py` (`tkd_side_kick`; Taekwondo's Slice) | `tkd_side_kick.bvh` f8-48 | none |
+| `motifect-tkd-side-kick-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-tkd-heel-kick` | 2026-10-16 | `motifect_clips.py` (`tkd_heel_kick`; Taekwondo's Gust) | `tkd_spinning_heel_kick.bvh` f34-78 (the turn, the kick, the foot set down) | held in place (`pin`: the step-through's travel taken off) |
+| `motifect-tkd-axe-kick` | 2026-10-16 | `motifect_clips.py` (`tkd_axe_kick`; Taekwondo's Slam) | `tkd_axe_kick.bvh` f24-56 | its lift off the deck taken off and held in place from f24 (`air`: the game's jump carries the body) |
+| `motifect-mt-elbow` | 2026-10-16 | `motifect_clips.py` (`mt_elbow`; Muay Thai's jab string, `style_poses.json`) | `muay_thai_elbow_cut.bvh` f2-34 | none |
+| `motifect-mt-elbow-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-mt-knee` | 2026-10-16 | `motifect_clips.py` (`mt_knee`; Muay Thai's Pop) | `muay_thai_knee_clinch.bvh` f18-56 | the left leg swung up about its hip and forward so its ankle is at least 0.52 m over the deck (`lift`, in over f27-31, out over f36-44): the pack's knee barely leaves the deck |
+| `motifect-mt-body-kick` | 2026-10-16 | `motifect_clips.py` (`mt_body_kick`; Muay Thai's Kick) | `muay_thai_body_kick.bvh` f8-52 | none |
+| `motifect-mt-body-kick-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-mt-teep` | 2026-10-16 | `motifect_clips.py` (`mt_teep`; Muay Thai's Kick held) | `muay_thai_teep.bvh` f2-52 | none (fire's own `motifect-fire-teep` is this cut capped to the belly) |
+| `motifect-mt-teep-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-mt-round-high` | 2026-10-16 | `motifect_clips.py` (`mt_round_high`; Muay Thai's High Kick) | `muay_thai_roundhouse.bvh` f56-106 | none (fire's own `motifect-fire-kick-low` is this cut capped to the shin) |
+| `motifect-mt-round-high-l` | 2026-10-16 | the same (`mirror`) | the same, mirrored | none |
+| `motifect-mt-check` | 2026-10-16 | `motifect_clips.py` (`mt_check`; Muay Thai's Parry) | `muay_thai_push_kick_defense.bvh` f0-30 | none |
 
 - The retarget, per frame: the BVH's global joint rotations (its rest is a T-pose, every joint unrotated) carried onto
   Actor_B's bones (`assets/character/actor_b_body.glb`, `rigkit.SK`) through each mapped bone's rest frame (our rest bone's
@@ -635,6 +702,6 @@ as text, when it bakes.
   `authored` meta naming the generator and a `source` meta naming the pack's clip and frames, so the library itself says what
   each clip was made from.
 - The game plays one only as `data/bending/poses.json` lists it by name in `motifect` (`BendPoses.motifect`, `usable`):
-  fire's Kick and its twin, the Kick held long (its `grow`: the teep), the High Kick and its twin, air's Leap. Each is timed as
+  fire's Kick and its twin, the Kick held long (its `grow`: the teep), the High Kick and its twin, air's Leap. The `motifect-tkd-*` and `motifect-mt-*` clips (2026-10-16) are listed there too but played only through `data/bending/style_poses.json` for a body wearing the Taekwondo (air's) or Muay Thai (fire's) style (`BendPoses._style_pick`), never by the element's own poses. Each is timed as
   the move's own clip it replaces (`timed_as`: its hold, strike, back and end exactly the old ones, so the move's gameplay is
   unchanged) and that own clip stands in when the library is missing.

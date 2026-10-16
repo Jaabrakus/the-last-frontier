@@ -13,8 +13,17 @@ mapped ones (the bases, the pelvis, the palms, the heels) keep their rest under 
 by the clip's end, the whole set down so the standing feet stand on the deck. Then each clip's edits, typed below: its span,
 its moments (hold_s the chamber held while the lock fills, strike_s, back_s), a kicking leg brought down (`cap`: the ankle no
 higher than cap m, the leg swung down about the hip, its knee and foot as they were), an airborne part's lift taken off (the
-game's jump carries the body), a spin made whole (its heading back to its start, a full turn more). Mirrored twins from the
-BVH mirrored (left for right) before the retarget.
+game's jump carries the body), a spin made whole (its heading back to its start, a full turn more), a travelling move held in place
+(`pin`: the hips' drift across the deck taken off every frame, its lift kept: a jumping kick cast standing), a knee
+brought up (`lift`: the leg swung up about the hip so its ankle is at least lift m, the clinch knee's). Mirrored twins from
+the BVH mirrored (left for right) before the retarget.
+Taekwondo (air's fighting style, 2026-10-16; data/bending/style_poses.json "taekwondo"): five of the pack's Taekwondo kicks, the
+style's own clips (tkd_*: a snap kick for the Palm and its twin, a jumping front kick for the Pop, a side kick for the Slice, a
+spinning heel kick for the Gust, an axe kick for the Slam); the style's stance and knee guard are our own key-posed clips
+(style_taekwondo.py).
+Muay Thai (fire's fighting style, 2026-10-16; style_poses.json "muay_thai"): the elbow cut for the jab string, the clinch knee
+(its knee lifted) for the string's Pop, the body kick, the full teep and the full-height roundhouse for the Kick, its grow and
+the High Kick, the push-kick check for the Parry; the stance, the cross and the steps are our own (style_muay_thai.py).
     blender -b --factory-startup -P tools/anim_author/blender/motifect_clips.py -- --out /tmp/motifect.json
         [--bvh-dir ~/Downloads/Motifect_martial_arts_v1_0/BVH] [--clips kick_low,...] [--report]
 """
@@ -77,10 +86,53 @@ CLIPS = {
     "air_jump_spin_kick": {"src": "tkd_jump_spinning_kick", "span": [34, 72], "hold": 46, "strike": 54, "back": 66,
                            "meta": {"hand": "both", "mask": "full", "root": False, "legs_always": 1.0},
                            "air": [54, 72], "spin": [46, 72]},
+
+    # ---- Taekwondo (air's style; the clips named by the style, picked through style_poses.json, timed as air's own)
+    # the Palm (the jab string's hits): a lead-leg snap kick to the body, chambered (hold), snapped out (strike), snapped back
+    "tkd_snap_kick": {"src": "tkd_front_kick_high", "span": [4, 34], "hold": 12, "strike": 19, "back": 26,
+                      "meta": {"hand": "foot_l", "mask": "full", "root": "place", "legs_always": 1.0}, "mirror": True},
+    # the Pop (the string's third): a jumping front kick in place (pin: the pack's run-up travel taken off, its jump kept; the
+    # clip ends as the feet land, the game's blend brings the stance back)
+    "tkd_jump_kick": {"src": "tkd_jump_front_kick", "span": [30, 58], "hold": 33, "strike": 48, "back": 54,
+                      "meta": {"hand": "foot_l", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True, "mirror": True},
+    # the Slice (key 1): a side kick, side-on, the blade of the foot leading
+    "tkd_side_kick": {"src": "tkd_side_kick", "span": [8, 48], "hold": 17, "strike": 25, "back": 36,
+                      "meta": {"hand": "foot_r", "mask": "full", "root": "place", "legs_always": 1.0}, "mirror": True},
+    # the Gust (key 2): a spinning heel kick (the turn is the wind-up; pin: the step-through's travel taken off, the pivot stays)
+    "tkd_heel_kick": {"src": "tkd_spinning_heel_kick", "span": [34, 78], "hold": 48, "strike": 60, "back": 68,
+                      "meta": {"hand": "foot_r", "mask": "full", "root": "place", "legs_always": 1.0}, "pin": True},
+    # the Slam (2 in the air): an axe kick, the heel brought down (air: the game's jump carries the body)
+    "tkd_axe_kick": {"src": "tkd_axe_kick", "span": [24, 56], "hold": 30, "strike": 44, "back": 50,
+                     "meta": {"hand": "foot_l", "mask": "full", "root": False, "legs_always": 1.0}, "air": [24, 56]},
+
+    # ---- Muay Thai (fire's style; the clips named by the style, picked through style_poses.json, timed as fire's own)
+    # the jab string's hits: a cutting elbow, the body turned through it (the twin the other elbow)
+    "mt_elbow": {"src": "muay_thai_elbow_cut", "span": [2, 34], "hold": 9, "strike": 15, "back": 22,
+                 "meta": {"hand": "r", "mask": "full", "root": "place"}, "mirror": True},
+    # the string's Pop: the clinch knee, straight up (the pack's knee barely leaves the deck: lift brings the left knee up)
+    "mt_knee": {"src": "muay_thai_knee_clinch", "span": [18, 56], "hold": 27, "strike": 32, "back": 42,
+                "meta": {"hand": "foot_l", "mask": "full", "root": "place", "legs_always": 1.0},
+                "lift": ["l", 0.52, [27, 31], [36, 44]]},
+    # the Kick: the body kick (a roundhouse to the ribs, full height)
+    "mt_body_kick": {"src": "muay_thai_body_kick", "span": [8, 52], "hold": 20, "strike": 30, "back": 40,
+                     "meta": {"hand": "foot_r", "mask": "full", "root": "place", "legs_always": 1.0}, "mirror": True},
+    # the Kick held to grow it: the teep at full height (a push kick to the chest; fire's own is capped to the belly)
+    "mt_teep": {"src": "muay_thai_teep", "span": [2, 52], "hold": 17, "strike": 28, "back": 36,
+                "meta": {"hand": "foot_r", "mask": "full", "root": "place", "legs_always": 1.0}, "mirror": True},
+    # the High Kick: the roundhouse at full height (fire's own Kick is this clip capped to the shin)
+    "mt_round_high": {"src": "muay_thai_roundhouse", "span": [56, 106], "hold": 70, "strike": 76, "back": 88,
+                      "meta": {"hand": "foot_r", "mask": "full", "root": "place", "legs_always": 1.0}, "mirror": True},
+    # the Parry: the shin check (the lead knee raised against a push kick, then set down)
+    "mt_check": {"src": "muay_thai_push_kick_defense", "span": [0, 30], "hold": 7, "strike": 11, "back": 18,
+                 "meta": {"hand": "both", "mask": "full", "root": "place", "legs_always": 1.0}},
 }
 
 NAMES = {"fire_kick_low": "motifect-fire-kick-low", "fire_kick_high": "motifect-fire-kick-high", "fire_teep": "motifect-fire-teep",
-         "air_jump_spin_kick": "motifect-air-jump-spin-kick"}
+         "air_jump_spin_kick": "motifect-air-jump-spin-kick",
+         "tkd_snap_kick": "motifect-tkd-snap-kick", "tkd_jump_kick": "motifect-tkd-jump-kick", "tkd_side_kick": "motifect-tkd-side-kick",
+         "tkd_heel_kick": "motifect-tkd-heel-kick", "tkd_axe_kick": "motifect-tkd-axe-kick",
+         "mt_elbow": "motifect-mt-elbow", "mt_knee": "motifect-mt-knee", "mt_body_kick": "motifect-mt-body-kick",
+         "mt_teep": "motifect-mt-teep", "mt_round_high": "motifect-mt-round-high", "mt_check": "motifect-mt-check"}
 
 
 # ---------------------------------------------------------------- the BVH (read as text: data only)
@@ -245,18 +297,24 @@ def retarget(frame, frames_rest, scale, hips_ref, fist):
     return rots, root
 
 
-def cap_leg(rots, root, side, cap_y, w):
+def cap_leg(rots, root, side, cap_y, w, lift=False):
     """The `side` leg swung down about its hip (its knee and foot as they are) so its ankle is no higher than `cap_y` m, by
-    `w` (0..1)."""
+    `w` (0..1); `lift`: swung up instead, so its ankle is no lower than `cap_y` (a knee brought up)."""
     if w <= 0.0:
         return
     P, G = SK.fk(rots, root)
     hip, ankle = P[side + "_upper_leg"], P[side + "_ankle"]
-    if ankle.y <= cap_y:
+    if (ankle.y >= cap_y) if lift else (ankle.y <= cap_y):
         return
     want_y = ankle.y + (cap_y - ankle.y) * w
     v = ankle - hip
     flat = Vector((v.x, 0.0, v.z))
+    if lift:
+        # (a knee driven up goes forward of the hip, whatever way the foot stood: its flat way turned to the body's forward)
+        fwd = G["root"] @ Vector((0.0, 0.0, 1.0))      # (G: the global rotations, quaternions)
+        fwd = Vector((fwd.x, 0.0, fwd.z))
+        if fwd.length > 1e-4:
+            flat = flat.lerp(fwd.normalized() * max(flat.length, 0.05), w)
     dy = max(min(want_y - hip.y, v.length * 0.999), -v.length * 0.999)
     fl = math.sqrt(max(v.length ** 2 - dy * dy, 0.0))
     v2 = (flat.normalized() if flat.length > 1e-4 else Vector((0, 0, 1))) * fl + Vector((0.0, dy, 0.0))
@@ -317,9 +375,16 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
     drop = lowest(out_rots[0], out_roots[0]) - lowest(dict(bc.REST), bc.ROOT_REST)
     # the drift across the deck taken back by the end (a cast in place: it ends where it began)
     d_end = Vector((out_roots[-1].x - out_roots[0].x, 0.0, out_roots[-1].z - out_roots[0].z))
+    pinned = bool(spec.get("pin", False))
     for i in range(n):
         t = bc.smooth(i / max(n - 1, 1))
-        out_roots[i] = out_roots[i] - Vector((0.0, drop, 0.0)) - d_end * t
+        out_roots[i] = out_roots[i] - Vector((0.0, drop, 0.0)) - (Vector() if pinned else d_end * t)
+    if pinned:
+        # (held in place: the hips' travel across the deck taken off every frame, the lift kept; a planted foot then slides
+        # the little the hips travelled while it stood, which the cuts above keep short)
+        for i in range(n):
+            out_roots[i].x = out_roots[0].x
+            out_roots[i].z = out_roots[0].z
     x0 = Vector((out_roots[0].x - bc.ROOT_REST.x, 0.0, out_roots[0].z - bc.ROOT_REST.z))
     for i in range(n):
         out_roots[i] = out_roots[i] - x0
@@ -330,6 +395,13 @@ def bake_clip(key, spec, bvh_dir, mirror, fist, report):
             side = "l" if side == "r" else "r"
         for i in range(n):
             cap_leg(out_rots[i], out_roots[i], side, cap_y, _win(a + i, c0, c1, c2, c3))
+    if "lift" in spec:
+        # (a knee brought up: the leg swung up about its hip so the ankle is at least lift m over the deck)
+        side, lift_y, (c0, c1), (c2, c3) = spec["lift"]
+        if mirror:
+            side = "l" if side == "r" else "r"
+        for i in range(n):
+            cap_leg(out_rots[i], out_roots[i], side, lift_y, _win(a + i, c0, c1, c2, c3), True)
     if "air" in spec:
         # (airborne from its takeoff: its lift off the deck taken off, the game's jump carries the body; its crouches kept)
         t0, t1 = spec["air"]

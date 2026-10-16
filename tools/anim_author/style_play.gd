@@ -15,6 +15,8 @@ const POSES := "res://data/bending/style_poses.json"
 ## The corner's line of keys, per style.
 const KEYS := {
 	"boxing": "BOXING (fire, test)   Left click: jab, cross (the 3rd of a string: the hook)   1: Punch   1 twice: Lightning   2: Ground punch   2 twice: Uppercut   3: Step   E: Slip (on the beat)",
+	"taekwondo": "TAEKWONDO (air, test)   Left click: snap kick (the 3rd of a string: a jumping kick)   1: Side kick (the Slice)   2: Spinning heel kick (the Gust)   2 in the air: Axe kick (the Slam)   Space twice, click: jumping spin kick (the Leap)   E: Knee guard (held: kept up)",
+	"muay_thai": "MUAY THAI (fire, test)   Left click: elbows (the 3rd of a string: the clinch knee)   1: Cross   1 held: Fireball off the cross   2: Body kick   2 held: Teep   2 twice: High roundhouse   Shift + a direction: step and slide   E: Shin check (on the beat)",
 }
 
 

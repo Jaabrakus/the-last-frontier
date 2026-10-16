@@ -1,228 +1,726 @@
 {
-  "format": "tidebreak-fighting-styles",
-  "version": 1,
-  "_doc": [
-    "The fighting styles of docs/fighting_styles_design.md's rosters, written by hand from its tables (2026-10-09): each element's four (its canon one first) and Jeet Kune Do for every element. A class is element + style (20 classes); the Character Advancement window (scripts/ui/advancement/) shows a style's rail and levers and saves it with each loadout. Read through AdvancementData (styles, style, rail, levers).",
-    "Player text keeps each art's feel and drops real people's names and their quotes (the design doc's Jeet Kune Do line names a person and quotes him: its idea is kept, the words are not). No word from the show is used (tests/ring/test_player_words.gd).",
-    "state: canon (the element's own clips, today's look), animated (its own clips are built: Boxing, data/bending/style_poses.json), parked (clips made, then parked by the owner: Capoeira, 2026-10-09), coming (not made yet). Only canon and animated styles can be picked (data/ui/advancement.json switches.pickable_states).",
-    "levers: two +1 and two -1 of speed, power, reach, width, mobility, defence (the design's six levers; 10% each at the start, the soak retunes; nothing in play reads them yet). A style never changes a move's identity, never slows or hurts anyone's aim.",
-    "rail: the style's traits on the window's right edge, granted with the class (cost 0): stance (with its levers), jab string, signature, guard. chip names the key the trait sits on; move and mode its icon's move (empty: the element's own move on that chip: the jab on LMB, the guard on E). perfect: the small reward a perfect guard gives, when the style has one.",
-    "library: the style's clip library (tools/anim_author/install_style.gd); poses: its key in data/bending/style_poses.json. home_weapons: ids only (weapons are on hold, 2026-10-08)."
+ "format": "tidebreak-fighting-styles",
+ "version": 1,
+ "_doc": [
+  "The fighting styles of docs/fighting_styles_design.md's rosters, written by hand from its tables (2026-10-09): each element's four (its canon one first) and Jeet Kune Do for every element. A class is element + style (20 classes); the Character Advancement window (scripts/ui/advancement/) shows a style's rail and levers and saves it with each loadout. Read through AdvancementData (styles, style, rail, levers).",
+  "Player text keeps each art's feel and drops real people's names and their quotes (the design doc's Jeet Kune Do line names a person and quotes him: its idea is kept, the words are not). No word from the show is used (tests/ring/test_player_words.gd).",
+  "state: canon (the element's own clips, today's look), animated (its own clips are built: Boxing, data/bending/style_poses.json), parked (clips made, then parked by the owner: Capoeira, 2026-10-09), coming (not made yet). Only canon and animated styles can be picked (data/ui/advancement.json switches.pickable_states).",
+  "levers: two +1 and two -1 of speed, power, reach, width, mobility, defence (the design's six levers; 10% each at the start, the soak retunes; nothing in play reads them yet). A style never changes a move's identity, never slows or hurts anyone's aim.",
+  "rail: the style's traits on the window's right edge, granted with the class (cost 0): stance (with its levers), jab string, signature, guard. chip names the key the trait sits on; move and mode its icon's move (empty: the element's own move on that chip: the jab on LMB, the guard on E). perfect: the small reward a perfect guard gives, when the style has one.",
+  "library: the style's clip library (tools/anim_author/install_style.gd); poses: its key in data/bending/style_poses.json. home_weapons: ids only (weapons are on hold, 2026-10-08)."
+ ],
+ "order": {
+  "earth": [
+   "hung_gar",
+   "karate",
+   "sumo",
+   "wrestling"
   ],
-  "order": {
-    "earth": ["hung_gar", "karate", "sumo", "wrestling"],
-    "water": ["tai_chi", "aikido", "judo", "wing_chun"],
-    "fire": ["northern_shaolin", "boxing", "muay_thai", "kickboxing"],
-    "air": ["baguazhang", "capoeira", "taekwondo", "drunken_boxing"],
-    "any": ["jeet_kune_do"]
-  },
-  "styles": {
-    "hung_gar": {
-      "element": "earth", "label": "Hung Gar", "canon": true, "state": "canon",
-      "known": "A low horse stance, tiger and crane hands.",
-      "levers": {"power": 1, "defence": 1, "speed": -1, "mobility": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "A low horse stance, tiger and crane hands."},
-        {"id": "jab", "chip": "LMB", "line": "Tiger-claw flicks; the Pop is a crane strike, straight up."},
-        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Fissure, grown: a double tiger palm driven into the deck, the widest crack and the slowest."},
-        {"id": "guard", "chip": "E", "line": "A two-hand catch from the horse stance."}
-      ],
-      "home_weapons": []
+  "water": [
+   "tai_chi",
+   "aikido",
+   "judo",
+   "wing_chun"
+  ],
+  "fire": [
+   "northern_shaolin",
+   "boxing",
+   "muay_thai",
+   "kickboxing"
+  ],
+  "air": [
+   "baguazhang",
+   "capoeira",
+   "taekwondo",
+   "drunken_boxing"
+  ],
+  "any": [
+   "jeet_kune_do"
+  ]
+ },
+ "styles": {
+  "hung_gar": {
+   "element": "earth",
+   "label": "Hung Gar",
+   "canon": true,
+   "state": "canon",
+   "known": "A low horse stance, tiger and crane hands.",
+   "levers": {
+    "power": 1,
+    "defence": 1,
+    "speed": -1,
+    "mobility": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "A low horse stance, tiger and crane hands."
     },
-    "karate": {
-      "element": "earth", "label": "Karate", "canon": false, "state": "coming",
-      "known": "Deep stances, straight strikes, one decisive blow.",
-      "levers": {"power": 1, "reach": 1, "width": -1, "mobility": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Deep stances, straight strikes, one decisive blow."},
-        {"id": "jab", "chip": "LMB", "line": "Snapping straight punches; the Pop is a reverse punch, flat and far."},
-        {"id": "signature", "chip": "1", "move": "stone_form", "mode": "spike", "line": "Spike: a reverse punch drives it straighter and farther."},
-        {"id": "guard", "chip": "E", "line": "A sharp block and catch.", "perfect": "On a perfect the throw comes back faster."}
-      ],
-      "home_weapons": ["bo", "sai", "tonfa"]
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Tiger-claw flicks; the Pop is a crane strike, straight up."
     },
-    "sumo": {
-      "element": "earth", "label": "Sumo", "canon": false, "state": "coming",
-      "known": "Pushing and thrusting palms that force the foe out of the ring.",
-      "levers": {"power": 1, "width": 1, "reach": -1, "speed": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Pushing and thrusting palms that force the foe out of the ring."},
-        {"id": "jab", "chip": "LMB", "line": "Open-hand thrusts; the Pop shoves level, best toward the open end."},
-        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "push", "line": "Fissure: rapid thrusting palms into the deck, a wide crack built for ring-outs."},
-        {"id": "guard", "chip": "E", "line": "A belly-and-arms catch with the whole body."}
-      ],
-      "home_weapons": []
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "earth_shove",
+     "mode": "push",
+     "line": "Fissure, grown: a double tiger palm driven into the deck, the widest crack and the slowest."
     },
-    "wrestling": {
-      "element": "earth", "label": "Wrestling", "canon": false, "state": "coming",
-      "known": "Takedowns, lifts and slams.",
-      "levers": {"speed": 1, "power": 1, "reach": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Takedowns, lifts and slams."},
-        {"id": "jab", "chip": "LMB", "line": "Quick shots in close; the Pop is a lift."},
-        {"id": "signature", "chip": "2", "move": "earth_shove", "mode": "column", "line": "Column and Slam: the Column launches higher, the Slam drives down harder."},
-        {"id": "guard", "chip": "E", "line": "A sprawl catch, low to the deck."}
-      ],
-      "home_weapons": []
-    },
-    "tai_chi": {
-      "element": "water", "label": "Tai Chi", "canon": true, "state": "canon",
-      "known": "Slow continuous circles, push hands, yielding.",
-      "levers": {"defence": 1, "width": 1, "speed": -1, "power": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Slow continuous circles, push hands, yielding."},
-        {"id": "jab", "chip": "LMB", "line": "Circling splashes; the Pop rolls them up and over."},
-        {"id": "signature", "chip": "2", "move": "wave", "mode": "push", "line": "Wave: push hands, a wider and slower arc."},
-        {"id": "guard", "chip": "E", "line": "A yielding circle.", "perfect": "A perfect Turn's return keeps curving."}
-      ],
-      "home_weapons": ["straight_sword", "saber"]
-    },
-    "aikido": {
-      "element": "water", "label": "Aikido", "canon": false, "state": "coming",
-      "known": "Turning the attacker's own momentum against him.",
-      "levers": {"defence": 1, "reach": 1, "power": -1, "speed": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Turning the attacker's own momentum against him."},
-        {"id": "jab", "chip": "LMB", "line": "Small entering strikes; the Pop is a turning throw."},
-        {"id": "signature", "chip": "E", "move": "water_redirect", "mode": "redirect", "line": "Turn: a perfect sends the shot back farther."},
-        {"id": "guard", "chip": "E", "line": "A step off the line.", "perfect": "Perfect returns travel 10% farther."}
-      ],
-      "home_weapons": ["jo_staff", "wooden_sword"]
-    },
-    "judo": {
-      "element": "water", "label": "Judo", "canon": false, "state": "coming",
-      "known": "Throws from off-balancing.",
-      "levers": {"power": 1, "defence": 1, "reach": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Throws from off-balancing."},
-        {"id": "jab", "chip": "LMB", "line": "Grips of water; the Pop is a hip-throw angle."},
-        {"id": "signature", "chip": "2", "move": "wave", "mode": "spout", "line": "Geyser: the launch throws sideways at a set angle."},
-        {"id": "guard", "chip": "E", "line": "A grip and turn.", "perfect": "A perfect readies your jab at once."}
-      ],
-      "home_weapons": []
-    },
-    "wing_chun": {
-      "element": "water", "label": "Wing Chun", "canon": false, "state": "coming",
-      "known": "The centreline, chain punches, sticky hands, trapping.",
-      "levers": {"speed": 1, "defence": 1, "reach": -1, "power": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "The centreline, chain punches, sticky hands, trapping."},
-        {"id": "jab", "chip": "LMB", "line": "Chain punches: four small splashes before the Pop."},
-        {"id": "signature", "chip": "LMB", "move": "water_jet", "mode": "splash", "line": "Splash and Lash: rapid centreline chains."},
-        {"id": "guard", "chip": "E", "line": "Sticky hands.", "perfect": "A perfect Turn keeps you in range to string."}
-      ],
-      "home_weapons": ["butterfly_swords", "long_pole"]
-    },
-    "northern_shaolin": {
-      "element": "fire", "label": "Northern Shaolin", "canon": true, "state": "canon",
-      "known": "Long-range kicks and extended strikes.",
-      "levers": {"reach": 1, "power": 1, "defence": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Long-range kicks and extended strikes."},
-        {"id": "jab", "chip": "LMB", "line": "Long punches; the Pop is a flying kick."},
-        {"id": "signature", "chip": "2", "move": "fire_kick", "mode": "high_kick", "line": "High Kick: a long flying kick, the farthest fire arc."},
-        {"id": "guard", "chip": "E", "line": "An extended forearm parry."}
-      ],
-      "home_weapons": ["staff", "spear"]
-    },
-    "boxing": {
-      "element": "fire", "label": "Boxing", "canon": false, "state": "animated",
-      "known": "Jab, cross, hook and uppercut; head movement; footwork.",
-      "levers": {"speed": 1, "mobility": 1, "reach": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Jab, cross, hook and uppercut; head movement; footwork."},
-        {"id": "jab", "chip": "LMB", "line": "A one-two and a hook: the hook is the Pop."},
-        {"id": "signature", "chip": "1", "move": "fire_blast", "mode": "punch", "line": "Punch and Embers: the fastest fire; the Fireball still grows, a little slower."},
-        {"id": "guard", "chip": "E", "line": "A slip.", "perfect": "A perfect Parry readies a counter jab at once."}
-      ],
-      "library": "res://animations_extra/Frontier_Style_Boxing.res",
-      "poses": "boxing",
-      "home_weapons": []
-    },
-    "muay_thai": {
-      "element": "fire", "label": "Muay Thai", "canon": false, "state": "coming",
-      "known": "Fists, elbows, knees and shins; the clinch; the push kick.",
-      "levers": {"power": 1, "defence": 1, "reach": -1, "mobility": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Fists, elbows, knees and shins; the clinch; the push kick."},
-        {"id": "jab", "chip": "LMB", "line": "Elbows in close; the Pop is a clinch knee, straight up."},
-        {"id": "signature", "chip": "2", "move": "fire_kick", "mode": "kick", "line": "Kick: a shin roundhouse arc; grown, it becomes a straight push kick."},
-        {"id": "guard", "chip": "E", "line": "A shin check: the parry from a raised knee."}
-      ],
-      "home_weapons": ["krabi_sword", "krabi_staff"]
-    },
-    "kickboxing": {
-      "element": "fire", "label": "Kickboxing", "canon": false, "state": "coming",
-      "known": "Punch-kick combinations and low kicks.",
-      "levers": {"speed": 1, "reach": 1, "defence": -1, "power": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Punch-kick combinations and low kicks."},
-        {"id": "jab", "chip": "LMB", "line": "Punches that finish in a kick: the Pop is a round kick."},
-        {"id": "signature", "chip": "2", "move": "fire_kick", "mode": "kick", "line": "Kick: punch-kick flurries, a low fire wave along the floor."},
-        {"id": "guard", "chip": "E", "line": "A high guard parry."}
-      ],
-      "home_weapons": []
-    },
-    "baguazhang": {
-      "element": "air", "label": "Baguazhang", "canon": true, "state": "canon",
-      "known": "Circle walking, palm changes, spiralling evasion.",
-      "levers": {"mobility": 1, "width": 1, "power": -1, "reach": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Circle walking, palm changes, spiralling evasion."},
-        {"id": "jab", "chip": "LMB", "line": "Spiralling palms; the Pop is a turning palm."},
-        {"id": "signature", "chip": "3", "move": "evade", "mode": "slip", "line": "Slip: the dash curves round the foe."},
-        {"id": "guard", "chip": "E", "line": "A turning palm.", "perfect": "A perfect bounce-back carries wind."}
-      ],
-      "home_weapons": ["broadsword"]
-    },
-    "capoeira": {
-      "element": "air", "label": "Capoeira", "canon": false, "state": "parked",
-      "known": "Constant rocking footwork, acrobatics, spinning kicks.",
-      "levers": {"mobility": 1, "power": 1, "speed": -1, "defence": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Constant rocking footwork, acrobatics, spinning kicks."},
-        {"id": "jab", "chip": "LMB", "line": "Swinging kicks; the Pop is a half-moon spin."},
-        {"id": "signature", "chip": "2", "move": "air_gust", "mode": "gust", "line": "Gust: a full spinning crescent of wind."},
-        {"id": "guard", "chip": "E", "line": "A dodge in the rocking sway."}
-      ],
-      "library": "res://animations_extra/Frontier_Style_Capoeira.res",
-      "home_weapons": []
-    },
-    "taekwondo": {
-      "element": "air", "label": "Taekwondo", "canon": false, "state": "coming",
-      "known": "High, spinning and jumping kicks.",
-      "levers": {"reach": 1, "mobility": 1, "defence": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "High, spinning and jumping kicks."},
-        {"id": "jab", "chip": "LMB", "line": "Fast snap kicks; the Pop is a jumping kick."},
-        {"id": "signature", "chip": "3", "move": "air_jump", "mode": "leap", "line": "Leap: the close hit in the air becomes a jumping spin kick with more reach."},
-        {"id": "guard", "chip": "E", "line": "A lifted-knee wind guard."}
-      ],
-      "home_weapons": []
-    },
-    "drunken_boxing": {
-      "element": "air", "label": "Drunken Boxing", "canon": false, "state": "coming",
-      "known": "A drunkard's sway and deceptive feints.",
-      "levers": {"defence": 1, "mobility": 1, "speed": -1, "reach": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "A drunkard's sway and deceptive feints."},
-        {"id": "jab", "chip": "LMB", "line": "Lurching swipes; the Pop is a falling strike."},
-        {"id": "signature", "chip": "3", "move": "evade", "mode": "slip", "line": "Slip: shorter, but you recover faster."},
-        {"id": "guard", "chip": "E", "line": "A stumbling evasion.", "perfect": "A perfect sways you clear."}
-      ],
-      "home_weapons": []
-    },
-    "jeet_kune_do": {
-      "element": "any", "label": "Jeet Kune Do", "canon": false, "state": "coming",
-      "known": "Intercepting: stop-hits, economy of motion, the straight lead, no fixed form.",
-      "levers": {"speed": 1, "defence": 1, "power": -1, "width": -1},
-      "rail": [
-        {"id": "stance", "chip": "passive", "line": "Intercepting: stop-hits, economy of motion, the straight lead, no fixed form."},
-        {"id": "jab", "chip": "LMB", "line": "Straight leads; the Pop is a stop-kick."},
-        {"id": "signature", "chip": "LMB", "line": "The jab intercepts: a jab that lands while he holds a lock sets that lock back by its full cost (the rule every hit already has; it never slows him or his aim)."},
-        {"id": "guard", "chip": "E", "line": "Your element's guard, from a narrower and faster stance."}
-      ],
-      "home_weapons": ["nunchaku", "sticks"]
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A two-hand catch from the horse stance."
     }
+   ],
+   "home_weapons": []
+  },
+  "karate": {
+   "element": "earth",
+   "label": "Karate",
+   "canon": false,
+   "state": "coming",
+   "known": "Deep stances, straight strikes, one decisive blow.",
+   "levers": {
+    "power": 1,
+    "reach": 1,
+    "width": -1,
+    "mobility": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Deep stances, straight strikes, one decisive blow."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Snapping straight punches; the Pop is a reverse punch, flat and far."
+    },
+    {
+     "id": "signature",
+     "chip": "1",
+     "move": "stone_form",
+     "mode": "spike",
+     "line": "Spike: a reverse punch drives it straighter and farther."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A sharp block and catch.",
+     "perfect": "On a perfect the throw comes back faster."
+    }
+   ],
+   "home_weapons": [
+    "bo",
+    "sai",
+    "tonfa"
+   ]
+  },
+  "sumo": {
+   "element": "earth",
+   "label": "Sumo",
+   "canon": false,
+   "state": "coming",
+   "known": "Pushing and thrusting palms that force the foe out of the ring.",
+   "levers": {
+    "power": 1,
+    "width": 1,
+    "reach": -1,
+    "speed": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Pushing and thrusting palms that force the foe out of the ring."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Open-hand thrusts; the Pop shoves level, best toward the open end."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "earth_shove",
+     "mode": "push",
+     "line": "Fissure: rapid thrusting palms into the deck, a wide crack built for ring-outs."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A belly-and-arms catch with the whole body."
+    }
+   ],
+   "home_weapons": []
+  },
+  "wrestling": {
+   "element": "earth",
+   "label": "Wrestling",
+   "canon": false,
+   "state": "coming",
+   "known": "Takedowns, lifts and slams.",
+   "levers": {
+    "speed": 1,
+    "power": 1,
+    "reach": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Takedowns, lifts and slams."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Quick shots in close; the Pop is a lift."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "earth_shove",
+     "mode": "column",
+     "line": "Column and Slam: the Column launches higher, the Slam drives down harder."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A sprawl catch, low to the deck."
+    }
+   ],
+   "home_weapons": []
+  },
+  "tai_chi": {
+   "element": "water",
+   "label": "Tai Chi",
+   "canon": true,
+   "state": "canon",
+   "known": "Slow continuous circles, push hands, yielding.",
+   "levers": {
+    "defence": 1,
+    "width": 1,
+    "speed": -1,
+    "power": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Slow continuous circles, push hands, yielding."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Circling splashes; the Pop rolls them up and over."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "wave",
+     "mode": "push",
+     "line": "Wave: push hands, a wider and slower arc."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A yielding circle.",
+     "perfect": "A perfect Turn's return keeps curving."
+    }
+   ],
+   "home_weapons": [
+    "straight_sword",
+    "saber"
+   ]
+  },
+  "aikido": {
+   "element": "water",
+   "label": "Aikido",
+   "canon": false,
+   "state": "coming",
+   "known": "Turning the attacker's own momentum against him.",
+   "levers": {
+    "defence": 1,
+    "reach": 1,
+    "power": -1,
+    "speed": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Turning the attacker's own momentum against him."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Small entering strikes; the Pop is a turning throw."
+    },
+    {
+     "id": "signature",
+     "chip": "E",
+     "move": "water_redirect",
+     "mode": "redirect",
+     "line": "Turn: a perfect sends the shot back farther."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A step off the line.",
+     "perfect": "Perfect returns travel 10% farther."
+    }
+   ],
+   "home_weapons": [
+    "jo_staff",
+    "wooden_sword"
+   ]
+  },
+  "judo": {
+   "element": "water",
+   "label": "Judo",
+   "canon": false,
+   "state": "coming",
+   "known": "Throws from off-balancing.",
+   "levers": {
+    "power": 1,
+    "defence": 1,
+    "reach": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Throws from off-balancing."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Grips of water; the Pop is a hip-throw angle."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "wave",
+     "mode": "spout",
+     "line": "Geyser: the launch throws sideways at a set angle."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A grip and turn.",
+     "perfect": "A perfect readies your jab at once."
+    }
+   ],
+   "home_weapons": []
+  },
+  "wing_chun": {
+   "element": "water",
+   "label": "Wing Chun",
+   "canon": false,
+   "state": "coming",
+   "known": "The centreline, chain punches, sticky hands, trapping.",
+   "levers": {
+    "speed": 1,
+    "defence": 1,
+    "reach": -1,
+    "power": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "The centreline, chain punches, sticky hands, trapping."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Chain punches: four small splashes before the Pop."
+    },
+    {
+     "id": "signature",
+     "chip": "LMB",
+     "move": "water_jet",
+     "mode": "splash",
+     "line": "Splash and Lash: rapid centreline chains."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "Sticky hands.",
+     "perfect": "A perfect Turn keeps you in range to string."
+    }
+   ],
+   "home_weapons": [
+    "butterfly_swords",
+    "long_pole"
+   ]
+  },
+  "northern_shaolin": {
+   "element": "fire",
+   "label": "Northern Shaolin",
+   "canon": true,
+   "state": "canon",
+   "known": "Long-range kicks and extended strikes.",
+   "levers": {
+    "reach": 1,
+    "power": 1,
+    "defence": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Long-range kicks and extended strikes."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Long punches; the Pop is a flying kick."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "fire_kick",
+     "mode": "high_kick",
+     "line": "High Kick: a long flying kick, the farthest fire arc."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "An extended forearm parry."
+    }
+   ],
+   "home_weapons": [
+    "staff",
+    "spear"
+   ]
+  },
+  "boxing": {
+   "element": "fire",
+   "label": "Boxing",
+   "canon": false,
+   "state": "animated",
+   "known": "Jab, cross, hook and uppercut; head movement; footwork.",
+   "levers": {
+    "speed": 1,
+    "mobility": 1,
+    "reach": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Jab, cross, hook and uppercut; head movement; footwork."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "A one-two and a hook: the hook is the Pop."
+    },
+    {
+     "id": "signature",
+     "chip": "1",
+     "move": "fire_blast",
+     "mode": "punch",
+     "line": "Punch and Embers: the fastest fire; the Fireball still grows, a little slower."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A slip.",
+     "perfect": "A perfect Parry readies a counter jab at once."
+    }
+   ],
+   "library": "res://animations_extra/Frontier_Style_Boxing.res",
+   "poses": "boxing",
+   "home_weapons": []
+  },
+  "muay_thai": {
+   "element": "fire",
+   "label": "Muay Thai",
+   "canon": false,
+   "state": "animated",
+   "known": "Fists, elbows, knees and shins; the clinch; the push kick.",
+   "levers": {
+    "power": 1,
+    "defence": 1,
+    "reach": -1,
+    "mobility": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Fists, elbows, knees and shins; the clinch; the push kick."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Elbows in close; the Pop is a clinch knee, straight up."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "fire_kick",
+     "mode": "kick",
+     "line": "Kick: a shin roundhouse arc; grown, it becomes a straight push kick."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A shin check: the parry from a raised knee."
+    }
+   ],
+   "home_weapons": [
+    "krabi_sword",
+    "krabi_staff"
+   ],
+   "library": "res://animations_extra/Frontier_Style_Muay_thai.res",
+   "poses": "muay_thai"
+  },
+  "kickboxing": {
+   "element": "fire",
+   "label": "Kickboxing",
+   "canon": false,
+   "state": "coming",
+   "known": "Punch-kick combinations and low kicks.",
+   "levers": {
+    "speed": 1,
+    "reach": 1,
+    "defence": -1,
+    "power": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Punch-kick combinations and low kicks."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Punches that finish in a kick: the Pop is a round kick."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "fire_kick",
+     "mode": "kick",
+     "line": "Kick: punch-kick flurries, a low fire wave along the floor."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A high guard parry."
+    }
+   ],
+   "home_weapons": []
+  },
+  "baguazhang": {
+   "element": "air",
+   "label": "Baguazhang",
+   "canon": true,
+   "state": "canon",
+   "known": "Circle walking, palm changes, spiralling evasion.",
+   "levers": {
+    "mobility": 1,
+    "width": 1,
+    "power": -1,
+    "reach": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Circle walking, palm changes, spiralling evasion."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Spiralling palms; the Pop is a turning palm."
+    },
+    {
+     "id": "signature",
+     "chip": "3",
+     "move": "evade",
+     "mode": "slip",
+     "line": "Slip: the dash curves round the foe."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A turning palm.",
+     "perfect": "A perfect bounce-back carries wind."
+    }
+   ],
+   "home_weapons": [
+    "broadsword"
+   ]
+  },
+  "capoeira": {
+   "element": "air",
+   "label": "Capoeira",
+   "canon": false,
+   "state": "parked",
+   "known": "Constant rocking footwork, acrobatics, spinning kicks.",
+   "levers": {
+    "mobility": 1,
+    "power": 1,
+    "speed": -1,
+    "defence": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Constant rocking footwork, acrobatics, spinning kicks."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Swinging kicks; the Pop is a half-moon spin."
+    },
+    {
+     "id": "signature",
+     "chip": "2",
+     "move": "air_gust",
+     "mode": "gust",
+     "line": "Gust: a full spinning crescent of wind."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A dodge in the rocking sway."
+    }
+   ],
+   "library": "res://animations_extra/Frontier_Style_Capoeira.res",
+   "home_weapons": []
+  },
+  "taekwondo": {
+   "element": "air",
+   "label": "Taekwondo",
+   "canon": false,
+   "state": "animated",
+   "known": "High, spinning and jumping kicks.",
+   "levers": {
+    "reach": 1,
+    "mobility": 1,
+    "defence": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "High, spinning and jumping kicks."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Fast snap kicks; the Pop is a jumping kick."
+    },
+    {
+     "id": "signature",
+     "chip": "3",
+     "move": "air_jump",
+     "mode": "leap",
+     "line": "Leap: the close hit in the air becomes a jumping spin kick with more reach."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A lifted-knee wind guard."
+    }
+   ],
+   "home_weapons": [],
+   "library": "res://animations_extra/Frontier_Style_Taekwondo.res",
+   "poses": "taekwondo"
+  },
+  "drunken_boxing": {
+   "element": "air",
+   "label": "Drunken Boxing",
+   "canon": false,
+   "state": "coming",
+   "known": "A drunkard's sway and deceptive feints.",
+   "levers": {
+    "defence": 1,
+    "mobility": 1,
+    "speed": -1,
+    "reach": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "A drunkard's sway and deceptive feints."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Lurching swipes; the Pop is a falling strike."
+    },
+    {
+     "id": "signature",
+     "chip": "3",
+     "move": "evade",
+     "mode": "slip",
+     "line": "Slip: shorter, but you recover faster."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "A stumbling evasion.",
+     "perfect": "A perfect sways you clear."
+    }
+   ],
+   "home_weapons": []
+  },
+  "jeet_kune_do": {
+   "element": "any",
+   "label": "Jeet Kune Do",
+   "canon": false,
+   "state": "coming",
+   "known": "Intercepting: stop-hits, economy of motion, the straight lead, no fixed form.",
+   "levers": {
+    "speed": 1,
+    "defence": 1,
+    "power": -1,
+    "width": -1
+   },
+   "rail": [
+    {
+     "id": "stance",
+     "chip": "passive",
+     "line": "Intercepting: stop-hits, economy of motion, the straight lead, no fixed form."
+    },
+    {
+     "id": "jab",
+     "chip": "LMB",
+     "line": "Straight leads; the Pop is a stop-kick."
+    },
+    {
+     "id": "signature",
+     "chip": "LMB",
+     "line": "The jab intercepts: a jab that lands while he holds a lock sets that lock back by its full cost (the rule every hit already has; it never slows him or his aim)."
+    },
+    {
+     "id": "guard",
+     "chip": "E",
+     "line": "Your element's guard, from a narrower and faster stance."
+    }
+   ],
+   "home_weapons": [
+    "nunchaku",
+    "sticks"
+   ]
   }
+ }
 }
