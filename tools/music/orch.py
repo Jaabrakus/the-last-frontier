@@ -38,7 +38,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import dsp  # noqa: E402
 
 SR = 44100
+## The samples' folder: VSCO=<folder>, else ~/Downloads/VSCO-2-CE, else the copy on the external drive "The one" (moved there
+## 2026-10-16 to free the disk).
 VSCO = os.path.expanduser(os.environ.get("VSCO", "~/Downloads/VSCO-2-CE"))
+if not os.path.isdir(VSCO) and "VSCO" not in os.environ and os.path.isdir("/Volumes/The one/VSCO-2-CE"):
+    VSCO = "/Volumes/The one/VSCO-2-CE"
 ## The tuning (user 2026-10-03: "redo the music in 432 hz"): A4 in Hz. The samples were recorded at A = 440; every pitched
 ## note is played this much lower (432: 31.8 cents); the unpitched percussion stays as recorded. A4=<Hz> overrides.
 A4 = float(os.environ.get("A4", "432"))

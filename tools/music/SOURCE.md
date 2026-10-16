@@ -17,7 +17,8 @@ Universal** (the repository's `LICENSE`). Its readme asks for credit to Versilia
 the homepage, and that the samples themselves not be sold; we ship only the rendered music, not the samples.
 
 The samples (3 GB) are not in this repository. To render, download the repository's files into
-`~/Downloads/VSCO-2-CE` (or anywhere, with `VSCO=<folder>`), then `python3 tools/music/render.py`. Downloaded
+`~/Downloads/VSCO-2-CE` (or anywhere, with `VSCO=<folder>`; since 2026-10-16 the copy lives on the external drive at
+`/Volumes/The one/VSCO-2-CE`, which orch.py finds on its own when the drive is plugged in), then `python3 tools/music/render.py`. Downloaded
 2026-10-03 (3,187 files, sizes checked against the repository's tree). The sampler caches each sample's measured level
 in `<VSCO>/.frontier_zone_levels.json`.
 
