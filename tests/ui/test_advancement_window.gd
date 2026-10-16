@@ -418,8 +418,9 @@ func _picker() -> void:
 	await frames(3)
 	check(w.picker_open(), "Change class opens the picker")
 	var card := w.picker_node().find_child("Card_boxing", true, false)
-	var cap := w.picker_node().find_child("Card_muay_thai", true, false)
-	check(card != null and cap != null, "the picker holds the element's classes (Boxing, Muay Thai)")
+	# (the class still coming: Kickboxing; Muay Thai was the example until it was animated, 2026-10-16)
+	var cap := w.picker_node().find_child("Card_kickboxing", true, false)
+	check(card != null and cap != null, "the picker holds the element's classes (Boxing, Kickboxing)")
 	check((cap.find_child("PickButton", true, false) as Button).disabled, "a class that is only coming cannot be picked")
 	check(not (card.find_child("PickButton", true, false) as Button).disabled, "Boxing, the animated style, can")
 	(card.find_child("PickButton", true, false) as Button).pressed.emit()
@@ -428,11 +429,15 @@ func _picker() -> void:
 	var title := w.find_child("TitleLeft", true, false) as Label
 	check(title.text == "BOXING", "the left title takes the class (%s)" % title.text)
 	check(w.rail().style_id == "boxing", "the rail takes the class's traits")
-	w.pick_class("muay_thai")
+	w.pick_class("kickboxing")
 	check(w.work.style == "boxing", "pick_class refuses a class that is not ready")
 	w.save_button().pressed.emit()
 	check(AdvancementStore.slot("fire", 0).style == "boxing" and not w.is_pending(), "Save writes the class")
 	check(AdvancementStore.style_of("fire") == "boxing" or AdvancementStore.worn_index("fire") != 0, "the class is the worn one's when it is worn")
+	# (the owner, 2026-10-16: Karate saved on Loadout 1 with Classic worn, and the lobby still said Hung Gar: a class saved is the
+	# fighter's class whatever is worn)
+	check(AdvancementStore.style_of("fire") == "boxing", "the class saved plays next, Classic worn or not (%s, worn %d)"
+			% [AdvancementStore.style_of("fire"), AdvancementStore.worn_index("fire")])
 	w.pick_class(AdvancementData.canon_style("fire"))
 	w.undo()
 	check(w.work.style == "boxing" and title.text == "BOXING", "undo returns the class too")

@@ -14,16 +14,21 @@ extends CanvasLayer
 ## What it does: every click is a PENDING change of a copy of the loadout slot (Save glows green, an undo arrow shows);
 ## Save Changes writes the slot and raises a toast for each new twist, technique, new skill and skill set; Reset makes Classic
 ## a pending change; Change class picks the class (element + style); the Loadouts panel wears a slot (a short gold bar, then
-## the toasts). Closing with changes pending asks Save / Discard / Keep editing.
+## the toasts). Closing with changes pending asks Save / Discard / Keep editing. The element chips at the tabs' right (the owner,
+## 2026-10-16: "we need to be able to change it in your class"): the fighter's element changed from here: a press asks the menu
+## that opened the window (element_requested; pending changes ask Save / Discard first), which makes it the character's and the
+## match's and opens the window again for it (one window is built for one element).
 ##
 ##   AdvancementWindow.open(parent, element := "") -> AdvancementWindow     (element "" = the character's, else earth)
 ##   signal closed / signal look_requested   (the "Your look" tab: the menus open the creator when they wire this)
+##   signal element_requested(el)            (the element chips: the menus turn the fighter to it and open the window anew)
 ##   close()
 ## PROCESS_MODE_ALWAYS (it works over a paused game), the mouse is visible while it is open, Esc closes it (a popped choice, a
 ## list, the class picker, the Loadouts panel first) and the Esc is consumed so a RingMenu under it does not also close.
 
 signal closed
 signal look_requested
+signal element_requested(el: String)
 
 const LAYER := 95
 const AUTHORED := Vector2(1600, 900)
@@ -68,6 +73,7 @@ var _class_btn: Button
 var _tab_adv: Button
 var _tab_loadouts: Button
 var _tab_look: Button
+var _el_btns: Dictionary = {}       ## element -> its chip at the tabs' right (the one in play pressed)
 var _slots: AdvancementSlots
 var _picker: AdvancementPicker
 var _prompt: Control
@@ -111,6 +117,10 @@ func _ready() -> void:
 	var w := AdvancementStore.worn_index(element)
 	slot_index = w if w >= 0 else 0
 	saved = AdvancementStore.slot(element, slot_index).with_live_context()
+	if w < 0:
+		# (Classic worn: the window edits Loadout 1, but the class it shows is the one that plays, the element's: the owner,
+		# 2026-10-16, saved Karate on Loadout 1 with Classic worn and the lobby still said Hung Gar)
+		saved.style = AdvancementStore.style_of(element)
 	work = saved.copy()
 	_build()
 	get_viewport().size_changed.connect(_fit)
@@ -697,6 +707,48 @@ func _build_tabs() -> void:
 	_tab_adv.pressed.connect(func() -> void: set_slots_open(false))
 	_tab_loadouts.pressed.connect(func() -> void: set_slots_open(true))
 	_tab_look.pressed.connect(func() -> void: look_requested.emit())
+	# the fighter's element, at the row's right: four chips in the tabs' stone, the one in play pressed and in its colour
+	var fr := _r("frame")
+	var cw := 108.0
+	var x := fr.position.x + fr.size.x - 4.0 * (cw + 6.0) + 6.0
+	var cap := AdvancementTheme.label(AdvancementData.word("element_cap", "ELEMENT"), AdvancementTheme.S_SMALL + 1,
+			AdvancementData.color("text_dim"), "head2", true)
+	cap.name = "ElementCap"
+	cap.add_theme_font_override("font", AdvancementTheme.spaced("head2", 3))
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cap.size = Vector2(140, tr.size.y)
+	cap.position = Vector2(x - 152.0, tr.position.y)
+	_stage.add_child(cap)
+	var eg := ButtonGroup.new()
+	for el: String in AdvancementData.ELEMENTS:
+		var b := AdvancementTheme.button(MatchSetup.label(el), "tab", 22)
+		b.name = "Element_" + el
+		b.toggle_mode = true
+		b.button_group = eg
+		b.position = Vector2(x, tr.position.y)
+		b.size = Vector2(cw, tr.size.y)
+		b.add_theme_color_override("font_pressed_color", AdvancementData.element_color(el).lightened(0.3))
+		b.add_theme_color_override("font_hover_pressed_color", AdvancementData.element_color(el).lightened(0.45))
+		b.pressed.connect(switch_element.bind(el))
+		_hint(b, AdvancementData.word("element_tip", "Your fighter's element: the class, loadouts and trees of this one") if el != element
+				else AdvancementData.word("element_now", "Your element now"))
+		_stage.add_child(b)
+		_el_btns[el] = b
+		x += cw + 6.0
+	(_el_btns[element] as Button).button_pressed = true
+
+
+## The element chips: `el` asked of the menu that opened the window (element_requested: it turns the fighter to it and opens the
+## window anew for it; one window is built for one element), after the Save / Discard question when changes are pending. The
+## chip of the element in play stays pressed meanwhile (Keep editing leaves it so).
+func switch_element(el: String) -> void:
+	if _el_btns.has(element):
+		(_el_btns[element] as Button).set_pressed_no_signal(true)
+	if el == element or not el in AdvancementData.ELEMENTS or busy:
+		return
+	_hide_tip()
+	_guard(func() -> void: element_requested.emit(el))
 
 
 func s_tab_set(key: String, b: Button) -> void:
@@ -1079,6 +1131,11 @@ func save() -> String:
 		_set_status(why, AdvancementData.color("reason"))
 		return why
 	var d := work.diff(saved)
+	if bool(d.style):
+		# (a class saved is the fighter's class from the next match, whatever is worn: Classic's and the worn loadout's,
+		# AdvancementStore.pick_style, as the match setup's STYLE chips; a kept loadout worn keeps its own, Classic's still set)
+		if AdvancementStore.pick_style(element, work.style) != "":
+			AdvancementStore.set_style(element, work.style)
 	var ts: Array = work.toasts(saved)
 	saved.picks = work.picks.duplicate()
 	saved.style = work.style

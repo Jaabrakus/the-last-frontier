@@ -706,7 +706,38 @@ func _open_advancement(from: Control = null) -> void:
 	if not w.closed.is_connected(_after_advancement):
 		w.closed.connect(_after_advancement)
 		w.look_requested.connect(_look_from_window.bind(w))
+		w.element_requested.connect(_turn_class.bind(w))
 		_window_cover(true)
+
+
+## The class window's element chips (the owner, 2026-10-16: "we need to be able to change it in your class"): the fighter's element
+## changed from the window: the character's own and the match's, as the element step's Enter does (AppearanceStore.set_element,
+## MatchSetup.save), the setup's cards or the lobby's figure after it, and the window opened again for that element (one window is
+## built for one element: the open one closes, _after_advancement puts the menu back meanwhile, then it opens anew from the same row).
+func _turn_class(el: String, w: AdvancementWindow) -> void:
+	if not el in Bending.ELEMENTS or not is_instance_valid(w):
+		return
+	AppearanceStore.set_element(el)
+	MatchSetup.element = el
+	MatchSetup.save()
+	var from_name := _adv_from
+	w.close()
+	if is_instance_valid(_keys_box):
+		_choose_element(el)                      # (the match setup behind it: its cards, keys and style row follow)
+	elif _fw != null:
+		_swap_figure(el)                         # (the lobby: its figure in the element's dress)
+	_reopen_class.call_deferred(from_name)
+
+
+func _reopen_class(from_name: StringName) -> void:
+	if not is_inside_tree():
+		return
+	var back: Control = null
+	if _panel_scroll.visible:
+		back = _panel.find_child(String(from_name), true, false) as Control
+	if back == null:
+		back = _items.find_child(String(from_name), true, false) as Control
+	_open_advancement(back)
 
 
 ## The menu behind the advancement window: its screens put away (the window has the whole screen: the lobby's foot or the setup's
@@ -1256,7 +1287,7 @@ func _open_match() -> void:
 	_keys_box = VBoxContainer.new()
 	_keys_box.name = "Keys"
 	(_keys_box as VBoxContainer).add_theme_constant_override("separation", 6)
-	BroadcastUI.put(cards, _keys_box, Rect2(0, 502, 920, 190))
+	BroadcastUI.put(cards, _keys_box, Rect2(0, 502, 920, 300))    # (the style row too, 2026-10-16: the cards group is 700 tall)
 	# the match at the right
 	var mc := BroadcastUI.group(box, Vector2(1, 0), Vector2(-574, 128), Vector2(494, 696))
 	mc.name = "MatchCard"
@@ -1323,6 +1354,22 @@ func _open_match() -> void:
 	var lit := _setting(mc, "Light", y, "LIGHT", _words(MatchSetup.LIGHTS), MatchSetup.LIGHTS.find(MatchSetup.light), 20)
 	lit.picked.connect(func(i: int) -> void:
 		MatchSetup.light = String(MatchSetup.LIGHTS[i])
+		_paint_setup())
+	# the arena beside the light (the owner, 2026-10-16: the Blender-built ovals, Ruin and Crater; a row of its own would push
+	# the card past a 720-high window): its chips at the row's right half, its line with the light's
+	var arenas: Array = RingArena.arena_names()
+	var ar_opts: Array = []
+	for a: String in arenas:
+		ar_opts.append({"text": MatchSetup.arena_label(a), "value": a, "name": "Arena_" + a})
+	var lrow := mc.find_child("LightRow", false, false) as Control
+	var ar_title := BroadcastUI.lab("ARENA", BroadcastUI.head(false, 4, 1), 16, BroadcastUI.FAINT)
+	ar_title.name = "RowTitle2"
+	BroadcastUI.put(lrow, ar_title, Rect2(262, 4, 200, 19))
+	var arn := BroadcastUI.segments(ar_opts, maxi(arenas.find(MatchSetup.arena), 0), 20, 11.0)
+	arn.name = "Arena"
+	BroadcastUI.put(lrow, arn, Rect2(262, 23, 208, 36))
+	arn.picked.connect(func(i: int) -> void:
+		MatchSetup.arena = String(arenas[i])
 		_paint_setup())
 	y += ROW_H
 	# Controls: the buttons, the rules and the other ways to pick moves
@@ -1594,7 +1641,10 @@ func _paint_setup() -> void:
 	(mc.find_child("Games", true, false) as BroadcastUI.Segments).set_chosen(maxi(MatchSetup.GAMES.find(MatchSetup.games()), 0))
 	_say(mc, "GamesRow", MatchSetup.menu_word("games_line_menu"))
 	(mc.find_child("Light", true, false) as BroadcastUI.Segments).set_chosen(maxi(MatchSetup.LIGHTS.find(MatchSetup.light), 0))
-	_say(mc, "LightRow", MatchSetup.light_line(MatchSetup.light))
+	var arn := mc.find_child("Arena", true, false) as BroadcastUI.Segments
+	if arn != null:
+		arn.set_chosen(maxi(RingArena.arena_names().find(MatchSetup.arena), 0))
+	_say(mc, "LightRow", MatchSetup.light_line(MatchSetup.light) + ("  ·  " + MatchSetup.arena_line(MatchSetup.arena) if MatchSetup.arena != "classic" else ""))
 	var sl := _panel.find_child("SportLine", true, false) as Label
 	if sl != null:
 		sl.text = MatchSetup.sport_line()
@@ -1657,6 +1707,13 @@ func _lay_rows(mc: Control, k: float) -> float:
 			sh = maxf(sh, (c as BroadcastUI.Chip).natural_h())
 		seg.position = Vector2(26.0, sy)
 		seg.size = Vector2(444.0, sh)
+		var seg2 := g.find_child("Arena", false, false) as Control if nm == "Light" else null
+		if seg2 != null:
+			# (a second choice sharing the row, the Light row's Arena: its title and chips at the row's right half)
+			var ttl2 := g.find_child("RowTitle2", false, false) as Control
+			if ttl2 != null:
+				ttl2.position = Vector2(262.0, top)
+			seg2.position = Vector2(262.0, sy)
 		var ly := sy + sh + 1.0 + k
 		ln.size = Vector2(446.0, 10.0)
 		var lh := float(ln.get_line_height())
@@ -1784,11 +1841,15 @@ func _link_setup() -> void:
 func _show_keys(el: String) -> void:
 	if not is_instance_valid(_keys_box):
 		return
-	_fill_kit(_keys_box, el if el != "" else MatchSetup.element)
+	var e := el if el != "" else MatchSetup.element
+	_fill_kit(_keys_box, e, true, func() -> void:
+		_lobby_dirty = true                     # (the lobby's class row says the new pick as the setup closes)
+		_show_keys(e))
 
 
-## Element `e`'s style, passive, guard and buttons laid into `box` (the match setup's keys block, the Practice panel's).
-static func _fill_kit(box: Control, e: String, with_style := true) -> void:
+## Element `e`'s style, passive, guard and buttons laid into `box` (the match setup's keys block, the Practice panel's). With the
+## style, its fighting style row too (`on_pick` called after a pick: the caller repaints).
+static func _fill_kit(box: Control, e: String, with_style := true, on_pick := Callable()) -> void:
 	for c in box.get_children():
 		box.remove_child(c)
 		c.queue_free()
@@ -1803,6 +1864,7 @@ static func _fill_kit(box: Control, e: String, with_style := true) -> void:
 		style.add_child(nick)
 		style.add_child(BroadcastUI.label(MatchSetup.style(e), 20, BroadcastUI.WHITE))
 		box.add_child(style)
+		box.add_child(_style_row(e, on_pick))
 	# (the passive: its name on a plate, its line; the guard's own line is the Controls panel's)
 	var ps := KitWords.passive(e)
 	var pl := BroadcastUI.hbox(12)
@@ -1823,6 +1885,54 @@ static func _fill_kit(box: Control, e: String, with_style := true) -> void:
 	for line in KitWords.kit_lines(e, "", true):
 		keys.add_child(_key_chip(String(line), n))
 		n += 1
+
+
+## The fighting style row under the element (the owner, 2026-10-16: "allow the ability to pick the fighting style"): the element's
+## pickable styles as chips (AdvancementData: its own and the animated ones; the picked one lit, AdvancementStore.style_of), a press
+## picks it for this element, for Classic and the worn loadout alike (AdvancementStore.pick_style; what plays from the next match),
+## and `on_pick` repaints. After the chips the picked one's two strengths and two weaknesses ("Power+  Reach+  ·  Width-
+## Mobility-": its levers, live in play, BendLoadout), the advancement window's words for them on its tooltip. One row: the keys
+## under it must stay clear of the foot's hints (the styles still coming are the window's class picker's to list).
+static func _style_row(e: String, on_pick: Callable) -> Control:
+	var row := BroadcastUI.hbox(12)
+	row.name = "StyleRow"
+	var store := _script_of(ADVANCEMENT_STORE)
+	var picked := String(store.call(&"style_of", e)) if store != null else ""
+	var ids: Array = []
+	var opts: Array = []
+	for st: Dictionary in AdvancementData.styles(e):
+		var id := String(st.get("id", ""))
+		if bool(st.get("pickable", false)):
+			ids.append(id)
+			opts.append({"text": String(st.get("label", id)), "value": id, "name": "Style_" + id, "color": BroadcastUI.plate_c(e)})
+	var head := BroadcastUI.caps("STYLE", BroadcastUI.head(false, 4, 1), 16, BroadcastUI.FAINT)
+	head.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(head)
+	var seg := BroadcastUI.segments(opts, maxi(ids.find(picked), 0), 16, 10.0)
+	seg.name = "Styles"
+	row.add_child(seg)
+	var up: Array = []
+	var down: Array = []
+	var long: Array = []
+	for lv: Dictionary in AdvancementData.levers(picked):
+		var plus := int(lv.get("sign", 0)) > 0
+		(up if plus else down).append(String(lv.get("label", "")) + ("+" if plus else "-"))
+		long.append(String(lv.get("line", "")))
+	var levers := BroadcastUI.label("%s  ·  %s" % ["  ".join(PackedStringArray(up)), "  ".join(PackedStringArray(down))], 16, BroadcastUI.DIM)
+	levers.name = "StyleLevers"
+	levers.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	levers.mouse_filter = Control.MOUSE_FILTER_PASS
+	levers.tooltip_text = "\n".join(PackedStringArray(long))
+	row.add_child(levers)
+	seg.picked.connect(func(i: int) -> void:
+		if store == null or i < 0 or i >= ids.size():
+			return
+		var why := String(store.call(&"pick_style", e, String(ids[i])))
+		if why != "":
+			levers.text = why
+		elif on_pick.is_valid():
+			on_pick.call())
+	return row
 
 
 ## One of an element's buttons as a chip: its key on a cap, its role, its move, and what a second tap readies. `line` as KitWords
@@ -2125,7 +2235,7 @@ func _open_element_step(then: Callable) -> void:
 	_keys_box = VBoxContainer.new()
 	_keys_box.name = "Keys"
 	(_keys_box as VBoxContainer).add_theme_constant_override("separation", 6)
-	BroadcastUI.put(cards, _keys_box, Rect2(0, 502, 920, 190))
+	BroadcastUI.put(cards, _keys_box, Rect2(0, 502, 920, 300))    # (the style row too, 2026-10-16: the cards group is 700 tall)
 	# the choice at the right: your fighter, the element picked, and the button
 	var sc := BroadcastUI.group(box, Vector2(1, 0), Vector2(-574, 128), Vector2(494, 488))
 	sc.name = "StepCard"

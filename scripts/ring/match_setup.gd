@@ -103,6 +103,8 @@ static var rounds_to_win := 2
 static var round_s := 180.0
 static var spectate := false
 static var light := "noon"
+## The arena (ring.json arenas: "classic" today's deck, "ruin", "crater" the Blender-built ovals; the owner, 2026-10-16), kept.
+static var arena := "classic"
 static var kind := "match"
 static var dummy := "stand"
 static var format := "1v1"
@@ -231,6 +233,9 @@ static func parse(args: PackedStringArray) -> bool:
 			"light", "mood":
 				if v in LIGHTS:
 					light = v
+			"arena":
+				if v in RingArena.arena_names():
+					arena = v
 			"aim", "aim_help":
 				if v in AIMS:
 					_aim_help = v                # (for the run: not kept)
@@ -285,7 +290,7 @@ static func save() -> void:
 			f = kept
 	GameSettings.set_section(SECTION, {"element": element, "foe": f, "format": format if not quick else String(_kept("format", "1v1")),
 			"difficulty": difficulty, "rounds": rounds_to_win,
-			"light": light, "dummy": dummy, "rules": rules_choice, "games": games_n, "foe_pct": foe_pct, "my_pct": my_pct,
+			"light": light, "arena": arena, "dummy": dummy, "rules": rules_choice, "games": games_n, "foe_pct": foe_pct, "my_pct": my_pct,
 			"steer": steer, "speed": speed, "fresh": fresh, "throw_me": throw_me})
 
 
@@ -313,6 +318,8 @@ static func load() -> void:
 	var l := String(GameSettings.get_value(SECTION, "light"))
 	if l in LIGHTS:
 		light = l
+	var ar := str(_kept("arena", "classic"))
+	arena = ar if ar in RingArena.arena_names() else "classic"
 	_scheme = ""                                 # (read again from the file on its next ask)
 	var dm := str(_kept("dummy", DUMMIES[0]))
 	if dm in DUMMIES or dm in STOCK_DUMMIES:
@@ -1143,6 +1150,15 @@ static func difficulty_line(d: String) -> String:
 ## What a light mood looks like, in a line (the menu's panel).
 static func light_line(l: String) -> String:
 	return String((data().get("lights", {}) as Dictionary).get(l, ""))
+
+
+## The arenas' words (ring.json arenas.<a>.label / line): "Ruin", "an oval of earth and stone ...".
+static func arena_label(a: String) -> String:
+	return String(RingArena.arena_def(a).get("label", a.capitalize()))
+
+
+static func arena_line(a: String) -> String:
+	return String(RingArena.arena_def(a).get("line", ""))
 
 
 ## "best of 3" for 2 round wins.

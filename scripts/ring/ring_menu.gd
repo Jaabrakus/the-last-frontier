@@ -9,6 +9,10 @@ extends CanvasLayer
 ##   Match setup        its rows in the panel at the right (the UI audit, 2026-10-09: sixteen rows in one column ran off the
 ##                      screen; now every row is in view at 1280 x 720), each from the next restart:
 ##     Element: Earth     the player's, in turn (MatchSetup.element)
+##     Style: Karate      the player's fighting style for that element (2026-10-16, the owner: "allow the ability to pick the
+##                        fighting style"): its pickable styles in turn (AdvancementData: its own and the animated ones), the
+##                        pick kept in the Advancement save for Classic and the worn loadout alike (AdvancementStore.pick_style);
+##                        its line the style's two strengths and two weaknesses (its levers, live in play: BendLoadout)
 ##     Opponent: Water    the bot's, in turn, Any among them (MatchSetup.foes)
 ##     Difficulty: normal easy, normal, hard in turn (MatchSetup.difficulty)
 ##     Rules: Lives       round 3: the rule set in turn, "Lives" (the % ring) or "Zones" (never the ids; MatchSetup.rules_choice),
@@ -64,6 +68,8 @@ var _rows_scroll: ScrollContainer
 var _bug: Control
 var _note: Label
 var _elem: Button
+var _style: Button
+var _style_el := ""                  ## the element the Style row's chips were made for (remade as it changes)
 var _foe: Button
 var _diff: Button
 var _scheme: Button
@@ -83,6 +89,7 @@ var _callouts: Button
 var _look: Button
 var _photo: Button
 var _rules: Button
+var _arena: Button
 var _games: Button
 var _practice: Button
 ## The column's rows that open the Match setup and Options panels, and those panels' rows (kept in the right-hand panel,
@@ -248,6 +255,8 @@ func _ready() -> void:
 	_elem = _opt_row(_setup, "Element", "Element", el_opts, cycle_element, func(i: int) -> void:
 		MatchSetup.element = String(els[i])
 		_picked(_elem_text()))
+	_style = _opt_row(_setup, "Style", "Style", _style_opts(), cycle_style, _pick_style)
+	_style_el = MatchSetup.element
 	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
 	var foe_opts: Array = []
 	for e: String in foes:
@@ -267,6 +276,12 @@ func _ready() -> void:
 		MatchSetup.games_n = int(MatchSetup.GAMES[i])
 		MatchSetup.save()
 		_picked(_games_text()))
+	# (the arena, 2026-10-16: today's deck or a Blender-built oval, Ruin and Crater; from the next restart, kept)
+	var arenas: Array = RingArena.arena_names()
+	_arena = _opt_row(_setup, "Arena", "Arena", arenas.map(MatchSetup.arena_label), cycle_arena, func(i: int) -> void:
+		MatchSetup.arena = String(arenas[i])
+		MatchSetup.save()
+		_picked(_arena_text()))
 	_options = _sub_panel("OptionRows", w("options"))
 	_aim = _opt_row(_options, "AimHelp", "Aim help", MatchSetup.AIM_ORDER.map(MatchSetup.aim_name), cycle_aim, func(i: int) -> void:
 		MatchSetup.set_aim_help(String(MatchSetup.AIM_ORDER[i]))
@@ -562,6 +577,61 @@ func cycle_element() -> void:
 	_note.text = w("applies") % _elem_text()
 
 
+## The fighting styles the element in play may pick (AdvancementData: its own and the animated ones), their ids in the window's order.
+func _style_ids() -> Array:
+	var out: Array = []
+	for st: Dictionary in AdvancementData.styles(MatchSetup.element):
+		if bool(st.get("pickable", false)):
+			out.append(String(st.get("id", "")))
+	return out
+
+
+func _style_opts() -> Array:
+	var out: Array = []
+	for id: String in _style_ids():
+		out.append({"text": String(AdvancementData.style(id).get("label", id)), "color": BroadcastUI.plate_c(MatchSetup.element)})
+	return out
+
+
+## The style picked for the element in play (the worn loadout's, else Classic's).
+func _style_now() -> String:
+	return AdvancementStore.style_of(MatchSetup.element)
+
+
+func _style_text() -> String:
+	return w("style") % String(AdvancementData.style(_style_now()).get("label", ""))
+
+
+## The Style row's line: the picked style's two strengths and two weaknesses ("Power+, Reach+  ·  Width-, Mobility-").
+func _style_line() -> String:
+	var up: Array = []
+	var down: Array = []
+	for lv: Dictionary in AdvancementData.levers(_style_now()):
+		var plus := int(lv.get("sign", 0)) > 0
+		(up if plus else down).append(String(lv.get("label", "")) + ("+" if plus else "-"))
+	if up.is_empty() and down.is_empty():
+		return w("style_line")
+	return w("style_line_levers") % [", ".join(PackedStringArray(up)), ", ".join(PackedStringArray(down))]
+
+
+## The player's next fighting style in turn for the element in play (from the next restart).
+func cycle_style() -> void:
+	var ids := _style_ids()
+	if not ids.is_empty():
+		_pick_style((ids.find(_style_now()) + 1) % ids.size())
+
+
+## Style `i` of the element in play picked and kept (AdvancementStore.pick_style: Classic's class and the worn loadout's); a refused
+## pick (a kept loadout's padlock) says why in the note.
+func _pick_style(i: int) -> void:
+	var ids := _style_ids()
+	if i < 0 or i >= ids.size():
+		return
+	var why := AdvancementStore.pick_style(MatchSetup.element, String(ids[i]))
+	_paint()
+	_note.text = why if why != "" else w("applies") % _style_text()
+
+
 ## The bot's next element in turn, Any among them (from the next restart).
 func cycle_opponent() -> void:
 	var list: Array = Bending.ELEMENTS.duplicate()
@@ -577,6 +647,18 @@ func cycle_rules() -> void:
 	MatchSetup.save()
 	_paint()
 	_note.text = w("applies") % _rules_text()
+
+
+## The arena in turn (from the next restart), kept.
+func cycle_arena() -> void:
+	MatchSetup.arena = String(MatchSetup.next_in(RingArena.arena_names(), MatchSetup.arena))
+	MatchSetup.save()
+	_paint()
+	_note.text = w("applies") % _arena_text()
+
+
+func _arena_text() -> String:
+	return w("arena") % MatchSetup.arena_label(MatchSetup.arena)
 
 
 ## Round 3: the games of a match in turn, 1 or best of 3 (from the next restart), kept.
@@ -813,10 +895,16 @@ func _paint() -> void:
 	var els: Array = Bending.ELEMENTS
 	var foes: Array = Bending.ELEMENTS + [MatchSetup.ANY]
 	_opt(_elem, _elem_text(), els.find(MatchSetup.element), KitWords.passive_line(MatchSetup.element))      # (the element's one passive, round 2)
+	if _style_el != MatchSetup.element and _style is BroadcastUI.OptionRow:
+		(_style as BroadcastUI.OptionRow).set_options(_style_opts())      # (the styles are the element's: its chips anew)
+		_style_el = MatchSetup.element
+	_opt(_style, _style_text(), _style_ids().find(_style_now()), _style_line())
 	_opt(_foe, _foe_text(), foes.find(MatchSetup.foe()), w("opponent_line"))
 	_opt(_diff, _diff_text(), MatchSetup.DIFFICULTIES.find(MatchSetup.difficulty), MatchSetup.difficulty_line(MatchSetup.difficulty))
 	_opt(_rules, _rules_text(), MatchSetup.RULE_SETS.find(MatchSetup.rule_set()), _rules_line())
 	_opt(_games, _games_text(), MatchSetup.GAMES.find(MatchSetup.games()), MatchSetup.menu_word("games_line"))
+	var line := MatchSetup.arena_line(MatchSetup.arena)
+	_opt(_arena, _arena_text(), RingArena.arena_names().find(MatchSetup.arena), line if line != "" else w("arena_line"))
 	_set_row(_scheme, KitWords.other_ways_row(), KitWords.other_ways_line())
 	_set_row(_preset, MatchSetup.controls_row(), MatchSetup.controls_row_line())
 	_opt(_aim, MatchSetup.aim_row(), MatchSetup.AIM_ORDER.find(MatchSetup.aim_help()), MatchSetup.aim_row_line())
@@ -931,14 +1019,31 @@ func _settings() -> void:
 ## the main menu's, never over a match).
 func class_talents() -> void:
 	_clear_panel()
-	var el := match_mode.element if match_mode != null else MatchSetup.element
+	# (the element the next restart plays: the Element row's, or the one in play; its class is what the window edits)
+	var el := MatchSetup.element if MatchSetup.element in Bending.ELEMENTS else (match_mode.element if match_mode != null else "earth")
 	var win := AdvancementWindow.open(self, el)
 	if not win.closed.is_connected(_after_window):
 		win.closed.connect(_after_window)
 		win.look_requested.connect(_look_from_window.bind(win))
+		win.element_requested.connect(_turn_class.bind(win))
 		# (the window has the whole screen: the menu's rows, bug and keys put away under it, the softened ring left)
 		_layout.visible = false
 		_shade.visible = false
+
+
+## The window's element chips (the owner, 2026-10-16: "we need to be able to change it in your class"): the fighter's element
+## changed from the window: the character's own (AppearanceStore) and the next restart's (MatchSetup.element, as the Element row
+## does), the menu's rows repainted, and the window opened again for it (one window is built for one element).
+func _turn_class(el: String, win: AdvancementWindow) -> void:
+	if not el in Bending.ELEMENTS or not is_instance_valid(win):
+		return
+	AppearanceStore.set_element(el)
+	MatchSetup.element = el
+	MatchSetup.save()
+	win.close()                                  # (_after_window: the menu's screen back meanwhile)
+	_paint()
+	_note.text = w("applies") % _elem_text()
+	class_talents.call_deferred()
 
 
 func _after_window() -> void:

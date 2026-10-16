@@ -14,6 +14,9 @@
     "title": "Character Advancement",
     "ribbon": "Green-dot picks play in matches; the rest is a preview",
     "tabs": {"advancement": "Advancement", "loadouts": "Loadouts", "look": "Your look"},
+    "element_cap": "ELEMENT",
+    "element_tip": "Your fighter's element: the class, loadouts and trees of this one. Changes pending ask Save or Discard first.",
+    "element_now": "Your element now",
     "buttons": {
       "save": "Save Changes",
       "undo": "Undo",

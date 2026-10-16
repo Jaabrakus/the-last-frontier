@@ -932,6 +932,7 @@ class OptionRow extends Button:
 	var count := 0
 	var chosen := 0
 	var chips: Segments
+	var _px := 18
 	var _plate: Panel
 	var _bar: ColorRect
 	var _title: Label
@@ -980,13 +981,8 @@ class OptionRow extends Button:
 		_title.name = "Title"
 		_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		top.add_child(_title)
-		chips = BroadcastUI.segments(options, 0, px, 11.0)
-		chips.mouse_filter = Control.MOUSE_FILTER_PASS
-		for c: Chip in chips.chips:
-			c.focus_mode = Control.FOCUS_NONE
-		chips.picked.connect(func(i: int) -> void:
-			if picker.is_valid():
-				picker.call(i))
+		_px = px
+		chips = _make_chips(options)
 		top.add_child(chips)
 		if options.is_empty():
 			# (a link to a panel of its own: Photo, Controls: a chevron where the chips would be)
@@ -997,6 +993,28 @@ class OptionRow extends Button:
 		_sub.name = "Sub"
 		BroadcastUI.put(self, _sub, Rect2(14, 46, width - 28, 26))
 		return self
+
+	func _make_chips(options: Array) -> Segments:
+		var s := BroadcastUI.segments(options, 0, _px, 11.0)
+		s.mouse_filter = Control.MOUSE_FILTER_PASS
+		for c: Chip in s.chips:
+			c.focus_mode = Control.FOCUS_NONE
+		s.picked.connect(func(i: int) -> void:
+			if picker.is_valid():
+				picker.call(i))
+		count = options.size()
+		return s
+
+	## The row's values anew (the Style row's as the element in play changes): its chips rebuilt in their place, the first lit.
+	func set_options(options: Array) -> void:
+		var top := chips.get_parent()
+		var at := chips.get_index()
+		top.remove_child(chips)
+		chips.queue_free()
+		chips = _make_chips(options)
+		top.add_child(chips)
+		top.move_child(chips, at)
+		chosen = 0
 
 	## The row as the option stands: its words whole (Text), the value in force, the line under it.
 	func paint(words: String, index: int, line: String) -> void:
