@@ -188,6 +188,18 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.water
 			p = {"mode": 0, "wobble": 0.02, "outline": 1.0, "flow": Vector2(0.0, -2.4), "nscale": Vector2(2.2, 1.0),
 					"foam": 0.78, "rim": 0.5}
+		"water_column":
+			# (the Geyser's column, GeyserFx: the cel water, a drawn line round it, foam flecks running up it)
+			m.shader = SHADERS.water
+			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "flow": Vector2(0.0, -2.8), "nscale": Vector2(0.8, 0.55), "foam": 0.74,
+					"rim": 0.8, "c_shade": Color(0.06, 0.32, 0.8, 0.96), "c_body": Color(0.14, 0.52, 0.97, 0.94),
+					"c_rim": Color(0.6, 0.88, 1.0, 0.96)}
+		"water_column_core":
+			# (the paler heart of it)
+			m.shader = SHADERS.water
+			p = {"mode": 0, "wobble": 0.0, "outline": 0.0, "flow": Vector2(0.0, -4.0), "nscale": Vector2(1.0, 0.7), "foam": 0.7,
+					"rim": 0.9, "c_shade": Color(0.45, 0.78, 1.0, 0.9), "c_body": Color(0.7, 0.92, 1.0, 0.9),
+					"c_rim": Color(0.92, 0.99, 1.0, 0.92)}
 		"water_crest":
 			# (the Wave's body, WaveFx: the cel water with a white foam lip along its crest and a drawn line round it)
 			m.shader = SHADERS.water
@@ -420,6 +432,36 @@ static func sphere(segs := 18) -> Mesh:
 		s.radial_segments = segs
 		s.rings = segs / 2
 		return s)
+
+
+## An open water column standing on its foot (local Y 0..`h`), radius `r`: UV.x metres round it, UV.y metres up it.
+static func column_mesh(r: float, h: float, sides := 20) -> Mesh:
+	return _cached("column_%.3f_%.3f_%d" % [r, h, sides], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var circ := TAU * r
+		for j in sides:
+			var a0 := TAU * float(j) / float(sides)
+			var a1 := TAU * float(j + 1) / float(sides)
+			var n0 := Vector3(cos(a0), 0.0, sin(a0))
+			var n1 := Vector3(cos(a1), 0.0, sin(a1))
+			var q := [n0 * r, n1 * r, n0 * r + Vector3.UP * h, n1 * r + Vector3.UP * h]
+			var nn := [n0, n1, n0, n1]
+			var uv := [Vector2(circ * float(j) / sides, 0.0), Vector2(circ * float(j + 1) / sides, 0.0),
+					Vector2(circ * float(j) / sides, h), Vector2(circ * float(j + 1) / sides, h)]
+			for tri: Array in [[0, 2, 1], [1, 2, 3]]:
+				var a: Vector3 = q[tri[0]]
+				var b: Vector3 = q[tri[1]]
+				var c: Vector3 = q[tri[2]]
+				var order: Array = tri
+				# (front faces wind clockwise seen from outside: the cross points inward)
+				if (b - a).cross(c - a).dot(nn[tri[0]]) > 0.0:
+					order = [tri[0], tri[2], tri[1]]
+				for k in order:
+					st.set_normal(nn[k])
+					st.set_uv(uv[k])
+					st.add_vertex(q[k])
+		return st.commit())
 
 
 ## A water teardrop along -Z (the anime pass): a round head at z -1 and a tail drawn out to a point at z `tail`, radius 1 at the

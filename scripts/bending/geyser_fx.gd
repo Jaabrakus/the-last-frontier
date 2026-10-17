@@ -23,6 +23,7 @@ var _t := 0.0
 var _col: MeshInstance3D
 var _core: MeshInstance3D
 var _crown: MeshInstance3D
+var _ribs: Array[ToonRibbon] = []
 var _spikes: Array[MeshInstance3D] = []
 var _lean: Array[Vector3] = []
 var _burst := false
@@ -36,24 +37,25 @@ func _ready() -> void:
 	var y := dir.normalized() if dir.length_squared() > 1e-4 else Vector3.UP
 	var x := y.cross(Vector3.FORWARD if absf(y.z) < 0.9 else Vector3.RIGHT).normalized()
 	global_basis = Basis(x, y, x.cross(y).normalized())
-	var cd := RingArena.block("curtain")
-	# (bluer than the tank's curtain behind it, so the column stands out against it; a pale core gives it body)
-	_col = _water(radius, 0.85, -7.0, Color(0.3, 0.64, 0.95), RingArena._tint(cd.get("foam"), Color(0.92, 0.97, 1.0)))
-	_core = _water(radius * 0.6, 0.95, -10.0, Color(0.66, 0.88, 1.0), Color(1.0, 1.0, 1.0))
-	var crown := SphereMesh.new()
-	crown.radius = radius * 1.15
-	crown.height = radius * 0.8
-	crown.radial_segments = 16
-	crown.rings = 6
-	var cm := StandardMaterial3D.new()
-	cm.albedo_color = Color(0.85, 0.94, 1.0, 0.7)
-	cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cm.roughness = 0.35
-	crown.material = cm
+	# (the anime pass, 2026-10-16: the column in cel water, a drawn line round it and foam flecks running up it, a paler heart, two
+	# ribbons spiralling up it, a torn crown of foam at its top)
+	_col = _column(radius, "water_column")
+	_core = _column(radius * 0.62, "water_column_core")
 	_crown = MeshInstance3D.new()
-	_crown.mesh = crown
+	_crown.mesh = ToonFx.band_mesh(1.0, 1.55, 0.9)
+	_crown.material_override = ToonFx.mat("crown")
 	_crown.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_crown)
+	FxParams.put(_crown, &"t", 0.3)
+	FxParams.put(_crown, &"tint", BendLooks.WATER)
+	FxParams.put(_crown, &"tint2", BendLooks.FOAM)
+	FxParams.put(_crown, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	for i in 2:
+		var rb := ToonRibbon.new()
+		rb.main_mat = ToonFx.mat("water_ribbon")
+		rb.coils = 0
+		add_child(rb)
+		_ribs.append(rb)
 	if crack:
 		# (the deck breaking round the foot: stone spikes in a ring, leaning out, the cracks under them, dust rising)
 		for i in SPIKE_N:
@@ -75,18 +77,11 @@ func _ready() -> void:
 	_shape(0.0, 1.0)
 
 
-## A water cylinder along the node's y (its root at the foot), the curtain's streaks running up it.
-func _water(r: float, alpha: float, flow: float, tint: Color, foam: Color) -> MeshInstance3D:
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://shaders/ring/ring_curtain.gdshader")
-	mat.set_shader_parameter(&"tint", tint)
-	mat.set_shader_parameter(&"foam", foam)
-	mat.set_shader_parameter(&"alpha", alpha)
-	mat.set_shader_parameter(&"flow_mps", flow)
-	mat.set_shader_parameter(&"height", length)
+## A water column along the node's y (its root at the foot), in ToonFx material `mat`.
+func _column(r: float, mat: String) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	mi.mesh = RingSpout._cylinder(r, length)
-	mi.material_override = mat
+	mi.mesh = ToonFx.column_mesh(r, length)
+	mi.material_override = ToonFx.mat(mat)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
 	return mi
@@ -99,8 +94,27 @@ func _shape(h: float, w: float) -> void:
 		m.scale = Vector3(w, hh, w)
 		m.visible = h > 0.01
 	_crown.position = Vector3(0.0, length * h, 0.0)
-	_crown.scale = Vector3.ONE * clampf(w, 0.3, 1.6)
+	_crown.scale = Vector3.ONE * radius * clampf(w, 0.3, 1.6) * 1.2
 	_crown.visible = h > 0.04
+	_spiral(h, w)
+
+
+## Two ribbons of water winding up the column from its foot to its top, turning with time (the anime pass).
+func _spiral(h: float, w: float) -> void:
+	for i in _ribs.size():
+		if h < 0.2:
+			_ribs[i].stop()
+			continue
+		var pts := PackedVector3Array()
+		var n := 22
+		for j in n + 1:
+			var f := float(j) / float(n)             # (0 at the head, the top; 1 at the foot)
+			var y := length * h * (1.0 - f)
+			var a := _t * 5.5 + PI * float(i) + y * 2.4
+			var rr := radius * w * 1.1
+			pts.append(global_transform * Vector3(cos(a) * rr, y, sin(a) * rr))
+		_ribs[i].fade = 1.0
+		_ribs[i].lay_path(pts, 0.085, 0.085, 0.06)
 
 
 func _process(dt: float) -> void:
