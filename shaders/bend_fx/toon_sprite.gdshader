@@ -5,6 +5,8 @@ shader_type spatial;
 //   mode 2  crown: a band (ToonFx.band_mesh) whose torn top rises and drops (a splash crown)
 //   mode 3  swirl: two crescents facing the camera that spin out (air)
 //   mode 4  orb: a lasting ball of fire facing the camera, banded from a white heart, its edge boiling (a fireball's core)
+//   mode 5  air heart: a flat white disc facing the camera, a pale shade crescent, an inked rim, a swirl drawn in it that turns
+//           (the anime air, 2026-10-16: the heart of the ball of air)
 // Round 4 (LOOKS): `range_on` (instance, a bolt's core orb) grows it with its distance from the camera (fx_common
 // range_scale); thinned near the camera (near_cut).
 render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled, skip_vertex_transform;
@@ -45,7 +47,7 @@ instance uniform float range_on = 0.0;
 #endif
 
 void vertex() {
-	if (mode == 0 || mode == 3 || mode == 4) {
+	if (mode == 0 || mode == 3 || mode == 4 || mode == 5) {
 		vec3 c = (VIEW_MATRIX * vec4(MODEL_MATRIX[3].xyz, 1.0)).xyz;
 		float s = length(MODEL_MATRIX[0].xyz);
 		if (range_on > 0.5) {
@@ -87,6 +89,15 @@ void fragment() {
 		float top = (0.35 + 0.65 * n2) * rise;
 		v = (top - UV.y) / max(top, 1e-3) - t * 0.25;
 		col = mix(tint.rgb, tint2.rgb, aastep(0.0, 0.32 - v));
+	} else if (mode == 5) {
+		v = 1.0 - r;
+		float sh = dot(p, normalize(vec2(0.55, -0.85)));
+		float spiral = fract(ang / 6.28318 * 2.0 + r * 1.7 - TIME * 0.9 + seed);
+		float line = (1.0 - aastep(0.14, abs(spiral - 0.5) * 0.5 / max(r, 0.2) * 1.0)) * aastep(0.15, r) * (1.0 - aastep(0.85, r));
+		col = c_core;
+		col = mix(col, tint.rgb, aastep(0.28, sh));
+		col = mix(col, tint.rgb * 0.9, line * 0.8);
+		col = mix(col, c_ink, 1.0 - aastep(0.07, v));              // (a thin inked rim)
 	} else if (mode == 4) {
 		float b = texture(noise, vec2(ang / 6.28318 * 2.0 + seed, TIME * 0.9)).r;
 		float b2 = texture(noise, UV * 1.3 + vec2(seed, -TIME * 1.7)).r;

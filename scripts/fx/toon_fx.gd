@@ -131,6 +131,21 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.88, 0.95, 1.0), "c_c": Color(0.7, 0.83, 0.95),
 					"c_ink": Color(0.3, 0.45, 0.6), "wobble": 0.6}
+		"puff_air_ink":
+			# (the anime air: a flat cel puff with an ink edge, less torn: the air's puffs as flat drawn shapes)
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.9, 0.95, 1.0), "c_c": Color(0.76, 0.86, 0.96),
+					"c_ink": Color(0.3, 0.44, 0.62), "wobble": 0.3, "ink": 0.8}
+		"puff_dust_air":
+			# (the anime air's dust: pale flat shapes, a soft brown ink line, never a dark clod)
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(0.98, 0.94, 0.84), "c_b": Color(0.9, 0.84, 0.72), "c_c": Color(0.76, 0.69, 0.58),
+					"c_ink": Color(0.5, 0.42, 0.32), "wobble": 0.3, "ink": 0.7}
+		"leaf":
+			# (the anime air: a leaf caught in the swirl as it gathers; a long cel puff in leaf greens with an ink edge, tumbling)
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(0.8, 0.88, 0.46), "c_b": Color(0.52, 0.68, 0.3), "c_c": Color(0.3, 0.44, 0.2),
+					"c_ink": Color(0.14, 0.22, 0.1), "wobble": 0.22, "stretch": 1.9, "ink": 0.9}
 		"foam":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.82, 0.94, 1.0), "c_c": Color(0.5, 0.76, 0.98),
@@ -190,6 +205,25 @@ static func mat(key: String) -> ShaderMaterial:
 		"wind_strip":
 			m.shader = SHADERS.wind
 			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.25}
+		"wind_stroke":
+			# (the anime air, 2026-10-16: a swirl line drawn as a bold curved stroke, a ToonRibbon: a soft white body, a pale
+			# blue-grey edge and a thin ink line down each side; the wind shader's stroke mode)
+			m.shader = SHADERS.wind
+			p = {"mode": 3, "speed": 1.2, "nscale": Vector2(1.2, 0.5), "streak": 0.1, "glow": 1.0,
+					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": Color(0.3, 0.44, 0.62),
+					"ink": 0.85}
+		"wind_band_ink":
+			# (the anime air: a band of swirl lines with an ink edge, spinning: the ball of air at the palm, the Wind Guard's
+			# sphere, the air ball's swirl)
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 7.5, "nscale": Vector2(2.0, 0.8), "streak": 0.5, "glow": 1.0,
+					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": Color(0.3, 0.44, 0.62),
+					"ink": 0.8}
+		"wind_band_ink_slow":
+			m.shader = SHADERS.wind
+			p = {"mode": 0, "spin": 4.2, "nscale": Vector2(2.6, 0.8), "streak": 0.5, "glow": 1.0,
+					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": Color(0.3, 0.44, 0.62),
+					"ink": 0.8}
 		"ice_strip":
 			m.shader = SHADERS.wind
 			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.25,
@@ -256,6 +290,11 @@ static func mat(key: String) -> ShaderMaterial:
 		"orb":
 			m.shader = SHADERS.sprite
 			p = {"mode": 4}
+		"air_heart":
+			# (the anime air: the heart of its ball, a flat white disc with a pale blue shade, an inked rim and a swirl drawn in it)
+			m.shader = SHADERS.sprite
+			p = {"mode": 5, "ink": 0.0, "c_ink": Color(0.3, 0.44, 0.62), "c_core": Color(1.0, 1.0, 1.0),
+					"tint": Color(0.74, 0.86, 0.97, 1.0)}
 		"ring":
 			m.shader = SHADERS.sprite
 			p = {"mode": 1}
@@ -288,7 +327,8 @@ static func mat(key: String) -> ShaderMaterial:
 		m.set_shader_parameter(k, p[k])
 	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke]:
 		m.set_shader_parameter(&"noise", noise())
-	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
+	if not p.has("ink"):
+		m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)      # (a material's own ink line stays in the cel style)
 	m.set_shader_parameter(&"fx_gain", gain)
 	_mats[key] = m
 	return m
@@ -463,6 +503,32 @@ static func arc_mesh(r: float, w: float, span := 2.2, segs := 20) -> Mesh:
 		return st.commit())
 
 
+## A drawn swirl stroke (the anime air, 2026-10-16): a helix arc round local Y, `turns` turns of it, its radius going from `r0`
+## (u 0, the tail) to `r1` (u 1, the head) over `rise` m up Y (centred on the origin). A strip as ToonRibbon's (NORMAL along
+## it, UV2.x its half width in metres, UV.y across; the wind shader's strip modes turn it to the camera), brush-shaped: thin
+## at both ends, fullest a little behind its head. UV.x is 0 at the head and 1 at the tail (the stroke's tail dissolves).
+static func stroke_mesh(turns: float, r0: float, r1: float, rise: float, w: float, segs := 30) -> Mesh:
+	return _cached("stroke_%.2f_%.2f_%.2f_%.2f_%.3f" % [turns, r0, r1, rise, w], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+		var pts: Array[Vector3] = []
+		for i in segs + 1:
+			var u := float(i) / segs
+			var a := TAU * turns * u
+			var r := lerpf(r0, r1, u)
+			pts.append(Vector3(cos(a) * r, rise * (u - 0.5), sin(a) * r))
+		for i in segs + 1:
+			var u := float(i) / segs
+			var along := (pts[mini(i + 1, segs)] - pts[maxi(i - 1, 0)]).normalized()
+			var prof := pow(sin(PI * clampf(pow(u, 0.8), 0.0, 1.0)), 0.55)
+			for k in 2:
+				st.set_normal(along)
+				st.set_uv(Vector2(1.0 - u, float(k)))
+				st.set_uv2(Vector2(w * prof + 0.002, 1.0))
+				st.add_vertex(pts[i])
+		return st.commit())
+
+
 ## An ice crystal along -Z: a six-sided bipyramid `len` long, `r` round, its tip forward (its back short), uneven by `seed`.
 static func shard_mesh(len: float, r: float, seed := 0, sides := 6) -> Mesh:
 	return _cached("shard_%.2f_%.3f_%d_%d" % [len, r, seed, sides], func() -> Mesh:
@@ -559,11 +625,19 @@ static func recipe(key: String) -> Dictionary:
 			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.3, Color(1, 0.95, 0.9, 0.9)], [1.0, Color(1.0, 0.7, 0.6, 0.0)]])
 			pm.scale_curve = curve([Vector2(0, 0.55), Vector2(0.2, 1.0), Vector2(1, 0.7)])
 			r.amount = 40
-		"puff_steam", "puff_smoke", "puff_dust", "puff_frost", "puff_air", "foam":
+		"puff_steam", "puff_smoke", "puff_dust", "puff_frost", "puff_air", "puff_air_ink", "puff_dust_air", "foam":
 			r.mat = mat(key)
 			pm.color_ramp = fade
 			pm.scale_curve = curve([Vector2(0, 0.5), Vector2(0.25, 1.0), Vector2(1, 1.1)], 1.2)
 			r.amount = 32
+		"leaf":
+			# (a leaf tumbles as it goes, whole until it falls out of the swirl)
+			r.mat = mat("leaf")
+			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.8, Color(1, 1, 1, 1)], [1.0, Color(1, 1, 1, 0.0)]])
+			pm.scale_curve = curve([Vector2(0, 0.7), Vector2(0.15, 1.0), Vector2(1, 1.0)])
+			pm.angular_velocity_min = -420.0
+			pm.angular_velocity_max = 420.0
+			r.amount = 24
 		"drop", "drop_mud":
 			r.mat = mat(key)
 			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.7, Color(1, 1, 1, 0.85)], [1.0, Color(1, 1, 1, 0.0)]])

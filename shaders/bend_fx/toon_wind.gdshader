@@ -5,6 +5,8 @@ shader_type spatial;
 //           rings, a tornado's, an air ball's swirl)
 //   mode 1  a strip along a line (ToonRibbon: UV.x along, UV.y across): speed lines
 //   mode 2  a flat crescent mesh (UV.x along the arc, UV.y across): an air slice
+//   mode 3  a drawn stroke along a line (ToonRibbon, as mode 1): a clean body with an ink line down each edge, tapered to
+//           its tail, torn only a little (the anime air, 2026-10-16: swirl lines drawn as bold curved strokes)
 // `fade` (instance) eats it away.
 // Round 4 (LOOKS): `band_w` (instance) draws a band that share as wide about its middle, its silhouette edge kept (your own
 // Wind Guard, seen from your own camera: 0.6); `range_on` (instance, a bolt's core) grows it with its distance from the
@@ -48,7 +50,7 @@ instance uniform float range_on = 0.0;
 void vertex() {
 	vec3 cam = CAMERA_POSITION_WORLD;
 	vec3 w;
-	if (mode == 1) {
+	if (mode == 1 || mode == 3) {
 		vec3 c = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 		w = strip_point(c, (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz, UV2.x, UV.y, cam);
 	} else {
@@ -80,14 +82,17 @@ void fragment() {
 		v -= along * 0.9;                                   // a speed line thins to its tail
 	} else if (mode == 2) {
 		v -= pow(abs(along * 2.0 - 1.0), 3.0) * 0.9;           // a crescent thins to its horns
+	} else if (mode == 3) {
+		// a stroke: its body from its middle out (the noise only ruffles its edge), thinned to its tail, eaten by the fade
+		v = mid * 1.25 - streak + (n - 0.5) * 0.3 - along * along * 1.05 - (1.0 - fade) * 1.3;
 	}
 	float a = aastep(0.0, v);
 	if (a <= 0.01) {
 		discard;
 	}
-	float core = aastep(0.28, v);
+	float core = aastep(mode == 3 ? 0.3 : 0.28, v);
 	vec4 col = mix(c_edge, c_main, core);
-	col.rgb = mix(col.rgb, c_ink, ink * (1.0 - aastep(0.07, v)));
+	col.rgb = mix(col.rgb, c_ink, ink * (1.0 - aastep(mode == 3 ? 0.09 : 0.07, v)));
 	ALBEDO = (col.rgb * glow) * fx_gain;
 	// (blended: the near fade is its alpha; your own Wind Guard's bands, band_w < 1, see-through inside their edge)
 	float inside = mix(1.0, band_w, core);

@@ -800,6 +800,14 @@ static func emitter(parent: Node3D, kind: String, extents: Vector3, amount := 60
 			key = "foam"
 		"lightning":
 			key = "spark_elec"
+		"leaf":
+			key = "leaf"                              # (the anime air: leaves caught in the swirl)
+		"lines":
+			key = "spark_line"                        # (the anime air: speed lines streaming)
+		"air_ink":
+			key = "puff_air_ink"                      # (the anime air: flat inked puffs)
+		"air_dust":
+			key = "puff_dust_air"                     # (the anime air: pale flat dust)
 	var g := _stream(key, amount, life)
 	var pm := g.process_material as ParticleProcessMaterial
 	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
@@ -3001,6 +3009,8 @@ static func warm_up(cam: Camera3D, progress := Callable(), elements: Array = [])
 					if c is ToonRibbon:
 						(c as ToonRibbon).prime(at, at + Vector3.LEFT * 0.05))
 	groups.append(func() -> void: burst(at, "steam", 2, Vector3.UP, 30.0, 0.1, 0.01))
+	if elements.is_empty() or "air" in elements:
+		groups.append(func() -> void: warm_air(pool, holder, at))
 	for i in range(0, WARM_EMITTER_KINDS.size(), WARM_EMITTERS):
 		var some := WARM_EMITTER_KINDS.slice(i, i + WARM_EMITTERS)
 		groups.append(func() -> void:
@@ -3057,6 +3067,23 @@ static func warm_up(cam: Camera3D, progress := Callable(), elements: Array = [])
 			stop_trail(t as GPUParticles3D)
 	if is_instance_valid(holder):
 		holder.queue_free()
+
+
+## The anime air's own materials compiled at the warm-up (2026-10-16): its strokes (a ribbon primed), its inked bands, its
+## inked puffs and the leaves of its gather, so a first air cast never stalls a frame.
+static func warm_air(pool: ToonFxPool, holder: Node3D, at: Vector3) -> void:
+	for mk: String in ["wind_stroke"]:
+		var rb := ToonRibbon.new()
+		rb.main_mat = ToonFx.mat(mk)
+		rb.width = 0.01
+		holder.add_child(rb)
+		rb.prime(at, at + Vector3.LEFT * 0.05)
+	pool.shoot("puff_dust_air", at, 2, Vector3.UP, 30.0, Vector2(0.1, 0.1), Vector2(0.01, 0.01), 0.1)
+	for mk: String in ["wind_band_ink", "wind_band_ink_slow"]:
+		var b := _mesh(holder, ToonFx.band_mesh(1.0, 0.9, 0.3), ToonFx.mat(mk))
+		b.scale = Vector3.ONE * 0.01
+	pool.shoot("puff_air_ink", at, 2, Vector3.UP, 30.0, Vector2(0.1, 0.1), Vector2(0.01, 0.01), 0.1)
+	pool.shoot("leaf", at, 2, Vector3.UP, 30.0, Vector2(0.1, 0.1), Vector2(0.01, 0.01), 0.1)
 
 
 static func _scene() -> Node:
