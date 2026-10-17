@@ -18,7 +18,8 @@ extends Node3D
 ##          cast, the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops shake off
 ##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
 ##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
-##   earth  stones lift off the deck round the feet one by one, circle the body, then gather round the hands or the foot; a
+##   earth  slabs of the deck are torn out round the feet (the deck cracks in a line, the slab lifts with a snap, grit falling),
+##          circle the body, then gather round the hands or the foot; a
 ##          Spike's or Boulder's raised stone (FormEffects.raised_of) is made from them: they fly into it one by one and it
 ##          grows from STONE_FROM of its size to its own (its look only; its body is as it was). Broken pieces lying near
 ##          (RockDebris; the owner: "we can have broken rock pieces on the floor we channel it to make the things") are
@@ -62,7 +63,20 @@ const FIST_SCALE := Vector2(0.35, 1.0)
 const FLAME_UP := Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP)
 ## Earth: the rocks, the loose pieces pulled in (within PULL_M flat, at most PULL_MAX, flying PULL_S), a rock's flight into
 ## the raised stone (INTO_S), and the share of its size the stone's look starts at while it is made from them.
-const ROCKS := 9
+## Earth in the show's cel style (2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as possible"): the
+## stance cracks the deck and SLABS are torn out of it, one by one at SLAB_AT of the lock, each out where he faces fanned by
+## SLAB_FAN (rad): the deck splits in a line out to the spot and the slab shudders in its hole (CRACK_S), then it lifts with a
+## snap that overshoots (SNAP_S) and hangs, grit falling from it every GRIT_S; CHUNKS small pieces besides. At the limb the slabs
+## close up to SLAB_CLOSE of their size. Slabs and chunks are the cel rock with its dark line (BendLooks.cel_rock).
+const SLAB_AT := [0.0, 0.2, 0.42]
+const SLAB_FAN := [0.0, 1.1, -1.1]
+const SLAB_SIZE := Vector2(0.42, 0.54)
+const CRACK_S := 0.13
+const SNAP_S := 0.2
+const CHUNKS := 5
+const GRIT_S := Vector2(0.28, 0.5)
+const SLAB_CLOSE := 0.7
+const ROCKS := 8
 const PULL_M := 7.0
 const PULL_MAX := 7
 const PULL_S := 0.5
@@ -200,6 +214,11 @@ func flash() -> void:
 				pool.shoot("spark_fire", tip, 8, Vector3.UP, 70.0, Vector2(1.5, 3.5), Vector2(0.025, 0.04), 0.45,
 						Vector3(0, -4.0, 0), 1.0)
 		"earth":
+			# (the click is a stomp: a ring of dust and the deck cracking under his feet)
+			if pool != null:
+				pool.shoot("puff_dust", _center() + Vector3.UP * 0.08, 10, Vector3.UP, 85.0, Vector2(1.2, 2.6), Vector2(0.2, 0.4), 0.65,
+						Vector3(0, 0.4, 0), 3.5, {"r": 0.3, "flat": 0.9, "radial": 1.6})
+				pool.mark("cracks", _center(), Vector3.UP, 1.8, 2.0)
 			_dust_puff(_center(), 5, 1.4, 0.35)
 		_:
 			_dust_puff(tip, 4, 2.5, 0.3, "puff_air")
@@ -677,6 +696,9 @@ func _build_earth() -> void:
 		var m: Node3D
 		var src := Vector3.INF
 		var size := rng.randf_range(0.2, 0.32)
+		var j := i - claimed.size()
+		var slab := j >= 0 and j < SLAB_AT.size()
+		var at := 0.0
 		if i < claimed.size():
 			# (a broken piece lying near: pulled in from where it lies, its own size)
 			m = claimed[i] as Node3D
@@ -684,24 +706,33 @@ func _build_earth() -> void:
 			size = m.scale.x
 			_dust_puff(src, 2, 0.6, 0.2)
 		else:
-			var mi := MeshInstance3D.new()
-			mi.mesh = ToonFx.chunk_mesh(i % 4)
-			mi.material_override = ToonFx.mat("rock")
+			var mesh: Mesh = ToonFx.slab_mesh(j % 4) if slab else ToonFx.chunk_mesh(j % 4)
+			var mi := BendLooks.cel_rock(self, mesh, true)
 			mi.top_level = true
 			mi.visible = false
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-			add_child(mi)
 			m = mi
+			if slab:
+				size = rng.randf_range(SLAB_SIZE.x, SLAB_SIZE.y)
+				at = float(SLAB_AT[j])
+			else:
+				at = 0.1 + 0.7 * float(j - SLAB_AT.size()) / float(maxi(n - claimed.size() - SLAB_AT.size() - 1, 1))
 		_rocks.append({"mesh": m, "phase": TAU * float(i) / float(n) + rng.randf_range(-0.3, 0.3),
-				"r": rng.randf_range(0.75, 1.1), "h": rng.randf_range(0.35, 1.25),
-				"at": 0.0 if src != Vector3.INF else float(i - claimed.size()) / float(maxi(n - claimed.size(), 1)) * 0.8,
-				"lift": 1.0 if src != Vector3.INF else 0.0, "size": size, "spin": rng.randf_range(1.5, 4.0),
+				"r": rng.randf_range(0.75, 1.1), "h": rng.randf_range(0.35, 1.25), "at": at,
+				"lift": 1.0 if src != Vector3.INF else 0.0, "size": size,
+				"spin": rng.randf_range(0.8, 1.6) if slab else rng.randf_range(1.5, 4.0),
 				"axis": Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized(),
 				"speed": rng.randf_range(0.8, 1.2), "vel": Vector3.ZERO, "lifted": src != Vector3.INF, "src": src,
-				"fly": 0.0 if src != Vector3.INF else 1.0, "dep": INF, "into": -1.0, "from": Vector3.ZERO, "gone": false})
+				"fly": 0.0 if src != Vector3.INF else 1.0, "dep": INF, "into": -1.0, "from": Vector3.ZERO, "gone": false,
+				"slab": slab, "state": 0 if slab else 3, "st": 0.0, "spot": Vector3.ZERO,
+				"fan": float(SLAB_FAN[j]) if slab else 0.0, "grit": rng.randf_range(0.1, GRIT_S.y)})
 	var dust := _emitter("dust", Vector3(0.55, 0.04, 0.55), 14, 0.8, 0.5, 0.3)
 	if dust != null:
 		dust.position = Vector3(0, 0.05, 0)
+	# (the stance cracks the deck under his feet)
+	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
+	if pool != null:
+		pool.mark("cracks", _center(), Vector3.UP, 2.3, 2.8)
 
 
 ## The stone the body raised and holds (a Spike's or a Boulder's, FormEffects.raised_of), null none.
@@ -748,6 +779,13 @@ func _earth(dt: float) -> void:
 		heart = mi.global_transform * (mi.get_aabb().get_center() if mi.mesh != null else Vector3.ZERO)
 	elif making:
 		heart = _stone.global_position
+	var fwd_a := atan2(_forward().z, _forward().x)
+	# (a Spike or a Boulder is being made: the slabs gather round it, where it hangs, not round the hand)
+	var focus := tip
+	var focus_k := ch
+	if making and heart != Vector3.INF:
+		focus = heart
+		focus_k = maxf(ch, smoothstep(0.0, 0.5, _level() - _stone_k0 + 0.25))
 	for i in _rocks.size():
 		var rk: Dictionary = _rocks[i]
 		var m := rk.mesh as Node3D
@@ -767,21 +805,51 @@ func _earth(dt: float) -> void:
 				m.global_position.y = c.y + 0.06      # (fallen: it lies on the deck, a piece for the next)
 				rk.vel = Vector3.ZERO
 			continue
-		var on := minf(k, 1.0) >= float(rk.at)
+		var slab := bool(rk.slab)
+		var on := minf(k, 1.0) >= float(rk.at) or (making and minf(k, 1.0) >= float(rk.dep))
 		var lift := clampf(float(rk.lift) + (dt / 0.2 if on else -dt / 0.25), 0.0, 1.0)
+		if slab:
+			# (torn out of the deck: waiting, the crack and the shudder, the snap up, then hanging: CRACK_S, SNAP_S)
+			if int(rk.state) == 0:
+				if not on:
+					continue
+				_tear_begin(rk, fwd_a, w, c)
+			else:
+				rk.st = float(rk.st) + dt
+			if int(rk.state) == 1 and float(rk.st) >= CRACK_S:
+				rk.state = 2
+				rk.st = float(rk.st) - CRACK_S
+				_tear_burst(rk)
+			if int(rk.state) == 2 and float(rk.st) >= SNAP_S:
+				rk.state = 3
+				rk.lifted = true
+			lift = 1.0
 		rk.lift = lift
 		var th := float(rk.phase) + _t * w * float(rk.speed)
 		# (round the body, closing in at the waist as it fills; channelled, round the hands or the foot)
 		var r := lerpf(float(rk.r), 0.58, tight)
 		var h := lerpf(float(rk.h), 0.95 + 0.25 * sin(float(i) * 1.9), tight)
 		var tgt := c + Vector3(cos(th) * r, h + 0.05 * sin(_t * 3.0 + float(i)), sin(th) * r)
-		var ring_r := 0.3 if foot else 0.36
-		var ring := tip + Vector3(cos(th) * ring_r, (0.14 if foot else 0.0) + 0.12 * sin(th * 1.7 + float(i)), sin(th) * ring_r)
-		tgt = tgt.lerp(ring, ch)
-		if making and float(rk.into) < 0.0 and minf(k, 1.0) >= float(rk.dep):
+		var ring_r := 0.62 if focus != tip else (0.3 if foot else 0.36)
+		var ring := focus + Vector3(cos(th) * ring_r, (0.14 if foot and focus == tip else 0.0) + 0.12 * sin(th * 1.7 + float(i)), sin(th) * ring_r)
+		tgt = tgt.lerp(ring, focus_k)
+		if making and float(rk.into) < 0.0 and minf(k, 1.0) >= float(rk.dep) and int(rk.state) == 3:
 			rk.into = 0.0
 			rk.from = m.global_position
 		var p := tgt
+		var pop := 1.0
+		var turn := 1.0
+		if slab and int(rk.state) == 1:
+			var u := clampf(float(rk.st) / CRACK_S, 0.0, 1.0)
+			p = (rk.spot as Vector3) + Vector3.UP * (0.02 + 0.06 * u) + Vector3(sin(_t * 97.0 + float(i)), 0.0, cos(_t * 83.0 + float(i))) * 0.014 * u
+			pop = 0.88 + 0.08 * u
+			turn = 0.0
+		elif slab and int(rk.state) == 2:
+			var u := clampf(float(rk.st) / SNAP_S, 0.0, 1.0)
+			var e := _back(u)
+			p = (rk.spot as Vector3).lerp(tgt, e)
+			pop = lerpf(0.9, 1.0, clampf(e, 0.0, 1.0)) * (1.0 + 0.1 * sin(u * PI))
+			turn = u
 		if float(rk.into) >= 0.0 and heart != Vector3.INF:
 			# (into the stone: it flies in and is gone, the stone a share bigger)
 			var into := minf(float(rk.into) + dt / INTO_S, 1.0)
@@ -804,17 +872,24 @@ func _earth(dt: float) -> void:
 			rk.fly = fly
 			var e := 1.0 - pow(1.0 - fly, 2.0)
 			p = (rk.src as Vector3).lerp(tgt, e) + Vector3.UP * 0.7 * sin(PI * fly)
-		elif rk.src == Vector3.INF:
+		elif rk.src == Vector3.INF and not slab:
 			p.y = lerpf(c.y, tgt.y, 1.0 - pow(1.0 - lift, 3.0))   # (lifted up off the deck)
 		m.global_position = p
-		m.rotate(rk.axis, dt * float(rk.spin))
-		m.scale = Vector3.ONE * float(rk.size) * clampf(lift * 1.4, 0.0, 1.0) * (1.0 + 0.25 * _flash)
+		m.rotate(rk.axis, dt * float(rk.spin) * turn)
+		var sk := lerpf(1.0, SLAB_CLOSE, ch) if slab else 1.0
+		m.scale = Vector3.ONE * float(rk.size) * clampf(lift * 1.4, 0.0, 1.0) * (1.0 + 0.25 * _flash) * sk * pop
 		m.visible = lift > 0.01
 		if lift > 0.0 and not bool(rk.lifted):
 			rk.lifted = true
 			_dust_puff(Vector3(p.x, c.y, p.z), 3, 0.8, 0.25)
-		elif lift <= 0.0 and rk.src == Vector3.INF:
+		elif lift <= 0.0 and rk.src == Vector3.INF and not slab:
 			rk.lifted = false
+		if slab and int(rk.state) == 3 and float(rk.into) < 0.0:
+			# (grit and dust fall from a slab as it hangs)
+			rk.grit = float(rk.grit) - dt
+			if float(rk.grit) <= 0.0:
+				rk.grit = ToonFx.vis_rng.randf_range(GRIT_S.x, GRIT_S.y)
+				_grit(p, float(rk.size))
 	if making and minf(k, 1.0) >= 1.0 and merged >= _rocks.size():
 		_stone_finish()
 	for e in _emit:
@@ -822,6 +897,58 @@ func _earth(dt: float) -> void:
 			# (the dust at the feet settles as the earth goes to the hands)
 			(e as GPUParticles3D).amount_ratio = clampf(0.1 + 0.7 * k + 0.5 * _flash, 0.05, 1.0) * _shown \
 					* (1.0 - 0.65 * ch if not foot else 1.0)
+
+
+## Slab `rk` begins to be torn out: it comes to the spot on the deck where he faces (fanned by its own SLAB_FAN), the deck
+## cracks in a line out to it, the pit's scar left under it, a puff of dust; its orbit goes on from that angle.
+func _tear_begin(rk: Dictionary, fwd_a: float, w: float, c: Vector3) -> void:
+	var a := fwd_a + float(rk.fan)
+	rk.state = 1
+	rk.st = 0.0
+	rk.phase = a - _t * w * float(rk.speed)
+	var dir := Vector3(cos(a), 0.0, sin(a))
+	var spot := c + dir * float(rk.r)
+	rk.spot = spot
+	var m := rk.mesh as Node3D
+	m.global_transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * float(rk.size) * 0.88), spot)
+	m.visible = true
+	BendLooks.crack(c + dir * 0.3, spot + dir * 0.5, 0.7, CRACK_S, 2.2)
+	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
+	if pool != null:
+		pool.mark("cracks", spot, Vector3.UP, float(rk.size) * 2.4, 2.4)
+	_dust_puff(spot, 3, 0.8, 0.2)
+
+
+## The snap: slab `rk` leaves its pit. A flat ring of dust, puffs, and the pit's chips thrown up and falling back.
+func _tear_burst(rk: Dictionary) -> void:
+	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
+	if pool == null:
+		return
+	var spot: Vector3 = rk.spot
+	var sz := float(rk.size)
+	pool.shoot("puff_dust", spot + Vector3.UP * 0.08, 6, Vector3.UP, 85.0, Vector2(1.0, 2.4), Vector2(0.14, 0.28), 0.6,
+			Vector3(0, 0.4, 0), 3.5, {"r": 0.25, "flat": 0.9, "radial": 1.2})
+	pool.shoot("chunk", spot + Vector3.UP * 0.15, 6, Vector3.UP, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.8,
+			Vector3(0, -14.0, 0), 0.0, {"r": 0.2, "ang": 400.0})
+
+
+## A bit of grit (and now and then a puff of dust) shed by a hanging slab at `at`.
+func _grit(at: Vector3, size: float) -> void:
+	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
+	if pool == null:
+		return
+	var from := at - Vector3.UP * size * 0.1
+	pool.shoot("chunk", from, 2, Vector3.DOWN, 30.0, Vector2(0.1, 0.7), Vector2(0.06, 0.11), 0.55, Vector3(0, -9.0, 0), 0.0,
+			{"r": size * 0.4})
+	if ToonFx.vis_rng.randf() < 0.5:
+		pool.shoot("puff_dust", from, 1, Vector3.DOWN, 40.0, Vector2(0.05, 0.3), Vector2(0.08, 0.14), 0.6, Vector3(0, -0.6, 0), 1.5,
+				{"r": size * 0.3})
+
+
+## Ease out with an overshoot (u 0..1): the snap of a slab leaving its pit.
+static func _back(u: float) -> float:
+	var c1 := 1.70158
+	return 1.0 + (c1 + 1.0) * pow(u - 1.0, 3.0) + c1 * pow(u - 1.0, 2.0)
 
 
 ## A charge that fell away (break, fizzle): its rocks lie where they fell, broken pieces for the next earth charge

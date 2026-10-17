@@ -44,6 +44,8 @@ var matter := "stone"
 ## Where it stands risen (world): the spike's foot on the ground, its point up; the ball's middle.
 var base := Transform3D.IDENTITY
 var mesh_instance: MeshInstance3D
+## Its mesh's seed (spike(), ball()): cel_dress draws the same stone's shape from it.
+var look_seed := 0
 
 var _t := 0.0
 var _sink_from := Transform3D.IDENTITY
@@ -72,6 +74,7 @@ static func spike(parent: Node, foot: Vector3, way: Vector3, d: Dictionary, seed
 	s.add_child(cs)
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
+	s.look_seed = seed
 	s.mesh_instance.mesh = FormModels.spike_mesh(s.radius, s.height, 31 + seed % 7, FormModels.BURY_M, p_matter)
 	FxParams.put(s.mesh_instance, &"seed", float(seed))
 	s.add_child(s.mesh_instance)
@@ -96,6 +99,7 @@ static func ball(parent: Node, foot: Vector3, d: Dictionary, seed := 0, p_matter
 	s.add_child(cs)
 	s.mesh_instance = MeshInstance3D.new()
 	s.mesh_instance.name = "Mesh"
+	s.look_seed = seed
 	s.mesh_instance.mesh = FormModels.ball_mesh(s.radius, 41 + seed % 7, p_matter)
 	FxParams.put(s.mesh_instance, &"seed", float(seed))
 	s.add_child(s.mesh_instance)
@@ -126,6 +130,22 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	s.add_to_group(GROUP)
 	NetStones.made(s)                             # (online: named in its cast's run, or the host's decision's: NetStones)
 	return s
+
+
+## The stone drawn as earth in the show's cel style (2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as
+## possible"): a bold faceted rock of three flat tones with a pale rim on its sun side and a dark drawn line round it (ToonFx
+## "rock", BendLooks.outline), in place of the weathered fieldstone. A look only: its body, its size and its collision are as
+## they were. Done for the stones of the ring (FormEffects, BendZone); once.
+func cel_dress() -> void:
+	if mesh_instance == null or has_meta(&"cel_rock") or not BendLooks.live():
+		return
+	if kind == "spike":
+		mesh_instance.mesh = ToonFx.spike_cel_mesh(radius, height, look_seed % 5, FormModels.BURY_M)
+	else:
+		mesh_instance.mesh = ToonFx.boulder_mesh(radius, look_seed % 5)
+	mesh_instance.material_override = ToonFx.mat("rock")
+	BendLooks.outline(mesh_instance, mesh_instance.mesh)
+	set_meta(&"cel_rock", true)
 
 
 ## Grown in the hands (FormEffects.grow_raised: a Spike or a Boulder held on past its lock): its body `k` x its size at once,
@@ -218,7 +238,7 @@ static func pack_look(s: FormStone) -> void:
 		s.remove_child(old)
 		old.queue_free()
 		s.mesh_instance.visible = true
-		s.mesh_instance.material_override = null
+		s.mesh_instance.material_override = ToonFx.mat("rock") if s.has_meta(&"cel_rock") else null
 	if pack == "":
 		return
 	var holder := Node3D.new()

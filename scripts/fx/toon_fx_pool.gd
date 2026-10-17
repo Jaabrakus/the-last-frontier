@@ -12,6 +12,8 @@ const BOLTS := 4
 const TRAILS_PER_KIND := 12
 ## Marks on the ground of each kind at once (round 4: the Kick's scorches along its path, ToonFx.looks floor_wave).
 const MARKS := 16
+## Cracks racing along the deck at once (earth in the show's cel style, 2026-10-16: ToonCrack's shader, crack()).
+const CRACKS := 14
 
 static var _pool: ToonFxPool
 
@@ -30,6 +32,8 @@ var _bolt_i := 0
 ## trails: kind -> Array of {"g": GPUParticles3D, "free_at": float (-1 in use)}
 var _trails := {}
 var _now := 0.0
+## cracks: [{mi, age, race, life}]
+var _cracks: Array = []
 
 
 ## The pool of `scene` (made under it the first time).
@@ -211,6 +215,78 @@ func light(at: Vector3, col: Color, energy: float, time: float, reach: float) ->
 	_lit.append([l, 0.0, time, energy])
 
 
+# ---------------------------------------------------------------- cracks
+## A crack in the deck along `pts` (world points on the deck, a few metres of jagged line), `width` m across, racing out from
+## its first point over `race_s` and fading after `life` s in all (the show's earth, our cel style: the ground splits in a line
+## before a slab lifts out of it, the Fissure's front). Reuses CRACKS strips; the oldest is taken when all are busy.
+func crack(pts: PackedVector3Array, width := 0.5, race_s := 0.12, life := 1.6) -> MeshInstance3D:
+	if pts.size() < 2:
+		return null
+	var mi: MeshInstance3D = null
+	for e: Dictionary in _cracks:
+		if is_instance_valid(e.mi) and not (e.mi as MeshInstance3D).visible:
+			mi = e.mi
+			_cracks.erase(e)
+			break
+	if mi == null and _cracks.size() >= CRACKS:
+		var old: Dictionary = _cracks.pop_front()
+		mi = old.mi if is_instance_valid(old.mi) else null
+	if mi == null:
+		mi = MeshInstance3D.new()
+		mi.mesh = ImmediateMesh.new()
+		mi.material_override = ToonFx.mat("crack")
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.extra_cull_margin = 4.0
+		add_child(mi)
+	var im := mi.mesh as ImmediateMesh
+	im.clear_surfaces()
+	var total := 0.0
+	for i in range(1, pts.size()):
+		total += pts[i].distance_to(pts[i - 1])
+	im.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP, ToonFx.mat("crack"))
+	var run := 0.0
+	for i in pts.size():
+		if i > 0:
+			run += pts[i].distance_to(pts[i - 1])
+		var a := pts[maxi(i - 1, 0)]
+		var b := pts[mini(i + 1, pts.size() - 1)]
+		var along := Vector3(b.x - a.x, 0.0, b.z - a.z)
+		along = along.normalized() if along.length_squared() > 1e-8 else Vector3.RIGHT
+		var side := Vector3(-along.z, 0.0, along.x) * width * 0.5
+		for k in 2:
+			im.surface_set_uv(Vector2(run / maxf(total, 1e-3), float(k)))
+			im.surface_add_vertex(pts[i] + side * (1.0 if k == 1 else -1.0) + Vector3.UP * 0.035)
+	im.surface_end()
+	FxParams.put(mi, &"reveal", 0.0)
+	FxParams.put(mi, &"t", 0.0)
+	FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	mi.visible = true
+	_cracks.append({"mi": mi, "age": 0.0, "race": maxf(race_s, 0.02), "life": maxf(life, 0.1)})
+	return mi
+
+
+func _crack_step(dt: float) -> void:
+	var i := 0
+	while i < _cracks.size():
+		var e: Dictionary = _cracks[i]
+		var mi: MeshInstance3D = e.mi
+		if not is_instance_valid(mi):
+			_cracks.remove_at(i)
+			continue
+		if not mi.visible:
+			i += 1
+			continue
+		e.age = float(e.age) + dt
+		if float(e.age) >= float(e.life):
+			mi.visible = false
+			(mi.mesh as ImmediateMesh).clear_surfaces()
+			i += 1
+			continue
+		FxParams.put(mi, &"reveal", clampf(float(e.age) / float(e.race), 0.0, 1.0))
+		FxParams.put(mi, &"t", clampf(float(e.age) / float(e.life), 0.0, 1.0))
+		i += 1
+
+
 # ---------------------------------------------------------------- lightning
 ## Lightning from `a` to `b` (ToonFx.lightning_strips builds the forks): rebuilt `flickers` times over its life, then thinned
 ## out.
@@ -314,6 +390,8 @@ func trail_release(g: GPUParticles3D) -> void:
 
 func _process(dt: float) -> void:
 	_now += dt
+	if not _cracks.is_empty():
+		_crack_step(dt)
 	var i := 0
 	while i < _playing.size():
 		var p: Array = _playing[i]

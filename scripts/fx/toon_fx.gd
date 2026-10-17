@@ -26,6 +26,8 @@ const SHADERS := {
 	"mark": preload("res://shaders/bend_fx/toon_mark.gdshader"),
 	"glow": preload("res://shaders/bend_fx/toon_glow.gdshader"),
 	"smoke": preload("res://shaders/bend_fx/toon_smoke.gdshader"),
+	"crack": preload("res://shaders/bend_fx/toon_crack.gdshader"),
+	"outline": preload("res://shaders/bend_fx/toon_outline.gdshader"),
 }
 ## The looks' numbers (round 4).
 const LOOKS_PATH := "res://data/bending/fx_looks.json"
@@ -216,10 +218,27 @@ static func mat(key: String) -> ShaderMaterial:
 		"ice":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
-		"rock":
+		"rock", "rock_held":
+			# (earth in the show's cel style, 2026-10-16: three flat warm tones, no rim, no glint, and its ink line kept in
+			# every style (ink_min), a pale rim along its sun side (rim_sun); its drawn outline a second mesh, "rock_outline")
 			m.shader = SHADERS.facet
-			p = {"c_light": Color(0.78, 0.69, 0.56), "c_mid": Color(0.55, 0.47, 0.37), "c_dark": Color(0.32, 0.26, 0.21),
-					"rim_on": 0.0, "glint": 0.0, "c_ink": Color(0.1, 0.07, 0.05)}
+			p = {"c_light": Color(0.84, 0.74, 0.57), "c_mid": Color(0.6, 0.5, 0.38), "c_dark": Color(0.34, 0.27, 0.2),
+					"rim_on": 1.0, "rim": 0.5, "rim_sun": 1.0, "c_rim": Color(1.0, 0.95, 0.78), "glint": 0.0,
+					"c_ink": Color(0.1, 0.07, 0.05), "ink_min": 1.0}
+			if key == "rock_held":
+				# (rocks held round the caster, seen from his own camera 3-4 m off: the near fade only at the lens)
+				p["near_m"] = 0.8
+				p["far_m"] = 1.8
+		"rock_outline", "rock_outline_held":
+			# (the dark drawn line round a cel rock: an inverted hull of the same mesh, toon_outline)
+			m.shader = SHADERS.outline
+			p = {"c_ink": Color(0.09, 0.06, 0.04), "width": 0.028}
+			if key == "rock_outline_held":
+				p["near_m"] = 0.8
+				p["far_m"] = 1.8
+		"crack":
+			# (a crack in the deck racing out from where earth is torn: ToonCrack)
+			m.shader = SHADERS.crack
 		"magma":
 			# (a magma ball, where earth and fire meet in a guard; the owner 2026-10-12: "if earth parries fire then magma ball and
 			# if fire catches earth then magma ball": the cel liquid's body as molten rock: a dark crust in its shade, the lit
@@ -286,7 +305,7 @@ static func mat(key: String) -> ShaderMaterial:
 	m.set_shader_parameter(&"range_max", float(rg.get("max", 2.2)))
 	for k in p:
 		m.set_shader_parameter(k, p[k])
-	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke]:
+	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke, SHADERS.crack]:
 		m.set_shader_parameter(&"noise", noise())
 	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
 	m.set_shader_parameter(&"fx_gain", gain)
@@ -506,6 +525,148 @@ static func chunk_mesh(seed := 0) -> Mesh:
 			for tri in [[a, b, m], [b, c, m], [c, a, m]]:
 				for v: Vector3 in tri:
 					st.add_vertex(v * 0.5 * Vector3(1.0, 0.75, 1.0))
+		st.generate_normals()
+		return st.commit())
+
+
+## A triangle wound to face `out` (Godot's front face is clockwise seen from outside: (b - a) x (c - a) points in).
+static func _tri_out(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, out: Vector3) -> void:
+	if (b - a).cross(c - a).dot(out) > 0.0:
+		var t := b
+		b = c
+		c = t
+	for v: Vector3 in [a, b, c]:
+		st.add_vertex(v)
+
+
+## A slab of deck torn out by an earth gather (the show's earth in our cel style, 2026-10-16; BendCharge): a jagged plate
+## about 1 m across and SLAB_THICK m thick about its middle, its top and underside faceted from a raised middle, its edge
+## broken into seven or eight uneven sides. Indexed with smooth normals, so its outline hull (toon_outline) closes round
+## it; the facet shader draws it flat whatever the normals.
+const SLAB_THICK := 0.2
+
+
+static func slab_mesh(seed := 0) -> Mesh:
+	return _cached("slab_%d" % seed, func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 7877 + 3
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var n := 7 + seed % 3
+		var th := SLAB_THICK
+		var top: Array[Vector3] = []
+		var bot: Array[Vector3] = []
+		# (a plate of the deck: a flat top torn into seven to nine uneven sides, one long and one short side, its underside a
+		# ragged lump of the earth under it)
+		for i in n:
+			var a := TAU * (float(i) + rng.randf_range(-0.35, 0.35)) / float(n)
+			var r := rng.randf_range(0.26, 0.55)
+			var x := cos(a) * r * 1.15
+			var z := sin(a) * r * 0.8
+			top.append(Vector3(x, th * 0.5 + rng.randf_range(-0.015, 0.025), z))
+			var k := rng.randf_range(0.35, 0.95)
+			bot.append(Vector3(x * k + rng.randf_range(-0.08, 0.08), -th * 0.5 - rng.randf_range(0.0, 0.1), z * k + rng.randf_range(-0.08, 0.08)))
+		var ct := Vector3(rng.randf_range(-0.05, 0.05), th * 0.5 + 0.02, rng.randf_range(-0.05, 0.05))
+		var cb := Vector3(rng.randf_range(-0.15, 0.15), -th * 0.5 - 0.2, rng.randf_range(-0.12, 0.12))
+		for i in n:
+			var j := (i + 1) % n
+			_tri_out(st, ct, top[i], top[j], Vector3.UP)
+			_tri_out(st, cb, bot[j], bot[i], Vector3.DOWN)
+			var mid := (top[i] + top[j] + bot[i] + bot[j]) * 0.25
+			var out := Vector3(mid.x, 0.0, mid.z).normalized()
+			_tri_out(st, top[i], bot[i], bot[j], out)
+			_tri_out(st, top[i], bot[j], top[j], out)
+		st.index()
+		st.generate_normals()
+		return st.commit())
+
+
+## A cel boulder of radius `r` (the Boulder, a caught stone; the show's earth in our cel style): a low-poly lumpy ball, its
+## points pushed in and out so its facets read big and bold. Indexed with smooth normals for its outline hull.
+static func boulder_mesh(r: float, seed := 0) -> Mesh:
+	return _cached("boulder_%.3f_%d" % [r, seed], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 4099 + 11
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var rings := 5
+		var segs := 7
+		var pts: Array = []
+		for j in rings + 1:
+			var v := PI * float(j) / float(rings)
+			var row: Array = []
+			for i in segs:
+				var u := TAU * (float(i) + (0.5 if j % 2 == 1 else 0.0) + rng.randf_range(-0.2, 0.2)) / float(segs)
+				var dir := Vector3(sin(v) * cos(u), cos(v), sin(v) * sin(u))
+				var k := 1.0 if j == 0 or j == rings else rng.randf_range(0.84, 1.14)
+				row.append(dir * r * k)
+			pts.append(row)
+		for j in rings:
+			for i in segs:
+				var i2 := (i + 1) % segs
+				var a: Vector3 = pts[j][i]
+				var b: Vector3 = pts[j][i2]
+				var c: Vector3 = pts[j + 1][i2]
+				var d: Vector3 = pts[j + 1][i]
+				var mid := (a + b + c + d) * 0.25
+				if j > 0:
+					_tri_out(st, a, b, c, mid)
+				if j < rings - 1:
+					_tri_out(st, a, c, d, mid)
+		st.index()
+		st.generate_normals()
+		return st.commit())
+
+
+## A cel spike of base radius `r` and height `h` (a Spike, a Column's crown; the show's earth in our cel style): a jagged
+## six-sided cone in four uneven rings, its point a little off true, `bury` m of it under the ground, its foot closed.
+## Indexed with smooth normals for its outline hull.
+static func spike_cel_mesh(r: float, h: float, seed := 0, bury := 0.0) -> Mesh:
+	return _cached("spikec_%.3f_%.3f_%d_%.2f" % [r, h, seed, bury], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 2531 + 5
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var sides := 6
+		var rings := 4
+		var tip := Vector3(rng.randf_range(-0.25, 0.25) * r, h, rng.randf_range(-0.25, 0.25) * r)
+		var pts: Array = []
+		for j in rings + 1:
+			var u := float(j) / float(rings)
+			var y := lerpf(-bury, h * 0.9, u)
+			var k := 1.0 - clampf(y / h, 0.0, 1.0)
+			var row: Array = []
+			for i in sides:
+				var a := TAU * (float(i) + rng.randf_range(-0.2, 0.2)) / float(sides) + float(seed) * 0.3
+				var rr := r * maxf(k, 0.1) * rng.randf_range(0.8, 1.2)
+				row.append(Vector3(cos(a) * rr, y, sin(a) * rr) + Vector3(tip.x, 0.0, tip.z) * clampf(y / h, 0.0, 1.0))
+			pts.append(row)
+		for j in rings:
+			for i in sides:
+				var i2 := (i + 1) % sides
+				var a: Vector3 = pts[j][i]
+				var b: Vector3 = pts[j][i2]
+				var c: Vector3 = pts[j + 1][i2]
+				var d: Vector3 = pts[j + 1][i]
+				var mid := (a + b + c + d) * 0.25
+				var lean := Vector3(tip.x, 0.0, tip.z) * clampf(mid.y / h, 0.0, 1.0)
+				var out := Vector3(mid.x - lean.x, 0.0, mid.z - lean.z).normalized()
+				_tri_out(st, a, b, c, out)
+				_tri_out(st, a, c, d, out)
+		var cap: Array = pts[rings]
+		for i in sides:
+			var a: Vector3 = cap[i]
+			var b: Vector3 = cap[(i + 1) % sides]
+			var mid := (a + b) * 0.5
+			_tri_out(st, tip, a, b, Vector3(mid.x - tip.x, 0.0, mid.z - tip.z).normalized() + Vector3.UP * 0.3)
+		var foot: Array = pts[0]
+		var fc := Vector3.ZERO
+		for q: Vector3 in foot:
+			fc += q
+		fc /= float(sides)
+		for i in sides:
+			_tri_out(st, fc, foot[i], foot[(i + 1) % sides], Vector3.DOWN)
+		st.index()
 		st.generate_normals()
 		return st.commit())
 

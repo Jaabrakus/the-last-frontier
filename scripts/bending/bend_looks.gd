@@ -491,6 +491,56 @@ static func _mesh(parent: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
 	return mi
 
 
+## A mesh drawn as earth in the show's cel style (2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as
+## possible"): three flat tones of rock with a pale rim on the sun side (ToonFx "rock"), a dark drawn line round it (an inverted
+## hull of the same mesh, ToonFx "rock_outline", a child that goes wherever the rock goes). Our own meshes and shaders.
+## Not a bolt's core (_core): the caller sets range_on when it is one.
+static func cel_rock(parent: Node3D, m: Mesh, held := false) -> MeshInstance3D:
+	var mi := _mesh(parent, m, ToonFx.mat("rock_held" if held else "rock"))
+	mi.name = "Rock"
+	outline(mi, m, held)
+	return mi
+
+
+## The dark drawn line round `mi` (see cel_rock): its mesh again in "rock_outline", under it. `held`: rocks held round their
+## caster, whose near fade is at the lens only (his own camera sits 3-4 m off).
+static func outline(mi: MeshInstance3D, m: Mesh, held := false) -> MeshInstance3D:
+	var ol := MeshInstance3D.new()
+	ol.name = "Outline"
+	ol.mesh = m
+	ol.material_override = ToonFx.mat("rock_outline_held" if held else "rock_outline")
+	ol.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.add_child(ol)
+	return ol
+
+
+## A jagged line over the deck from `a` to `b` (the points' y is a's): a point every `step` m, each pushed aside by up to
+## `jag` m, the ends kept. The points of a crack (crack).
+static func crack_line(a: Vector3, b: Vector3, step := 0.26, jag := 0.07) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	var flat := Vector3(b.x - a.x, 0.0, b.z - a.z)
+	var len := flat.length()
+	if len < 0.05:
+		return out
+	var dir := flat / len
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	var n := maxi(int(len / step), 2)
+	for i in n + 1:
+		var u := float(i) / float(n)
+		var off := 0.0 if i == 0 or i == n else ToonFx.vis_rng.randf_range(-jag, jag)
+		out.append(Vector3(a.x, a.y, a.z) + dir * len * u + side * off)
+	return out
+
+
+## A crack racing over the deck from `a` to `b` (see ToonFxPool.crack): `width` m across, over `race_s`, gone after `life` s.
+static func crack(a: Vector3, b: Vector3, width := 0.5, race_s := 0.12, life := 1.6) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool != null:
+		pool.crack(crack_line(a, b), width, race_s, life)
+
+
 ## A bolt's drawn core (round 4): it grows at range in its shader (range_on; ToonFx.range_scale), and draws no shadow of
 ## its own (a grown core's shadow would grow too: its shadow is _shadow's).
 static func _core(g: GeometryInstance3D) -> void:
@@ -2342,9 +2392,8 @@ static func rooted_dust(body: Node3D) -> void:
 	if pool == null:
 		return
 	var foot := body.global_position + Vector3.UP * 0.05
-	pool.play("ring", Transform3D(Basis.IDENTITY, foot), 0.5, 0.3, 0.9, DUST, DUST_LIGHT)
-	pool.shoot("puff_dust", foot, 5, Vector3.UP, 80.0, Vector2(0.3, 0.7), Vector2(0.15, 0.3), 0.6, Vector3.ZERO, 2.0,
-			{"flat": 0.8, "r": 0.4})
+	pool.shoot("puff_dust", foot, 6, Vector3.UP, 80.0, Vector2(0.5, 1.1), Vector2(0.12, 0.24), 0.55, Vector3.ZERO, 3.0,
+			{"flat": 0.9, "r": 0.3, "radial": 0.8})
 
 
 ## The hands of `sway` (a SwayCaster: its hand_point) or the chest of a body.
@@ -3000,6 +3049,11 @@ static func warm_up(cam: Camera3D, progress := Callable(), elements: Array = [])
 				for c in t.get_children():
 					if c is ToonRibbon:
 						(c as ToonRibbon).prime(at, at + Vector3.LEFT * 0.05))
+	groups.append(func() -> void:
+		# (earth in the cel style: its crack strip, cel rocks and their outlines drawn once, compiled up front)
+		pool.crack(crack_line(at, at + Vector3.RIGHT * 0.3, 0.1, 0.0), 0.01, 0.05, 0.2)
+		cel_rock(holder, ToonFx.slab_mesh(0), true)
+		cel_rock(holder, ToonFx.boulder_mesh(0.1, 0)))
 	groups.append(func() -> void: burst(at, "steam", 2, Vector3.UP, 30.0, 0.1, 0.01))
 	for i in range(0, WARM_EMITTER_KINDS.size(), WARM_EMITTERS):
 		var some := WARM_EMITTER_KINDS.slice(i, i + WARM_EMITTERS)

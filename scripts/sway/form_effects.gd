@@ -373,6 +373,8 @@ static func stone_form(c: Variant, at: Vector3, d: Dictionary, mode := "spike") 
 		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
+	if BendR3.on(bc.body):
+		s.cel_dress()                              # (the ring's stones are drawn in the cel style)
 	var h: Dictionary = d.get("hollow", {})
 	if face == Vector3.INF:
 		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
@@ -464,6 +466,8 @@ static func _new_stone(bc: BendCaster, d: Dictionary, mode: String) -> FormStone
 		s = FormStone.ball(scn, foot, _ball_d(bc, d), seed, matter)
 	else:
 		s = FormStone.spike(scn, foot, way, d.get("spike", {}), seed, matter)
+	if BendR3.on(bc.body):
+		s.cel_dress()                              # (the ring's stones are drawn in the cel style)
 	var h: Dictionary = d.get("hollow", {})
 	if face == Vector3.INF:
 		FormHollow.dig(scn, foot, way, float(h.get("width_m", 1.3)), float(h.get("depth_m", 1.3)), float(h.get("fade_s", 600.0)))
@@ -692,6 +696,8 @@ static func reshape_raised(th: Node, mode: String) -> Node:
 		s = FormStone.ball(scn, at, d.get("cannonball", {}), 7, matter)
 	else:
 		s = FormStone.spike(scn, at, bc.facing(), d.get("spike", {}), 7, matter)
+	if BendR3.on(bc.body):
+		s.cel_dress()
 	s.base = Transform3D(s.base.basis, at)
 	s.global_transform = s.base
 	s.state = FormStone.State.RESTING
