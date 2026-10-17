@@ -548,6 +548,8 @@ static func screens() -> Dictionary:
 ## DEFAULTS; the jab is a quick spell of its element though it is on none of 1-4. A kept one the kit no longer has (fire's
 ## old fire_jab/jab) gives the default. A test points GameSettings.path at a file of its own.
 const QUICK_SECTION := "quick"
+## The quick spells a fresh public (web) profile starts with, as the owner's own game has them on the left button.
+const PUBLIC_QUICK := {"earth": "stone_form/cannonball", "fire": "fire_kick/kick", "air": "air_blast/slice", "water": "water_whip/whip"}
 
 
 ## Element `el`'s quick spell: {id, mode} (the one kept, else its default; {} for no element).
@@ -557,6 +559,13 @@ static func quick_of(el: String) -> Dictionary:
 	var kept := _quick_parse(el, String(GameSettings.get_value(QUICK_SECTION, el)))
 	if not kept.is_empty():
 		return kept
+	if OS.has_feature("public"):
+		# (the public web build, a fresh profile: the left button holds the moves the owner's own game has on it, not the jabs:
+		# 2026-10-16, "the rock boulder cast seems slow ... compared to the main game": his saved quick spells are the Boulder,
+		# the Kick, the Slice and the Whip)
+		var pq := _quick_parse(el, String(PUBLIC_QUICK.get(el, "")))
+		if not pq.is_empty():
+			return pq
 	return quick_default(el)
 
 
