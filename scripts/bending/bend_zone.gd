@@ -375,11 +375,14 @@ func _look() -> void:
 		"smoke", "dust", "spray", "snow":
 			# (smoke: more and smaller puffs, a haze over the same round rather than a few grey lumps; the move review 2026-10-12)
 			var sm := kind == "smoke"
+			var flat_smoke := sm and float(ToonFx.looks("smoke").get("flat", 1.0)) > 0.5
 			var cl := BendLooks.emitter(self, "smoke" if sm else ("dust" if kind == "dust" else "foam"),
-					Vector3(radius, 0.8, radius), 84 if sm else 40, 1.6 if sm else 2.2, 0.6, 0.8 if sm else 1.6)
+					Vector3(radius, 0.8, radius), (56 if flat_smoke else 84) if sm else 40, 1.6 if sm else 2.2, 0.6,
+					(1.1 if flat_smoke else 0.8) if sm else 1.6)
 			_fx.append(cl)
-			if kind == "smoke" and cl != null:
-				# (round 4: lit warm from under by the flame that made it, for its first warm_s)
+			if kind == "smoke" and cl != null and not flat_smoke:
+				# (round 4: lit warm from under by the flame that made it, for its first warm_s; the flat puffs of round 2 have no
+				# under-glow)
 				FxParams.put(cl, &"warm", 1.0)
 				var tw := cl.create_tween()
 				tw.tween_method(func(v: float) -> void: FxParams.put(cl, &"warm", v), 1.0, 0.0,
@@ -530,7 +533,7 @@ func _grow(look: Node3D, from: Vector3) -> void:
 ## The Parry's shield (the cel look): the arc stood up before the guard's hands (PARRY_AT: height, ahead), facing the shot (`way`), a
 ## smile turned over so it domes the hands, a bold outlined flame arc (ToonFx flame_slash) and PARRY_TONGUES tongues rising off its
 ## outer edge, the middle ones tallest. Burns out in a puff of smoke when it goes.
-const PARRY_R := 0.85
+const PARRY_R := 1.1
 const PARRY_TONGUES := 7
 const PARRY_AT := Vector2(1.3, 0.7)
 func _parry_look(look: Node3D) -> void:

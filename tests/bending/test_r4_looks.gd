@@ -256,8 +256,11 @@ func _smoke() -> void:
 	_expect(is_equal_approx(z.radius, 2.025), "Breath's smoke radius as the base's (%.3f)" % z.radius)
 	_expect(is_equal_approx(z.life_s, 5.0), "its life as the base's (%.1f)" % z.life_s)
 	_expect(hid, "it still hides the player from the bot")
+	# (round 2, fire's cel look 2026-10-17: Breath's smoke is flat outlined puffs unless fx_looks smoke.flat is 0, the lit volume of
+	# round 4; either way its puffs are sorted and its zone is the base's)
+	var smoke_shader: Shader = ToonFx.SHADERS.puff if float(ToonFx.looks("smoke").get("flat", 1.0)) > 0.5 else ToonFx.SHADERS.smoke
 	_expect(em != null and em.draw_order == GPUParticles3D.DRAW_ORDER_VIEW_DEPTH and em.material_override is ShaderMaterial
-			and (em.material_override as ShaderMaterial).shader == ToonFx.SHADERS.smoke, "drawn as a lit volume, its puffs sorted")
+			and (em.material_override as ShaderMaterial).shader == smoke_shader, "drawn as the smoke look in force (flat rimmed puffs, or the lit volume), its puffs sorted")
 	metrics["smoke_screen_unchanged_ok"] = ok
 	z.end()
 	await _ticks(2)
@@ -474,5 +477,5 @@ func _warm() -> void:
 	await BendLooks.warm_up(cam)
 	var has := ToonFx._mats.has("flame_glow") and ToonFx._mats.has("flame_lip") and ToonFx._mats.has("flame_orb") \
 			and ToonFx._mats.has("flame_wave") and ToonFx._mats.has("puff_smoke") \
-			and (ToonFx._mats["puff_smoke"] as ShaderMaterial).shader == ToonFx.SHADERS.smoke
+			and (ToonFx._mats["puff_smoke"] as ShaderMaterial).shader == (ToonFx.SHADERS.puff if float(ToonFx.looks("smoke").get("flat", 1.0)) > 0.5 else ToonFx.SHADERS.smoke)
 	_expect(has, "the warm-up covers every new material (flame_glow, flame_lip, flame_orb, flame_wave, the smoke's)")

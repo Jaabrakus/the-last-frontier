@@ -50,6 +50,12 @@ uniform float ink_w = 0.08;
 uniform float lobes = 2.5;
 uniform float notch = 0.32;
 uniform float cel_noise = 0.7;
+// Where the yellow band and the pale core begin in the field (the cel bands; round 2: the show's core is a small pale centre), and the
+// orb's (mode 3) in its own 0..1.
+uniform float hot_at = 0.22;
+uniform float core_at = 0.82;
+uniform float orb_hot = 0.24;
+uniform float orb_core = 0.5;
 // 1 (mode 1): a flat arc of flame, high along its middle (the High Kick's crescent) instead of a tongue's teardrop.
 uniform float slash = 0.0;
 // 1: an instance's colour red is its heat (the Kick's rows, a MultiMesh with colours); 0: every tongue whole heat.
@@ -124,8 +130,8 @@ void fragment() {
 		float obw = clamp(fwidth(ov), cel > 0.5 ? 0.012 : 0.025, 0.1);
 		vec3 ocol = c_edge;
 		ocol = mix(ocol, c_mid, smoothstep(0.1 - obw, 0.1 + obw, ov));
-		ocol = mix(ocol, c_hot, smoothstep(0.24 - obw, 0.24 + obw, ov));
-		ocol = mix(ocol, c_core * glow, smoothstep(0.5 - obw, 0.5 + obw, ov));
+		ocol = mix(ocol, c_hot, smoothstep(orb_hot - obw, orb_hot + obw, ov));
+		ocol = mix(ocol, c_core * glow, smoothstep(orb_core - obw, orb_core + obw, ov));
 		ocol = mix(ocol, c_ink, ink * (1.0 - smoothstep(ink_w - obw, ink_w + obw, ov)));
 		ALBEDO = ocol * fx_gain;
 		ALPHA = clamp(softstep(0.0, ov, sft) * fade, 0.0, 1.0);
@@ -167,8 +173,8 @@ void fragment() {
 		// thinner than about two pixels, so it still reads from across the deck)
 		float iw = max(ink_w, bw * 2.2);
 		col = c_mid;
-		col = mix(col, c_hot, smoothstep(o + iw + 0.22 - bw, o + iw + 0.22 + bw, v));
-		col = mix(col, c_core * glow, smoothstep(o + iw + 0.82 - bw, o + iw + 0.82 + bw, v));
+		col = mix(col, c_hot, smoothstep(o + iw + hot_at - bw, o + iw + hot_at + bw, v));
+		col = mix(col, c_core * glow, smoothstep(o + iw + core_at - bw, o + iw + core_at + bw, v));
 		col = mix(col, c_ink, ink * (1.0 - smoothstep(o + iw - bw, o + iw + bw, v)));
 	} else {
 		col = mix(col, c_mid, smoothstep(o + 0.14 - bw, o + 0.14 + bw, v));

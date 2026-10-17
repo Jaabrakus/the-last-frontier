@@ -19,7 +19,7 @@ const CaptureKit := preload("res://tools/ui_audit/capture_kit.gd")
 ## [take, how, move, mode, grown] (how: "cast" the key and the aim held; "key3" Shift + a direction (tap 2: twice); "guard" E
 ## held against the dummy's punch)
 const TAKES := [
-	["embers", "cast", "fire_jab", "embers", false],
+	["embers", "direct", "fire_jab", "embers", false],
 	["punch", "cast", "fire_blast", "punch", false],
 	["fireball", "cast", "fire_blast", "punch", true],
 	["kick", "cast", "fire_kick", "kick", false],
@@ -241,6 +241,15 @@ func _take(t: Array) -> void:
 					g += 1
 				await _f(9)
 			_ctl.set_held(act, false)
+		"direct":
+			# (Embers: the jab has no key of its own and the aim hold casts the hotbar's key (the Punch), so it is cast as the game lands
+			# a move, BendCast.cast with the crosshair on the dummy; its look is the effect's, no gather)
+			got["lock25"] = _grab()
+			await _f(4)
+			got["full"] = _grab()
+			if film_dir != "":
+				await _f(8)
+			BendCast.cast(st.bc, m, md)
 		"key3":
 			# (Step and Jets cast as the game lands a dash: BendCast.cast with the direction held; the keys' chord (Shift + W) is
 			# the player's way, tools/ring/move_reel.gd, and its timing did not reach the dash here)

@@ -13,6 +13,9 @@ extends SceneTree
 ##   the guards    the Parry's look is a Shield (an arc and PARRY_TONGUES tongues), the Fire Wall has few embers and a few puffs
 ##                 of smoke, and puffs out when it ends
 ##   the Step      a fire dash leaves a trail of flame behind it and burns out where it ends
+##   round 2       (2026-10-17) the pale core small (core_at), fire's bolts drawn size_k bigger with the hitbox kept, an Embers pellet a
+##                 small teardrop of its own, Breath's smoke flat outlined puffs, the Kick's drawn crest (and the low rows as they
+##                 were), no ring on the deck at a fire hit
 ## Last line "FIRE CEL PASSED" or "FIRE CEL FAILED"; exit 0 only on a pass; a watchdog quits with 2.
 ##   Godot --headless --fixed-fps 60 --path . -s tests/bending/test_fire_cel.gd
 
@@ -89,6 +92,7 @@ func _run() -> void:
 	foe.held = true
 	await _ticks(30)
 	_flame()
+	_round2()
 	_gather()
 	await _casts()
 	await _guards()
@@ -164,6 +168,62 @@ func _gather() -> void:
 		gone = gone and not (ms[k] as Node3D).visible
 	_expect(gone, "then it is thrown out and gone (HOLD_S %.2f + SNAP_S %.2f)" % [BendCharge.HOLD_S, BendCharge.SNAP_S])
 	c.queue_free()
+
+
+# ---------------------------------------------------------------- round 2
+func _round2() -> void:
+	var fm := ToonFx.mat("flame")
+	_expect(float(fm.get_shader_parameter(&"core_at")) >= 1.0 and float(fm.get_shader_parameter(&"orb_core")) >= 0.6,
+			"the pale core is a small centre (core_at %.2f, orb_core %.2f)" % [float(fm.get_shader_parameter(&"core_at")), float(fm.get_shader_parameter(&"orb_core"))])
+	var k := BendLooks.fire_k()
+	_expect(k >= 1.3 and k <= 1.6, "fire's bolts are drawn %.2f times bigger (1.3 to 1.6)" % k)
+	var f := Node3D.new()
+	current_scene.add_child(f)
+	BendLooks.bolt_body(f, "fire", 0.5)
+	var orb: MeshInstance3D = null
+	for c in f.get_children():
+		if c is MeshInstance3D and (c as MeshInstance3D).material_override == ToonFx.mat("flame_orb"):
+			orb = c
+	_expect(orb != null and is_equal_approx(orb.scale.x, 0.5 * 2.5 * k), "the fireball's drawn orb is its radius x2.5 x size_k (%.2f)" % (orb.scale.x if orb else -1.0))
+	f.queue_free()
+	var e := Node3D.new()
+	current_scene.add_child(e)
+	BendLooks.bolt_body(e, "fire", 0.08)
+	var et := _child(e, "Tongues") as MultiMeshInstance3D
+	_expect(et != null and et.multimesh.instance_count <= 4 and _num(et, &"grow", 1.0) < BendLooks.SMEAR_K,
+			"an Embers pellet is a small teardrop of its own (%d tongues, a shorter smear)" % (et.multimesh.instance_count if et else -1))
+	e.queue_free()
+	var sm := ToonFx.mat("puff_smoke")
+	_expect(sm.shader == ToonFx.SHADERS.puff and float(sm.get_shader_parameter(&"ink")) > 0.5, "Breath's smoke is flat puffs with a rim (not the lit volume)")
+	# the Kick's drawn crest, the low rows as they were
+	var h := Node3D.new()
+	current_scene.add_child(h)
+	var wave := BendLooks.floor_wave_body(h, 1.2, 0.9)
+	var crest := _child(wave, "Crest") as Node3D
+	var rows := _child(wave, "Tongues") as MultiMeshInstance3D
+	_expect(crest != null and crest.find_child("CrestTongues", true, false) != null, "the Kick has its drawn crest of tongues")
+	var top := 0.0
+	if rows != null:
+		for t: Dictionary in (rows.get_meta(&"tongues", []) as Array):
+			top = maxf(top, (t.xf as Transform3D).basis.y.length() * float(ToonFx.looks("floor_wave").get("fill", 0.92)))
+	_expect(rows != null and absf(top - 0.9) <= 0.1, "its low rows still stand at the height they were given (0.9; %.2f), the crest is drawn over them" % top)
+	h.queue_free()
+	# no ring on the deck at a fire hit (it read as a target marker)
+	var pool := ToonFxPool.of(current_scene)
+	pool.set_process(false)
+	var at := rm.ring.center() + Vector3.UP * 0.15
+	var rings_before := 0
+	for pl: Array in pool._playing:
+		if (pl[0] as MeshInstance3D).material_override == ToonFx.mat("ring"):
+			rings_before += 1
+	BendLooks.burst(at, "fire", 16, Vector3.UP, 120.0, 3.5, 0.3, false)
+	BendLooks.blast(at, Vector3.FORWARD, 360.0, 3.0, "fire")
+	var rings_after := 0
+	for pl: Array in pool._playing:
+		if (pl[0] as MeshInstance3D).material_override == ToonFx.mat("ring"):
+			rings_after += 1
+	pool.set_process(true)
+	_expect(rings_after == rings_before, "no flat ring on the deck at a fire hit or a fire ring (%d)" % (rings_after - rings_before))
 
 
 # ---------------------------------------------------------------- the casts

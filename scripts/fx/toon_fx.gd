@@ -122,12 +122,19 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.84, 0.88, 0.93), "c_c": Color(0.6, 0.67, 0.77),
 					"c_ink": Color(0.25, 0.3, 0.38)}
 		"puff_smoke":
-			# (round 4: a lit volume, its own shader; the smoke kind only)
-			var sm := looks("smoke")
-			var gk: Array = sm.get("grow", [0.85, 1.35])
-			m.shader = SHADERS.smoke
-			p = {"curl": float(sm.get("curl", 1.6)), "grow_k": Vector2(float(gk[0]), float(gk[1])), "tint_k": float(sm.get("tint", 0.55)),
-					"deck_fade_m": float(sm.get("deck_fade_m", 0.6)), "opacity": float(sm.get("opacity", 0.92))}
+			# (round 2, 2026-10-17: Breath's smoke as the drawings have it, flat grey puffs with a dark rim ("even dust and smoke are
+			# drawn as puffs with a rim"), not a lit volume; the smoke kind only. The lit volume's shader (SHADERS.smoke) is kept:
+			# set looks smoke.flat to 0 to have it back.)
+			if float(looks("smoke").get("flat", 1.0)) > 0.5:
+				m.shader = SHADERS.puff
+				p = {"mode": 1, "c_a": Color(0.92, 0.91, 0.89), "c_b": Color(0.78, 0.77, 0.76), "c_c": Color(0.6, 0.59, 0.59),
+						"c_ink": Color(0.3, 0.2, 0.18), "ink": 1.0, "wobble": 0.5}
+			else:
+				var sm := looks("smoke")
+				var gk: Array = sm.get("grow", [0.85, 1.35])
+				m.shader = SHADERS.smoke
+				p = {"curl": float(sm.get("curl", 1.6)), "grow_k": Vector2(float(gk[0]), float(gk[1])), "tint_k": float(sm.get("tint", 0.55)),
+						"deck_fade_m": float(sm.get("deck_fade_m", 0.6)), "opacity": float(sm.get("opacity", 0.92))}
 		"puff_dust":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.9, 0.8, 0.62), "c_b": Color(0.7, 0.58, 0.43), "c_c": Color(0.46, 0.37, 0.27),
@@ -289,7 +296,7 @@ static func mat(key: String) -> ShaderMaterial:
 	if m.shader == SHADERS.flame:
 		# (the cel look's numbers, fx_looks.json flame: cel on, its drawings' rate, the outline, the tips; 2026-10-16)
 		var fl := looks("flame")
-		for fk: String in ["soft", "warp", "embers", "deck_fade_m", "cel", "cel_fps", "ink_w", "lobes", "notch"]:
+		for fk: String in ["soft", "warp", "embers", "deck_fade_m", "cel", "cel_fps", "ink_w", "lobes", "notch", "hot_at", "core_at", "orb_hot", "orb_core"]:
 			if not p.has(fk) and fl.has(fk):
 				m.set_shader_parameter(fk, float(fl[fk]))
 		if fl.has("ink") and not p.has("ink"):
