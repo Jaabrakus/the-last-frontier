@@ -27,6 +27,8 @@ const SHADERS := {
 	"glow": preload("res://shaders/bend_fx/toon_glow.gdshader"),
 	"smoke": preload("res://shaders/bend_fx/toon_smoke.gdshader"),
 }
+## The anime air's outline: a thin light grey, never black (round 2, the style doc), drawn 2 px wide at any distance (ink_px).
+const AIR_INK := Color(0.56, 0.63, 0.72)
 ## The looks' numbers (round 4).
 const LOOKS_PATH := "res://data/bending/fx_looks.json"
 
@@ -135,17 +137,17 @@ static func mat(key: String) -> ShaderMaterial:
 			# (the anime air: a flat cel puff with an ink edge, less torn: the air's puffs as flat drawn shapes)
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.9, 0.95, 1.0), "c_c": Color(0.76, 0.86, 0.96),
-					"c_ink": Color(0.3, 0.44, 0.62), "wobble": 0.3, "ink": 0.8}
+					"c_ink": AIR_INK, "wobble": 0.3, "ink": 0.9, "ink_px": 2.0}
 		"puff_dust_air":
 			# (the anime air's dust: pale flat shapes, a soft brown ink line, never a dark clod)
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.99, 0.96, 0.9), "c_b": Color(0.95, 0.91, 0.83), "c_c": Color(0.88, 0.83, 0.74),
-					"c_ink": Color(0.74, 0.67, 0.57), "wobble": 0.3, "ink": 0.4}
+					"c_ink": Color(0.72, 0.67, 0.6), "wobble": 0.3, "ink": 0.6, "ink_px": 2.0}
 		"leaf":
 			# (the anime air: a leaf caught in the swirl as it gathers; a long cel puff in leaf greens with an ink edge, tumbling)
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.8, 0.88, 0.46), "c_b": Color(0.52, 0.68, 0.3), "c_c": Color(0.3, 0.44, 0.2),
-					"c_ink": Color(0.14, 0.22, 0.1), "wobble": 0.22, "stretch": 1.9, "ink": 0.9}
+					"c_ink": Color(0.34, 0.46, 0.26), "wobble": 0.22, "stretch": 1.9, "ink": 0.9, "ink_px": 2.0}
 		"foam":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.82, 0.94, 1.0), "c_c": Color(0.5, 0.76, 0.98),
@@ -210,20 +212,20 @@ static func mat(key: String) -> ShaderMaterial:
 			# blue-grey edge and a thin ink line down each side; the wind shader's stroke mode)
 			m.shader = SHADERS.wind
 			p = {"mode": 3, "speed": 1.2, "nscale": Vector2(1.2, 0.5), "streak": 0.1, "glow": 1.0,
-					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": Color(0.3, 0.44, 0.62),
-					"ink": 0.85}
+					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": AIR_INK,
+					"ink": 0.9, "ink_px": 2.0, "min_px": 6.0}
 		"wind_band_ink":
 			# (the anime air: a band of swirl lines with an ink edge, spinning: the ball of air at the palm, the Wind Guard's
 			# sphere, the air ball's swirl)
 			m.shader = SHADERS.wind
 			p = {"mode": 0, "spin": 7.5, "nscale": Vector2(2.0, 0.8), "streak": 0.5, "glow": 1.0,
-					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": Color(0.3, 0.44, 0.62),
-					"ink": 0.8}
+					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": AIR_INK,
+					"ink": 0.85, "ink_px": 2.0}
 		"wind_band_ink_slow":
 			m.shader = SHADERS.wind
 			p = {"mode": 0, "spin": 4.2, "nscale": Vector2(2.6, 0.8), "streak": 0.5, "glow": 1.0,
-					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": Color(0.3, 0.44, 0.62),
-					"ink": 0.8}
+					"c_main": Color(1.0, 1.0, 1.0, 0.94), "c_edge": Color(0.74, 0.86, 0.97, 0.85), "c_ink": AIR_INK,
+					"ink": 0.85, "ink_px": 2.0}
 		"ice_strip":
 			m.shader = SHADERS.wind
 			p = {"mode": 1, "speed": 2.0, "nscale": Vector2(1.5, 0.4), "streak": 0.25,
@@ -234,24 +236,24 @@ static func mat(key: String) -> ShaderMaterial:
 					"c_main": Color(0.86, 0.76, 0.6, 0.9), "c_edge": Color(0.62, 0.5, 0.38, 0.7), "c_ink": Color(0.25, 0.18, 0.1)}
 		"wind_arc":
 			m.shader = SHADERS.wind
-			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1, "ink": 0.8}
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1, "ink": 0.85, "c_ink": AIR_INK, "ink_px": 2.0}
 		"wind_arc_ink":
 			# (the anime air's Gust: a crescent of swirl with a soft white body and an ink line; the wedge's three)
 			m.shader = SHADERS.wind
-			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.3, "glow": 1.05, "ink": 0.85,
-					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": Color(0.3, 0.44, 0.62)}
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.3, "glow": 1.05, "ink": 0.9, "ink_px": 2.0,
+					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": AIR_INK}
 		"wind_stroke_wide":
 			# (a soft pale wash round a stroke: the air beam's body, no ink)
 			m.shader = SHADERS.wind
-			p = {"mode": 3, "speed": 1.2, "nscale": Vector2(1.2, 0.5), "streak": 0.05, "glow": 1.0, "ink": 0.0,
+			p = {"mode": 3, "speed": 1.2, "nscale": Vector2(1.2, 0.5), "streak": 0.05, "glow": 1.0, "ink": 0.0, "min_px": 10.0,
 					"c_main": Color(0.9, 0.96, 1.0, 0.55), "c_edge": Color(0.74, 0.86, 0.97, 0.4)}
 		"swirl_ink":
 			# (the anime air's burst: two crescents spinning out with an ink line)
 			m.shader = SHADERS.sprite
-			p = {"mode": 3, "ink": 0.85, "c_ink": Color(0.3, 0.44, 0.62)}
+			p = {"mode": 3, "ink": 0.9, "c_ink": AIR_INK, "ink_px": 2.0, "t_steps": 4.0}
 		"ring_ink":
 			m.shader = SHADERS.sprite
-			p = {"mode": 1, "ink": 0.85, "c_ink": Color(0.3, 0.44, 0.62)}
+			p = {"mode": 1, "ink": 0.9, "c_ink": AIR_INK, "ink_px": 2.0, "t_steps": 4.0}
 		"air_facet":
 			# (the Air Lance's head and shaft: flat white facets, pale blue in their shade, an ink line)
 			m.shader = SHADERS.facet
@@ -262,13 +264,13 @@ static func mat(key: String) -> ShaderMaterial:
 			# pale wave; the move review 2026-10-12)
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.12, "glow": 1.25,
-					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.12, 0.28, 0.55), "ink": 0.85}
+					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.45, 0.58, 0.8), "ink": 0.9, "ink_px": 2.0}
 		"wind_arc_pull":
 			# (the Pull's hook: teal, inked, its curve facing back to the caster)
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.15, "glow": 1.15,
-					"c_main": Color(0.85, 1.0, 0.97, 0.92), "c_edge": Color(0.25, 0.75, 0.75, 0.85), "c_ink": Color(0.08, 0.35, 0.38),
-					"ink": 0.8}
+					"c_main": Color(0.85, 1.0, 0.97, 0.92), "c_edge": Color(0.25, 0.75, 0.75, 0.85), "c_ink": Color(0.42, 0.64, 0.66),
+					"ink": 0.9, "ink_px": 2.0}
 		"ice":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
@@ -312,10 +314,16 @@ static func mat(key: String) -> ShaderMaterial:
 		"orb":
 			m.shader = SHADERS.sprite
 			p = {"mode": 4}
+		"air_sphere":
+			# (the compressed air: a translucent pale ball, a bright rim, curved streak lines wrapping it from pole to pole, a thin
+			# light grey outline 2 px wide at any distance; the wind shader's sphere mode)
+			m.shader = SHADERS.wind
+			p = {"mode": 4, "spin": 8.0, "ink": 0.9, "ink_px": 2.0, "c_ink": AIR_INK, "c_main": Color(1.0, 1.0, 1.0, 1.0),
+					"c_edge": Color(0.82, 0.92, 1.0, 1.0), "glow": 1.0, "lines": 7.0, "twist": 1.6, "line_w": 0.07}
 		"air_heart":
 			# (the anime air: the heart of its ball, a flat white disc with a pale blue shade, an inked rim and a swirl drawn in it)
 			m.shader = SHADERS.sprite
-			p = {"mode": 5, "ink": 0.0, "c_ink": Color(0.3, 0.44, 0.62), "c_core": Color(1.0, 1.0, 1.0),
+			p = {"mode": 5, "ink": 0.0, "ink_px": 2.0, "c_ink": AIR_INK, "c_core": Color(1.0, 1.0, 1.0),
 					"tint": Color(0.74, 0.86, 0.97, 1.0)}
 		"ring":
 			m.shader = SHADERS.sprite

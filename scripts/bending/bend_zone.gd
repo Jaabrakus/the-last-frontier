@@ -322,9 +322,11 @@ func _look() -> void:
 				# (each ring one brush stroke round him, thick at its middle, thin at its ends)
 				var b := _part(look, ToonFx.stroke_mesh(1.15, 1.0, 1.0, 0.02, AIR_RING_W + 0.012 * float(i)), ToonFx.mat("wind_stroke"))
 				b.scale = Vector3(radius * (1.0 - i * 0.07), 1.0, radius * (1.0 - i * 0.07))
-				b.position = Vector3.UP * (0.3 + i * 0.62)
+				# (raised and each tilted its own way: round 2 rule f, nothing on the deck may read as a target marker, so no ring
+				# lies flat near it and none is concentric with another)
+				b.position = Vector3.UP * (0.85 + i * 0.4)
+				b.rotation = [Vector3(0.5, 0.0, 0.0), Vector3(-0.45, 1.1, 0.5), Vector3(0.85, 2.2, -0.4)][i]
 				b.extra_cull_margin = radius
-				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
 				FxParams.put(b, &"seed", i * 0.37)
 				FxParams.put(b, &"band_w", own_band_w())
 			var own := ToonFx.is_own(owner_node)
@@ -339,8 +341,7 @@ func _look() -> void:
 				sm.extra_cull_margin = radius
 				FxParams.put(sm, &"seed", float(i) * 0.31)
 				FxParams.put(sm, &"fade", 0.6 if own else 1.0)
-			var spin := shell.create_tween().set_loops()
-			spin.tween_property(shell, "rotation:y", TAU, AIR_SHELL_S).from(0.0)
+			_spin_stepped(shell, AIR_SHELL_S)
 			_fx.append(BendLooks.emitter(self, "air_dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
 			_grow(look, Vector3.ONE * 0.2)
 		"water_wall":
@@ -435,11 +436,20 @@ func _look() -> void:
 			_fx.append_array([debris, dust])
 			_grow(look, Vector3(0.3, 0.05, 0.3))
 		"vacuum":
-			for i in 2:
-				var b := _part(look, ToonFx.band_mesh(1.0, 0.7, 0.4), ToonFx.mat("wind_band_fast"))
-				b.scale = Vector3.ONE * radius * (1.0 - i * 0.35)
-				b.position = Vector3.UP * (0.3 + i * 0.5)
-				FxParams.put(b, &"seed", i * 0.5)
+			# (the air pulled in, round 2: four swirl strokes spiralling inward to a point (never flat rings round it, rule f), turning
+			# on twos, thin dust drawn in)
+			var pull := Node3D.new()
+			pull.name = "Pull"
+			look.add_child(pull)
+			for i in 4:
+				var sm := _part(pull, ToonFx.stroke_mesh(1.1, 1.0, 0.15, 0.5, 0.05), ToonFx.mat("wind_stroke"))
+				sm.scale = Vector3(radius, 1.0, radius)
+				sm.position = Vector3.UP * (0.5 + 0.3 * float(i))
+				sm.rotation.y = TAU * float(i) / 4.0
+				sm.extra_cull_margin = radius
+				FxParams.put(sm, &"seed", float(i) * 0.31)
+				FxParams.put(sm, &"fade", 1.0)
+			_spin_stepped(pull, -AIR_SHELL_S)
 			_fx.append(BendLooks.emitter(self, "air", Vector3(radius, 0.6, radius), 24, 0.6, -1.0, 0.35))
 		"redirect":
 			# (the Turn: a ring of water spinning up round the guard's waist, drops flung off it; on the guarder only)
@@ -536,6 +546,37 @@ func _part(under: Node3D, m: Mesh, mat: Material) -> MeshInstance3D:
 ## machine's player), else 1 (everyone else's read of his guard).
 func own_band_w() -> float:
 	return float(ToonFx.looks("own_guard").get("band_w", 0.6)) if ToonFx.is_own(owner_node) else 1.0
+
+
+## `node` turned about its Y once in `period` s (negative: the other way), drawn on twos: held between 12 drawings a second.
+func _spin_stepped(node: Node3D, period: float) -> void:
+	var p := absf(period)
+	var sgn := signf(period)
+	var tw := node.create_tween().set_loops()
+	tw.tween_method(func(t: float) -> void: node.rotation.y = sgn * TAU * floorf(t * 12.0) / (12.0 * p), 0.0, p, p)
+
+
+## The look's ending (round 2, the style doc: "the lines thin, spread and fade in 4 to 8 frames; no lingering cloud"): the Wind Guard's
+## and the Wind Wall's Look is let go of the zone at its end, its lines thinned away and spread a little over END_LOOK_S, then freed.
+## What the zone does is untouched (this is called as it is freed).
+const END_LOOK_S := 0.13
+func _look_ending() -> void:
+	if not kind in ["air_shield", "wind_wall"] or not BendLooks.live() or not is_inside_tree():
+		return
+	var look := get_node_or_null("Look") as Node3D
+	var scn := get_tree().current_scene
+	if look == null or scn == null:
+		return
+	var xf := look.global_transform
+	remove_child(look)
+	scn.add_child(look)
+	look.global_transform = xf
+	var tw := look.create_tween().set_parallel(true)
+	tw.tween_property(look, "scale", look.scale * Vector3(1.18, 1.0, 1.18), END_LOOK_S)
+	for mi in look.find_children("*", "MeshInstance3D", true, false):
+		var gi := mi as GeometryInstance3D
+		tw.tween_method(func(v: float) -> void: FxParams.put(gi, &"fade", v), 1.0, 0.0, END_LOOK_S)
+	tw.chain().tween_callback(look.queue_free)
 
 
 ## A wall's look faded by its owner's camera (round 4, OwnFade: between his camera and his head, or by the camera): every
@@ -2065,6 +2106,7 @@ func end(why := "ended") -> void:
 	for e in _fx:
 		if e is GPUParticles3D and is_instance_valid(e):
 			BendLooks.stop_trail(e as GPUParticles3D)
+	_look_ending()
 	SbFx.stop(self, "zone")
 	if is_inside_tree():
 		SbFx.fire(owner_node, SbFx.key_of(info), "zone_end", {"node": self, "dir": way, "size": size, "radius": radius})

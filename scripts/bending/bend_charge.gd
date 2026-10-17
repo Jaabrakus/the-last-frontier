@@ -80,7 +80,7 @@ const STONE_FROM := 0.35
 const AIR_STROKES := 7
 const AIR_ARM_STROKES := 6
 const AIR_STROKE_W := 0.04
-const AIR_BALL_R := Vector2(0.1, 0.24)
+const AIR_BALL_R := Vector2(0.12, 0.28)
 const AIR_SNAP_S := 0.2
 const AIR_SNAP_X := 1.7
 const AIR_LEAVES := 6
@@ -146,6 +146,14 @@ var _arm_strokes: Array = []
 var _arm_a := 0.0
 var _vortex_f := 0.0
 var _arm_f := 0.0
+## Round 2 (the style doc: shapes change on twos, positions move smoothly): the turns of the strokes, the arm's wind and the ball
+## are held between drawings and stepped at AIR_STEP_HZ a second; `_tick` is true on the frame a new drawing is made.
+const AIR_STEP_HZ := 12.0
+var _step_acc := 0.0
+var _tick := false
+var _vortex_a := 0.0
+var _arm_aq := 0.0
+var _ball_a := 0.0
 var _foot_dust: GPUParticles3D
 
 
@@ -919,33 +927,22 @@ func _build_air() -> void:
 		FxParams.put(mi2, &"seed", 0.5 + float(i) * 0.29)
 		FxParams.put(mi2, &"fade", 0.0)
 		_arm_strokes.append(mi2)
-	# (the ball at the palm: a flat white heart with a swirl drawn in it, inked swirl bands at three tilts spinning round it;
-	# grown in by the channel)
+	# (the ball at the palm, round 2: the show's compressed air, a translucent pale sphere with curved streak lines wrapping it from
+	# pole to pole and a thin light grey outline (ToonFx "air_sphere"), grown in by the channel and turning)
 	_ball = Node3D.new()
 	_ball.name = "AirBall"
 	_ball.top_level = true
 	add_child(_ball)
 	_ball.scale = Vector3.ONE * 0.01
 	_ball.visible = false
-	var heart := MeshInstance3D.new()
-	heart.mesh = ToonFx.quad()
-	heart.material_override = ToonFx.mat("air_heart")
-	heart.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	heart.scale = Vector3.ONE * 1.5
-	_ball.add_child(heart)
-	FxParams.put(heart, &"seed", float(absi(get_instance_id()) % 50))
-	FxParams.put(heart, &"tint", Color(0.74, 0.86, 0.97))          # (the sprite's tint is an instance's own)
-	for i in 3:
-		var b := MeshInstance3D.new()
-		b.mesh = ToonFx.band_mesh(1.0, 0.9, 0.3)
-		b.material_override = ToonFx.mat("wind_band_ink" if i != 1 else "wind_band_ink_slow")
-		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		b.scale = Vector3.ONE * (1.12 - 0.1 * i)
-		b.rotation = Vector3(0.45 + 0.95 * i, 1.1 * i, 0.3 * i)
-		b.position = -b.basis.y.normalized() * 0.15 * b.scale.y
-		_ball.add_child(b)
-		FxParams.put(b, &"seed", 0.31 * i)
-		_ball_parts.append(b)
+	var shell := MeshInstance3D.new()
+	shell.mesh = ToonFx.sphere(20)
+	shell.material_override = ToonFx.mat("air_sphere")
+	shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ball.add_child(shell)
+	FxParams.put(shell, &"seed", float(absi(get_instance_id()) % 7))
+	FxParams.put(shell, &"fade", 1.0)
+	_ball_parts.append(shell)
 	# (the flecks caught in the swirl: a pivot turning at the focus, the leaves and the dust emitted on a ring round it and
 	# carried round with it, drawn in as it closes)
 	_swirl = Node3D.new()
@@ -994,11 +991,21 @@ func _air(dt: float) -> void:
 	var focus := _air_focus(ch)
 	var ka := minf(k, 1.0)
 	var w := lerpf(5.0, 10.0, ka) + 6.0 * _flash
+	_step_acc += dt
+	_tick = _step_acc >= 1.0 / AIR_STEP_HZ
+	if _tick:
+		_step_acc = fposmod(_step_acc, 1.0 / AIR_STEP_HZ)
+	_vortex_a += dt * w
+	_arm_a += dt * w * 1.5
+	_ball_a += dt * 2.6
+	if _tick:
+		_arm_aq = _arm_a
 	# (the strokes round the body: turning, closing in as it fills, fading out as it is channelled to the arm)
 	if _vortex != null and is_instance_valid(_vortex) and ending == "":
 		_vortex.global_position = c
-		_vortex.rotate_y(dt * w)
-		_vortex.scale = Vector3(lerpf(1.0, 0.55, ka), lerpf(1.0, 0.8, ka), lerpf(1.0, 0.55, ka))
+		if _tick:
+			_vortex.rotation.y = _vortex_a
+			_vortex.scale = Vector3(lerpf(1.0, 0.55, ka), lerpf(1.0, 0.8, ka), lerpf(1.0, 0.55, ka))
 		_vortex_f = (0.45 + 0.55 * _shown) * (1.0 - ch * 0.85)
 		for mi: MeshInstance3D in _vortex_strokes:
 			FxParams.put(mi, &"fade", _vortex_f)
@@ -1011,8 +1018,7 @@ func _air(dt: float) -> void:
 		var len := maxf(d.length(), 0.12)
 		var y := d / len
 		var x := y.cross(Vector3.FORWARD if absf(y.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
-		_arm_a += dt * w * 1.5
-		_arm.global_transform = Transform3D(Basis(x, y, x.cross(y)).rotated(y, _arm_a).scaled_local(Vector3(1.0, len * 1.2, 1.0)),
+		_arm.global_transform = Transform3D(Basis(x, y, x.cross(y)).rotated(y, _arm_aq).scaled_local(Vector3(1.0, len * 1.2, 1.0)),
 				a.lerp(b, 0.5) + y * len * 0.1)
 		_arm_f = (0.4 + 0.6 * _shown) * smoothstep(0.08, 0.6, ch)
 		for mi: MeshInstance3D in _arm_strokes:
@@ -1024,8 +1030,8 @@ func _air(dt: float) -> void:
 			_ball.visible = br > 0.004
 			_ball.scale = Vector3.ONE * maxf(br, 0.004)
 			_ball.global_position = _tip(l) + _forward() * br * 0.9      # (held out before the palm, never sunk into the body)
-			_ball.rotate_y(dt * 2.6)
-			_ball.rotate_x(dt * 0.9)
+			if _tick:
+				_ball.rotation = Vector3(_ball_a * 0.35, _ball_a, 0.0)
 	if _swirl != null and is_instance_valid(_swirl) and ending == "":
 		_swirl.global_position = focus
 		_swirl.rotate_y(dt * lerpf(5.0, 9.0, minf(k, 1.0)))
@@ -1050,6 +1056,7 @@ func _air_snap(out: Vector3) -> void:
 		pool.play("flash", Transform3D(Basis.IDENTITY, tip), 0.14, 0.3, 1.3, Color.WHITE, BendLooks.AIR)
 		pool.shoot("puff_air_ink", tip, 6, out, 40.0, Vector2(2.5, 5.0), Vector2(0.14, 0.28), 0.3, Vector3.ZERO, 6.0, {"r": 0.1})
 		pool.shoot("spark_line", tip, 8, out, 22.0, Vector2(9.0, 16.0), Vector2(0.03, 0.045), 0.22, Vector3.ZERO, 20.0, {"r": 0.08})
+	BendLooks.air_cone(tip, out, 2.2, 26.0)      # (the release frame: the blast drawn stretched along its way, round 2)
 	_air_let_go(AIR_SNAP_S, AIR_SNAP_X, out)
 
 

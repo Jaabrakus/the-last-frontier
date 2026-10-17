@@ -26,6 +26,7 @@ uniform float wobble = 0.45;
 uniform float nfreq = 0.55;
 uniform float stretch = 1.0;
 uniform float half_k = 0.5;
+uniform float ink_px = 0.0;                          // (the anime air: its ink line that many pixels wide at any distance)
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 uniform vec4 occl = vec4(0.0);  // (the web build: a plain uniform, each object its own material; FxParams)
 #else
@@ -92,6 +93,7 @@ void fragment() {
 		}
 	}
 	col *= COLOR.rgb;
-	col = mix(col, c_ink, ink * (1.0 - aastep(0.09, v)));
+	float rim_k = ink_px > 0.0 ? 1.0 - smoothstep(ink_px - 0.6, ink_px + 0.4, v / max(fwidth(v), 1e-4)) : 1.0 - aastep(0.09, v);
+	col = mix(col, c_ink, ink * rim_k);
 	ALBEDO = (col) * fx_gain;
 }
