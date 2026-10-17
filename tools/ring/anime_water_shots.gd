@@ -38,7 +38,7 @@ const SHOTS := {
 }
 ## The camera each shot is filmed from in film mode (the stills' own: cam=).
 const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
-		"lash_hit": "wide", "geyser": "spot", "wave": "front34", "spear": "side", "spear_hit": "wide", "tomahawk_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
+		"lash_hit": "hit", "geyser": "spot", "wave": "front34", "spear": "side", "spear_hit": "hit", "tomahawk_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
 const ORDER := ["gather_lash", "gather_geyser", "geyser", "tomahawk_hit", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
 
 var view
