@@ -377,20 +377,47 @@ func _sheet() -> void:
 
 
 # ---------------------------------------------------------------- films
-## The caster's own cast of `id`/`md` (the bot's brain begins the lock: the real clip, gather and release), held on `tail`
-## frames after it leaves; `slow` the game's speed meanwhile. Waits for the lock to end (at most `cap` s of game time).
-func _cast(id: String, md: String, tail := 50, slow := 1.0, cap := 3.0) -> void:
-	var nb: NpcBending = caster.brain.bending if caster.brain != null else null
-	if nb == null:
-		return
+## Each move's lock time (data/sway/moves.json: lock_s, mode_lock_s), s.
+const LOCKS := {"palm": 0.25, "slice": 0.5, "ball": 0.75, "gust": 0.45, "pull": 0.35}
+const MOVES := {"palm": ["air_palm", "palm"], "slice": ["air_blast", "slice"], "ball": ["air_blast", "ball"],
+		"gust": ["air_gust", "gust"], "pull": ["air_gust", "pull"]}
+
+
+## The caster's cast of `kind` as the game plays it: the move's own clip wound up to strike as the lock fills (NpcBody.
+## play_cast), its element gathering as the lock fills (BendCharge, channelled to the clip's strike limb), the release a
+## frame after it is full: the charge ends "cast" and the move leaves the hand. `tail` frames held after; `slow` the game's
+## speed meanwhile (a held bot's own brain cancels a lock, so this drives the same pieces by hand).
+func _cast(kind: String, tail := 50, slow := 1.0) -> void:
+	var mv: Array = MOVES[kind]
+	var lock: float = LOCKS[kind]
 	Engine.time_scale = slow
-	nb.begin(id, md)
-	var t := 0.0
-	while nb.casting != "" and t < cap:
+	caster.action = "cast"
+	caster.body.play_cast(String(mv[0]), String(mv[1]), lock, "air", false)
+	var ch := BendCharge.make(caster, "air")
+	ch.limb_fn = func() -> String: return caster.body.strike_limb()
+	var n := maxi(int(round(lock * 60.0 / slow)), 2)
+	for i in n:
+		ch.fill = float(i) / float(n)
 		await _frames(1)
-		t += 1.0 / 60.0 * slow
+	ch.fill = 1.0
+	ch.full = true
+	ch.flash()
+	await _frames(1)
+	var hand: Vector3 = ch._tip(ch.limb())
+	var dir := (target.global_position + Vector3.UP * 1.1 - hand).normalized()
+	ch.end("cast")
+	if kind == "palm":
+		BendLooks.blast(hand, Vector3(dir.x, 0.0, dir.z).normalized(), 40.0, 3.5, "air")
+	else:
+		var s := _spec(String(mv[0]), String(mv[1]))
+		if kind in ["gust", "pull"]:
+			s["kind"] = "air"
+			s["long"] = true
+			s["radius_m"] = float(s.get("width_m", 2.0)) * 0.5
+		BendBolt.launch(caster, hand, dir, s)
 	await _frames(tail)
 	Engine.time_scale = 1.0
+	caster.action = ""
 	for b in get_nodes_in_group(BendBolt.GROUP):
 		(b as BendBolt).end("film")
 
@@ -399,31 +426,30 @@ func _film_gather() -> void:
 	rec = true
 	_cam("close")
 	await _frames(20)
-	await _cast("air_blast", "slice", 30, 0.35)         # (the Slice at a third of the speed: the gather and its snap)
+	await _cast("slice", 40, 0.3)                       # (the Slice at a third of the speed: the gather and its snap)
 	await _clear(20)
 	_cam("close")
-	await _cast("air_blast", "ball", 40, 0.35)
+	await _cast("ball", 40, 0.3)
 	await _clear(20)
 	_cam("cast")
-	await _cast("air_blast", "slice", 45)               # (as played)
+	await _cast("slice", 45)                            # (as played)
 	await _clear(20)
 	_cam("cast")
-	await _cast("air_blast", "ball", 55)
+	await _cast("ball", 55)
 	await _clear(20)
 	_cam("cast")
-	await _cast("air_palm", "palm", 40)
+	await _cast("palm", 40)
 	await _clear(20)
 	_cam("cast")
-	await _cast("air_gust", "gust", 60)
+	await _cast("gust", 60)
 	rec = false
 
 
 func _film_kit() -> void:
 	rec = true
-	for e: Array in [["air_palm", "palm", 40], ["air_blast", "slice", 45], ["air_blast", "ball", 60], ["air_gust", "gust", 70],
-			["air_gust", "pull", 70]]:
+	for kind: String in ["palm", "slice", "ball", "gust", "pull"]:
 		_cam("cast")
 		await _frames(15)
-		await _cast(String(e[0]), String(e[1]), int(e[2]))
+		await _cast(kind, 60)
 		await _clear(12)
 	rec = false
