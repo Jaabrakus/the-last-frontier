@@ -498,9 +498,48 @@ func _film_gather() -> void:
 
 func _film_kit() -> void:
 	rec = true
+	# (the casts from across the deck, then the beam, the dashes, Carried wind, the guard and the wall, then the player's own
+	# view, behind the caster, of the three bolts)
 	for kind: String in ["palm", "slice", "ball", "gust", "pull"]:
 		_cam("cast")
-		await _frames(15)
-		await _cast(kind, 60)
-		await _clear(12)
+		await _frames(10)
+		await _cast(kind, 55)
+		await _clear(10)
+	_cam("cast")
+	await _frames(10)
+	var hand := _hand()
+	BendLooks.beam_flash(caster, hand, "air")
+	await _frames(7)
+	BendLooks.beam(hand, target.global_position + Vector3.UP * 1.1, "air")
+	await _frames(55)
+	await _clear(10)
+	for e: Array in [["air_jump", "leap"], ["evade", "slip"]]:
+		_cam("wide")
+		await _frames(8)
+		var sp := _spec(String(e[0]), String(e[1]))
+		sp.erase("dir")
+		caster.held = false
+		BendEffects.dash(BendCaster.wrap(caster), axis, sp)
+		await _frames(70)
+		caster.held = true
+		await _clear(10)
+	_cam("wide")
+	BendLooks.carried(caster)
+	await _frames(45)
+	await _clear(10)
+	var z := BendZone.make(caster, "air_shield", caster.global_position, {"radius_m": 2.2, "window_s": 0.8}, axis)
+	await _frames(55)
+	if is_instance_valid(z):
+		z.end("film")
+	await _frames(10)
+	await _clear(10)
+	_cam("behind")
+	BendZone.make(caster, "wind_wall", caster.global_position + axis * 3.0, {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 4.0}, axis)
+	await _frames(80)
+	await _clear(10)
+	for kind: String in ["slice", "ball", "gust"]:
+		_cam("behind")
+		await _frames(10)
+		await _cast(kind, 45)
+		await _clear(10)
 	rec = false
