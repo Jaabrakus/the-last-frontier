@@ -132,10 +132,16 @@ static func _make(p_kind: String, d: Dictionary) -> FormStone:
 	return s
 
 
+func _ready() -> void:
+	# (the ring's stones are drawn in the cel style whoever made them: a cast's, a catch's, a kicked-up one, the deck's own)
+	if matter in ["earth", "stone"] and BendLooks.live() and RingArena.find(get_tree()) != null:
+		cel_dress()
+
+
 ## The stone drawn as earth in the show's cel style (2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as
 ## possible"): a bold faceted rock of three flat tones with a pale rim on its sun side and a dark drawn line round it (ToonFx
 ## "rock", BendLooks.outline), in place of the weathered fieldstone. A look only: its body, its size and its collision are as
-## they were. Done for the stones of the ring (FormEffects, BendZone); once.
+## they were. Done in _ready for the stones of the ring; once.
 func cel_dress() -> void:
 	if mesh_instance == null or has_meta(&"cel_rock") or not BendLooks.live():
 		return

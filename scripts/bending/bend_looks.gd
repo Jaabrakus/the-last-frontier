@@ -1112,6 +1112,44 @@ static func _dust(pool: ToonFxPool, g: Dictionary, n: int, k: float) -> void:
 			Vector2(1.5, 3.5) * k, Vector2(0.3, 0.6) * k, 0.7, Vector3.ZERO, 5.0, {"flat": 0.85, "r": 0.3 * k})
 
 
+## Grit falling off a stone held before its catcher (the show's earth: the rock slows into the palm and dust falls off it): a bit
+## every 0.3-0.55 s while it is held (meta bend_held_by), gone with the hold. A look only.
+class HeldGrit:
+	extends Node
+	var stone: Node3D
+	var size := 0.3
+	var _t := 0.2
+
+	func _process(dt: float) -> void:
+		if stone == null or not is_instance_valid(stone) or not stone.is_inside_tree() or not stone.has_meta(&"bend_held_by"):
+			queue_free()
+			return
+		_t -= dt
+		if _t > 0.0:
+			return
+		_t = ToonFx.vis_rng.randf_range(0.3, 0.55)
+		var pool := BendLooks._pool()
+		if pool == null:
+			return
+		var from := stone.global_position - Vector3.UP * size * 0.4
+		pool.shoot("chunk", from, 2, Vector3.DOWN, 30.0, Vector2(0.1, 0.7), Vector2(0.06, 0.11), 0.55, Vector3(0, -9.0, 0), 0.0,
+				{"r": size * 0.5})
+		if ToonFx.vis_rng.randf() < 0.5:
+			pool.shoot("puff_dust", from, 1, Vector3.DOWN, 40.0, Vector2(0.05, 0.3), Vector2(0.08, 0.14), 0.6, Vector3(0, -0.6, 0),
+					1.5, {"r": size * 0.4})
+
+
+## `stone` (held before its catcher) sheds grit while it is held (HeldGrit); `size` its radius. A look only.
+static func held_grit(stone: Node3D, size := 0.3) -> void:
+	if not live() or stone == null or not is_instance_valid(stone):
+		return
+	var hg := HeldGrit.new()
+	hg.name = "HeldGrit"
+	hg.stone = stone
+	hg.size = size
+	stone.add_child(hg)
+
+
 ## Cracks running out of `at` over the deck like the spokes of a wheel (a heavy stone landing, the Slam): `count` of them, each
 ## up to `reach` m long, racing out in 0.1 s and staying about 1.8 s (the pool's crack strips).
 static func quake(at: Vector3, count: int, reach: float, life := 1.8) -> void:
@@ -1680,6 +1718,13 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 	if SbFx.fire(body, "%s/%s" % [String(g.get("id", "")), String(g.get("mode", ""))], result, {"at": at, "el": el}):
 		return                                   # (the guard's Spellbreak result played instead: SbFx)
 	var pool := _pool()
+	if pool != null and el == "earth" and result in ["perfect", "late"]:
+		# (the show's earth takes the hit through the feet: the deck cracks under him in a star and flat dust is thrown out along
+		# it, bigger on a clean catch; no aura (below))
+		var foot := body.global_position
+		quake(foot, 5 if result == "perfect" else 3, 1.5 if result == "perfect" else 1.0, 1.6)
+		pool.shoot("puff_dust", foot + Vector3.UP * 0.08, 8 if result == "perfect" else 4, Vector3.UP, 85.0, Vector2(1.0, 2.4),
+				Vector2(0.16, 0.34), 0.6, Vector3.ZERO, 3.5, {"flat": 0.9, "r": 0.3, "radial": 1.4})
 	if pool == null or el == "earth":
 		# (earth answers with no aura round him (it fell back to air's white and blue; the owner, 2026-10-12: "no blue aura
 		# catching a water no aura"): its catch shows in the stone it holds, its flow in the rocks it sweeps up as it swirls,

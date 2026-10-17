@@ -1087,7 +1087,8 @@ class RocksInto:
 			else:
 				var mi := MeshInstance3D.new()
 				mi.mesh = ToonFx.chunk_mesh(i % 4)
-				mi.material_override = ToonFx.mat("rock")
+				mi.material_override = ToonFx.mat("rock_held")
+				BendLooks.outline(mi, mi.mesh, true)                 # (the cel rock's drawn line, as the gather's)
 				mi.top_level = true
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 				add_child(mi)

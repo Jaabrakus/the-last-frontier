@@ -1614,6 +1614,9 @@ static func return_stone(c: Variant, s: Node3D, toward := Vector3.INF) -> FormEf
 		if pack == "magma" and th.lift != null:
 			th.lift.heat()                          # (a magma ball burns as it flies: fire to the guards, a Turn douses it)
 	BendLooks.burst(fs.global_position, "stone", 12)
+	if BendLooks.live() and bc.body is Node3D:
+		# (he braces to send it back: the deck cracks under his feet and flat dust jumps off it; bigger on a clean return)
+		BendLooks.quake((bc.body as Node3D).global_position, 4 if clean else 3, 1.3 if clean else 1.0, 1.4)
 	BendSounds.play(&"earth_cast_crack", fs.global_position, 1.0 if clean else -1.0)
 	return th
 
@@ -1977,6 +1980,8 @@ func _take_stone(s: Node3D, v: Vector3, perfect := false, thrower: Node = null) 
 				(s as FormStone).rest_again()
 			if not SbFx.start(s, "held", owner_node, SbFx.key_of(info, "stone_catch", "catch"), "held", {"node": s, "dir": out}):
 				BendLooks.burst(front, "stone", 14)
+				if s is FormStone:
+					BendLooks.held_grit(s, (s as FormStone).radius)    # (dust falls off the stone he holds)
 			if not r2:
 				BendLooks.sound("stone", "hit", front, -2.0)
 		"deflect":

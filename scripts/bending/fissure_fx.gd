@@ -185,7 +185,7 @@ func _heave(at: Vector3, scn: Node) -> void:
 		var out := side * float(sgn)
 		var reach := width * _rng.randf_range(SLAB_REACH.x, SLAB_REACH.y)
 		var base := at + out * reach + fwd * _rng.randf_range(-0.2, 0.2) + Vector3.DOWN * 0.02
-		_slab_up(scn, base, out, fwd, _rng.randf_range(0.8, 1.15))
+		_slab_up(scn, base, out, fwd, _rng.randf_range(0.65, 0.95))
 		if pool != null:
 			pool.shoot("puff_dust", base + Vector3.UP * 0.1, 3, Vector3.UP, 75.0, Vector2(0.6, 1.6), Vector2(0.14, 0.28), 0.6,
 					Vector3(0, 0.4, 0), 3.0, {"r": 0.2, "flat": 0.9, "radial": 0.8})
