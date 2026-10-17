@@ -23,8 +23,8 @@ const H := 720
 const SHOTS := {
 	"gather_lash": {"key": 0, "mode": "", "fills": [0.2, 0.45, 0.7, 0.92], "full": [12], "after": [3, 8, 16, 30]},
 	"gather_geyser": {"key": 1, "mode": "spout", "fills": [0.25, 0.5, 0.75, 0.95], "full": [12], "after": [4, 12, 26, 45, 70]},
-	"splash": {"key": -1, "mode": "", "fills": [], "full": [], "after": [10, 18, 22, 24, 26, 28, 31, 35, 42]},
-	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
+	"splash": {"key": 0, "move": "water_jet", "mode": "splash", "fills": [0.9], "full": [4], "after": [6, 9, 11, 13, 15, 18, 22, 30]},
+	"splash_hit": {"key": 0, "move": "water_jet", "mode": "splash", "fills": [], "full": [4], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
 	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 10, 18, 28, 40, 60]},
