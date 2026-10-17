@@ -120,6 +120,21 @@ body {
 			<div id="status-text">Loading</div>
 		</div>
 
+		<script>
+/* The canvas resolution (the owner, 2026-10-16: the browser game "does not feel smooth at all versus the local build"): the engine
+   sizes its canvas by window.devicePixelRatio, which on a Retina screen is 2, four times the pixels of the desktop game's own
+   window drawn through a single-threaded WebGL renderer. The ratio the engine sees is capped here at DPR_CAP (1.25: a sharp enough
+   picture for a quarter fewer than half the pixels); ?dpr=1 asks for the fastest, ?dpr=2 for the sharpest. Mouse positions are
+   in CSS pixels and unaffected. */
+(function () {
+	const real = window.devicePixelRatio || 1;
+	const ask = parseFloat(new URLSearchParams(location.search).get('dpr'));
+	const cap = ask > 0 ? ask : 1.25;
+	const ratio = Math.max(1, Math.min(real, cap));
+	try { Object.defineProperty(window, 'devicePixelRatio', { get: function () { return ratio; }, configurable: true }); } catch (e) { /* kept as is */ }
+	window.tidebreakDpr = { real: real, used: ratio };
+})();
+		</script>
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;

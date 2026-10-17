@@ -39,5 +39,7 @@ cmp -s $SKIP $KNOWN || { cp $SKIP $KNOWN; echo "tools/web/anim_skip.txt: $(wc -l
 #    textures (tools/web/prep_imports.py), then the re-import.
 python3 -I ${0:A:h}/prep_sbfx.py $SNAP || exit 1
 python3 -I ${0:A:h}/prep_imports.py $SNAP || exit 1
+# The elements the browser game offers (WEB_ELEMENTS, default earth,fire: the owner, 2026-10-16), narrowed in the snapshot's scripts.
+python3 -I ${0:A:h}/prep_elements.py $SNAP "${WEB_ELEMENTS:-earth,fire}" || exit 1
 $GODOT --headless --path . --import > $LOG/import.log 2>&1
 echo "import exit $?"
