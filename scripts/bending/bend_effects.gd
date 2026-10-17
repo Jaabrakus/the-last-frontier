@@ -663,6 +663,8 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 		bm._trail("fire")                         # (Jets: flame under his feet while it carries him, the move review 2026-10-12)
 	elif float(spec.get("under_s", 0.0)) > 0.0:
 		bm._trail("stone")                        # (Burrow: a wake of broken earth along the line he went under)
+		# (and the deck cracks along that line, a ridge of it heaved up: the cel look)
+		BendLooks.crack(p.global_position, p.global_position + dir * maxf(fwd * 0.4, 2.0), 0.9, 0.2, 1.6)
 	AirTalents.on_dash(p, spec)                     # (Peak Wind's Beat Leap: Carried wind at its top; Classic none)
 	if float(spec.get("under_s", 0.0)) > 0.0:
 		p.set_meta(&"bend_under_until", BendStatus.now() + float(spec.under_s))
@@ -1235,6 +1237,10 @@ static func column(c: Variant, at: Vector3, spec: Dictionary) -> FormRaised:
 	else:
 		r = FormRaised.raise(p.get_tree().current_scene, "pillar", xf, wn, absi(hash(at)) % 97)
 		r.set_meta(&"bend_by", p.get_instance_id())
+		if r.cel:
+			# (the deck splits in a star round the column and flat dust is thrown out as it shoots up: the cel look, ring only)
+			BendLooks.quake(at, 5, 1.7)
+			BendLooks.burst(at + Vector3.UP * 0.2, "stone", 14, Vector3.UP, 70.0, 3.0, 0.3, false)
 		BendSounds.play(&"earth_rise", at, 0.0)     # (the stone rising where it rises, not only the cast at his chest: the audit)
 	# (lift_m: the pillar carries whom it rises under up onto its top, where its throw must find him; the owner 2026-10-11, "i
 	# dont think the knock column knocks someone up right?": it was looked for within 3 m of the deck, the pillar 3 m tall)
@@ -1747,6 +1753,8 @@ static func slam(c: Variant, a: Dictionary, spec: Dictionary) -> Strike:
 	if floor_at != Vector3.INF:
 		if kind != "water" and not SbFx.fire(p, slk, "slam_deck", {"at": floor_at, "dir": box.fwd}):
 			BendLooks.burst(floor_at + Vector3.UP * 0.1, kind, 26, Vector3.UP, 70.0, 4.0, 0.4)
+			if kind == "stone":
+				BendLooks.quake(floor_at, 6, float(spec.get("width_m", 2.5)) * 1.3)      # (the deck splits in a star where it lands)
 		if bool(spec.get("put_out", false)):
 			for z in p.get_tree().get_nodes_in_group(BendZone.GROUP):
 				var bz := z as BendZone

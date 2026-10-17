@@ -93,6 +93,8 @@ var _sw_h0 := 1.0
 ## Wrapped in another element since a guard's swing (sheath: a water Turn's, "water"), and that trail.
 var sheathed := ""
 var _sheath_trail: GPUParticles3D
+## The ring's stone in flight: a wake of dust and chips behind it (a cel trail, BendLooks.trail "stone"), off where it lands.
+var _flight_trail: GPUParticles3D
 
 
 ## Gust's stone data (moves.json gust.stone).
@@ -323,7 +325,11 @@ func hurl(toward := Vector3.INF) -> void:
 	_fly_t = 0.0
 	_hurl_from = from
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
-	GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
+	if BendR3.on(by()):
+		_flight_trail = BendLooks.trail(stone, "stone", radius)         # (a wedge of dust and chips behind it, the ring's)
+		BendLooks.burst(from, "stone", 6, Vector3.UP, 120.0, 2.0, 0.2, false)
+	else:
+		GatherFx.fall_dust(get_tree().current_scene, from, radius * 1.5)
 	# (the Spellbreak flight, SbFx: visual only, keyed by its Throw's hit info; a held stone thrown back by the catch's own)
 	var sbk := SbFx.key_of(get_meta(&"bend_info", {}))
 	var sbo := {"node": stone, "dir": velocity, "info": get_meta(&"bend_info", {})}
@@ -877,11 +883,11 @@ func _shatter(at: Vector3, n: Vector3) -> void:
 	var scn := get_tree().current_scene
 	var dir := velocity.normalized() if velocity.length_squared() > 1e-6 else Vector3.DOWN
 	var out := (n - dir * 0.6).normalized() if (n - dir * 0.6).length_squared() > 1e-4 else Vector3.UP
-	GatherFx.stone_chips(scn, at, n, int(float(sd.get("chips", 24)) * k))
-	GatherFx.fall_dust(scn, at, float(sd.get("dust_m", 1.8)) * k)
+	# (earth in the show's cel style, 2026-10-16: no soft dust, the rock bursts into chunks and flat dust clods, the deck cracks
+	# round the place in a star and stays scarred; the ring only (shatter_d ring_only))
 	BendLooks.burst(at, "stone", int(float(sd.get("burst_n", 36)) * k), out, 150.0, float(sd.get("burst_mps", 6.5)) * sqrt(k),
 			float(sd.get("burst_size", 0.5)) * k)
-	GatherFx.fall_dust(scn, at + Vector3.UP * 0.4 * k, float(sd.get("dust_m", 1.8)) * k * 0.7)
+	BendLooks.quake(at, 4 + int(round(2.0 * k)), 1.7 * sqrt(k))
 	FormEffects.sfx("break", at, 2.0, 0.9 / sqrt(k))
 	FormEffects.sfx("strike", at, -1.0, 0.75)
 	# (a guard's fusion bursts as what it is: mud splats, magma flares)
@@ -913,8 +919,15 @@ static func _chunks(scn: Node, at: Vector3, out: Vector3, k: float, matter: Stri
 	side = side.normalized() if side.length_squared() > 1e-4 else Vector3.RIGHT
 	for i in n:
 		var mi := MeshInstance3D.new()
-		mi.mesh = _chunk_mesh(matter, i)
 		var sz := rng.randf_range(0.8, 2.0) * k
+		if ar != null:
+			# (the ring's: broken pieces of cel rock with their drawn line, as the gather's)
+			mi.mesh = ToonFx.chunk_mesh(i % 4)
+			mi.material_override = ToonFx.mat("rock")
+			BendLooks.outline(mi, mi.mesh)
+			sz *= 0.6
+		else:
+			mi.mesh = _chunk_mesh(matter, i)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		scn.add_child(mi)
 		mi.global_position = at
@@ -985,6 +998,9 @@ func _except(b: Node) -> void:
 
 
 func _release_stone() -> void:
+	if _flight_trail != null:
+		BendLooks.stop_trail(_flight_trail)
+		_flight_trail = null
 	if _kiln_trail != null:
 		BendLooks.stop_trail(_kiln_trail)        # (Kiln Stone: the heat ends where it lands)
 		_kiln_trail = null

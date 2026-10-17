@@ -27,8 +27,10 @@ var caption: Label
 
 
 func _initialize() -> void:
-	var a := CaptureKit.args({"out": out, "tag": tag, "light": "noon", "film": "off", "cam": "near"})
+	var a := CaptureKit.args({"out": out, "tag": tag, "light": "noon", "film": "off", "cam": "near", "public": "on"})
 	film = String(a["film"]) in ["1", "on", "true"]
+	if String(a.get("public", "on")) == "on":
+		SbFx.force_on = false                      # (our own effects only: the Fissure's Spellbreak shockwave off, as the posts'; public=off keeps it)
 	cam_kind = String(a["cam"])
 	out = String(a["out"])
 	tag = String(a["tag"])

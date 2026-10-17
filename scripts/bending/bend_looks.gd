@@ -187,12 +187,14 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			mi.name = "Body"
 			# (the effects' own dice: a stone's body never moves the game's rolls)
 			var sd := ToonFx.vis_rng.randi() % 50
-			mi.mesh = FormModels.ball_mesh(r, sd) if not long else FormModels.spike_mesh(r, r * 7.0, sd, 0.0)
+			# (earth in the show's cel style, 2026-10-16: a bold low-poly rock, flat tones, a dark drawn line round it)
+			mi.mesh = ToonFx.boulder_mesh(r, sd % 5) if not long else ToonFx.spike_cel_mesh(r, r * 7.0, sd % 5, 0.0)
 			if long:
 				mi.rotation.x = -PI / 2.0
 			mi.material_override = ToonFx.mat("rock")
 			parent.add_child(mi)
-			_core(mi)
+			outline(mi, mi.mesh)
+			_core_rock(mi, r)
 			_shadow(parent, "stone", r, Vector3(1.0, 1.0, 3.5) if long else Vector3.ONE, Vector3(0.0, 0.0, -r * 3.0) if long else Vector3.ZERO)
 
 
@@ -202,9 +204,12 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 ## little as they turn (one MultiMesh), a warm light.
 static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 	if kind == "stone":
-		var mi := _mesh(parent, disc_mesh(ToonFx.vis_rng.randi() % 6), ToonFx.mat("rock"))
-		mi.scale = Vector3.ONE * r * 1.45
-		_core(mi)
+		# (a torn plate of the deck stood in the flight's plane (YZ), turning like a wheel)
+		var mi := _mesh(parent, ToonFx.slab_mesh(ToonFx.vis_rng.randi() % 4), ToonFx.mat("rock"))
+		mi.rotation.z = PI / 2.0
+		mi.scale = Vector3.ONE * r * 3.4
+		outline(mi, mi.mesh)
+		_core_rock(mi, r)
 		_shadow(parent, "stone", r, Vector3(0.3, 1.45, 1.45), Vector3.ZERO)       # (round 4: its shadow from a core, not the scaled rock)
 		return
 	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
@@ -320,13 +325,14 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 	if kind == "stone":
 		var mi := MeshInstance3D.new()
 		mi.name = "Body"
-		mi.mesh = FormModels.spike_mesh(r, r * 9.0, ToonFx.vis_rng.randi() % 50, 0.0)
+		mi.mesh = ToonFx.spike_cel_mesh(r, r * 9.0, ToonFx.vis_rng.randi() % 5, 0.0)
 		mi.rotation.x = -PI / 2.0
 		mi.position = Vector3(0.0, 0.0, r * 4.0)
 		mi.material_override = ToonFx.mat("rock")
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(mi)
-		_core(mi)
+		outline(mi, mi.mesh)
+		_core_rock(mi, r)
 		_shadow(parent, "stone", r, Vector3(1.0, 1.0, 4.5), Vector3.ZERO)
 		return
 	var sd := ToonFx.vis_rng.randi() % 4
@@ -358,10 +364,11 @@ static func _pebbles_body(parent: Node3D, r: float) -> void:
 		var y := 1.0 - (float(i) + 0.5) / float(PEBBLES) * 2.0
 		var rr := sqrt(maxf(1.0 - y * y, 0.0))
 		var a := float(i) * 2.39996
-		var mi := _mesh(parent, FormModels.ball_mesh(pr * (0.8 + 0.08 * float(i % 4)), 41 + i), ToonFx.mat("rock"))
+		var mi := _mesh(parent, ToonFx.boulder_mesh(pr * (0.8 + 0.08 * float(i % 4)), i % 5), ToonFx.mat("rock"))
 		mi.position = Vector3(cos(a) * rr, y * 0.8, sin(a) * rr * 1.4) * spread
 		mi.rotation = Vector3(float(i) * 1.1, float(i) * 0.7, 0.0)
-		_core(mi)
+		outline(mi, mi.mesh)
+		_core_rock(mi, pr)
 	_shadow(parent, "stone", spread, Vector3(1.2, 1.0, 1.6), Vector3.ZERO)
 
 
@@ -546,6 +553,16 @@ static func crack(a: Vector3, b: Vector3, width := 0.5, race_s := 0.12, life := 
 static func _core(g: GeometryInstance3D) -> void:
 	FxParams.put(g, &"range_on", 1.0)
 	g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## A cel rock bolt's drawn core: _core, and its outline (cel_rock's child) grows at range with it and keeps a thin line on a
+## small rock (a pebble's is thinner than a boulder's).
+static func _core_rock(mi: MeshInstance3D, r: float) -> void:
+	_core(mi)
+	for c in mi.get_children():
+		if c is MeshInstance3D and String(c.name) == "Outline":
+			FxParams.put(c as GeometryInstance3D, &"range_on", 1.0)
+			FxParams.put(c as GeometryInstance3D, &"line_k", clampf(r / 0.3, 0.3, 1.0))
 
 
 ## A bolt's own shadow (round 4: every bolt but air and lightning; no decal, no marker): a shadow-only ellipsoid the size of
@@ -998,7 +1015,10 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.shoot("puff_dust", at, int(n * 0.7), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.55, 1.1) * k,
 					1.0, Vector3(0, 0.3, 0), 3.0, {"r": 0.2 * k}.merged(occl))
 			if not g.is_empty():
-				_dust(pool, g, n, k)
+				# (the show's cel earth: flat dust clods thrown out along the deck, no hoop; the scar cracked in the deck)
+				pool.shoot("puff_dust", (g.pos as Vector3) + (g.normal as Vector3) * 0.12, int(n * 0.5), g.normal, 85.0,
+						Vector2(1.2, 3.0) * k, Vector2(0.22, 0.46) * k, 0.7, Vector3.ZERO, 4.0,
+						{"flat": 0.9, "r": 0.25 * k, "radial": 1.4 * k})
 				pool.mark("cracks", g.pos, g.normal, 1.8 * k, 7.0)
 		"lightning":
 			pool.play("flash", up, 0.14, 0.4 * k, 1.3 * k, ELEC, Color(0.85, 0.92, 1.0))
@@ -1090,6 +1110,23 @@ static func _dust(pool: ToonFxPool, g: Dictionary, n: int, k: float) -> void:
 	pool.play("ring", _flat(g), 0.45, 0.3 * k, 1.7 * k, DUST, DUST_LIGHT)
 	pool.shoot("puff_dust", (g.pos as Vector3) + (g.normal as Vector3) * 0.15, int(n * 0.6), g.normal, 80.0,
 			Vector2(1.5, 3.5) * k, Vector2(0.3, 0.6) * k, 0.7, Vector3.ZERO, 5.0, {"flat": 0.85, "r": 0.3 * k})
+
+
+## Cracks running out of `at` over the deck like the spokes of a wheel (a heavy stone landing, the Slam): `count` of them, each
+## up to `reach` m long, racing out in 0.1 s and staying about 1.8 s (the pool's crack strips).
+static func quake(at: Vector3, count: int, reach: float, life := 1.8) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	var floor_at := _ground(pool, at + Vector3.UP * 0.3, Vector3.UP)
+	var base: Vector3 = floor_at.pos if not floor_at.is_empty() else at
+	var a0 := ToonFx.vis_rng.randf() * TAU
+	for i in count:
+		var a := a0 + TAU * float(i) / float(maxi(count, 1)) + ToonFx.vis_rng.randf_range(-0.25, 0.25)
+		var l := reach * ToonFx.vis_rng.randf_range(0.6, 1.0)
+		pool.crack(crack_line(base, base + Vector3(cos(a), 0.0, sin(a)) * l, 0.3, 0.06), 0.5, 0.1, life)
 
 
 ## The ground just under (or before) a burst at `at` going `d`: {pos, normal}, or {} in the air.
@@ -1323,6 +1360,15 @@ static func rise(at: Vector3, size: Vector3, way: Vector3, matter := "earth") ->
 	for i in marks:
 		var off := (float(i) + 0.5) / marks - 0.5
 		pool.mark("frost" if ice else "cracks", at + x * off * size.x, Vector3.UP, 1.9, 7.0)
+	if not ice:
+		# (the deck splits along both feet of the wall as it comes up, and flat dust clods are thrown out along it)
+		var z := x.cross(Vector3.UP)
+		for sgn in [-1.0, 1.0]:
+			var along := x * size.x * 0.55
+			var off := z * float(sgn) * (size.z * 0.5 + 0.25)
+			pool.crack(crack_line(at - along + off, at + along + off, 0.28, 0.07), 0.55, 0.12, 2.0)
+		pool.shoot("puff_dust", at + Vector3.UP * 0.1, 10, Vector3.UP, 80.0, Vector2(1.0, 2.6), Vector2(0.2, 0.42), 0.7,
+				Vector3(0, 0.4, 0), 3.5, {"box": Vector3(size.x * 0.5, 0.05, size.z * 0.5 + 0.3), "basis": b, "flat": 0.9, "radial": 1.0})
 
 
 ## A wall breaking apart at `at` (its foot's middle), `size` (x across, y up, z through), facing `way`: an ice wall into

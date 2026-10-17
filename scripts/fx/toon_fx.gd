@@ -671,6 +671,81 @@ static func spike_cel_mesh(r: float, h: float, seed := 0, bury := 0.0) -> Mesh:
 		return st.commit())
 
 
+## A box from (x0, y0, z0) to (x1, y1, z1) added to `st` (outward winding).
+static func _box(st: SurfaceTool, x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> void:
+	var c := [Vector3(x0, y0, z0), Vector3(x1, y0, z0), Vector3(x1, y0, z1), Vector3(x0, y0, z1),
+			Vector3(x0, y1, z0), Vector3(x1, y1, z0), Vector3(x1, y1, z1), Vector3(x0, y1, z1)]
+	for f: Array in [[0, 1, 2, 3, Vector3.DOWN], [4, 7, 6, 5, Vector3.UP], [0, 4, 5, 1, Vector3.FORWARD], [3, 2, 6, 7, Vector3.BACK],
+			[0, 3, 7, 4, Vector3.LEFT], [1, 5, 6, 2, Vector3.RIGHT]]:
+		_tri_out(st, c[f[0]], c[f[1]], c[f[2]], f[4])
+		_tri_out(st, c[f[0]], c[f[2]], c[f[3]], f[4])
+
+
+## A cel earth wall (the Earth Wall in the show's cel style, 2026-10-16): `w` across (x), `h` over the ground (y; `bury` more
+## under it), `t` thick (z), centred on x and z, its base at y 0. Columns of uneven height, each three layers of rock laid one on
+## the other with ledges between them, the top ragged. Indexed with smooth normals for its outline hull.
+static func wall_cel_mesh(w: float, h: float, t: float, seed := 0, bury := 0.45) -> Mesh:
+	return _cached("wallc_%.2f_%.2f_%.2f_%d_%.2f" % [w, h, t, seed, bury], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 3571 + 9
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var cols := clampi(int(w / 0.42), 4, 9)
+		var cw := w / float(cols)
+		for i in cols:
+			var x0 := -w * 0.5 + float(i) * cw - 0.015
+			var x1 := x0 + cw + 0.03
+			var edge := 0.86 if i == 0 or i == cols - 1 else 1.0
+			var top := h * edge * rng.randf_range(0.84, 1.0)
+			var ys := [-bury, top * 0.42, top * 0.74, top]
+			for j in 3:
+				var zf := t * 0.5 * (1.12 if j == 0 else rng.randf_range(0.92, 1.04))
+				var zb := t * 0.5 * (1.12 if j == 0 else rng.randf_range(0.92, 1.04))
+				var xo := rng.randf_range(-0.03, 0.03) if j > 0 else 0.0
+				_box(st, x0 + xo, x1 + xo, float(ys[j]), float(ys[j + 1]), -zb, zf)
+		st.index()
+		st.generate_normals()
+		return st.commit())
+
+
+## A cel rock column (the Pillar, the Column): radius `r`, `h` over the ground (`bury` more under it), four drums of rock
+## stacked a little off one another, seven-sided, the top flat to stand on. Indexed with smooth normals for its outline hull.
+static func pillar_cel_mesh(r: float, h: float, seed := 0, bury := 0.45) -> Mesh:
+	return _cached("pillarc_%.2f_%.2f_%d_%.2f" % [r, h, seed, bury], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 2087 + 4
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var sides := 7
+		var ys := [-bury, h * 0.3, h * 0.58, h * 0.82, h]
+		for j in 4:
+			var rr: float = r * float([1.12, 0.98, 1.06, 0.96][j]) * rng.randf_range(0.95, 1.05)
+			var off := Vector3(rng.randf_range(-0.05, 0.05), 0.0, rng.randf_range(-0.05, 0.05)) * r * (0.0 if j == 0 else 1.0)
+			var rot := rng.randf() * TAU
+			var y0 := float(ys[j])
+			var y1 := float(ys[j + 1])
+			var lo: Array[Vector3] = []
+			var hi: Array[Vector3] = []
+			for i in sides:
+				var a := rot + TAU * (float(i) + rng.randf_range(-0.12, 0.12)) / float(sides)
+				var q: float = rr * rng.randf_range(0.92, 1.08)
+				lo.append(off + Vector3(cos(a) * q, y0, sin(a) * q))
+				hi.append(off + Vector3(cos(a) * q * 0.97, y1, sin(a) * q * 0.97))
+			var cl := off + Vector3(0.0, y0, 0.0)
+			var chi := off + Vector3(0.0, y1 + (0.02 if j == 3 else 0.0), 0.0)
+			for i in sides:
+				var k := (i + 1) % sides
+				var mid := (lo[i] + lo[k] + hi[i] + hi[k]) * 0.25 - off
+				var out := Vector3(mid.x, 0.0, mid.z).normalized()
+				_tri_out(st, lo[i], lo[k], hi[k], out)
+				_tri_out(st, lo[i], hi[k], hi[i], out)
+				_tri_out(st, chi, hi[i], hi[k], Vector3.UP)
+				_tri_out(st, cl, lo[k], lo[i], Vector3.DOWN)
+		st.index()
+		st.generate_normals()
+		return st.commit())
+
+
 # ---------------------------------------------------------------- particles
 ## A colour ramp whose alpha is the shape's fill (1 whole .. 0 gone; ToonFx shaders): [[offset, colour], ...].
 static func ramp(stops: Array) -> GradientTexture1D:

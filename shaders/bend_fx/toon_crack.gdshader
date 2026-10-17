@@ -1,6 +1,6 @@
 shader_type spatial;
 // A crack in the deck (ToonCrack; earth's gather and casts in the show's cel style, 2026-10-16): a flat strip laid along a
-// jagged line on the ground, its UV.x 0 at the start to 1 at the end, UV.y across. A dark ink line wanders down its middle
+// jagged line on the ground, its UV.x 0 at the start to 1 at the end, UV2.x the metres along it (the noise), UV.y across. A dark ink line wanders down its middle
 // (the noise), a pale lip of broken deck either side of it, torn in and out along it; `reveal` (instance) is how much of its
 // length shows, so it races out from its start (the racing front a little paler and wider: a hot edge, no glow); `t`
 // (instance) its age 0 -> 1 (it fades over the last part). Thinned near the camera (fx_common near_cut).
@@ -35,8 +35,9 @@ void fragment() {
 		discard;
 	}
 	float v = UV.y * 2.0 - 1.0;
-	float n = texture(noise, vec2(u * 5.0 + seed, 0.31 + seed * 0.4)).r - 0.5;
-	float n2 = texture(noise, vec2(u * 13.0 + seed * 2.3, 0.71)).r - 0.5;
+	// (the noise runs by metres along the crack (UV2.x), so a crack that grows keeps its own shape)
+	float n = texture(noise, vec2(UV2.x * 0.55 + seed, 0.31 + seed * 0.4)).r - 0.5;
+	float n2 = texture(noise, vec2(UV2.x * 1.5 + seed * 2.3, 0.71)).r - 0.5;
 	float d = abs(v - n * wander);                                   // across, from the crack's own line
 	float hw = core * (0.75 + n2 * 1.1);                             // the ink's half width, torn along it
 	float head = (1.0 - aastep(reveal, u + 0.07)) * aastep(reveal - 0.14, u);     // the racing front

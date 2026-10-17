@@ -41,6 +41,11 @@ const MIN_W_M := 0.6
 
 enum State { RISING, UP, CRUMBLING }
 
+## Drawn in the cel style (the ring's earth wall and column; raise() decides): its mesh pops up a little past its place as it
+## rises and settles (a look: the body in the physics keeps its own rise).
+var cel := false
+const POP_K := 0.07
+
 var kind := "wall"
 ## What it is made of: "earth", "mud", "stone", "snow", "wood" (FormMatter).
 var matter := "earth"
@@ -139,11 +144,21 @@ static func raise(parent: Node, p_kind: String, xf: Transform3D, d: Dictionary, 
 				String(d.get("species", "")), bury)
 	else:
 		r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, seed, bury, r.matter)
-	FxParams.put(r.mesh_instance, &"seed", float(seed % 97))
+	var fades: Array = [r.mesh_instance]
+	if r.matter in ["earth", "stone"] and BendLooks.live() and RingArena.find(parent.get_tree()) != null:
+		# (earth in the show's cel style, 2026-10-16: the ring's wall and column are layered rock with ragged tops, flat tones, a
+		# dark drawn line round them; its collision, size and rise are as they were)
+		r.cel = true
+		r.mesh_instance.mesh = ToonFx.pillar_cel_mesh(r.size.x * 0.5, r.size.y, seed, bury) if p_kind == "pillar" \
+				else ToonFx.wall_cel_mesh(r.size.x, r.size.y, r.size.z, seed, bury)
+		r.mesh_instance.material_override = ToonFx.mat("rock")
+		fades.append(BendLooks.outline(r.mesh_instance, r.mesh_instance.mesh))
+	else:
+		FxParams.put(r.mesh_instance, &"seed", float(seed % 97))
 	r.add_child(r.mesh_instance)
 	# (round 4 LOOKS: your own wall or pillar between the camera and your head, or by the camera, drawn faded; it blocks
 	# all the same: OwnFade, form_matter's fade)
-	OwnFade.attach(r, [r.mesh_instance], AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
+	OwnFade.attach(r, fades, AABB(Vector3(-r.size.x * 0.5, 0.0, -r.size.z * 0.5), r.size), &"fade")
 	NetSpells.tag(r)                              # (online: its name in its cast's run; the host's wear on it a word)
 	parent.add_child(r)
 	r.global_transform = r._at(0.0)
@@ -238,9 +253,13 @@ func _physics_process(dt: float) -> void:
 			var xf := _at(u)
 			xf.origin += xf.basis * shake
 			global_transform = xf
+			if cel and mesh_instance != null:
+				mesh_instance.position.y = size.y * POP_K * sin(PI * clampf((u - 0.5) / 0.5, 0.0, 1.0))
 			if u >= 1.0:
 				state = State.UP
 				global_transform = _at(1.0)
+				if cel and mesh_instance != null:
+					mesh_instance.position.y = 0.0
 				age = 0.0
 		State.UP:
 			age += dt

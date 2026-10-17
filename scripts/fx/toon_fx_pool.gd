@@ -13,7 +13,7 @@ const TRAILS_PER_KIND := 12
 ## Marks on the ground of each kind at once (round 4: the Kick's scorches along its path, ToonFx.looks floor_wave).
 const MARKS := 16
 ## Cracks racing along the deck at once (earth in the show's cel style, 2026-10-16: ToonCrack's shader, crack()).
-const CRACKS := 14
+const CRACKS := 24
 
 static var _pool: ToonFxPool
 
@@ -255,6 +255,7 @@ func crack(pts: PackedVector3Array, width := 0.5, race_s := 0.12, life := 1.6) -
 		var side := Vector3(-along.z, 0.0, along.x) * width * 0.5
 		for k in 2:
 			im.surface_set_uv(Vector2(run / maxf(total, 1e-3), float(k)))
+			im.surface_set_uv2(Vector2(run, 0.0))
 			im.surface_add_vertex(pts[i] + side * (1.0 if k == 1 else -1.0) + Vector3.UP * 0.035)
 	im.surface_end()
 	FxParams.put(mi, &"reveal", 0.0)
