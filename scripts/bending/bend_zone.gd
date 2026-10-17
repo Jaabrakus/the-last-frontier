@@ -452,8 +452,8 @@ func _look() -> void:
 		"puddle":
 			# (the anime pass: a flat cel disc of water, its rim rounded so the cel light turns it pale at the edge, a drawn line
 			# round it, flecks of foam; and a ripple running out of it now and then: _puddle_ripple)
-			var wet := _part(look, ToonFx.sphere(20), ToonFx.mat("water_puddle"))
-			wet.scale = Vector3(radius, 0.06, radius)
+			var wet := _part(look, ToonFx.puddle_mesh(), ToonFx.mat("water_puddle"))
+			wet.scale = Vector3(radius, 1.0, radius)
 			wet.position = Vector3.UP * 0.01
 			FxParams.put(wet, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_grow(look, Vector3(0.2, 1.0, 0.2))

@@ -921,10 +921,11 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			var big := n >= 24
 			var sk := 1.7 if big else 1.0
 			pool.play("flash", up, 0.14, 0.4 * k * sk, 1.2 * k * sk, ICE, Color(0.9, 0.98, 1.0))
-			pool.shoot("shard", at, int(n * 0.9), d, spread, Vector2(speed * 0.7, speed * (2.2 if big else 1.6)),
-					Vector2(0.16, 0.34) * sk * k, 0.95, Vector3(0, -12.0, 0), 0.5, {"r": (0.7 if big else 0.1) * k, "ang": 600.0})
-			pool.shoot("puff_frost", at, int(n * (0.45 if big else 0.25)), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.3, 0.6) * sk * k,
-					0.55, Vector3.ZERO, 2.0, {"r": (0.5 if big else 0.1) * k}.merged(occl))
+			# (the anime pass: faceted shards, a few more and bigger; the frost cloud a little one)
+			pool.shoot("shard", at, int(n * 1.15), d, spread, Vector2(speed * 0.7, speed * (2.2 if big else 1.6)),
+					Vector2(0.2, 0.42) * sk * k, 0.95, Vector3(0, -12.0, 0), 0.5, {"r": (0.7 if big else 0.1) * k, "ang": 600.0})
+			pool.shoot("puff_frost", at, int(n * (0.16 if big else 0.2)), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.26, 0.5) * sk * k,
+					0.5, Vector3.ZERO, 2.0, {"r": (0.5 if big else 0.1) * k}.merged(occl))
 			pool.shoot("star", at, int(n * 0.6), d, spread, Vector2(speed * 0.4, speed * 1.2), Vector2(0.18, 0.32), 0.7,
 					Vector3(0, -2.0, 0), 2.0, {"r": (0.6 if big else 0.15) * k})
 			if not g.is_empty():

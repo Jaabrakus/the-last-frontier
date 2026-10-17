@@ -203,8 +203,8 @@ static func mat(key: String) -> ShaderMaterial:
 		"water_puddle":
 			# (a puddle left on the deck, the anime pass: a flat cel disc, a drawn line round its rim, a few flecks of foam)
 			m.shader = SHADERS.water
-			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "flow": Vector2(0.1, 0.06), "nscale": Vector2(1.3, 1.3), "foam": 0.86,
-					"rim": 0.7, "alpha_mul": 0.95, "c_shade": Color(0.08, 0.36, 0.84, 0.94), "c_body": Color(0.2, 0.58, 1.0, 0.92),
+			p = {"mode": 0, "wobble": 0.0, "outline": 0.0, "lip_foam": 1.0, "flow": Vector2(0.1, 0.06), "nscale": Vector2(1.3, 1.3),
+					"foam": 0.8, "rim": 0.97, "alpha_mul": 0.95, "c_shade": Color(0.12, 0.46, 0.92, 0.94), "c_body": Color(0.28, 0.66, 1.0, 0.92),
 					"c_rim": Color(0.7, 0.92, 1.0, 0.95)}
 		"water_crest":
 			# (the Wave's body, WaveFx: the cel water with a white foam lip along its crest and a drawn line round it)
@@ -450,6 +450,40 @@ static func sphere(segs := 18) -> Mesh:
 		s.radial_segments = segs
 		s.rings = segs / 2
 		return s)
+
+
+## A flat puddle of radius 1 lying on the deck (the anime pass): a level top, its rim sloping down to the deck. UV.y is 0 at its
+## middle, 0.52 where the rim begins and 0.6 at its edge (the water shader's lip foam draws the white rim there).
+static func puddle_mesh(sides := 28) -> Mesh:
+	return _cached("puddle_%d" % sides, func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var a_r := 0.84
+		for j in sides:
+			var a0 := TAU * float(j) / float(sides)
+			var a1 := TAU * float(j + 1) / float(sides)
+			var d0 := Vector3(cos(a0), 0.0, sin(a0))
+			var d1 := Vector3(cos(a1), 0.0, sin(a1))
+			var u0 := float(j) / sides * 4.0
+			var u1 := float(j + 1) / sides * 4.0
+			var tris := [
+				[Vector3(0.0, 0.016, 0.0), Vector3.UP, Vector2(u0, 0.0), d0 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u0, 0.52),
+						d1 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u1, 0.52)],
+				[d0 * a_r + Vector3.UP * 0.016, (d0 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u0, 0.52), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
+						Vector2(u0, 0.6), d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.52)],
+				[d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.52), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
+						Vector2(u0, 0.6), d1, (d1 * 0.7 + Vector3.UP * 0.7).normalized(), Vector2(u1, 0.6)]]
+			for t: Array in tris:
+				var v: Array[Vector3] = [t[0], t[3], t[6]]
+				var order := [0, 1, 2]
+				# (front faces wind clockwise seen from outside, above here: the cross points down)
+				if (v[1] - v[0]).cross(v[2] - v[0]).y > 0.0:
+					order = [0, 2, 1]
+				for k in order:
+					st.set_normal(t[k * 3 + 1])
+					st.set_uv(t[k * 3 + 2])
+					st.add_vertex(t[k * 3])
+		return st.commit())
 
 
 ## An open water column standing on its foot (local Y 0..`h`), radius `r`: UV.x metres round it, UV.y metres up it.
