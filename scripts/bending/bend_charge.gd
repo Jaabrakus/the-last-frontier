@@ -8,14 +8,15 @@ extends Node3D
 ## the ring (wanted): the player's (FormCast), a bot's (NpcBending), an online opponent's puppet (its own FormCast). The
 ## circle's face, so the callers swap one for the other: fill (0..1, the lock), full (it pulses), flash() (the click),
 ## end(kind) ("cast": thrown out with the cast; "break" / "fizzle": it falls away), freed after.
-##   water  as air's, in water (the owner, 2026-10-12: "water gathering is like trash it should be more fluid like maybe
-##          smoke water", "the water gather should be like air", "we want the water to gather where the attack is going to
-##          be"): thin wisps of water coil and spiral up round the body, a blue mist swirling with them, then wind tight round
-##          the limb; the Geyser's flows out along the deck to where it will rise and gathers there (then: "have it charge
-##          where the spells are going to be or let it flow there"): from before his feet to the cast's own place as the
-##          lock fills (_water_spot: the foe he tracks, else the aim's ground, within its reach), a low whirl closing in,
-##          the deck breaking behind it as the Fissure's does ("it moves still like a fissure right": _fissure_step);
-##          cast, the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops shake off
+##   water  drawn from a source in a ribbon (the anime pass, 2026-10-16, after the owner's 2026-10-12 "water gathering is like
+##          trash it should be more fluid", "we want the water to gather where the attack is going to be"): out of the nearest
+##          grate (_water_source), arching to the hands and winding on the limb the move leaves from as the lock fills, a flat
+##          cel band with a glossy streak and foam edges (ToonFx "water_ribbon"); the Geyser's runs along the deck to where it
+##          will rise and coils there (then: "have it charge where the spells are going to be or let it flow there": _water_spot:
+##          the foe he tracks, else the aim's ground, within its reach), the deck breaking behind it as the Fissure's does
+##          ("it moves still like a fissure right": _fissure_step); cast, it snaps and is flung off (the Geyser's streams up
+##          with the column) and the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops
+##          shake off
 ##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
 ##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
 ##   earth  stones lift off the deck round the feet one by one, circle the body, then gather round the hands or the foot; a
@@ -50,11 +51,6 @@ const CHANNEL := Vector2(0.3, 0.85)
 const WATER_SENT_META := &"bend_water_sent"
 ## Water: a Geyser's crack along the deck, a step of it (m) as the Fissure's rows are laid.
 const FISSURE_STEP_M := 0.7
-## Water: its wisps' width and colours (air's strip in water: a pale blue body, a deeper blue edge, a navy line).
-const WISP_W := 0.08
-const WISP_MAIN := Color(0.62, 0.86, 1.0, 0.9)
-const WISP_EDGE := Color(0.18, 0.52, 0.98, 0.78)
-const WISP_INK := Color(0.05, 0.18, 0.42)
 ## Fire: each fist's flame (and the kicking foot's) is the fireball's own body (BendLooks.bolt_body: its orb, glow and
 ## tongues), its +Z (where the tongues lick) turned up so it burns upward, sized by the lock (FIST_SCALE: start, full).
 const FIST_R := 0.1
@@ -102,8 +98,15 @@ var _emit: Array = []
 ## Fire's flames: the left fist's, the right fist's, the kicking foot's.
 var _flames: Array = []
 var _light: OmniLight3D
-## Water: its mist, and whether it gathers on the deck where it will rise now (the Geyser's), and that place.
-var _mist: GPUParticles3D
+## Water: the ribbons drawn from its source ({rb, pts (head first), vel, share, phase, fade}), where they are drawn from, the
+## drops shaken off them, the primary ribbon's head, the ring on the water's clock and the stepped time of their sway.
+var _rib: Array = []
+var _src := Vector3.INF
+var _drops: GPUParticles3D
+var _head := Vector3.ZERO
+var _ring_t := 0.0
+var _t12 := 0.0
+## Water: whether it gathers on the deck where it will rise now (the Geyser's), and that place.
 var _deck := false
 var _spot := Vector3.ZERO
 ## Water: where the Geyser's crack along the deck reached (_fissure_step; INF not begun).
@@ -237,9 +240,8 @@ func end(kind: String) -> void:
 			rk.vel = Vector3.ZERO
 	if element == "water" and ending == "cast" and _deck and body != null and is_instance_valid(body):
 		body.set_meta(WATER_SENT_META, BendStatus.now())     # (its water is there already: no send from his feet)
-		for run: Dictionary in _runs:
-			var v2: Vector3 = run.vel
-			run.vel = Vector3(v2.x * 0.2, 7.5, v2.z * 0.2)       # (the Geyser's: its wisps go up with the column)
+	if element == "water" and _visual:
+		_water_end(out)                                      # (the ribbon snaps and flies, or falls)
 	if _visual and ending == "cast":
 		match element:
 			"water":
@@ -451,49 +453,82 @@ func _dust_puff(at: Vector3, n: int, speed: float, size: float, key := "puff_dus
 
 
 # ---------------------------------------------------------------- water
+## Water, the anime pass (2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as possible"): the water
+## is DRAWN FROM A SOURCE in a ribbon, as the show's waterbender pulls it. It rises out of the nearest grate (the caster's own
+## puddle, else the tank under the deck's lip, else a pool at his feet: _water_source), arches over the deck and sways round
+## him to his hands, a flat cel band (ToonFx "water_ribbon": a dark edge, a glossy streak, white flecks running down it, torn
+## foam at its edges, a drawn line round it) with a thin strand twisting round it. The lock's fill draws more of it (its head
+## runs from the grate to the hands), the sway of it stepped at `step_hz` (a drawn look: the eye reads the stepping), and as
+## the lock is channelled it winds on the limb the move leaves from (a forearm, or the kicking shin); the other hand lets go.
+## The Geyser's runs along the deck to where it will rise and coils there. Let go it snaps taut and is flung off along his aim
+## (the Geyser's streams up with the column), tearing away as it goes; a lock that breaks lets it fall back. A few flat drops
+## shake off it, a ring runs out on the water where it leaves. Its numbers: fx_looks.json "water_gather".
+const WATER_RIBS := 2
+## Water: how far below a grate's top the ribbon leaves the water (m), and its lift over the deck on the Geyser's run.
+const SOURCE_DROP := 0.16
+const DECK_LIFT := 0.12
+
+
+static func _wf(key: String, dflt: float) -> float:
+	return float(ToonFx.looks("water_gather").get(key, dflt))
+
+
+static func _w2(key: String, dflt: Vector2) -> Vector2:
+	var v: Variant = ToonFx.looks("water_gather").get(key, null)
+	return Vector2(float(v[0]), float(v[1])) if v is Array and (v as Array).size() >= 2 else dflt
+
+
 func _build_water() -> void:
-	# (air's wisps in water: thin, coiling, the wind shader's strip tinted as the water)
-	var wm := ToonFx.mat("wind_strip").duplicate() as ShaderMaterial
-	wm.set_shader_parameter(&"c_main", WISP_MAIN)
-	wm.set_shader_parameter(&"c_edge", WISP_EDGE)
-	wm.set_shader_parameter(&"c_ink", WISP_INK)
-	for i in 4:
-		var run := _water_run(wm, TAU * float(i) / 4.0)
-		var drops := BendLooks.emitter(run.head, "water", Vector3(0.04, 0.04, 0.04), 6, 0.45, 0.4, 0.035)
-		if drops != null:
-			drops.local_coords = false
-			drops.amount_ratio = 0.05
-			_emit.append(drops)
-			run.drops = drops
-	# (the mist: blue puffs swirling with the wisps, as air's dust swirls; where the water gathers)
-	_mist = _emitter("frost", Vector3(0.45, 0.06, 0.45), 22, 0.75, 0.5, 0.32)
-	if _mist != null:
-		var pm := _mist.process_material as ParticleProcessMaterial
-		pm.tangential_accel_min = 4.0
-		pm.tangential_accel_max = 7.0
+	for i in WATER_RIBS:
+		var rb := ToonRibbon.new()
+		rb.main_mat = ToonFx.mat("water_ribbon")
+		rb.coils = 1 if _wf("strand", 1.0) > 0.5 else 0
+		rb.coil_mat = ToonFx.mat("water_ribbon_thin")
+		rb.coil_r = _wf("strand_r", 0.1)
+		rb.coil_w = _wf("strand_w", 0.03)
+		rb.coil_spin = _wf("strand_spin", 6.0)
+		add_child(rb)
+		_rib.append({"rb": rb, "pts": PackedVector3Array(), "vel": PackedVector3Array(), "share": 0.0,
+				"phase": TAU * float(i) * 0.37 + 0.6, "fade": 1.0})
+	var drops := BendLooks.emitter(self, "water", Vector3(0.05, 0.05, 0.05), 10, 0.55, 0.3, 0.045)
+	if drops != null:
+		drops.local_coords = false
+		drops.amount_ratio = 0.05
+		_emit.append(drops)
+		_drops = drops
+	_src = _water_source()
 
 
-## A wisp of `mat` (air's _run, its material a water-tinted copy of air's).
-func _water_run(mat: ShaderMaterial, phase: float) -> Dictionary:
-	var head := Node3D.new()
-	head.top_level = true
-	add_child(head)
-	head.global_position = _center() + Vector3.UP
-	var rb := ToonRibbon.new()
-	rb.main_mat = mat
-	rb.width = WISP_W
-	rb.tail_w = 0.2
-	rb.life = 0.34
-	rb.coils = 1
-	rb.coil_mat = mat
-	rb.coil_r = WISP_W * 1.4
-	rb.coil_w = WISP_W * 0.35
-	rb.coil_spin = 20.0
-	add_child(rb)
-	var run := {"head": head, "rb": rb, "phase": phase, "vel": Vector3.ZERO, "w": WISP_W, "stopped": false}
-	rb.follow(head)
-	_runs.append(run)
-	return run
+## The water the gather draws from: the nearest pool within `source_m` (the ring's grates and the caster's own puddles,
+## Bending.POOLS), else the tank under the deck's lip, else a pool at his feet. The point the ribbon leaves the water at.
+func _water_source() -> Vector3:
+	var c := _center()
+	var best := INF
+	var at := Vector3.INF
+	for n in get_tree().get_nodes_in_group(Bending.POOLS):
+		var n3 := n as Node3D
+		if n3 == null or not is_instance_valid(n3) or n3.is_queued_for_deletion():
+			continue
+		if n3 is BendZone and (n3 as BendZone).owner_node != body:
+			continue                              # (another's puddle is not his water)
+		var d := Vector2(n3.global_position.x - c.x, n3.global_position.z - c.z).length()
+		if d < best:
+			best = d
+			at = n3.global_position
+	if at != Vector3.INF and best <= _wf("source_m", 9.0):
+		return at + Vector3.DOWN * (SOURCE_DROP if not (best < 0.01) else 0.0)
+	var ra := RingArena.find(get_tree())
+	if ra != null:
+		var lip: Dictionary = ra.nearest_lip(c)
+		return (lip.point as Vector3) + (lip.normal as Vector3) * 0.4 + Vector3.DOWN * 0.6   # (out over the water, under the lip)
+	return c + _forward() * 0.8
+
+
+## The ribbon's tail kept where it is until the caster walks out of reach of it (then the nearest again).
+func _src_check() -> void:
+	var c := _center()
+	if _src == Vector3.INF or Vector2(_src.x - c.x, _src.z - c.z).length() > _wf("source_m", 9.0) + 1.0:
+		_src = _water_source()
 
 
 ## The bend spec of the move charging when its water gathers on the deck where it will rise (the Geyser's, do "spout"),
@@ -563,44 +598,250 @@ func _water_tip() -> Vector3:
 	return _tip(limb())
 
 
+## How much of the full ribbon is drawn at the lock's level `k` (0..1): a stub at the first frames, the whole of it by `full_k`.
+func _water_drawn(k: float) -> float:
+	var d0 := _wf("drawn_start", 0.3)
+	return lerpf(d0, 1.0, smoothstep(0.0, _wf("full_k", 0.42), k))
+
+
+## Ribbon `i`'s hand for the move's limb `l`: the first the limb's own hand (the right for a kick or both), the second the
+## other; and its share (1 whole .. 0 gone): the hand the move does not use lets go as it is channelled.
+func _rib_hand(i: int, l: String) -> String:
+	var first := "l_palm" if l == "l_palm" else "r_palm"
+	return first if i == 0 else ("l_palm" if first == "r_palm" else "r_palm")
+
+
+func _rib_share(i: int, l: String, ch: float) -> float:
+	if i == 0:
+		return 1.0
+	return 1.0 if l == "both" else (1.0 - ch) * _wf("other_hand", 0.7)
+
+
+## `pts` (tail first) cut to its first `frac` of its length, then reversed: head first (what ToonRibbon.lay_path takes).
+static func _cut_head_first(pts: PackedVector3Array, frac: float) -> PackedVector3Array:
+	var n := pts.size()
+	var out := PackedVector3Array()
+	if n < 2:
+		return out
+	var total := 0.0
+	for i in range(1, n):
+		total += pts[i].distance_to(pts[i - 1])
+	var want := total * clampf(frac, 0.0, 1.0)
+	var run := 0.0
+	var kept := PackedVector3Array([pts[0]])
+	for i in range(1, n):
+		var seg := pts[i].distance_to(pts[i - 1])
+		if run + seg >= want:
+			kept.append(pts[i - 1].lerp(pts[i], clampf((want - run) / maxf(seg, 1e-5), 0.0, 1.0)))
+			break
+		run += seg
+		kept.append(pts[i])
+	kept.reverse()
+	return kept
+
+
+## A lateral wave on `pts` (tail first): `amp` m of sway across and a half as much up, a wave running along it, turned only
+## in steps (`t12`, the stepped time), nothing at either end.
+func _wave(pts: PackedVector3Array, amp: float, phase: float) -> PackedVector3Array:
+	var n := pts.size()
+	var out := pts.duplicate()
+	var run := 0.0
+	for i in n:
+		if i > 0:
+			run += pts[i].distance_to(pts[i - 1])
+		var al := pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]
+		al = al.normalized() if al.length_squared() > 1e-8 else Vector3.FORWARD
+		var side := al.cross(Vector3.UP)
+		side = side.normalized() if side.length_squared() > 1e-6 else Vector3.RIGHT
+		var s := float(i) / float(maxi(n - 1, 1))
+		var w := sin(run * 2.6 - _t12 * 7.0 + phase) * sin(PI * s) * amp
+		out[i] = pts[i] + side * w + Vector3.UP * (w * 0.5 * cos(run * 1.7 - _t12 * 5.0 + phase))
+	return out
+
+
+## The cubic through a, b, c, d at `s`.
+static func _bez(a: Vector3, b: Vector3, c: Vector3, d: Vector3, s: float) -> Vector3:
+	var u := 1.0 - s
+	return a * (u * u * u) + b * (3.0 * u * u * s) + c * (3.0 * u * s * s) + d * (s * s * s)
+
+
+## Ribbon `i`'s points (tail first) from the source to the hand and wound on the limb: the arch rising out of the grate toward
+## him, a loop sweeping round his body that closes in on the hand as the lock is channelled, then the coil round the forearm
+## (the shin for a kick), the loosest at first.
+func _hand_pts(r: Dictionary, i: int, k: float, ch: float, l: String) -> PackedVector3Array:
+	var seg := _seg(_rib_hand(i, l))
+	if i == 0 and l.ends_with("foot"):
+		var fs := _seg(l)
+		seg = [(seg[0] as Vector3).lerp(fs[0], ch), (seg[1] as Vector3).lerp(fs[1], ch)]
+	var c := _center()
+	var h: Vector3 = seg[1]
+	var to_c := Vector3(c.x - _src.x, 0.0, c.z - _src.z)
+	var dist := to_c.length()
+	var th := float(r.phase) + _t * lerpf(2.4, 4.2, k)
+	var orb := _w2("orbit_r", Vector2(1.05, 0.6))
+	var ro := lerpf(orb.x, orb.y, k)
+	var p1 := _src + to_c * 0.3 + Vector3.UP * (_wf("arch_m", 1.0) * lerpf(1.0, 0.7, ch) + 0.1 * dist)
+	var p2 := c + Vector3(cos(th) * ro, lerpf(0.55, 1.25, k) + 0.3 * sin(th * 0.7 + float(r.phase)), sin(th) * ro)
+	p2 = p2.lerp(h + Vector3.UP * 0.3 + (h - c) * 0.25, ch)
+	var n := clampi(int(dist / 0.45) + 12, 14, 30)
+	var pts := PackedVector3Array()
+	for j in n + 1:
+		pts.append(_bez(_src, p1, p2, h, float(j) / float(n)))
+	pts = _wave(pts, _wf("wave_m", 0.1) * lerpf(1.0, 0.35, ch), float(r.phase))
+	# (the coil: from the palm back along the forearm, turning with time; looser before it is channelled)
+	var turns := lerpf(_wf("coil_turns", 0.9), _wf("coil_turns_full", 2.6), k)
+	var cover := lerpf(0.3, 0.95, k)
+	var cr := (_wf("coil_r_foot", 0.12) if l.ends_with("foot") and i == 0 else _wf("coil_r", 0.085)) * lerpf(1.5, 1.0, ch)
+	var cn := 12
+	for j in range(1, cn + 1):
+		var f := float(j) / float(cn)
+		pts.append(_coil(seg, 1.05 - cover * f, _t * 6.0 + f * turns * TAU + float(r.phase), cr))
+	return pts
+
+
+## Ribbon `i`'s points (tail first) for the Geyser: from the source along the deck (bowed round the caster, a low wave on it)
+## to where it will rise, and a whirl lying on the deck there that closes in as the lock is channelled.
+func _deck_pts(r: Dictionary, k: float, ch: float) -> PackedVector3Array:
+	var c := _center()
+	var spot := _spot
+	var deck_y := spot.y
+	var src := _src
+	var flat := Vector3(spot.x - src.x, 0.0, spot.z - src.z)
+	var dist := maxf(flat.length(), 0.01)
+	var way := flat / dist
+	var side := way.cross(Vector3.UP).normalized()
+	# (bowed away from the caster where the line passes close to him)
+	var rel := Vector3(c.x - src.x, 0.0, c.z - src.z)
+	var along := rel.dot(way)
+	var across := rel.dot(side)
+	var bow := 0.0
+	if along > -0.5 and along < dist + 0.5 and absf(across) < 1.1:
+		bow = (1.1 - absf(across)) * (-1.0 if across >= 0.0 else 1.0)
+	var rr := lerpf(0.9, 0.5, ch)
+	var base_ang := atan2(-way.z, -way.x)
+	var th0 := base_ang + _t * 4.0 * (1.0 if int(float(r.phase) * 10.0) % 2 == 0 else -1.0)
+	var enter := spot + Vector3(cos(th0), 0.0, sin(th0)) * rr
+	var line := Vector3(enter.x - src.x, 0.0, enter.z - src.z)
+	var n := clampi(int(line.length() / 0.4) + 8, 10, 30)
+	var pts := PackedVector3Array()
+	for j in n + 1:
+		var s := float(j) / float(n)
+		var p := src + line * s
+		p.y = lerpf(src.y, deck_y + DECK_LIFT, smoothstep(0.0, 0.12, s)) + 0.12 * sin(PI * s)
+		p += side * bow * sin(PI * s)
+		pts.append(p)
+	pts = _wave(pts, _wf("wave_m", 0.1) * 1.3, float(r.phase))
+	var turns := lerpf(0.5, 1.8, k)
+	var cn := 14
+	for j in range(1, cn + 1):
+		var f := float(j) / float(cn)
+		var a := th0 + f * turns * TAU * (-1.0 if int(float(r.phase) * 10.0) % 2 == 0 else 1.0)
+		var rad := lerpf(rr, 0.14, f)
+		pts.append(Vector3(spot.x + cos(a) * rad, deck_y + DECK_LIFT + 0.05 * f, spot.z + sin(a) * rad))
+	return pts
+
+
 func _water(dt: float) -> void:
-	var k := _level()
+	var step_hz := _wf("step_hz", 12.0)
+	_t12 = floorf(_t * step_hz) / step_hz
+	var k := minf(_level(), 1.0)
 	var ch := _channel()
 	var l := limb()
-	var seg := _seg(l)
 	var ds := _deck_spec()
 	_deck = not ds.is_empty()
 	if _deck:
 		_spot = _water_spot(ds)
-	var w := lerpf(4.5, 9.5, minf(k, 1.0)) + 6.0 * _flash
-	var c := _center()
-	var wrap_r := 0.25 if l.ends_with("foot") else 0.22
-	for i in _runs.size():
-		var run: Dictionary = _runs[i]
-		var th := float(run.phase) + _t * w
-		var h := lerpf(0.3, 1.0, minf(k, 1.0)) + 0.65 * sin(th * 0.35 + float(i) * 1.6)
-		h = clampf(h, 0.05, 1.9)
-		# (air's vortex: wider at the top, closing in as it fills)
-		var r := lerpf(1.0, 0.6, minf(k, 1.0)) * lerpf(0.85, 1.15, clampf(h / 2.0, 0.0, 1.0))
-		var p := c + Vector3(cos(th) * r, h, sin(th) * r)
-		var to := Vector3.ZERO
-		if _deck:
-			# (the Geyser's: down to the deck before his feet, a low whirl closing in, where it is sent from)
-			var foot := _water_tip()
-			var rr := lerpf(0.85, 0.35, ch)
-			to = Vector3(foot.x + cos(th) * rr, foot.y + 0.05 + 0.1 * absf(sin(th * 1.3 + float(i))), foot.z + sin(th) * rr)
-		else:
-			var u := fposmod(_t * 1.3 + float(i) * 0.25, 1.0)
-			to = _coil(seg, lerpf(0.0, 1.1, u) if l != "both" else u, th * 1.5, wrap_r)
-		_move(run, p.lerp(to, ch * 0.9), dt)
-		if run.has("drops") and is_instance_valid(run.drops) and ending == "":
-			(run.drops as GPUParticles3D).amount_ratio = clampf(0.1 + 0.6 * k, 0.05, 1.0) * _shown
-	if _deck and _visual and ending == "":
+	if ending != "":
+		_water_end_step(dt)
+		return
+	_src_check()
+	var wh := _w2("half_w", Vector2(0.09, 0.15))
+	var hw := lerpf(wh.x, wh.y, k) * clampf(_shown, 0.05, 1.0) * (1.0 + 0.3 * _flash)
+	var drawn := _water_drawn(k)
+	var first := PackedVector3Array()
+	for i in _rib.size():
+		var r: Dictionary = _rib[i]
+		var rb := r.rb as ToonRibbon
+		r.share = move_toward(float(r.share), _rib_share(i, l, ch), dt * 4.0)
+		var share := float(r.share)
+		if share < 0.04 or _src == Vector3.INF:
+			rb.lay_path(PackedVector3Array(), 0.0, 0.0)
+			r.pts = PackedVector3Array()
+			continue
+		var full := _deck_pts(r, k, ch) if _deck else _hand_pts(r, i, k, ch, l)
+		var pts := _cut_head_first(full, drawn)
+		r.pts = pts
+		rb.fade = 1.0
+		rb.lay_path(pts, hw * share, hw * share * _wf("tail_flare", 1.15), _wf("tip", 0.12))
+		if i == 0:
+			first = pts
+	if not first.is_empty():
+		_head = first[0]
+		if _drops != null and is_instance_valid(_drops):
+			_drops.global_position = first[int(fposmod(_t * 0.9, 1.0) * float(first.size() - 1))]
+			_drops.amount_ratio = clampf(0.1 + 0.5 * k, 0.05, 1.0) * _shown
+	# (a foam crown and a ripple on the water where the ribbon leaves it)
+	_ring_t -= dt
+	if _ring_t <= 0.0 and _src != Vector3.INF:
+		_ring_t = _wf("ring_every_s", 0.34)
+		var pool := ToonFxPool.of(get_tree().current_scene)
+		if pool != null:
+			var cm := _w2("crown_m", Vector2(0.22, 0.4))
+			var at := Vector3(_src.x, _src.y + SOURCE_DROP + 0.03, _src.z)
+			pool.play("crown", Transform3D(Basis.IDENTITY, at), 0.4, lerpf(cm.x, cm.y, k) * 0.7, lerpf(cm.x, cm.y, k) * 1.15,
+					BendLooks.WATER, BendLooks.FOAM, ToonFx.band_mesh(1.0, 1.4, 0.8))
+			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.55, 0.12, lerpf(0.35, 0.6, k), BendLooks.FOAM, BendLooks.WATER)
+	if _deck and ending == "":
 		_fissure_step()
-	if _mist != null and is_instance_valid(_mist) and ending == "":
-		# (the mist round his feet at first, then where the water gathers)
-		_mist.global_position = (c + Vector3.UP * 0.1).lerp(_water_tip(), ch)
-		_mist.amount_ratio = clampf(0.15 + 0.7 * k + 0.5 * _flash, 0.05, 1.0) * _shown
+
+
+## The ending's first frame (`out` the caster's aim, flat): each ribbon's points given their way: a cast snaps the tail up to
+## the head and flings it along `out` (the Geyser's streams up with the column); a lock that breaks lets it fall.
+func _water_end(out: Vector3) -> void:
+	for r: Dictionary in _rib:
+		var pts: PackedVector3Array = r.pts
+		var n := pts.size()
+		var vel := PackedVector3Array()
+		vel.resize(n)
+		for j in n:
+			var s := float(j) / float(maxi(n - 1, 1))          # (0 the head .. 1 the tail)
+			if ending == "cast":
+				if _deck:
+					vel[j] = Vector3(0.0, lerpf(8.5, 4.0, s), 0.0)
+				else:
+					vel[j] = out * lerpf(_wf("cast_mps", 11.0), 3.0, s) + Vector3.UP * 0.8 + (pts[0] - pts[j]) * _wf("snap", 5.0)
+			else:
+				vel[j] = Vector3(0.0, -0.4, 0.0)
+		r.vel = vel
+	if ending != "cast" and _visual:
+		BendLooks.burst(_water_tip() if not _deck else _spot, "water", 8, Vector3.UP, 70.0, 2.0, 0.18, false)
+
+
+## The ending's frames: the points fly or fall, the ribbon tears away (its fade) and thins, then is let go.
+func _water_end_step(dt: float) -> void:
+	var e := clampf(_end_t / float(END_S[ending]), 0.0, 1.0)
+	var grav := 6.0 if ending == "cast" else 14.0
+	var floor_y := _center().y + 0.03
+	var wh := _w2("half_w", Vector2(0.09, 0.15))
+	for r: Dictionary in _rib:
+		var pts: PackedVector3Array = r.pts
+		var vel: PackedVector3Array = r.vel
+		var rb := r.rb as ToonRibbon
+		if pts.size() < 2 or vel.size() != pts.size() or e >= 1.0:
+			rb.stop()
+			continue
+		for j in pts.size():
+			vel[j] = vel[j] + Vector3(0.0, -grav * dt, 0.0)
+			var p := pts[j] + vel[j] * dt
+			if p.y < floor_y and ending != "cast":
+				p.y = floor_y
+				vel[j] = Vector3.ZERO
+			pts[j] = p
+		r.pts = pts
+		r.vel = vel
+		rb.fade = 1.0 - (e * e if ending == "cast" else e)
+		var w := wh.y * float(r.share) * (1.0 - 0.5 * e)
+		rb.lay_path(pts, w, w * _wf("tail_flare", 1.15), _wf("tip", 0.12))
 
 
 # ---------------------------------------------------------------- fire
