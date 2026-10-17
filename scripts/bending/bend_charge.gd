@@ -732,7 +732,7 @@ func _build_earth() -> void:
 	# (the stance cracks the deck under his feet)
 	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
 	if pool != null:
-		pool.mark("cracks", _center(), Vector3.UP, 2.3, 2.8)
+		pool.mark("cracks", _center(), Vector3.UP, 1.8, 2.2)
 
 
 ## The stone the body raised and holds (a Spike's or a Boulder's, FormEffects.raised_of), null none.

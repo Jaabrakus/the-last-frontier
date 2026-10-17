@@ -681,66 +681,95 @@ static func _box(st: SurfaceTool, x0: float, x1: float, y0: float, y1: float, z0
 		_tri_out(st, c[f[0]], c[f[2]], c[f[3]], f[4])
 
 
+## A column from y0 up to a slanted top (height `ytl` on its left (x0), `ytr` on its right), x0..x1 across, z0..z1 through, added
+## to `st` (outward winding): the tooth of a wall's ragged skyline.
+static func _column(st: SurfaceTool, x0: float, x1: float, y0: float, ytl: float, ytr: float, z0: float, z1: float) -> void:
+	var c := [Vector3(x0, y0, z0), Vector3(x1, y0, z0), Vector3(x1, y0, z1), Vector3(x0, y0, z1),
+			Vector3(x0, ytl, z0), Vector3(x1, ytr, z0), Vector3(x1, ytr, z1), Vector3(x0, ytl, z1)]
+	for f: Array in [[0, 1, 2, 3, Vector3.DOWN], [4, 7, 6, 5, Vector3.UP], [0, 4, 5, 1, Vector3.FORWARD], [3, 2, 6, 7, Vector3.BACK],
+			[0, 3, 7, 4, Vector3.LEFT], [1, 5, 6, 2, Vector3.RIGHT]]:
+		_tri_out(st, c[f[0]], c[f[1]], c[f[2]], f[4])
+		_tri_out(st, c[f[0]], c[f[2]], c[f[3]], f[4])
+
+
 ## A cel earth wall (the Earth Wall in the show's cel style, 2026-10-16): `w` across (x), `h` over the ground (y; `bury` more
-## under it), `t` thick (z), centred on x and z, its base at y 0. Columns of uneven height, each three layers of rock laid one on
-## the other with ledges between them, the top ragged. Indexed with smooth normals for its outline hull.
+## under it), `t` thick (z), centred on x and z, its base at y 0. One solid body to a little over half its height, a step in
+## it, and over that a ragged skyline: teeth of uneven width whose tops slant from one height to the next. Indexed with smooth
+## normals for its outline hull.
 static func wall_cel_mesh(w: float, h: float, t: float, seed := 0, bury := 0.45) -> Mesh:
 	return _cached("wallc_%.2f_%.2f_%.2f_%d_%.2f" % [w, h, t, seed, bury], func() -> Mesh:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed * 3571 + 9
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var cols := clampi(int(w / 0.42), 4, 9)
-		var cw := w / float(cols)
-		for i in cols:
-			var x0 := -w * 0.5 + float(i) * cw - 0.015
-			var x1 := x0 + cw + 0.03
-			var edge := 0.86 if i == 0 or i == cols - 1 else 1.0
-			var top := h * edge * rng.randf_range(0.84, 1.0)
-			var ys := [-bury, top * 0.42, top * 0.74, top]
-			for j in 3:
-				var zf := t * 0.5 * (1.12 if j == 0 else rng.randf_range(0.92, 1.04))
-				var zb := t * 0.5 * (1.12 if j == 0 else rng.randf_range(0.92, 1.04))
-				var xo := rng.randf_range(-0.03, 0.03) if j > 0 else 0.0
-				_box(st, x0 + xo, x1 + xo, float(ys[j]), float(ys[j + 1]), -zb, zf)
+		var body := h * 0.56
+		_column(st, -w * 0.5, w * 0.5, -bury, body, body, -t * 0.58, t * 0.58)
+		# (the teeth: breakpoints across the width, a height at each, each tooth from one to the next)
+		var xs: Array[float] = [-w * 0.5]
+		while xs[xs.size() - 1] < w * 0.5 - 0.35:
+			xs.append(minf(xs[xs.size() - 1] + rng.randf_range(0.4, 0.85), w * 0.5))
+		xs[xs.size() - 1] = w * 0.5
+		var hs: Array[float] = []
+		for i in xs.size():
+			hs.append(h * rng.randf_range(0.8, 1.0) * (0.86 if i == 0 or i == xs.size() - 1 else 1.0))
+		for i in xs.size() - 1:
+			var zf := t * 0.5 * rng.randf_range(0.9, 1.04)
+			var zb := t * 0.5 * rng.randf_range(0.9, 1.04)
+			_column(st, xs[i] - 0.01, xs[i + 1] + 0.01, body - 0.05, hs[i], hs[i + 1], -zb, zf)
 		st.index()
 		st.generate_normals()
 		return st.commit())
 
 
-## A cel rock column (the Pillar, the Column): radius `r`, `h` over the ground (`bury` more under it), four drums of rock
-## stacked a little off one another, seven-sided, the top flat to stand on. Indexed with smooth normals for its outline hull.
+## A cel rock column (the Pillar, the Column): radius `r`, `h` over the ground (`bury` more under it), one faceted shaft of eight
+## sides in seven uneven rings, wider at its foot and a little off true, the top flat to stand on. Indexed with smooth normals
+## for its outline hull.
 static func pillar_cel_mesh(r: float, h: float, seed := 0, bury := 0.45) -> Mesh:
 	return _cached("pillarc_%.2f_%.2f_%d_%.2f" % [r, h, seed, bury], func() -> Mesh:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed * 2087 + 4
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var sides := 7
-		var ys := [-bury, h * 0.3, h * 0.58, h * 0.82, h]
-		for j in 4:
-			var rr: float = r * float([1.12, 0.98, 1.06, 0.96][j]) * rng.randf_range(0.95, 1.05)
-			var off := Vector3(rng.randf_range(-0.05, 0.05), 0.0, rng.randf_range(-0.05, 0.05)) * r * (0.0 if j == 0 else 1.0)
-			var rot := rng.randf() * TAU
-			var y0 := float(ys[j])
-			var y1 := float(ys[j + 1])
-			var lo: Array[Vector3] = []
-			var hi: Array[Vector3] = []
+		var sides := 8
+		var rings := 7
+		var pts: Array = []
+		for j in rings + 1:
+			var u := float(j) / float(rings)
+			var y := lerpf(-bury, h, u)
+			var taper := lerpf(1.12, 0.88, clampf(y / h, 0.0, 1.0))
+			var lean := Vector3(0.1 * r * sin(float(seed) + u * 2.0), 0.0, 0.08 * r * cos(float(seed) * 1.7 + u * 2.3)) * clampf(y / h, 0.0, 1.0)
+			var row: Array = []
 			for i in sides:
-				var a := rot + TAU * (float(i) + rng.randf_range(-0.12, 0.12)) / float(sides)
-				var q: float = rr * rng.randf_range(0.92, 1.08)
-				lo.append(off + Vector3(cos(a) * q, y0, sin(a) * q))
-				hi.append(off + Vector3(cos(a) * q * 0.97, y1, sin(a) * q * 0.97))
-			var cl := off + Vector3(0.0, y0, 0.0)
-			var chi := off + Vector3(0.0, y1 + (0.02 if j == 3 else 0.0), 0.0)
+				var a := TAU * (float(i) + rng.randf_range(-0.2, 0.2)) / float(sides) + u * 0.25
+				var rr: float = r * taper * (rng.randf_range(0.86, 1.1) if j > 0 and j < rings else 1.0)
+				row.append(lean + Vector3(cos(a) * rr, y, sin(a) * rr))
+			pts.append(row)
+		for j in rings:
 			for i in sides:
 				var k := (i + 1) % sides
-				var mid := (lo[i] + lo[k] + hi[i] + hi[k]) * 0.25 - off
-				var out := Vector3(mid.x, 0.0, mid.z).normalized()
-				_tri_out(st, lo[i], lo[k], hi[k], out)
-				_tri_out(st, lo[i], hi[k], hi[i], out)
-				_tri_out(st, chi, hi[i], hi[k], Vector3.UP)
-				_tri_out(st, cl, lo[k], lo[i], Vector3.DOWN)
+				var a: Vector3 = pts[j][i]
+				var b: Vector3 = pts[j][k]
+				var c: Vector3 = pts[j + 1][k]
+				var d: Vector3 = pts[j + 1][i]
+				var mid := (a + b + c + d) * 0.25
+				var out := Vector3(mid.x, 0.0, mid.z)
+				out = out.normalized() if out.length_squared() > 1e-8 else Vector3.RIGHT
+				_tri_out(st, a, b, c, out)
+				_tri_out(st, a, c, d, out)
+		var top: Array = pts[rings]
+		var ct := Vector3.ZERO
+		for q: Vector3 in top:
+			ct += q
+		ct = ct / float(sides) + Vector3.UP * 0.02
+		var foot: Array = pts[0]
+		var cf := Vector3.ZERO
+		for q: Vector3 in foot:
+			cf += q
+		cf /= float(sides)
+		for i in sides:
+			var k := (i + 1) % sides
+			_tri_out(st, ct, top[i], top[k], Vector3.UP)
+			_tri_out(st, cf, foot[k], foot[i], Vector3.DOWN)
 		st.index()
 		st.generate_normals()
 		return st.commit())
