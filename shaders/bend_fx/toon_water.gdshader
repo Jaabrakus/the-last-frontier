@@ -31,6 +31,7 @@ uniform float rim = 0.52;
 uniform float wobble = 0.0;
 uniform float alpha_mul = 1.0;
 uniform float outline = 0.0;
+uniform float lip_foam = 0.0;   // (mode 0: a wave's crest, UV.y its lip: white foam along it)
 uniform float gloss = 0.64;
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
@@ -120,6 +121,8 @@ void fragment() {
 	col = mix(col, c_body, aastep(-0.05, d));
 	col = mix(col, c_rim, aastep(rim, fres + (n2 - 0.5) * 0.25));
 	float fm = n * 0.75 + n2 * 0.45;
+	float lip = lip_foam * smoothstep(0.38, 0.5, UV.y) * (1.0 - smoothstep(0.66, 0.8, UV.y));
+	fm += lip * 0.9;
 	if (mode == 1) {
 		fm += UV.x * 0.35;                               // the stream breaks to foam toward its tail
 	}

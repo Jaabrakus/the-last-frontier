@@ -1158,43 +1158,28 @@ static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps:
 	var pool := _pool()
 	if pool == null:
 		return
-	var tree := pool.get_tree()
-	if tree == null:
-		return
 	var d := Vector3(dir.x, 0.0, dir.z).normalized()
 	if d.length_squared() < 1e-6:
 		return
-	var foot := FormEffects.ground_at(pool, at)
-	var span := deg_to_rad(clampf(deg, 20.0, 160.0))
-	var mesh := ToonFx.band_arc_mesh(1.0, 1.12, 1.0, span)
-	var look := Basis.looking_at(d, Vector3.UP)
+	# (the anime pass, 2026-10-16: one wave with a curling crest and a foam lip, travelling out at the cone's speed and breaking
+	# at its reach: WaveFx; spray off it as it runs, a crown where it falls)
+	var w := WAVE_FX.new()
+	w.name = "Wave"
+	w.foot = FormEffects.ground_at(pool, at)
+	w.dir = d
+	w.span = deg_to_rad(clampf(deg, 20.0, 160.0))
+	w.reach = reach
+	w.mps = maxf(mps, 1.0)
+	w.tall = tall
+	pool.add_child(w)
 	pool.shoot("drop", at, 16, d, deg * 0.4, Vector2(4.0, 8.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -10, 0), 0.0)
-	var steps := clampi(int(ceil(reach / 0.55)), 6, 24)
-	for i in steps:
-		var r := 0.7 + (reach - 0.7) * float(i + 1) / steps
-		var h := tall * lerpf(0.75, 1.0, sin(PI * float(i + 1) / (steps + 1)))   # (it swells, then breaks at its end)
-		var wait := r / maxf(mps, 1.0)
-		var last := i == steps - 1
-		tree.create_timer(maxf(wait - 0.04, 0.0), false).timeout.connect(func() -> void:
-			var p2 := _pool()
-			if p2 == null:
-				return
-			var xf := Transform3D(look * Basis.from_scale(Vector3(r, h, r)), foot + Vector3.UP * 0.02)
-			p2.play("crown", xf, 0.32, 1.0, 1.06, WATER, FOAM, mesh)
-			var lip := foot + d * r + Vector3.UP * h
-			p2.shoot("foam", lip, 3, d + Vector3.UP * 0.6, 50.0, Vector2(1.0, 2.5), Vector2(0.25, 0.45), 0.4, Vector3(0, -3, 0), 1.5,
-					{"r": r * sin(span * 0.5) * 0.8})
-			p2.shoot("drop", lip, 5, d + Vector3.UP * 0.8, 40.0, Vector2(2.0, 4.5), Vector2(0.06, 0.12), 0.6, Vector3(0, -10, 0), 0.0,
-					{"r": r * sin(span * 0.5) * 0.8})
-			if last:
-				p2.shoot("foam", foot + d * r + Vector3.UP * 0.3, 10, d + Vector3.UP, 70.0, Vector2(1.0, 3.0), Vector2(0.3, 0.6), 0.6,
-						Vector3(0, -2, 0), 1.0, {"r": r * sin(span * 0.5)}))
 
 
 ## Water's Downpour (its Slam) as the water's charge (the owner, 2026-10-12: "reeffect our water moves now with the new water
 ## charge"): four wisps of water spiral down from `from` (before the caster's chest) to `to` (the deck under its box, or its
 ## foot in the air) in DOWNPOUR_S, closing in as they go, drops pouring with them; where they land a burst of blue mist and
 ## drops thrown out round it.
+const WAVE_FX := preload("res://scripts/bending/wave_fx.gd")
 const DOWNPOUR_S := 0.16
 static func downpour(from: Vector3, to: Vector3) -> void:
 	if not live():
