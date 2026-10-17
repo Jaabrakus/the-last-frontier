@@ -458,7 +458,7 @@ static func puddle_mesh(sides := 28) -> Mesh:
 	return _cached("puddle_%d" % sides, func() -> Mesh:
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var a_r := 0.84
+		var a_r := 0.93
 		for j in sides:
 			var a0 := TAU * float(j) / float(sides)
 			var a1 := TAU * float(j + 1) / float(sides)

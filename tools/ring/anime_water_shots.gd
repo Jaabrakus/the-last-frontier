@@ -58,6 +58,7 @@ var n := 0
 var _spot_pt := Vector3.INF
 var aiming := false
 var pitch_sign := 1.0
+var _pitch0 := 0.0
 var film := ""
 var _film_n := 0
 var _film_phys := 0
@@ -168,6 +169,7 @@ func _run(only: Array) -> void:
 	view.camera.fov = 48.0
 	_place()
 	await _ticks(30)
+	_pitch0 = p.pitch
 	p.pitch = 0.3
 	await _ticks(3)
 	pitch_sign = 1.0 if (-p.camera.global_basis.z).y > 0.0 else -1.0
@@ -298,6 +300,8 @@ func _shot(name: String, d: Dictionary) -> void:
 	_place()
 	c.held_override = null
 	aiming = name.ends_with("_hit")
+	if not aiming:
+		p.pitch = _pitch0                    # (the aim level again: a wall is placed where the crosshair meets the deck)
 	if name.ends_with("_hit") and rm.foe != null and is_instance_valid(rm.foe):
 		# (the dummy on the line of fire, 6.5 m down the deck, facing him: the hit is seen)
 		rm.foe.global_position = Vector3(home.origin.x, home.origin.y, home.origin.z) + fwd * 6.5
