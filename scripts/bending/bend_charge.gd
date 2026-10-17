@@ -67,7 +67,7 @@ const SLEEVE_W := Vector2(0.13, 0.21)
 const FIST_LEN := 0.58
 const FIST_W := 0.3
 const BREATH_S := 0.38
-const MOUTH_Y := 1.48
+const MOUTH_Y := 1.3
 const STEP_FPS := 12.0
 const HOLD_S := 0.2
 const SNAP_S := 0.09
@@ -687,7 +687,7 @@ func _on_struck(_m: String) -> void:
 ## The mouth: before the face at MOUTH_Y over the body's feet (the rig's head bone is the head's top: its breath came out over
 ## the head).
 func _mouth() -> Vector3:
-	return _center() + Vector3.UP * MOUTH_Y + _forward() * 0.16
+	return _center() + Vector3.UP * MOUTH_Y + _forward() * 0.22
 
 
 ## A drawing's jitter for tongue `i` at drawing `step`: 0.8 .. 1.2, the same for a whole drawing, new at the next.
