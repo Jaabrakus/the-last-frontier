@@ -122,9 +122,10 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"curl": float(sm.get("curl", 1.6)), "grow_k": Vector2(float(gk[0]), float(gk[1])), "tint_k": float(sm.get("tint", 0.55)),
 					"deck_fade_m": float(sm.get("deck_fade_m", 0.6)), "opacity": float(sm.get("opacity", 0.92))}
 		"puff_dust":
+			# (earth in the show's cel style, 2026-10-16: dust is a light beige cloud with one soft shade, not a dark brown lump)
 			m.shader = SHADERS.puff
-			p = {"mode": 1, "c_a": Color(0.9, 0.8, 0.62), "c_b": Color(0.7, 0.58, 0.43), "c_c": Color(0.46, 0.37, 0.27),
-					"c_ink": Color(0.2, 0.14, 0.09)}
+			p = {"mode": 1, "c_a": Color(0.97, 0.91, 0.78), "c_b": Color(0.85, 0.75, 0.6), "c_c": Color(0.68, 0.58, 0.45),
+					"c_ink": Color(0.3, 0.22, 0.14)}
 		"puff_frost":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.76, 0.92, 1.0), "c_c": Color(0.45, 0.7, 0.95),

@@ -1012,7 +1012,7 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 		"stone":
 			pool.shoot("chunk", at, n, d, spread, Vector2(speed * 0.7, speed * 1.5), Vector2(0.12, 0.3) * k, 1.1,
 					Vector3(0, -16.0, 0), 0.3, {"r": 0.15 * k, "ang": 400.0})
-			pool.shoot("puff_dust", at, int(n * 0.7), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.55, 1.1) * k,
+			pool.shoot("puff_dust", at, int(n * 0.45), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.4, 0.85) * k,
 					1.0, Vector3(0, 0.3, 0), 3.0, {"r": 0.2 * k}.merged(occl))
 			if not g.is_empty():
 				# (the show's cel earth: flat dust clods thrown out along the deck, no hoop; the scar cracked in the deck)
@@ -1067,7 +1067,7 @@ const BURST_CLOUD := {
 	"steam": [[1.0, 0.9, 1.1, 2.0]],
 	"ice": [[0.6, 0.6, 0.55, 2.0], [0.0, 1.2, 0.0, 0.0]],
 	"air": [[0.8, 0.45, 0.4, 3.0], [0.0, 1.9, 0.0, 0.0]],
-	"stone": [[0.6, 1.1, 1.0, 3.0]],
+	"stone": [[0.6, 0.85, 1.0, 3.0]],
 	"mud": [[0.7, 0.4, 0.9, 0.5], [0.0, 0.8, 0.0, 0.0]],
 	"lightning": [[0.0, 1.3, 0.0, 0.0]],
 }
