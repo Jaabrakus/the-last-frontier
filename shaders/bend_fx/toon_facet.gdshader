@@ -14,6 +14,8 @@ uniform vec3 c_dark : source_color = vec3(0.18, 0.45, 0.78);
 uniform vec3 c_rim : source_color = vec3(1.0, 1.0, 1.0);
 uniform vec3 c_ink : source_color = vec3(0.04, 0.12, 0.25);
 uniform float ink = 0.0;
+uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
+uniform float frost = 0.0;   // (ice: blue striations through the faces, white veins between them)
 uniform float outline = 0.0;   // (the anime pass: a drawn line round the silhouette, with or without the ink style)
 uniform float rim = 0.62;
 uniform float rim_on = 1.0;
@@ -52,6 +54,12 @@ void fragment() {
 	vec3 col = c_dark;
 	col = mix(col, c_mid, aastep(0.05, d));
 	col = mix(col, c_light, aastep(0.62, d));
+	if (frost > 0.0) {
+		float nz = texture(noise, vec2(v_wpos.x + v_wpos.z * 0.8, v_wpos.y * 1.3 + v_wpos.z * 0.3) * 0.5).r;
+		col = mix(col, c_mid, frost * aastep(0.55, nz) * 0.9);
+		col = mix(col, c_dark, frost * aastep(0.7, nz) * 0.8);
+		col = mix(col, vec3(1.0), frost * (1.0 - aastep(0.025, abs(nz - 0.62))));
+	}
 	float fres = 1.0 - clamp(dot(N, VIEW), 0.0, 1.0);
 	col = mix(col, c_rim, rim_on * aastep(rim, fres));
 	if (glint > 0.0) {

@@ -270,7 +270,7 @@ static func mat(key: String) -> ShaderMaterial:
 					"ink": 0.6}
 		"ice":
 			m.shader = SHADERS.facet
-			p = {"c_light": Color(0.84, 0.96, 1.0), "c_mid": Color(0.58, 0.85, 1.0), "c_dark": Color(0.26, 0.56, 0.93), "outline": 0.85}
+			p = {"c_light": Color(0.84, 0.96, 1.0), "c_mid": Color(0.58, 0.85, 1.0), "c_dark": Color(0.26, 0.56, 0.93), "outline": 0.85, "frost": 1.0}
 		"ice_ribbon":
 			# (the Spear's trail, the anime pass: the water ribbon in ice's pale facets, a deep blue line round it)
 			m.shader = SHADERS.water
@@ -347,7 +347,7 @@ static func mat(key: String) -> ShaderMaterial:
 	m.set_shader_parameter(&"range_max", float(rg.get("max", 2.2)))
 	for k in p:
 		m.set_shader_parameter(k, p[k])
-	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke]:
+	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke, SHADERS.facet]:
 		m.set_shader_parameter(&"noise", noise())
 	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
 	m.set_shader_parameter(&"fx_gain", gain)
@@ -453,7 +453,7 @@ static func sphere(segs := 18) -> Mesh:
 
 
 ## A flat puddle of radius 1 lying on the deck (the anime pass): a level top, its rim sloping down to the deck. UV.y is 0 at its
-## middle, 0.52 where the rim begins and 0.6 at its edge (the water shader's lip foam draws the white rim there).
+## middle, 0.44 where the rim begins and 0.58 at its edge (the water shader's lip foam draws the white rim there).
 static func puddle_mesh(sides := 28) -> Mesh:
 	return _cached("puddle_%d" % sides, func() -> Mesh:
 		var st := SurfaceTool.new()
@@ -467,12 +467,12 @@ static func puddle_mesh(sides := 28) -> Mesh:
 			var u0 := float(j) / sides * 4.0
 			var u1 := float(j + 1) / sides * 4.0
 			var tris := [
-				[Vector3(0.0, 0.016, 0.0), Vector3.UP, Vector2(u0, 0.0), d0 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u0, 0.52),
-						d1 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u1, 0.52)],
-				[d0 * a_r + Vector3.UP * 0.016, (d0 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u0, 0.52), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
-						Vector2(u0, 0.6), d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.52)],
-				[d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.52), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
-						Vector2(u0, 0.6), d1, (d1 * 0.7 + Vector3.UP * 0.7).normalized(), Vector2(u1, 0.6)]]
+				[Vector3(0.0, 0.016, 0.0), Vector3.UP, Vector2(u0, 0.0), d0 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u0, 0.44),
+						d1 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u1, 0.44)],
+				[d0 * a_r + Vector3.UP * 0.016, (d0 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u0, 0.44), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
+						Vector2(u0, 0.58), d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.44)],
+				[d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.44), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
+						Vector2(u0, 0.58), d1, (d1 * 0.7 + Vector3.UP * 0.7).normalized(), Vector2(u1, 0.58)]]
 			for t: Array in tris:
 				var v: Array[Vector3] = [t[0], t[3], t[6]]
 				var order := [0, 1, 2]
