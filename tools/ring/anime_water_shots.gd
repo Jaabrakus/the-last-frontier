@@ -31,14 +31,15 @@ const SHOTS := {
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 8, 12, 16, 20, 24, 30, 40], "cam": "front34"},
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
 	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
+	"tomahawk_hit": {"key": 2, "mode": "", "fills": [], "full": [10], "rel": [-6, -2, 1, 4, 9, 16], "after": [40, 100], "cam": "hit"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
-	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
+	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 26, 36, 50, 90], "cam": "wide"},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32, 40], "cam": "front"},
 }
 ## The camera each shot is filmed from in film mode (the stills' own: cam=).
 const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
-		"lash_hit": "wide", "geyser": "spot", "wave": "front34", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
-const ORDER := ["gather_lash", "gather_geyser", "geyser", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
+		"lash_hit": "wide", "geyser": "spot", "wave": "front34", "spear": "side", "spear_hit": "wide", "tomahawk_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
+const ORDER := ["gather_lash", "gather_geyser", "geyser", "tomahawk_hit", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
 
 var view
 var out := "user://anime_water"

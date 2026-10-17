@@ -661,16 +661,13 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 		"surf":
 			# (water's movement (Skate, Surf: BendMotion) keeps water's first trail, the owner, 2026-10-12: "the orignal surf
 			# or wave skill was better"; the Lash's is the charge's wisps and mist)
-			g = _stream("drop", 22, 0.55)
-			rb.main_mat = ToonFx.mat("water_strip")
-			rb.coil_mat = ToonFx.mat("water_strip")
-			rb.coils = 2
+			# (the anime pass: the wake a Skate or a Surf leaves is a ribbon of water running out behind his feet, flat drops off it)
+			g = _stream("drop", 16, 0.55)
+			rb.main_mat = ToonFx.mat("water_whip")
 		"mud":
 			# (mud's: muddy water coiling round it, drops of mud falling off; the owner, 2026-10-12)
-			g = _stream("drop_mud", 22, 0.6)
-			rb.main_mat = ToonFx.mat("mud_strip")
-			rb.coil_mat = ToonFx.mat("mud_strip")
-			rb.coils = 2
+			g = _stream("drop_mud", 16, 0.6)
+			rb.main_mat = ToonFx.mat("mud_ribbon")
 		"ice":
 			g = _stream("puff_frost", 8, 0.3)
 			g.add_child(_stream("star", 10, 0.45))
@@ -720,10 +717,7 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 		"mud", "surf":
 			# (mud and water's movement keep water's old trail: drops and a coiled strip, no mist and no wisps)
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)
-			_ribbon(rb, r * 1.05, 0.45, 0.13)
-			rb.coil_r = r * 1.5
-			rb.coil_w = r * 0.42
-			rb.coil_spin = 26.0
+			_ribbon(rb, r * 0.6, 0.12, 0.18)
 		"ice":
 			_pm(pm, Vector2(0.2, 0.8), Vector2(maxf(r * 1.6, 0.16), maxf(r * 2.6, 0.26)), Vector3.ZERO, 1.5)
 			_pm(sub.process_material, Vector2(0.2, 1.0), Vector2(0.07, 0.13), Vector3(0, -1.0, 0), 1.0)
@@ -906,7 +900,7 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 				# (where it struck, on a body or in the air: a small crown of spikes opening back toward where it came from, as a
 				# milk-crown stands off the water, a drawn shape and not puffs, so it never hides who was struck)
 				var cb := Basis(Quaternion(Vector3.UP, d)) if d.dot(Vector3.UP) > -0.999 else Basis(Vector3.RIGHT, PI)
-				pool.play("crown", Transform3D(cb, at), 0.34, 0.28 * k, 0.7 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.7, 0.8))
+				pool.play("crown", Transform3D(cb, at), 0.3, 0.16 * k, 0.4 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.7, 0.8))
 		"mud":
 			# (a splat of mud: heavy drops flung out and falling, a few fat globs slower after them, and a dark wet stain on the
 			# deck; no crown (a band of mud read as a jagged ring floating over the deck) and no dust (its tan cloud read as dirt,

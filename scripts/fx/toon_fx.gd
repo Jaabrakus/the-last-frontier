@@ -200,6 +200,12 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"mode": 0, "wobble": 0.0, "outline": 0.0, "flow": Vector2(0.0, -4.0), "nscale": Vector2(1.0, 0.7), "foam": 0.7,
 					"rim": 0.9, "c_shade": Color(0.45, 0.78, 1.0, 0.9), "c_body": Color(0.7, 0.92, 1.0, 0.9),
 					"c_rim": Color(0.92, 0.99, 1.0, 0.92)}
+		"water_puddle":
+			# (a puddle left on the deck, the anime pass: a flat cel disc, a drawn line round its rim, a few flecks of foam)
+			m.shader = SHADERS.water
+			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "flow": Vector2(0.1, 0.06), "nscale": Vector2(1.3, 1.3), "foam": 0.86,
+					"rim": 0.7, "alpha_mul": 0.95, "c_shade": Color(0.08, 0.36, 0.84, 0.94), "c_body": Color(0.2, 0.58, 1.0, 0.92),
+					"c_rim": Color(0.7, 0.92, 1.0, 0.95)}
 		"water_crest":
 			# (the Wave's body, WaveFx: the cel water with a white foam lip along its crest and a drawn line round it)
 			m.shader = SHADERS.water

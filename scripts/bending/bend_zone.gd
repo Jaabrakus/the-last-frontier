@@ -450,12 +450,14 @@ func _look() -> void:
 			_grow(look, Vector3(1.0, 0.05, 1.0))
 			_own_fade(look)
 		"puddle":
-			var wet := _part(look, ToonFx.plane(), ToonFx.mat("mark_wet"))
-			wet.scale = Vector3(radius, 1.0, radius)
-			wet.position = Vector3.UP * 0.03
-			FxParams.put(wet, &"t", 0.15)
+			# (the anime pass: a flat cel disc of water, its rim rounded so the cel light turns it pale at the edge, a drawn line
+			# round it, flecks of foam; and a ripple running out of it now and then: _puddle_ripple)
+			var wet := _part(look, ToonFx.sphere(20), ToonFx.mat("water_puddle"))
+			wet.scale = Vector3(radius, 0.06, radius)
+			wet.position = Vector3.UP * 0.01
 			FxParams.put(wet, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_grow(look, Vector3(0.2, 1.0, 0.2))
+			_ripple_t = ToonFx.vis_rng.randf() * 1.0
 		"mud":
 			# (the Mud set's pool: the scorch mark's browns with no embers, a wet sheen over them, slow bubbles rising)
 			var mud := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
@@ -605,8 +607,20 @@ func _physics_process(dt: float) -> void:
 		BendCombo.guard_tick(owner_node, self, dt)   # (held past its window the gauge drains; empty, the guard breaks)
 		if is_queued_for_deletion():
 			return
+	if kind == "puddle" and BendLooks.live():
+		_ripple_t -= dt
+		if _ripple_t <= 0.0:
+			_ripple_t = 1.3
+			var pool := ToonFxPool.of(get_tree().current_scene)
+			if pool != null:
+				pool.play("ring", Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.05), 0.9, radius * 0.15, radius * 0.8,
+						BendLooks.FOAM, BendLooks.WATER)
 	if t >= life_s:
 		end("life")
+
+
+## A puddle's next ripple (s): a ring runs out across it now and then.
+var _ripple_t := 0.0
 
 
 ## A wind wall's push: whoever walks into it is pushed back the way he came (off its near face, WIND_WALL_KNOCK), once a
