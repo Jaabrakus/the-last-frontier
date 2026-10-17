@@ -24,12 +24,12 @@ const SHOTS := {
 	"gather_lash": {"key": 0, "mode": "", "fills": [0.2, 0.45, 0.7, 0.92], "full": [12], "after": [3, 8, 16, 30]},
 	"gather_geyser": {"key": 1, "mode": "spout", "fills": [0.25, 0.5, 0.75, 0.95], "full": [12], "after": [4, 12, 26, 45, 70]},
 	"splash": {"key": -1, "mode": "", "fills": [], "full": [], "after": [10, 18, 22, 24, 26, 28, 31, 35, 42]},
-	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "after": [24, 28, 32, 36, 42, 50, 62], "cam": "wide"},
+	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "after": [30, 33, 35, 37, 39, 42, 46, 52], "cam": "hit"},
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
-	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "after": [16, 20, 24, 28, 34, 42, 56], "cam": "wide"},
+	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "after": [26, 29, 31, 33, 35, 38, 42, 50], "cam": "hit"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 10, 18, 28, 40, 60]},
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
-	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "after": [14, 18, 22, 26, 32, 40, 56], "cam": "wide"},
+	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "after": [30, 34, 37, 40, 43, 47, 52, 60], "cam": "hit"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32]},
@@ -195,6 +195,11 @@ func _cam() -> void:
 		"wide":
 			eye = at + right * 7.5 + fwd * 4.0 + Vector3.UP * 2.6
 			look = at + fwd * 4.5 + Vector3.UP * 0.8
+		"hit":
+			# (the dummy 6.5 m down the line of fire, from before him and to one side)
+			var tgt := at + fwd * 6.5
+			eye = tgt - fwd * 2.4 + right * 2.8 + Vector3.UP * 1.5
+			look = tgt + Vector3.UP * 1.0
 		_:
 			eye = at + right * 3.6 + fwd * 1.5 + Vector3.UP * 1.55
 			look = at + fwd * 0.9 + Vector3.UP * 0.95
