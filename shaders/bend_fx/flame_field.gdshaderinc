@@ -29,3 +29,17 @@ float ember_mask(sampler2D tex, float across, float along, float t, float sd, fl
 	float spot = smoothstep(0.69, 0.75, e * 0.7 + e2 * 0.45);
 	return spot * smoothstep(0.42, 0.8, along) * smoothstep(-0.4, -0.08, v) * (1.0 - smoothstep(0.0, 0.03, v));
 }
+
+// The cel field (the cel look, 2026-10-16): a clean teardrop, fat low down and a point at the tip, bent by one slow low noise
+// (more toward the tip), the tip split into `lobes_k` points by V notches `notch_k` deep (each tongue its own phase, `sd`).
+// No fine grain and no second octave: a hand-drawn tongue, redrawn each step of `t`. Its value is high in the middle and 0
+// at the edge: bands are steps in it (toon_flame).
+float cel_v(sampler2D tex, float across, float along, float t, float sd, float lobes_k, float notch_k) {
+	float x = across * 2.0 - 1.0;
+	float n = texture(tex, vec2(sd * 0.37 + along * 0.35, t * 0.5)).r - 0.5;
+	x += n * 1.1 * along * along;
+	float w = pow(max(1.0 - along, 0.0), 1.15) * (1.0 + 0.3 * sin(along * 3.14159));   // (a belly low down, an S to the tip)
+	float tips = 0.5 + 0.5 * cos(x * 3.14159 * lobes_k + sd * 3.1);
+	w *= 1.0 - notch_k * (1.0 - tips) * smoothstep(0.25, 0.8, along);
+	return (w - abs(x)) * 1.25;
+}

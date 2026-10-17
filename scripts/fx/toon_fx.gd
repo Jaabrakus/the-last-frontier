@@ -123,6 +123,12 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.9, 0.8, 0.62), "c_b": Color(0.7, 0.58, 0.43), "c_c": Color(0.46, 0.37, 0.27),
 					"c_ink": Color(0.2, 0.14, 0.09)}
+		"puff_soot":
+			# (the puff a flame goes out in (the cel look, 2026-10-16: "the flame burning out in a puff at the end of every
+			# move"): a flat lit ball of dark grey smoke with an inked edge, a few at a time, never a cloud)
+			m.shader = SHADERS.puff
+			p = {"mode": 1, "c_a": Color(0.64, 0.62, 0.6), "c_b": Color(0.42, 0.4, 0.39), "c_c": Color(0.25, 0.24, 0.24),
+					"c_ink": Color(0.09, 0.08, 0.08), "ink": 1.0, "wobble": 0.3}
 		"puff_frost":
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(1.0, 1.0, 1.0), "c_b": Color(0.76, 0.92, 1.0), "c_c": Color(0.45, 0.7, 0.95),
@@ -272,10 +278,13 @@ static func mat(key: String) -> ShaderMaterial:
 			push_warning("ToonFx: no material %s" % key)
 			m.shader = SHADERS.puff
 	if m.shader == SHADERS.flame:
+		# (the cel look's numbers, fx_looks.json flame: cel on, its drawings' rate, the outline, the tips; 2026-10-16)
 		var fl := looks("flame")
-		for fk: String in ["soft", "warp", "embers", "deck_fade_m"]:
+		for fk: String in ["soft", "warp", "embers", "deck_fade_m", "cel", "cel_fps", "ink_w", "lobes", "notch"]:
 			if not p.has(fk) and fl.has(fk):
 				m.set_shader_parameter(fk, float(fl[fk]))
+		if fl.has("ink") and not p.has("ink"):
+			p["ink"] = float(fl["ink"])               # (fire is drawn with its outline whatever the style: the show's line)
 	var nr := looks("near")
 	var rg := looks("range")
 	m.set_shader_parameter(&"near_m", float(nr.get("near_m", 2.5)))
@@ -288,7 +297,8 @@ static func mat(key: String) -> ShaderMaterial:
 		m.set_shader_parameter(k, p[k])
 	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke]:
 		m.set_shader_parameter(&"noise", noise())
-	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
+	if not p.has("ink"):
+		m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
 	m.set_shader_parameter(&"fx_gain", gain)
 	_mats[key] = m
 	return m
@@ -564,6 +574,13 @@ static func recipe(key: String) -> Dictionary:
 			pm.color_ramp = fade
 			pm.scale_curve = curve([Vector2(0, 0.5), Vector2(0.25, 1.0), Vector2(1, 1.1)], 1.2)
 			r.amount = 32
+		"puff_soot":
+			# (a burn-out's smoke: small as the flame dies, swelling as it rises, torn away at the end)
+			r.mat = mat(key)
+			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.6, Color(1, 1, 1, 0.9)], [1.0, Color(1, 1, 1, 0.0)]])
+			pm.scale_curve = curve([Vector2(0, 0.35), Vector2(0.35, 1.0), Vector2(1, 1.3)], 1.3)
+			r.amount = 24
+			r.slots = 6
 		"drop", "drop_mud":
 			r.mat = mat(key)
 			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.7, Color(1, 1, 1, 0.85)], [1.0, Color(1, 1, 1, 0.0)]])

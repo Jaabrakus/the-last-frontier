@@ -959,6 +959,21 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.shoot("puff_air", at, n, d, spread, Vector2(speed * 0.5, speed), Vector2(0.2, 0.4) * k, 0.5)
 
 
+## A flame going out at `at` (the cel look, 2026-10-16, the owner: "the flame burning out in a puff at the end of every
+## move"): `n` flat puffs of dark smoke rising off it (ToonFx "puff_soot") and a few flat sparks, `size` their scale (1: a
+## fireball's). The pool's: nothing made per call.
+static func fire_out(at: Vector3, size := 1.0, n := 2) -> void:
+	if not live():
+		return
+	var pool := _pool()
+	if pool == null:
+		return
+	pool.shoot("puff_soot", at, n, Vector3.UP, 45.0, Vector2(0.5, 1.1) * size, Vector2(0.16, 0.28) * size, 0.6,
+			Vector3(0, 0.8, 0), 2.0, {"r": 0.08 * size})
+	pool.shoot("spark_fire", at, 3, Vector3.UP, 110.0, Vector2(1.2, 2.6) * size, Vector2(0.025, 0.04), 0.4,
+			Vector3(0, -5.0, 0), 1.5)
+
+
 ## The body a burst at `at` lands on (a fighter or a player standing within ToonFx.looks puffs.find_r_m of it, `at` within
 ## his height), or null.
 static func struck_body(at: Vector3) -> Node3D:

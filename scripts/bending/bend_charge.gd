@@ -16,8 +16,10 @@ extends Node3D
 ##          lock fills (_water_spot: the foe he tracks, else the aim's ground, within its reach), a low whirl closing in,
 ##          the deck breaking behind it as the Fissure's does ("it moves still like a fissure right": _fissure_step);
 ##          cast, the body is marked (WATER_SENT_META) so the Geyser sends no more water from his feet; drops shake off
-##   fire   a flame coils round each forearm and each fist holds a flame (the fireball's own); channelled, the coils run to
-##          the limb and the flame goes there: the kicking foot blazes, the other fist goes out
+##   fire   born on the body as the show draws it (2026-10-16, the cel look): a breath of flame at the mouth as the lock
+##          begins, then thick flat tongues licking up along the striking limb (the forearm, or the shin for a kick) and a
+##          flame held in the fist or on the foot, growing with the lock, flaring at the click, snapping out along the strike
+##          and gone in a puff of smoke; no coils (see _build_fire)
 ##   earth  stones lift off the deck round the feet one by one, circle the body, then gather round the hands or the foot; a
 ##          Spike's or Boulder's raised stone (FormEffects.raised_of) is made from them: they fly into it one by one and it
 ##          grows from STONE_FROM of its size to its own (its look only; its body is as it was). Broken pieces lying near
@@ -55,11 +57,23 @@ const WISP_W := 0.08
 const WISP_MAIN := Color(0.62, 0.86, 1.0, 0.9)
 const WISP_EDGE := Color(0.18, 0.52, 0.98, 0.78)
 const WISP_INK := Color(0.05, 0.18, 0.42)
-## Fire: each fist's flame (and the kicking foot's) is the fireball's own body (BendLooks.bolt_body: its orb, glow and
-## tongues), its +Z (where the tongues lick) turned up so it burns upward, sized by the lock (FIST_SCALE: start, full).
-const FIST_R := 0.1
-const FIST_SCALE := Vector2(0.35, 1.0)
-const FLAME_UP := Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP)
+## Fire (the cel look): SLEEVE tongues along a limb, a tongue's length and width at the lock's start and full (m), the fist's
+## flame, the breath at the mouth (s), the sway's drawings a second (on twos with the shader's), and the cast's timing: the
+## flames held pulled back on the limb (the wind-up) until the pose's strike or HOLD_S, then stretched along the strike for
+## SNAP_S (the smear) and gone in a puff.
+const SLEEVE := 4
+const SLEEVE_LEN := Vector2(0.2, 0.46)
+const SLEEVE_W := Vector2(0.13, 0.21)
+const FIST_LEN := 0.58
+const FIST_W := 0.3
+const BREATH_S := 0.38
+const MOUTH_Y := 1.48
+const STEP_FPS := 12.0
+const HOLD_S := 0.2
+const SNAP_S := 0.09
+## Each sleeve's limb (_seg) and the share the other limbs burn at while the element is round the body.
+const SLEEVE_SEG := {"l_arm": "l_palm", "r_arm": "r_palm", "l_leg": "l_foot", "r_leg": "r_foot"}
+const SLEEVE_LOW := 0.5
 ## Earth: the rocks, the loose pieces pulled in (within PULL_M flat, at most PULL_MAX, flying PULL_S), a rock's flight into
 ## the raised stone (INTO_S), and the share of its size the stone's look starts at while it is made from them.
 const ROCKS := 9
@@ -99,8 +113,16 @@ var _runs: Array = []
 ## Earth's rocks: {mesh, phase, r, h, at, lift, size, spin, axis, speed, vel, lifted, src, fly, dep, into, from, gone}
 var _rocks: Array = []
 var _emit: Array = []
-## Fire's flames: the left fist's, the right fist's, the kicking foot's.
-var _flames: Array = []
+## Fire's flames: a MultiMesh of tongues a limb (SLEEVE_SEG's keys; the last instance the fist's or foot's flame), the breath at
+## the mouth, the sparks off the striking limb, each limb's smoothed motion (the tongues trail it), the strike heard (the
+## snap) and when.
+var _sleeves := {}
+var _breath: MeshInstance3D
+var _spark: GPUParticles3D
+var _limb_vel := {}
+var _struck := false
+var _snap_at := INF
+var _snapped := false
 var _light: OmniLight3D
 ## Water: its mist, and whether it gathers on the deck where it will rise now (the Geyser's), and that place.
 var _mist: GPUParticles3D
@@ -158,6 +180,11 @@ func _ready() -> void:
 			_skel = sk[0] as Skeleton3D
 			for b: String in FALLBACK:
 				_bones[b] = _skel.find_bone(b)
+	if element == "fire":
+		# (the player's pose says when the strike lands: fire's flames snap out with it; a bot's snap at HOLD_S)
+		var sc := SwayCaster.of(body) if body != null else null
+		if sc != null and sc.pose != null and sc.pose.has_signal(&"struck"):
+			sc.pose.struck.connect(_on_struck)
 	match element:
 		"water":
 			_build_water()
@@ -193,11 +220,9 @@ func flash() -> void:
 		"water":
 			BendLooks.burst(_water_tip(), "water", 8, Vector3.UP, 120.0, 2.5, 0.16, false)
 		"fire":
-			# (the limb's flame flares up: a lick of flame and sparks, no blast)
+			# (the limb's flame flares up (the tongues' flare, _fire) and a few flat sparks fly off it: no blast, no cloud)
 			if pool != null:
-				pool.shoot("puff_fire", tip, 6, Vector3.UP, 40.0, Vector2(0.8, 1.8), Vector2(0.16, 0.28), 0.32,
-						Vector3(0, 3.0, 0), 2.0, {"r": 0.06})
-				pool.shoot("spark_fire", tip, 8, Vector3.UP, 70.0, Vector2(1.5, 3.5), Vector2(0.025, 0.04), 0.45,
+				pool.shoot("spark_fire", tip, 5, Vector3.UP, 60.0, Vector2(1.5, 3.2), Vector2(0.025, 0.04), 0.4,
 						Vector3(0, -4.0, 0), 1.0)
 		"earth":
 			_dust_puff(_center(), 5, 1.4, 0.35)
@@ -248,6 +273,11 @@ func end(kind: String) -> void:
 				_dust_puff(_center(), 8, 2.0, 0.45)
 			"air":
 				_dust_puff(_tip(limb()), 6, 3.0, 0.4, "puff_air")
+	if _visual and element == "fire" and ending != "cast":
+		# (snuffed: the flames shrink away and a puff of smoke comes off each limb that burned)
+		for key: String in _sleeves:
+			if (_sleeves[key] as Node3D).visible:
+				BendLooks.fire_out((_seg(String(SLEEVE_SEG[key]))[1] as Vector3) + Vector3.UP * 0.05, 0.6, 1)
 
 
 ## Its loop begun (a fighter's not the listener's): CHARGE_SOUNDS of its element, at CHARGE_DB's quiet end.
@@ -604,68 +634,195 @@ func _water(dt: float) -> void:
 
 
 # ---------------------------------------------------------------- fire
+## Fire (2026-10-16, the cel look; the owner: as the show draws it): no coils. Flame is born on the body: a breath of it at the
+## mouth as the lock begins (BREATH_S), then thick flat tongues licking up along the striking limb, the forearm (the elbow to
+## past the palm) or the shin (the knee to the ball of the foot), each tongue's base on the limb, pointing up and away from
+## the body and trailing the limb's motion, and a bigger flame held in the fist (or on the foot). Both forearms burn low
+## (SLEEVE_LOW) while the element is round the body; channelled, the striking limb's flames grow whole and the other's go out
+## (a kick: both arms go out, the shin and the foot come up). They grow with the lock, flare at the click, and at the cast
+## stay pulled back on the limb (the wind-up, HOLD_S or until the pose's strike), snap out along the strike for SNAP_S (a smear,
+## as a drawing's) and are gone in a puff of smoke and a few sparks (BendLooks.fire_out). Their sway steps on twos (STEP_FPS)
+## with the shader's drawings. One MultiMesh a limb (SLEEVE + 1 quads of ToonFx "flame", mode 0: each turned round its own axis
+## to face the camera), a quad for the breath, a few sparks off the fist.
 func _build_fire() -> void:
-	for i in 2:
-		_run("flame_strip", 0.12, 0.2, 0.24, 0, PI * float(i))
-	for i in 3:
-		var f := Node3D.new()
-		f.top_level = true
-		add_child(f)
-		_flames.append(f)
-		BendLooks.bolt_body(f, "fire", FIST_R)
-		var sh := f.get_node_or_null("Shadow")
-		if sh != null:
-			sh.free()                              # (no bolt's shadow under a flame held on a hand or a foot)
-		f.scale = Vector3.ONE * 0.01
-		f.visible = false
-		var g := BendLooks.emitter(f, "embers", Vector3(0.04, 0.04, 0.04), 14, 0.5, 1.2, 0.03)
-		if g != null:
-			g.local_coords = false
-			g.amount_ratio = 0.05
-			_emit.append(g)
-	var embers := _emitter("embers", Vector3(0.45, 0.35, 0.45), 26, 1.1, 1.6, 0.032)
-	if embers != null:
-		embers.position = Vector3(0, 0.7, 0)
-		var pm := embers.process_material as ParticleProcessMaterial
-		pm.tangential_accel_min = 2.0
-		pm.tangential_accel_max = 4.0
+	for key: String in SLEEVE_SEG:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = ToonFx.quad_base()
+		mm.instance_count = SLEEVE + 1
+		for i in SLEEVE + 1:
+			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 0.001), Vector3.ZERO))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Sleeve_" + key
+		mmi.multimesh = mm
+		mmi.material_override = ToonFx.mat("flame")
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.extra_cull_margin = 4.0
+		mmi.top_level = true
+		mmi.visible = false
+		FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
+		add_child(mmi)
+		mmi.global_transform = Transform3D.IDENTITY
+		_sleeves[key] = mmi
+	_breath = MeshInstance3D.new()
+	_breath.name = "Breath"
+	_breath.mesh = ToonFx.quad_base()
+	_breath.material_override = ToonFx.mat("flame")
+	_breath.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_breath.extra_cull_margin = 2.0
+	_breath.top_level = true
+	_breath.visible = false
+	FxParams.put(_breath, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	add_child(_breath)
+	_spark = _emitter("embers", Vector3(0.06, 0.06, 0.06), 6, 0.45, 1.2, 0.028)
+
+
+## The pose's strike (the player's): the flames snap out with it.
+func _on_struck(_m: String) -> void:
+	if ending == "cast" and not _struck:
+		_struck = true
+		_snap_at = _end_t
+
+
+## The mouth: before the face at MOUTH_Y over the body's feet (the rig's head bone is the head's top: its breath came out over
+## the head).
+func _mouth() -> Vector3:
+	return _center() + Vector3.UP * MOUTH_Y + _forward() * 0.16
+
+
+## A drawing's jitter for tongue `i` at drawing `step`: 0.8 .. 1.2, the same for a whole drawing, new at the next.
+static func _jit(i: int, step: int) -> float:
+	var h := fmod(sin(float(i) * 12.9898 + float(step) * 78.233) * 43758.5453, 1.0)
+	return 0.8 + 0.4 * absf(h)
+
+
+## A tongue's transform for the flame shader's mode 0: its base at `base`, `axis` its way (world), `len` m long, `w` m wide.
+static func _tongue(base: Vector3, axis: Vector3, len: float, w: float) -> Transform3D:
+	var ax := axis.normalized() if axis.length_squared() > 1e-6 else Vector3.UP
+	var side := ax.cross(Vector3.UP)
+	if side.length_squared() < 1e-4:
+		side = ax.cross(Vector3.RIGHT)
+	side = side.normalized()
+	return Transform3D(Basis(side * maxf(w, 0.001), ax * maxf(len, 0.001), side.cross(ax).normalized()), base)
+
+
+## Limb `key`'s motion (m/s, smoothed): its middle `mid` now against the last frame's.
+func _limb_motion(key: String, mid: Vector3, dt: float) -> Vector3:
+	var e: Dictionary = _limb_vel.get(key, {})
+	var v := Vector3.ZERO
+	if e.has("at") and dt > 0.0:
+		v = ((mid - (e.at as Vector3)) / dt).limit_length(12.0)
+		v = (e.vel as Vector3).lerp(v, 0.35)
+	_limb_vel[key] = {"at": mid, "vel": v}
+	return v
 
 
 func _fire(dt: float) -> void:
-	var k := _level()
+	var k := minf(_level(), 1.0)
 	var ch := _channel()
 	var l := limb()
-	var foot := l.ends_with("foot")
-	for i in 2:
-		var arm := [_bone("l_elbow" if i == 0 else "r_elbow"), _bone("l_palm" if i == 0 else "r_palm")]
-		var run: Dictionary = _runs[i]
-		var th := float(run.phase) + _t * lerpf(11.0, 19.0, minf(k, 1.0))
-		# (a coil round the forearm sliding from the elbow to past the palm and back; channelled to one limb, both coils run
-		# to it: down the leg into the kicking foot, or round the striking arm)
-		var u := 0.5 + 0.5 * sin(_t * 3.4 + float(i) * 1.7)
-		var r := lerpf(0.09, 0.15, minf(k, 1.0))
-		var p := _coil(arm, lerpf(0.15, 1.15, u), th, r)
-		if l != "both":
-			p = p.lerp(_coil(_seg(l), lerpf(0.1, 1.1, u), th, r * (1.3 if foot else 1.0)), ch)
-		_move(run, p, dt)
-	# (the flames: each fist's while the element is round the body; channelled, the striking fist's grows on and the other
-	# goes out, or both go out and the kicking foot's comes up; going out as it ends)
-	var size := lerpf(FIST_SCALE.x, FIST_SCALE.y, minf(k, 1.0)) * _shown * (1.0 + 0.35 * _flash)
-	var on_l := 1.0 if l in ["both", "l_palm"] else (1.0 - ch) * 0.7
-	var on_r := 1.0 if l in ["both", "r_palm"] else (1.0 - ch) * 0.7
-	var on_f := ch * 1.15 if foot else 0.0
-	var at := [_bone("l_palm"), _bone("r_palm"), _bone(l.replace("foot", "ball")) if foot else _bone("r_ball")]
-	var shares := [on_l, on_r, on_f]
-	for i in 3:
-		var f := _flames[i] as Node3D
-		var s := size * float(shares[i]) * (1.0 + 0.06 * sin(_t * 23.0 + float(i) * 2.0))
-		if ending != "":
-			s = maxf(0.0, 1.0 - _end_t / float(END_S[ending])) * FIST_SCALE.y * float(shares[i])
-		f.global_transform = Transform3D(FLAME_UP.scaled(Vector3.ONE * maxf(s, 0.01)), (at[i] as Vector3) + Vector3.UP * 0.04)
-		f.visible = s > 0.02
-	for e in _emit:
-		if is_instance_valid(e) and ending == "":
-			(e as GPUParticles3D).amount_ratio = clampf(0.1 + 0.7 * k + 0.4 * _flash, 0.05, 1.0) * _shown
+	var step := floori(_t * STEP_FPS)
+	var out := _forward()
+	# (what each limb burns at: both forearms low while the element is round the body; channelled, the striker's whole and
+	# the others' out)
+	var on := {"l_arm": SLEEVE_LOW, "r_arm": SLEEVE_LOW, "l_leg": 0.0, "r_leg": 0.0}
+	match l:
+		"l_palm":
+			on.l_arm = lerpf(SLEEVE_LOW, 1.0, ch)
+			on.r_arm = SLEEVE_LOW * (1.0 - ch)
+		"r_palm":
+			on.r_arm = lerpf(SLEEVE_LOW, 1.0, ch)
+			on.l_arm = SLEEVE_LOW * (1.0 - ch)
+		"l_foot", "r_foot":
+			on.l_arm = SLEEVE_LOW * (1.0 - ch)
+			on.r_arm = SLEEVE_LOW * (1.0 - ch)
+			on["l_leg" if l == "l_foot" else "r_leg"] = ch
+		_:
+			on.l_arm = lerpf(SLEEVE_LOW, 1.0, ch)
+			on.r_arm = lerpf(SLEEVE_LOW, 1.0, ch)
+	# (the cast: held back on the limb (back: the wind-up's lean against the strike), then the snap, then gone)
+	var back := 0.0
+	var snap := 0.0
+	var die := 1.0
+	if ending == "cast":
+		var snap_at := minf(_snap_at, HOLD_S)
+		if _end_t < snap_at:
+			back = clampf(_end_t / maxf(snap_at, 0.01), 0.0, 1.0)
+		else:
+			snap = 1.0 - clampf((_end_t - snap_at) / SNAP_S, 0.0, 1.0)
+			die = snap
+			if snap <= 0.0 and not _struck:
+				_struck = true                      # (a bot's: no pose signal; the snap ran at HOLD_S)
+	elif ending != "":
+		die = maxf(0.0, 1.0 - _end_t / float(END_S[ending]))
+	var flare := 1.0 + 0.45 * _flash
+	var shown := clampf(_shown, 0.05, 1.0)
+	var tip_of := Vector3.INF
+	for key: String in _sleeves:
+		var mmi := _sleeves[key] as MultiMeshInstance3D
+		var s := float(on[key]) * die
+		var seg := _seg(String(SLEEVE_SEG[key]))
+		var a: Vector3 = seg[0]
+		var b: Vector3 = seg[1]
+		if s < 0.03 or _shown < 0.03 or (ending == "cast" and _end_t > minf(_snap_at, HOLD_S) + SNAP_S):
+			mmi.visible = false
+			continue
+		mmi.visible = true
+		var ax := b - a
+		var ln := ax.length()
+		ax = ax / ln if ln > 0.01 else Vector3.UP
+		var away := (a + b) * 0.5 - (_center() + Vector3.UP * 1.0)
+		away -= ax * away.dot(ax)
+		away = away.normalized() if away.length_squared() > 1e-4 else Vector3.UP
+		var vel := _limb_motion(key, (a + b) * 0.5, dt)
+		# (the tongues lick up and away off the limb, trailing where it moves; the wind-up pulls them back along it, the
+		# snap throws them out along the strike)
+		var lick := (Vector3.UP * 0.8 + away * 0.45 - vel * 0.06).normalized()
+		lick = lick.lerp(-out * 0.6 + Vector3.UP * 0.4, 0.45 * back).normalized()
+		if snap > 0.0:
+			lick = lick.lerp(out, 0.85).normalized()
+		var grow := shown * s * flare
+		var mm := mmi.multimesh
+		var kh := absi(key.hash()) % 7
+		for i in SLEEVE:
+			var j := _jit(i + kh, step)
+			var u := 0.1 + 0.9 * (float(i) + 0.5) / float(SLEEVE) + (j - 1.0) * 0.08
+			var base := a.lerp(b, u) + away * 0.03
+			var len := lerpf(SLEEVE_LEN.x, SLEEVE_LEN.y, k) * grow * j * (1.0 + 1.5 * snap)
+			var w := lerpf(SLEEVE_W.x, SLEEVE_W.y, k) * grow * (1.0 - 0.45 * snap)
+			var axis := (lick + ax * ((j - 1.0) * 1.5)).normalized()
+			mm.set_instance_transform(i, _tongue(base, axis, len, w))
+		# (the fist's or the foot's flame: bigger, leaning forward, the first to snap out)
+		var tip := b + ax * 0.03
+		var jf := _jit(9 + kh, step)
+		var flen := FIST_LEN * lerpf(0.5, 1.0, k) * grow * jf * (1.0 + 2.4 * snap)
+		var fw := FIST_W * grow * (1.0 - 0.4 * snap)
+		var faxis := (Vector3.UP * 0.7 + out * 0.35 + away * 0.2 - vel * 0.05).normalized()
+		faxis = faxis.lerp(-out * 0.5 + Vector3.UP * 0.5, 0.5 * back).normalized()
+		if snap > 0.0:
+			faxis = faxis.lerp(out, 0.9).normalized()
+		mm.set_instance_transform(SLEEVE, _tongue(tip, faxis, flen, fw))
+		if s >= 0.9 or tip_of == Vector3.INF:
+			tip_of = tip
+	# (the breath: a flat tongue of flame breathed out at the mouth as the lock begins, gone as the arms take it)
+	if _breath != null:
+		var bt := _t / BREATH_S
+		if ending == "" and bt < 1.0 and _shown > 0.05:
+			_breath.visible = true
+			var bl := 0.28 * sin(PI * bt) * _jit(3, step)
+			var baxis := (out * 0.8 + Vector3.DOWN * 0.12).normalized()
+			_breath.global_transform = _tongue(_mouth(), baxis, bl, 0.17 * _jit(5, step))
+		else:
+			_breath.visible = false
+	# (a few flat sparks off the striking limb)
+	if _spark != null and is_instance_valid(_spark):
+		if tip_of != Vector3.INF:
+			_spark.global_position = tip_of + Vector3.UP * 0.1
+		_spark.amount_ratio = clampf(0.1 + 0.6 * k + 0.4 * _flash, 0.05, 1.0) * _shown if ending == "" else 0.05
+	# (the snap's first frame: the flame leaves the limb in a puff of smoke and a few sparks, where the fist was)
+	if ending == "cast" and snap > 0.0 and snap > 0.95 and not _snapped and tip_of != Vector3.INF:
+		_snapped = true
+		BendLooks.fire_out(tip_of + out * 0.15, 0.7, 2)
 
 
 # ---------------------------------------------------------------- earth
