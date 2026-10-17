@@ -161,20 +161,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 				g.scale = Vector3.ONE * maxf(r * 4.5, 0.45)
 		"air":
 			if long:
-				var mi := _mesh(parent, ToonFx.arc_mesh(1.0, 0.42, 2.3), ToonFx.mat("wind_arc"))
-				mi.scale = Vector3.ONE * r * 5.0
-				_core(mi)
+				_air_gust_body(parent, r)
 			else:
-				for i in 3:
-					var b := _mesh(parent, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
-					b.scale = Vector3.ONE * r * (1.25 - i * 0.18)
-					b.rotation = Vector3(0.5 + i * 0.9, i * 1.3, 0.35 * i)
-					b.position = -b.basis.y.normalized() * 0.25 * b.scale.y
-					FxParams.put(b, &"seed", i * 0.31)
-					_core(b)
-				var core := _mesh(parent, ToonFx.sphere(12), ToonFx.mat("bubble"))
-				core.scale = Vector3.ONE * r * 0.55
-				_core(core)
+				_air_ball_body(parent, r)
 			_air_dust(parent)
 		"lightning":
 			var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
@@ -194,6 +183,36 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			parent.add_child(mi)
 			_core(mi)
 			_shadow(parent, "stone", r, Vector3(1.0, 1.0, 3.5) if long else Vector3.ONE, Vector3(0.0, 0.0, -r * 3.0) if long else Vector3.ZERO)
+
+
+## The Wind Ball (the anime air, 2026-10-16): a flat white heart with a swirl drawn in it (ToonFx "air_heart", facing the
+## camera) in three inked swirl bands spinning round it, the ball of swirl lines; its trail's helix strokes wind behind it.
+static func _air_ball_body(parent: Node3D, r: float) -> void:
+	for i in 3:
+		var b := _mesh(parent, ToonFx.band_mesh(1.0, 0.9, 0.34), ToonFx.mat("wind_band_ink" if i != 1 else "wind_band_ink_slow"))
+		b.scale = Vector3.ONE * r * (1.5 - i * 0.16)
+		b.rotation = Vector3(0.5 + i * 0.9, i * 1.3, 0.35 * i)
+		b.position = -b.basis.y.normalized() * 0.17 * b.scale.y
+		FxParams.put(b, &"seed", i * 0.31)
+		_core(b)
+	var heart := _mesh(parent, ToonFx.quad(), ToonFx.mat("air_heart"))
+	heart.scale = Vector3.ONE * r * 2.1
+	FxParams.put(heart, &"tint", Color(0.74, 0.86, 0.97))
+	FxParams.put(heart, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	_core(heart)
+
+
+## The Gust (a wave of wind kept to the 2 m it hits: look_r; the owner, 2026-10-11, hated a big air wave): a wedge of three
+## inked crescents, each behind the one before and a little smaller, tipped up so they read from behind too; its speed
+## lines are its trail's strokes.
+static func _air_gust_body(parent: Node3D, r: float) -> void:
+	for i in 3:
+		var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.42 - 0.07 * i, 2.5), ToonFx.mat("wind_arc_ink"))
+		arc.scale = Vector3.ONE * r * (5.0 - 1.1 * i)
+		arc.position = Vector3(0.0, 0.0, r * 1.7 * i)
+		arc.rotation = Vector3(0.3, 0.0, 0.0)
+		FxParams.put(arc, &"seed", 0.27 * i)
+		_core(arc)
 
 
 ## A thrown disc (BendThrow's spinning flight turns its parent about local X: the disc stands in the YZ plane, so it turns
@@ -260,10 +279,10 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 	# review 2026-10-12: the flame went out flat, not like an uppercut)
 	arc.rotation = Vector3(1.05 if kind == "fire" else 0.35, 0.0, 0.0)
 	FxParams.put(arc, &"seed", ToonFx.vis_rng.randf() * 10.0)
-	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "orb"))
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "air_heart"))
 	o.scale = Vector3.ONE * w * 0.9
 	_core(o)
-	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
+	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else Color(0.74, 0.86, 0.97))
 	FxParams.put(o, &"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
 	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	if live() and kind == "fire":
@@ -279,16 +298,31 @@ static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 ## Slice a wider, thinner blade with a deep blue inked edge, flat across its flight; the Pull a teal hook whose curve faces back
 ## to the caster (it draws him in), a second smaller hook inside it. Small as the Gust (the owner, 2026-10-11, hated a big air
 ## wave): shape and colour, not size.
+## How far the Slice's blade is banked about its flight (rad): a flat blade is edge-on from behind (the player's view).
+const SLICE_BANK := 0.9
+
+
 static func _air_blade(parent: Node3D, r: float, shape: String) -> void:
 	if shape == "slice":
-		var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.28, 2.6), ToonFx.mat("wind_arc_slice"))
+		# (a bold crescent banked well up so its face shows from behind as well as from the side, and two echoes of it left
+		# behind it, thinner each (a smear: the 2D cut's drawn-out frames); its speed lines are its trail's)
+		var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.4, 2.6), ToonFx.mat("wind_arc_slice"))
 		arc.scale = Vector3.ONE * r * 6.5
+		arc.rotation = Vector3(0.0, 0.0, SLICE_BANK)
 		_core(arc)
+		for i in 2:
+			var echo := _mesh(parent, ToonFx.arc_mesh(1.0, 0.22 - 0.08 * i, 2.8), ToonFx.mat("wind_arc_ink"))
+			echo.scale = Vector3.ONE * r * (5.6 - 0.9 * i)
+			echo.position = Vector3(0.0, 0.0, r * (2.6 + 2.2 * i))
+			echo.rotation = Vector3(0.0, 0.0, SLICE_BANK)
+			FxParams.put(echo, &"seed", 0.5 + 0.3 * i)
+			FxParams.put(echo, &"fade", 0.75 - 0.3 * i)
+			_core(echo)
 	else:
 		for i in 2:
 			var hook := _mesh(parent, ToonFx.arc_mesh(1.0, 0.34, 2.2), ToonFx.mat("wind_arc_pull"))
 			hook.scale = Vector3.ONE * r * (5.0 - 1.8 * i)
-			hook.rotation = Vector3(0.0, PI, 0.0)            # (its bulge toward the caster: a hook pulling back)
+			hook.rotation = Vector3(0.3, PI, 0.0)            # (its bulge toward the caster: a hook pulling back)
 			hook.position = Vector3(0.0, 0.0, r * 1.2 * i)
 			FxParams.put(hook, &"seed", 0.37 * i)
 			_core(hook)
@@ -301,16 +335,16 @@ static func _air_blade(parent: Node3D, r: float, shape: String) -> void:
 static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 	if kind == "air":
 		var sa := ToonFx.vis_rng.randi() % 4
-		var shaft_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, sa, 5), ToonFx.mat("bubble"))
+		var shaft_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, sa, 5), ToonFx.mat("air_facet"))
 		shaft_a.scale = Vector3(r * 2.0, r * 2.0, r * 16.0)
 		shaft_a.position = Vector3(0.0, 0.0, r * 3.5)
-		var head_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.3, (sa + 1) % 4, 6), ToonFx.mat("bubble"))
+		var head_a := _mesh(parent, ToonFx.shard_mesh(1.0, 0.3, (sa + 1) % 4, 6), ToonFx.mat("air_facet"))
 		head_a.scale = Vector3(r * 3.6, r * 3.6, r * 6.0)
 		head_a.position = Vector3(0.0, 0.0, -r * 4.2)
 		_core(shaft_a)
 		_core(head_a)
 		for i in 2:
-			var band := _mesh(parent, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
+			var band := _mesh(parent, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_ink"))
 			band.scale = Vector3.ONE * r * 3.2
 			band.rotation = Vector3(PI / 2.0, float(i) * 1.3, 0.0)
 			band.position = Vector3(0.0, 0.0, -r * (1.0 + 3.5 * float(i)))
@@ -684,9 +718,10 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 			g = _stream("spark_elec", 16, 0.25)
 			rb = null
 		_:
-			g = _stream("puff_air", 10, 0.3)
-			rb.main_mat = ToonFx.mat("wind_strip")
-			rb.coil_mat = ToonFx.mat("wind_strip")
+			# (the anime air: a clean drawn line behind it and two thin strokes winding round it, a few flat inked puffs)
+			g = _stream("puff_air_ink", 4, 0.3)
+			rb.main_mat = ToonFx.mat("wind_stroke")
+			rb.coil_mat = ToonFx.mat("wind_stroke")
 			rb.coils = 2
 	g.name = "Trail_" + kind
 	if rb != null:
@@ -740,10 +775,10 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 			_pm(pm, Vector2(1.0, 3.0), Vector2(0.03, 0.05), Vector3.ZERO, 2.0)
 		_:
 			_pm(pm, Vector2(0.2, 0.7), Vector2(r * 0.6, r * 1.3), Vector3.ZERO, 1.5)
-			_ribbon(rb, r * 0.7, 0.1, 0.12)
-			rb.coil_r = r * 1.35
-			rb.coil_w = 0.05 + r * 0.14
-			rb.coil_spin = 16.0
+			_ribbon(rb, clampf(r * 0.1, 0.014, 0.03), 0.05, 0.22)
+			rb.coil_r = r * 1.15
+			rb.coil_w = clampf(r * 0.07, 0.012, 0.026)
+			rb.coil_spin = 14.0
 
 
 static func _pm(pm: ParticleProcessMaterial, v: Vector2, s: Vector2, gravity: Vector3, damp: float) -> void:
@@ -769,7 +804,7 @@ static func _ribbon(rb: ToonRibbon, w: float, tail: float, life: float) -> void:
 static func emitter(parent: Node3D, kind: String, extents: Vector3, amount := 60, life := 0.9, rise := 1.5, size := 0.5) -> GPUParticles3D:
 	if not live():
 		return null
-	var key := "puff_air"
+	var key := "puff_air_ink"
 	var gravity := Vector3.ZERO
 	match kind:
 		"fire":
@@ -942,14 +977,14 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			if not g.is_empty():
 				pool.mark("frost", g.pos, g.normal, (2.2 if big else 1.2) * k, 6.0)
 		"air":
-			pool.play("swirl", up, 0.36, 0.6 * k, 1.9 * k, AIR, Color(0.5, 0.75, 1.0))
-			pool.play("swirl", up, 0.28, 0.4 * k, 1.2 * k, AIR, Color(0.5, 0.75, 1.0))
+			pool.play("swirl_ink", up, 0.36, 0.6 * k, 1.9 * k, Color.WHITE, Color(0.74, 0.86, 0.97))
+			pool.play("swirl_ink", up, 0.28, 0.4 * k, 1.2 * k, Color.WHITE, Color(0.74, 0.86, 0.97))
 			pool.shoot("spark_line", at, n, d, spread, Vector2(speed * 1.5, speed * 3.0), Vector2(0.045, 0.07), 0.32,
 					Vector3.ZERO, speed * 3.0)
-			pool.shoot("puff_air", at, int(n * 0.4), d, spread, Vector2(speed * 0.3, speed * 0.8), Vector2(0.2, 0.45) * k,
+			pool.shoot("puff_air_ink", at, int(n * 0.4), d, spread, Vector2(speed * 0.3, speed * 0.8), Vector2(0.2, 0.45) * k,
 					0.4, Vector3.ZERO, 3.0, occl)
 			if not g.is_empty():
-				_dust(pool, g, n, k)
+				_dust_air(pool, g, n, k)
 		"stone":
 			pool.shoot("chunk", at, n, d, spread, Vector2(speed * 0.7, speed * 1.5), Vector2(0.12, 0.3) * k, 1.1,
 					Vector3(0, -16.0, 0), 0.3, {"r": 0.15 * k, "ang": 400.0})
@@ -1044,6 +1079,13 @@ static func burst_cap(kind: String, speed: float, size: float, h: float) -> floa
 	return lo
 
 
+## The deck's dust under an air hit, the anime air's: a pale flat ring, pale flat puffs lifted off it.
+static func _dust_air(pool: ToonFxPool, g: Dictionary, n: int, k: float) -> void:
+	pool.play("ring_ink", _flat(g), 0.45, 0.3 * k, 1.7 * k, Color.WHITE, Color(0.9, 0.84, 0.72))
+	pool.shoot("puff_dust_air", (g.pos as Vector3) + (g.normal as Vector3) * 0.15, int(n * 0.6), g.normal, 80.0,
+			Vector2(1.5, 3.5) * k, Vector2(0.3, 0.6) * k, 0.7, Vector3.ZERO, 5.0, {"flat": 0.85, "r": 0.3 * k})
+
+
 static func _dust(pool: ToonFxPool, g: Dictionary, n: int, k: float) -> void:
 	pool.play("ring", _flat(g), 0.45, 0.3 * k, 1.7 * k, DUST, DUST_LIGHT)
 	pool.shoot("puff_dust", (g.pos as Vector3) + (g.normal as Vector3) * 0.15, int(n * 0.6), g.normal, 80.0,
@@ -1100,11 +1142,14 @@ static func blast(at: Vector3, dir: Vector3, deg: float, reach: float, kind: Str
 				pool.play("ring", flat, 0.6, 0.5, reach, FOAM, WATER)
 		"air":
 			pool.shoot("spark_line", at, n * 2, d, half, Vector2(v * 1.2, v * 1.8), Vector2(0.035, 0.05), 0.35, Vector3.ZERO, damp, opt)
-			pool.shoot("puff_air", at, n, d, half, Vector2(v * 0.5, v), Vector2(0.25, 0.5), 0.45, Vector3.ZERO, damp, opt)
-			pool.play("swirl", Transform3D(Basis.IDENTITY, at + (Vector3.ZERO if ring else d * reach * 0.4)), 0.4, 0.6,
-					reach * (1.0 if ring else 0.6), AIR, Color(0.6, 0.82, 1.0))
+			pool.shoot("puff_air_ink", at, n, d, half, Vector2(v * 0.5, v), Vector2(0.25, 0.5), 0.45, Vector3.ZERO, damp, opt)
+			var sw := Color(0.74, 0.86, 0.97)
+			pool.play("swirl_ink", Transform3D(Basis.IDENTITY, at + (Vector3.ZERO if ring else d * reach * 0.4)), 0.4, 0.6,
+					reach * (1.0 if ring else 0.6), Color.WHITE, sw)
+			if not ring:
+				pool.play("swirl_ink", Transform3D(Basis.IDENTITY, at + d * reach * 0.2), 0.3, 0.4, reach * 0.4, Color.WHITE, sw)
 			if ring:
-				pool.play("ring", flat, 0.45, 0.5, reach, AIR, DUST_LIGHT)
+				pool.play("ring_ink", flat, 0.45, 0.5, reach, Color.WHITE, Color(0.9, 0.84, 0.72))
 		"stone":
 			pool.shoot("chunk", at, n, d, half, Vector2(v * 0.4, v * 0.8), Vector2(0.1, 0.25), 1.0, Vector3(0, -14, 0), damp * 0.4,
 					opt.merged({"ang": 400.0}))
@@ -1363,24 +1408,27 @@ static func beam(a: Vector3, b: Vector3, kind := "air") -> void:
 	root.name = "AirBeam"
 	scn.add_child(root)
 	root.global_transform = Transform3D(basis, (a + b) * 0.5)
-	for layer: Array in [[0.045, "bubble"], [0.11, "wind_band_fast"]]:
-		var cm := CylinderMesh.new()
-		cm.top_radius = float(layer[0])
-		cm.bottom_radius = float(layer[0])
-		cm.height = length
-		cm.radial_segments = 10
-		cm.rings = 1
-		var mi := _mesh(root, cm, ToonFx.mat(String(layer[1])))
+	# (a pale wash and a bold white line with its ink edge, both the length of the beam, thinning away as it fades)
+	var lines: Array = []
+	for layer: Array in [[0.2, "wind_stroke_wide"], [0.08, "wind_stroke"]]:
+		var mi := _mesh(root, ToonFx.line_mesh(float(layer[0])), ToonFx.mat(String(layer[1])))
+		mi.scale = Vector3(1.0, length, 1.0)
+		mi.extra_cull_margin = length
 		FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
+		FxParams.put(mi, &"fade", 1.0)
+		lines.append(mi)
 	# rings of wind along it, blown outward as it fades
 	var n := clampi(int(length / 2.5), 3, 12)
 	for i in n:
-		var band := _mesh(root, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_fast"))
+		var band := _mesh(root, ToonFx.band_mesh(1.0, 0.85, 0.5), ToonFx.mat("wind_band_ink"))
 		band.position = Vector3(0.0, lerpf(-length * 0.5 + 0.6, length * 0.5, (float(i) + 0.5) / float(n)), 0.0)
-		band.scale = Vector3.ONE * 0.22
+		band.scale = Vector3.ONE * 0.3
 		FxParams.put(band, &"seed", float(i) * 0.37)
 		var bt := band.create_tween()
-		bt.tween_property(band, ^"scale", Vector3.ONE * 0.55, BEAM_S)
+		bt.tween_property(band, ^"scale", Vector3.ONE * 0.7, BEAM_S)
+	for mi: MeshInstance3D in lines:
+		root.create_tween().tween_method(func(v: float) -> void: FxParams.put(mi, &"fade", v), 1.0, 0.0, BEAM_S) \
+				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	var tw := root.create_tween()
 	tw.tween_property(root, ^"scale", Vector3(0.05, 1.0, 0.05), BEAM_S).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(root.queue_free)
@@ -1388,7 +1436,7 @@ static func beam(a: Vector3, b: Vector3, kind := "air") -> void:
 	if pool != null:
 		pool.play("flash", Transform3D(Basis.IDENTITY, b), 0.2, 0.5, 1.4, BEAM_CORE, BEAM_EDGE)
 		pool.play("ring", Transform3D(basis, b), 0.25, 0.3, 1.2, BEAM_CORE, BEAM_EDGE)
-		pool.shoot("puff_air", b, 10, -y, 70.0, Vector2(1.0, 3.0), Vector2(0.25, 0.45), 0.4, Vector3.ZERO, 1.0, {"r": 0.3})
+		pool.shoot("puff_air_ink", b, 10, -y, 70.0, Vector2(1.0, 3.0), Vector2(0.25, 0.45), 0.4, Vector3.ZERO, 1.0, {"r": 0.3})
 		pool.light((a + b) * 0.5, Color(0.75, 0.92, 1.0), 2.5, 0.2, length * 0.5 + 3.0)
 	burst(b, kind, 12, -y, 80.0, 3.0, 0.25)
 
@@ -1403,8 +1451,8 @@ static func beam_flash(body: Node3D, at: Vector3, kind := "air") -> void:
 		return
 	var fwd := -body.global_basis.z
 	pool.play("flash", Transform3D(Basis.IDENTITY, at), 0.15, 0.3, 1.0, BEAM_CORE, BEAM_EDGE)
-	pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.18, 0.2, 0.9, BEAM_CORE, BEAM_EDGE)
-	pool.shoot("puff_air", at, 8, fwd, 60.0, Vector2(0.6, 1.8), Vector2(0.15, 0.3), 0.3, Vector3.ZERO, 1.0, {"r": 0.15})
+	pool.play("swirl_ink", Transform3D(Basis.IDENTITY, at), 0.22, 0.25, 0.9, Color.WHITE, BEAM_EDGE)     # (a swirl facing the camera, not a ring flat round him)
+	pool.shoot("puff_air_ink", at, 8, fwd, 60.0, Vector2(0.6, 1.8), Vector2(0.15, 0.3), 0.3, Vector3.ZERO, 1.0, {"r": 0.15})
 	burst(at, kind, 8, fwd, 60.0, 2.0, 0.15)
 
 
@@ -2321,6 +2369,28 @@ static func sputter(sway: Node, el: String) -> void:
 			else Vector2(0.12, 0.25), 0.5, Vector3(0, -6.0, 0), 1.0)
 
 
+## An air dash's own look (BendEffects.dash, the anime air): the Leap (a high jump) a column of swirl strokes rising round him,
+## a Slip (a low dash) streaks laid back along the way he went. One pooled node per scene (AirColumn): none made per dash.
+static func air_dash(body: Node3D, dir: Vector3, up_mps: float) -> void:
+	if not live() or body == null or not is_instance_valid(body):
+		return
+	var col := _air_column()
+	if col != null:
+		col.play(body.global_position, Vector3(dir.x, 0.0, dir.z), up_mps >= 6.0)
+
+
+static func _air_column() -> AirColumn:
+	var pool := _pool()
+	if pool == null:
+		return null
+	var c := pool.get_node_or_null("AirColumn") as AirColumn
+	if c == null:
+		c = AirColumn.new()
+		c.name = "AirColumn"
+		pool.add_child(c)
+	return c
+
+
 ## Carried wind charged on `body` (air's passive): a spiral of wind round him rising from his feet and a whistle
 ## (BendSounds carried_whistle).
 static func carried(body: Node3D) -> void:
@@ -2366,6 +2436,72 @@ static func _hands(sway: Node) -> Vector3:
 
 ## Under an air bolt (round 4): every every_s while its bolt flies within over_m of the deck under it, a thin line of dust
 ## rises along the stretch it flew (the pool's puff_dust laid along it). No marker: the dust is the air's own.
+class AirColumn:
+	extends Node3D
+	## Its strokes (helix arcs, ToonFx.stroke_mesh), how long a play lasts, and whether it is a leap's column (up) or a slip's streaks.
+	const N := 5
+	const LIFE_S := 0.5
+	const UP_H := 2.0
+	const BACK_L := 2.2
+	var _strokes: Array = []
+	var _t := INF
+	var _up := true
+	var _at := Vector3.ZERO
+	var _way := Vector3.FORWARD
+
+	func _init() -> void:
+		top_level = true
+		visible = false
+		for i in N:
+			var mi := MeshInstance3D.new()
+			mi.mesh = ToonFx.stroke_mesh(0.85 + 0.15 * float(i % 2), 0.6, 0.46, 1.0, 0.055)
+			mi.material_override = ToonFx.mat("wind_stroke")
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mi.extra_cull_margin = 3.0
+			add_child(mi)
+			mi.position = Vector3(0.0, 0.0, 0.0)
+			mi.rotation.y = TAU * float(i) / float(N)
+			FxParams.put(mi, &"seed", float(i) * 0.37)
+			FxParams.put(mi, &"fade", 0.0)
+			_strokes.append(mi)
+		set_process(false)
+
+	## Play at `at` (his feet): a leap's rising column, or streaks laid back along `way` (flat).
+	func play(at: Vector3, way: Vector3, up: bool) -> void:
+		_at = at
+		_up = up
+		_way = way.normalized() if way.length_squared() > 1e-4 else Vector3.FORWARD
+		_t = 0.0
+		visible = true
+		set_process(true)
+		_pose(0.0)
+
+	func _pose(k: float) -> void:
+		var e := 1.0 - pow(1.0 - k, 2.5)
+		var spin := e * 5.0 + k
+		var fade := clampf(1.0 - k * k, 0.0, 1.0)
+		if _up:
+			global_transform = Transform3D(Basis(Vector3.RIGHT, Vector3.UP * (UP_H * (0.3 + 0.7 * e)), Vector3.BACK).rotated(Vector3.UP, spin),
+					_at + Vector3.UP * (UP_H * 0.5 * (0.3 + 0.7 * e) + 0.1))
+		else:
+			# (streaks: the strokes' length along the way he went, behind him, thinner round than the column)
+			var y := -_way
+			var x := y.cross(Vector3.UP).normalized()
+			var b := Basis(x * 0.5, y * BACK_L, x.cross(y) * 0.5).rotated(y, spin)
+			global_transform = Transform3D(b, _at + Vector3.UP * 0.9 + y * (BACK_L * 0.5 + 0.3 * e))
+		for mi: MeshInstance3D in _strokes:
+			FxParams.put(mi, &"fade", fade)
+
+	func _process(dt: float) -> void:
+		_t += dt
+		var k := _t / LIFE_S
+		if k >= 1.0:
+			visible = false
+			set_process(false)
+			return
+		_pose(k)
+
+
 class AirDust:
 	extends Node3D
 
@@ -2401,7 +2537,7 @@ class AirDust:
 		var fwd := seg / l
 		var x := Vector3.UP.cross(fwd).normalized()
 		var foot := Vector3((p.x + was.x) * 0.5, (h.position as Vector3).y + 0.05, (p.z + was.z) * 0.5)
-		pool.shoot("puff_dust", foot, 7, Vector3.UP, 15.0, Vector2(0.4, 1.1), Vector2(0.12, 0.26), 0.5, Vector3.ZERO, 1.5,
+		pool.shoot("puff_dust_air", foot, 7, Vector3.UP, 15.0, Vector2(0.4, 1.1), Vector2(0.12, 0.26), 0.5, Vector3.ZERO, 1.5,
 				{"box": Vector3(0.04, 0.02, l * 0.5), "basis": Basis(x, Vector3.UP, fwd)})
 
 
@@ -3079,6 +3215,21 @@ static func warm_air(pool: ToonFxPool, holder: Node3D, at: Vector3) -> void:
 		holder.add_child(rb)
 		rb.prime(at, at + Vector3.LEFT * 0.05)
 	pool.shoot("puff_dust_air", at, 2, Vector3.UP, 30.0, Vector2(0.1, 0.1), Vector2(0.01, 0.01), 0.1)
+	for mk: String in ["wind_arc_ink", "wind_arc_slice", "wind_arc_pull", "wind_stroke_wide"]:
+		var a := _mesh(holder, ToonFx.arc_mesh(1.0, 0.3, 2.5), ToonFx.mat(mk))
+		a.scale = Vector3.ONE * 0.01
+	var col := _air_column()
+	if col != null:
+		col.play(at, Vector3.FORWARD, true)
+		col.scale = Vector3.ONE * 0.01
+	var hm := _mesh(holder, ToonFx.quad(), ToonFx.mat("air_heart"))
+	hm.scale = Vector3.ONE * 0.01
+	var lm := _mesh(holder, ToonFx.line_mesh(0.05), ToonFx.mat("wind_stroke_wide"))
+	lm.scale = Vector3.ONE * 0.01
+	var fm := _mesh(holder, ToonFx.shard_mesh(1.0, 0.2, 0, 5), ToonFx.mat("air_facet"))
+	fm.scale = Vector3.ONE * 0.01
+	for sk: String in ["swirl_ink", "ring_ink"]:
+		pool.play(sk, Transform3D(Basis.IDENTITY, at), 0.1, 0.01, 0.01)
 	for mk: String in ["wind_band_ink", "wind_band_ink_slow"]:
 		var b := _mesh(holder, ToonFx.band_mesh(1.0, 0.9, 0.3), ToonFx.mat(mk))
 		b.scale = Vector3.ONE * 0.01

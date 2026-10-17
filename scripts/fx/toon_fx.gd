@@ -140,7 +140,7 @@ static func mat(key: String) -> ShaderMaterial:
 			# (the anime air's dust: pale flat shapes, a soft brown ink line, never a dark clod)
 			m.shader = SHADERS.puff
 			p = {"mode": 1, "c_a": Color(0.98, 0.94, 0.84), "c_b": Color(0.9, 0.84, 0.72), "c_c": Color(0.76, 0.69, 0.58),
-					"c_ink": Color(0.5, 0.42, 0.32), "wobble": 0.3, "ink": 0.7}
+					"c_ink": Color(0.66, 0.58, 0.48), "wobble": 0.3, "ink": 0.55}
 		"leaf":
 			# (the anime air: a leaf caught in the swirl as it gathers; a long cel puff in leaf greens with an ink edge, tumbling)
 			m.shader = SHADERS.puff
@@ -234,19 +234,41 @@ static func mat(key: String) -> ShaderMaterial:
 					"c_main": Color(0.86, 0.76, 0.6, 0.9), "c_edge": Color(0.62, 0.5, 0.38, 0.7), "c_ink": Color(0.25, 0.18, 0.1)}
 		"wind_arc":
 			m.shader = SHADERS.wind
-			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1}
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.18, "glow": 1.1, "ink": 0.8}
+		"wind_arc_ink":
+			# (the anime air's Gust: a crescent of swirl with a soft white body and an ink line; the wedge's three)
+			m.shader = SHADERS.wind
+			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.3, "glow": 1.05, "ink": 0.85,
+					"c_main": Color(1.0, 1.0, 1.0, 0.96), "c_edge": Color(0.74, 0.86, 0.97, 0.9), "c_ink": Color(0.3, 0.44, 0.62)}
+		"wind_stroke_wide":
+			# (a soft pale wash round a stroke: the air beam's body, no ink)
+			m.shader = SHADERS.wind
+			p = {"mode": 3, "speed": 1.2, "nscale": Vector2(1.2, 0.5), "streak": 0.05, "glow": 1.0, "ink": 0.0,
+					"c_main": Color(0.9, 0.96, 1.0, 0.55), "c_edge": Color(0.74, 0.86, 0.97, 0.4)}
+		"swirl_ink":
+			# (the anime air's burst: two crescents spinning out with an ink line)
+			m.shader = SHADERS.sprite
+			p = {"mode": 3, "ink": 0.85, "c_ink": Color(0.3, 0.44, 0.62)}
+		"ring_ink":
+			m.shader = SHADERS.sprite
+			p = {"mode": 1, "ink": 0.85, "c_ink": Color(0.3, 0.44, 0.62)}
+		"air_facet":
+			# (the Air Lance's head and shaft: flat white facets, pale blue in their shade, an ink line)
+			m.shader = SHADERS.facet
+			p = {"c_light": Color(1.0, 1.0, 1.0), "c_mid": Color(0.88, 0.95, 1.0), "c_dark": Color(0.66, 0.8, 0.95),
+					"c_rim": Color(1.0, 1.0, 1.0), "c_ink": Color(0.3, 0.44, 0.62), "ink": 0.8, "rim_on": 0.0, "glint": 0.0}
 		"wind_arc_slice":
 			# (the Slice's blade: a deeper blue edge and an ink line, so it reads on the pale planks and apart from the Gust's
 			# pale wave; the move review 2026-10-12)
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.12, "glow": 1.25,
-					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.12, 0.28, 0.55), "ink": 0.7}
+					"c_edge": Color(0.3, 0.6, 1.0, 0.9), "c_ink": Color(0.12, 0.28, 0.55), "ink": 0.85}
 		"wind_arc_pull":
 			# (the Pull's hook: teal, inked, its curve facing back to the caster)
 			m.shader = SHADERS.wind
 			p = {"mode": 2, "speed": 0.0, "nscale": Vector2(1.6, 0.6), "streak": 0.15, "glow": 1.15,
 					"c_main": Color(0.85, 1.0, 0.97, 0.92), "c_edge": Color(0.25, 0.75, 0.75, 0.85), "c_ink": Color(0.08, 0.35, 0.38),
-					"ink": 0.6}
+					"ink": 0.8}
 		"ice":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
@@ -526,6 +548,24 @@ static func stroke_mesh(turns: float, r0: float, r1: float, rise: float, w: floa
 				st.set_uv(Vector2(1.0 - u, float(k)))
 				st.set_uv2(Vector2(w * prof + 0.002, 1.0))
 				st.add_vertex(pts[i])
+		return st.commit())
+
+
+## A straight drawn line, 1 m long along local Y (-0.5..0.5), `w` half wide in metres: the stroke's strip (see stroke_mesh)
+## for a straight run, UV.x 0 at the +Y end (the head) to 1 at the -Y end (the tail). Scale its node along Y for the length:
+## an air beam's core and wash.
+static func line_mesh(w: float, segs := 8) -> Mesh:
+	return _cached("line_%.3f" % w, func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+		for i in segs + 1:
+			var u := float(i) / segs
+			var prof := pow(sin(PI * clampf(pow(u, 0.7), 0.0, 1.0)), 0.35)
+			for k in 2:
+				st.set_normal(Vector3(0.0, -1.0, 0.0))
+				st.set_uv(Vector2(1.0 - u, float(k)))
+				st.set_uv2(Vector2(w * prof + 0.002, 1.0))
+				st.add_vertex(Vector3(0.0, 0.5 - u, 0.0))
 		return st.commit())
 
 

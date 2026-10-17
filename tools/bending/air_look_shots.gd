@@ -34,6 +34,7 @@ var imgs: Array = []
 var names: Array = []
 var film := ""
 var _macro_at := Vector3.INF
+var _fpos := Vector3.INF
 var rec := false
 var rec_i := 0
 var rec_dir := ""
@@ -156,6 +157,11 @@ func _cam(kind: String) -> void:
 			eye = hand + (axis * 0.5 + right * 0.9).normalized() * 4.6 + Vector3.UP * 0.25
 			look = hand
 			fov = 9.0
+		"behind":
+			# (the player's own view of his casts: behind and above the caster, looking down the deck)
+			eye = _feet() - axis * 3.8 + right * 0.5 + Vector3.UP * 2.2
+			look = _feet() + axis * 3.0 + Vector3.UP * 1.0
+			fov = 58.0
 		"cast":
 			eye = _feet() + axis * 4.2 + right * 4.8 + Vector3.UP * 1.6
 			look = _feet() + axis * 2.4 + Vector3.UP * 1.1
@@ -250,23 +256,46 @@ func _macro() -> void:
 
 
 func _palm() -> void:
-	_cam("side")
-	BendLooks.blast(_hand(), axis, 40.0, 3.5, "air")
-	await _frames(3)
-	await _snap("palm_f03")
-	await _frames(9)
-	await _snap("palm_f12")
+	for vw: String in ["side", "behind"]:
+		_cam("cast" if vw == "side" else "behind")
+		BendLooks.blast(_hand(), axis, 40.0, 3.5, "air")
+		await _frames(3)
+		await _snap("palm_%s_f03" % vw)
+		await _frames(9)
+		await _snap("palm_%s_f12" % vw)
+		await _clear(40)
+
+
+## A camera held on a flying bolt: across the deck from it (side), or the player's own, behind the caster (behind).
+func _follow(b: Variant, view: String) -> void:
+	if view == "behind":
+		_cam("behind")
+		return
+	if is_instance_valid(b):
+		_fpos = (b as Node3D).global_position
+	var p := _fpos if _fpos.is_finite() else _hand()
+	var eye := p + right * 4.4 + Vector3.UP * 1.1 - axis * 0.5
+	view_cam(eye, p + Vector3.UP * 0.05, 34.0)
+
+
+func view_cam(eye: Vector3, look: Vector3, fov: float) -> void:
+	view.camera.fov = fov
+	view.camera.global_transform = Transform3D(Basis.looking_at(look - eye, Vector3.UP), eye)
 
 
 func _bolt_shots(name: String, spec: Dictionary, f1: int, f2: int) -> void:
-	_cam("side")
-	var b := BendBolt.launch(caster, _hand(), axis, spec)
-	await _frames(f1)
-	await _snap("%s_f%02d" % [name, f1])
-	await _frames(f2 - f1)
-	await _snap("%s_f%02d" % [name, f2])
-	if is_instance_valid(b) and not b.spent:
-		b.end("shots")
+	for vw: String in ["side", "behind"]:
+		var b := BendBolt.launch(caster, _hand(), axis, spec)
+		_fpos = Vector3.INF
+		var at := 0
+		for f: int in [f1, f2]:
+			await _frames(f - at)
+			at = f
+			_follow(b, vw)
+			await _snap("%s_%s_f%02d" % [name, vw, f])
+		if is_instance_valid(b) and not b.spent:
+			b.end("shots")
+		await _clear(40)
 
 
 func _slice() -> void:
@@ -294,28 +323,32 @@ func _pull() -> void:
 
 
 func _lance() -> void:
-	_cam("side")
-	BendLooks.beam_flash(caster, _hand(), "air")
-	await _frames(3)
-	await _snap("lance_f03")
-	BendLooks.beam(_hand(), target.global_position + Vector3.UP * 1.1, "air")
-	await _frames(2)
-	await _snap("lance_f05")
-	await _frames(7)
-	await _snap("lance_f12")
+	for vw: String in ["side", "behind"]:
+		_cam("cast" if vw == "side" else "behind")
+		BendLooks.beam_flash(caster, _hand(), "air")
+		await _frames(3)
+		await _snap("lance_%s_f03" % vw)
+		BendLooks.beam(_hand(), target.global_position + Vector3.UP * 1.1, "air")
+		await _frames(2)
+		await _snap("lance_%s_f05" % vw)
+		await _frames(6)
+		await _snap("lance_%s_f11" % vw)
+		await _clear(40)
 
 
 func _dash_shots(name: String, spec: Dictionary, f1: int, f2: int) -> void:
-	_cam("wide")
-	var bc := BendCaster.wrap(caster)
-	caster.held = false
-	BendEffects.dash(bc, axis, spec)
-	await _frames(f1)
-	await _snap("%s_f%02d" % [name, f1])
-	await _frames(f2 - f1)
-	await _snap("%s_f%02d" % [name, f2])
-	await _frames(60)
-	caster.held = true
+	for vw: String in ["wide", "behind"]:
+		_cam(vw)
+		var bc := BendCaster.wrap(caster)
+		caster.held = false
+		BendEffects.dash(bc, axis, spec)
+		await _frames(f1)
+		await _snap("%s_%s_f%02d" % [name, vw, f1])
+		await _frames(f2 - f1)
+		await _snap("%s_%s_f%02d" % [name, vw, f2])
+		await _frames(50)
+		caster.held = true
+		await _clear(40)
 
 
 func _leap() -> void:

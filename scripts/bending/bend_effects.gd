@@ -674,6 +674,8 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	var dinfo: Dictionary = spec.get("_info", {})
 	if not SbFx.fire(p, SbFx.key_of(dinfo), "dash", {"at": p.global_position + Vector3.UP * 0.05, "dir": dir, "info": dinfo}):
 		BendLooks.burst(p.global_position + Vector3.UP * 0.3, "stone" if bool(spec.get("dust", false)) else kind, 22, -dir + Vector3.UP * 0.3, 50.0, 4.0, 0.4)
+	if kind == "air":
+		BendLooks.air_dash(p, dir, up)               # (the anime air's look: a leap's column or a slip's streaks, pooled)
 	SbFx.dash_began(p, SbFx.key_of(dinfo), dir, dinfo)
 	if bool(spec.get("burn", false)):
 		var start := p.global_position
