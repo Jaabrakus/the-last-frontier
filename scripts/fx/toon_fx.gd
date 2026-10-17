@@ -225,7 +225,7 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.84, 0.74, 0.57), "c_mid": Color(0.6, 0.5, 0.38), "c_dark": Color(0.34, 0.27, 0.2),
 					"rim_on": 1.0, "rim": 0.5, "rim_sun": 1.0, "c_rim": Color(1.0, 0.95, 0.78), "glint": 0.0,
-					"c_ink": Color(0.1, 0.07, 0.05), "ink_min": 1.0}
+					"c_ink": Color(0.16, 0.13, 0.11), "ink_min": 1.0, "t_mid": -0.22, "t_light": 0.5}
 			if key == "rock_held":
 				# (rocks held round the caster, seen from his own camera 3-4 m off: the near fade only at the lens)
 				p["near_m"] = 0.8
@@ -233,7 +233,7 @@ static func mat(key: String) -> ShaderMaterial:
 		"rock_outline", "rock_outline_held":
 			# (the dark drawn line round a cel rock: an inverted hull of the same mesh, toon_outline)
 			m.shader = SHADERS.outline
-			p = {"c_ink": Color(0.09, 0.06, 0.04), "width": 0.028}
+			p = {"c_ink": Color(0.16, 0.13, 0.11), "width": 0.028}
 			if key == "rock_outline_held":
 				p["near_m"] = 0.8
 				p["far_m"] = 1.8
@@ -693,30 +693,37 @@ static func _column(st: SurfaceTool, x0: float, x1: float, y0: float, ytl: float
 		_tri_out(st, c[f[0]], c[f[2]], c[f[3]], f[4])
 
 
-## A cel earth wall (the Earth Wall in the show's cel style, 2026-10-16): `w` across (x), `h` over the ground (y; `bury` more
-## under it), `t` thick (z), centred on x and z, its base at y 0. One solid body to a little over half its height, a step in
-## it, and over that a ragged skyline: teeth of uneven width whose tops slant from one height to the next. Indexed with smooth
-## normals for its outline hull.
+## A cel earth wall (the Earth Wall in the show's cel style, 2026-10-16, round 2: "flat-faced slabs with strata lines that rise
+## in one piece ... a broken top in two or three steps"): `w` across (x), `h` over the ground (y; `bury` more under it), `t` thick
+## (z), centred on x and z, its base at y 0. One flat-faced body to 0.6 of its height in layers that stand a hair proud of one
+## another (the strata: a pale ledge, a line, on every face), over it two or three blocks of uneven height whose tops slant a
+## little (the broken top), the highest one taller than the rest by a step. Indexed with smooth normals for its outline hull.
 static func wall_cel_mesh(w: float, h: float, t: float, seed := 0, bury := 0.45) -> Mesh:
 	return _cached("wallc_%.2f_%.2f_%.2f_%d_%.2f" % [w, h, t, seed, bury], func() -> Mesh:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed * 3571 + 9
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var body := h * 0.56
-		_column(st, -w * 0.5, w * 0.5, -bury, body, body, -t * 0.58, t * 0.58)
-		# (the teeth: breakpoints across the width, a height at each, each tooth from one to the next)
-		var xs: Array[float] = [-w * 0.5]
-		while xs[xs.size() - 1] < w * 0.5 - 0.35:
-			xs.append(minf(xs[xs.size() - 1] + rng.randf_range(0.4, 0.85), w * 0.5))
-		xs[xs.size() - 1] = w * 0.5
-		var hs: Array[float] = []
-		for i in xs.size():
-			hs.append(h * rng.randf_range(0.8, 1.0) * (0.86 if i == 0 or i == xs.size() - 1 else 1.0))
-		for i in xs.size() - 1:
-			var zf := t * 0.5 * rng.randf_range(0.9, 1.04)
-			var zb := t * 0.5 * rng.randf_range(0.9, 1.04)
-			_column(st, xs[i] - 0.01, xs[i + 1] + 0.01, body - 0.05, hs[i], hs[i + 1], -zb, zf)
+		var ys := [-bury, h * 0.2, h * 0.4, h * 0.6]
+		for i in 3:
+			var z := t * 0.5 * (1.0 + 0.05 * float(i % 2))
+			_column(st, -w * 0.5, w * 0.5, float(ys[i]), float(ys[i + 1]), float(ys[i + 1]), -z, z)
+		# (the broken top: two or three blocks side by side, heights stepped, each top slanting a little)
+		var n := 3 if w >= 2.4 else 2
+		var cuts: Array[float] = [-w * 0.5]
+		for k in n - 1:
+			cuts.append(-w * 0.5 + w * (float(k + 1) / float(n)) + rng.randf_range(-0.12, 0.12) * w / float(n))
+		cuts.append(w * 0.5)
+		var steps: Array[float] = [1.0, 0.86, 0.74]
+		var rot := rng.randi() % 3                      # (which block stands highest: its own dice, never the game's)
+		for k in n:
+			var top: float = h * float(steps[(k + rot) % 3])
+			var ytl := top + h * rng.randf_range(-0.04, 0.04)
+			var ytr := top + h * rng.randf_range(-0.04, 0.04)
+			var z := t * 0.5 * (1.0 + 0.05 * float((k + 1) % 2))
+			var mid := h * 0.6 + (top - h * 0.6) * 0.5
+			_column(st, cuts[k] - 0.01, cuts[k + 1] + 0.01, h * 0.6 - 0.03, mid, mid, -z, z)
+			_column(st, cuts[k] - 0.01, cuts[k + 1] + 0.01, mid - 0.03, ytl, ytr, -z * 0.96, z * 0.96)
 		st.index()
 		st.generate_normals()
 		return st.commit())
@@ -737,13 +744,15 @@ static func pillar_cel_mesh(r: float, h: float, seed := 0, bury := 0.45) -> Mesh
 		for j in rings + 1:
 			var u := float(j) / float(rings)
 			var y := lerpf(-bury, h, u)
-			var taper := lerpf(1.12, 0.88, clampf(y / h, 0.0, 1.0))
+			var taper := lerpf(1.12, 0.88, clampf(y / h, 0.0, 1.0)) * (1.0 + 0.045 * float(j % 2))    # (strata: every other ring a hair proud)
 			var lean := Vector3(0.1 * r * sin(float(seed) + u * 2.0), 0.0, 0.08 * r * cos(float(seed) * 1.7 + u * 2.3)) * clampf(y / h, 0.0, 1.0)
 			var row: Array = []
 			for i in sides:
 				var a := TAU * (float(i) + rng.randf_range(-0.2, 0.2)) / float(sides) + u * 0.25
-				var rr: float = r * taper * (rng.randf_range(0.86, 1.1) if j > 0 and j < rings else 1.0)
-				row.append(lean + Vector3(cos(a) * rr, y, sin(a) * rr))
+				var rr: float = r * taper * (rng.randf_range(0.94, 1.06) if j > 0 and j < rings else 1.0)
+				# (the broken top: a third of the last ring a step lower)
+				var yy := y - (h * 0.07 if j == rings and i < sides / 3 else 0.0)
+				row.append(lean + Vector3(cos(a) * rr, yy, sin(a) * rr))
 			pts.append(row)
 		for j in rings:
 			for i in sides:

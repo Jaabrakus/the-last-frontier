@@ -11,6 +11,8 @@ render_mode unshaded, cull_front, shadows_disabled, fog_disabled, skip_vertex_tr
 uniform vec3 c_ink : source_color = vec3(0.09, 0.06, 0.04);
 uniform float width = 0.028;
 uniform float far_k = 0.16;
+// The line is never thinner than this many pixels on the screen, at any distance (round 2: 0.028 m vanishes at 10 m).
+uniform float min_px = 3.0;
 uniform float ink = 0.0;
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 uniform float range_on = 0.0;  // (the web build: a plain uniform, each object its own material; FxParams)
@@ -31,7 +33,8 @@ void vertex() {
 	vec3 v = (MODELVIEW_MATRIX * vec4(p, 1.0)).xyz;
 	vec3 n = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 	float d = length(v);
-	float w = width * line_k * clamp(0.5 + d * far_k, 0.5, 4.0);
+	float px_m = 2.0 * d / maxf(PROJECTION_MATRIX[1][1] * VIEWPORT_SIZE.y, 1.0);      // a pixel's width in metres at this depth
+	float w = maxf(width * line_k * clamp(0.5 + d * far_k, 0.5, 4.0), min_px * px_m);
 	VERTEX = v + n * w;
 	NORMAL = n;
 }

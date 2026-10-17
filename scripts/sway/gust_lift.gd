@@ -95,6 +95,8 @@ var sheathed := ""
 var _sheath_trail: GPUParticles3D
 ## The ring's stone in flight: a wake of dust and chips behind it (a cel trail, BendLooks.trail "stone"), off where it lands.
 var _flight_trail: GPUParticles3D
+## The smear left on its release (FormStone.smear): the time it has still to run, 0 none.
+var _smear_t := 0.0
 
 
 ## Gust's stone data (moves.json gust.stone).
@@ -261,6 +263,10 @@ func _physics_process(dt: float) -> void:
 		Phase.HELD:
 			_held(dt)
 		Phase.FLIGHT:
+			if _smear_t > 0.0 and stone is FormStone:
+				# (the smear on its release: stretched along its way, back to whole within SMEAR_S)
+				_smear_t = maxf(_smear_t - dt, 0.0)
+				(stone as FormStone).smear(velocity, lerpf(1.0, FormStone.SMEAR_K, _smear_t / FormStone.SMEAR_S))
 			if _sw_t >= 0.0:
 				_swing(dt)
 			else:
@@ -326,6 +332,7 @@ func hurl(toward := Vector3.INF) -> void:
 	_hurl_from = from
 	FormEffects.sfx("hurl", from, 0.0, 0.7 if kind == "cannonball" else 1.0)
 	if BendR3.on(by()):
+		_smear_t = FormStone.SMEAR_S
 		_flight_trail = BendLooks.trail(stone, "stone", radius)         # (a wedge of dust and chips behind it, the ring's)
 		BendLooks.burst(from, "stone", 6, Vector3.UP, 120.0, 2.0, 0.2, false)
 	else:
@@ -998,6 +1005,9 @@ func _except(b: Node) -> void:
 
 
 func _release_stone() -> void:
+	if _smear_t > 0.0 and stone is FormStone and is_instance_valid(stone):
+		_smear_t = 0.0
+		(stone as FormStone).smear(Vector3.UP, 1.0)
 	if _flight_trail != null:
 		BendLooks.stop_trail(_flight_trail)
 		_flight_trail = null

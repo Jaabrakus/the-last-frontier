@@ -25,6 +25,11 @@ const LOOSE_META := &"bend_loose_by"
 ## swung round in water). Its look (pack_look) and its flight's (magma burns, mud slows) by it, kept should an earth Catch take
 ## it (E throws it so: BendZone.return_stone, mud as a mud wave); told the others with the stone (NetStones.MARKS).
 const PACK_META := &"bend_pack"
+## Round 2: the cel stone is drawn this much wider than its body (a look: the hit and the collision are the body's own).
+const DRAW_K := 1.3
+## The smear on the release: its drawn body stretched along its flight, 1.9 times at the start and back over SMEAR_S.
+const SMEAR_K := 1.9
+const SMEAR_S := 0.07
 
 ## Loose stones in the order they were let fall: maker's instance id -> [FormStone].
 static var _loose := {}
@@ -145,13 +150,33 @@ func _ready() -> void:
 func cel_dress() -> void:
 	if mesh_instance == null or has_meta(&"cel_rock") or not BendLooks.live():
 		return
+	# (drawn bolder than its body, DRAW_K: from the player's camera 4 m off a 0.26 m stone read small; its collision is as it was)
 	if kind == "spike":
-		mesh_instance.mesh = ToonFx.spike_cel_mesh(radius, height, look_seed % 5, FormModels.BURY_M)
+		mesh_instance.mesh = ToonFx.spike_cel_mesh(radius * DRAW_K, height, look_seed % 5, FormModels.BURY_M)
 	else:
-		mesh_instance.mesh = ToonFx.boulder_mesh(radius, look_seed % 5)
+		mesh_instance.mesh = ToonFx.boulder_mesh(radius * DRAW_K, look_seed % 5)
 	mesh_instance.material_override = ToonFx.mat("rock")
 	BendLooks.outline(mesh_instance, mesh_instance.mesh)
 	set_meta(&"cel_rock", true)
+
+
+## The smear (round 2: the show draws the thrown thing stretched along its way on the frame it leaves the hand): the drawn body
+## stretched `k` times along the world direction `dir`, 1 giving it back whole. A look only (the body is untouched).
+func smear(dir: Vector3, k: float) -> void:
+	if mesh_instance == null or not has_meta(&"cel_rock"):
+		return
+	if not has_meta(&"smear_base"):
+		set_meta(&"smear_base", mesh_instance.basis)
+	var base: Basis = get_meta(&"smear_base")
+	if k <= 1.001:
+		mesh_instance.basis = base
+		remove_meta(&"smear_base")
+		return
+	var d := (global_basis.inverse() * dir).normalized()
+	var f := k - 1.0
+	# (I + (k - 1) d d^T, column by column)
+	var sb := Basis(Vector3(1.0, 0.0, 0.0) + d * (d.x * f), Vector3(0.0, 1.0, 0.0) + d * (d.y * f), Vector3(0.0, 0.0, 1.0) + d * (d.z * f))
+	mesh_instance.basis = sb * base
 
 
 ## Grown in the hands (FormEffects.grow_raised: a Spike or a Boulder held on past its lock): its body `k` x its size at once,
@@ -174,8 +199,14 @@ func grow(k: float, over_s := 0.25) -> void:
 	if over_s <= 0.0 or not is_inside_tree():
 		mesh_instance.scale = Vector3.ONE * k
 		return
+	# (it swells on twos, 12 a step a second, a little past its size and back, the shape changing in steps)
+	var from := mesh_instance.scale
 	var tw := create_tween()
-	tw.tween_property(mesh_instance, ^"scale", Vector3.ONE * k, over_s).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(mesh_instance):
+			var u := floorf(t * 12.0) / 12.0 / maxf(over_s, 0.01)
+			var e := 1.0 + 2.70158 * pow(u - 1.0, 3.0) + 1.70158 * pow(u - 1.0, 2.0)
+			mesh_instance.scale = from.lerp(Vector3.ONE * k, clampf(e, 0.0, 1.4)), 0.0, over_s, over_s)
 
 
 ## Its place `u` (0..1) of the way out of the ground.

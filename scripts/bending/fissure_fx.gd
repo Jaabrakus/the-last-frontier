@@ -27,7 +27,7 @@ const TILT_HOLD_S := 0.28
 const TILT_BACK_S := 0.5
 const SLAB_POOL := 24
 ## The crack's width (m), the length of the forks off it and how often one forks, the time it stays after the wave is gone (s).
-const CRACK_W := 0.7
+const CRACK_W := 0.95
 const FORK_M := Vector2(0.7, 1.3)
 const CRACK_LIFE_S := 2.0
 ## A mud fissure's end (spike_burst): this many spikes, the middle ones tallest, held up this long.
@@ -68,7 +68,7 @@ func _ready() -> void:
 		_mud_meshes = true
 	else:
 		for i in CREST_N:
-			_meshes.append(ToonFx.spike_cel_mesh(0.15 + 0.03 * float(i % 3), 0.55 + 0.16 * float(i % 2), 31 + i * 11 % 5, 0.0))
+			_meshes.append(ToonFx.spike_cel_mesh(0.2 + 0.04 * float(i % 3), 0.72 + 0.2 * float(i % 2), 31 + i * 11 % 5, 0.0))
 	for i in CREST_N:
 		var mi := MeshInstance3D.new()
 		mi.mesh = _meshes[i]
@@ -110,10 +110,12 @@ func _process(dt: float) -> void:
 	# (the ground breaking at the crest: its spikes jostle up and down and lean)
 	var wide := (0.5 if _mud_meshes else 1.5) if look == "mud" else 1.0
 	var tall := (0.75 if _mud_meshes else 0.55) if look == "mud" else 1.0
+	# (the crest's shape jostles on twos, 12 a second, while the wave itself moves smoothly: round 2)
+	var tq := floorf(_t * 12.0) / 12.0
 	for i in _crest.size():
-		var s := 0.75 + 0.35 * sin(_t * 23.0 + float(i) * 1.7)
+		var s := 0.75 + 0.35 * sin(tq * 23.0 + float(i) * 1.7)
 		_crest[i].scale = Vector3(wide, s * tall, wide)
-		_crest[i].rotation = Vector3(0.25 * sin(_t * 17.0 + float(i)), 0.0, 0.18 * sin(_t * 13.0 + float(i) * 2.1))
+		_crest[i].rotation = Vector3(0.25 * sin(tq * 17.0 + float(i)), 0.0, 0.18 * sin(tq * 13.0 + float(i) * 2.1))
 	var p := global_position
 	if _trail != null and is_instance_valid(_trail):
 		_trail.add(p)
@@ -185,7 +187,7 @@ func _heave(at: Vector3, scn: Node) -> void:
 		var out := side * float(sgn)
 		var reach := width * _rng.randf_range(SLAB_REACH.x, SLAB_REACH.y)
 		var base := at + out * reach + fwd * _rng.randf_range(-0.2, 0.2) + Vector3.DOWN * 0.02
-		_slab_up(scn, base, out, fwd, _rng.randf_range(0.65, 0.95))
+		_slab_up(scn, base, out, fwd, _rng.randf_range(0.85, 1.25))
 		if pool != null:
 			pool.shoot("puff_dust", base + Vector3.UP * 0.1, 3, Vector3.UP, 75.0, Vector2(0.6, 1.6), Vector2(0.14, 0.28), 0.6,
 					Vector3(0, 0.4, 0), 3.0, {"r": 0.2, "flat": 0.9, "radial": 0.8})

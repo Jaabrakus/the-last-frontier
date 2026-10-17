@@ -76,6 +76,16 @@ func _run() -> void:
 	# (our own camera: close beside him, a little in front, looking at his chest, so the slabs and the hand are in it)
 	var toward := -away
 	var right := toward.cross(Vector3.UP).normalized()
+	if cam_kind == "player":
+		# (the player's own camera, behind him about 4 m: what the owner plays; nothing of ours replaces it)
+		cam = p.camera
+		await CaptureKit.secs(self, 0.4)
+		if film:
+			await _film(foe)
+			return
+		Engine.time_scale = SLOW
+		await _stills()
+		return
 	cam = Camera3D.new()
 	cam.fov = 34.0
 	cam.far = 400.0
@@ -92,6 +102,10 @@ func _run() -> void:
 		await _film(foe)
 		return
 	Engine.time_scale = SLOW
+	await _stills()
+
+
+func _stills() -> void:
 	# ---- the Fissure's lock (key 2): torn slabs, channelled to the hand
 	await _key(&"weapon_2")
 	c.held_override = true

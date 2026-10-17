@@ -138,6 +138,10 @@ const WRAP_IN_S := 0.06
 const WRAP_OUT_S := 0.12
 var deck_y := 0.0
 var _wave_look: Node3D
+## The smear on a stone's release: the time it has still to run (SMEAR_S), 0 none; its stretch (a look, never the hitbox).
+var _smear_t := 0.0
+const SMEAR_K := 1.9
+const SMEAR_S := 0.07
 ## The pull (a Pull wave): whom it strikes is knocked toward its caster.
 var pull := false
 ## Where it ends it bursts (spec "splash": {radius_m, damage, knock_mps, up_mps, puddle {radius_m, life_s}}; the Ice
@@ -250,6 +254,8 @@ static func launch(by: Node3D, from: Vector3, dir: Vector3, spec: Dictionary) ->
 		b.deck_y = FormEffects.ground_at(b, from).y
 		b.global_position.y = b.deck_y
 	b._face()
+	if b.kind == "stone" and not b.floor_wave and BendLooks.live():
+		b._smear_t = SMEAR_S                      # (a stone leaves the hand stretched along its flight, then whole)
 	var holder: Node3D = b
 	if b.flight in ["spinning", "flick"] or absf(b.tilt) > 1e-4:
 		b.spin = Node3D.new()
@@ -600,6 +606,11 @@ func _turn(dt: float) -> void:
 func _physics_process(dt: float) -> void:
 	if spent:
 		return
+	if _smear_t > 0.0:
+		# (the smear on its release (round 2: a thrown stone is drawn stretched along its flight for a frame or two): its body
+		# stretched along -Z (it faces its way), back to whole within SMEAR_S; a look only, its radius and path are its own)
+		_smear_t = maxf(_smear_t - dt, 0.0)
+		scale = Vector3(1.0, 1.0, lerpf(1.0, SMEAR_K, _smear_t / SMEAR_S))
 	_net_check()
 	if _swing_t >= 0.0:
 		_swing(dt)

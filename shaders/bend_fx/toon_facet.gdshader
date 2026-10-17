@@ -18,6 +18,10 @@ uniform float ink = 0.0;
 uniform float ink_min = 0.0;
 // 1: the rim lights only where a face turns toward the sun (a bright edge along a rock's lit side), 0 all round.
 uniform float rim_sun = 0.0;
+// Where the tones change on the face's turn to the sun (the shade below t_mid, the light above t_light): a rock seen from behind and
+// above has its upright faces round 0, so earth lowers t_mid and they read as the middle tone, not as shade (round 2).
+uniform float t_mid = 0.05;
+uniform float t_light = 0.62;
 uniform float rim = 0.62;
 uniform float rim_on = 1.0;
 uniform float glint = 1.0;
@@ -53,8 +57,8 @@ void fragment() {
 	}
 	float d = dot(N, cel_light(VIEW_MATRIX));
 	vec3 col = c_dark;
-	col = mix(col, c_mid, aastep(0.05, d));
-	col = mix(col, c_light, aastep(0.62, d));
+	col = mix(col, c_mid, aastep(t_mid, d));
+	col = mix(col, c_light, aastep(t_light, d));
 	float fres = 1.0 - clamp(dot(N, VIEW), 0.0, 1.0);
 	col = mix(col, c_rim, rim_on * aastep(rim, fres) * mix(1.0, aastep(0.15, d), rim_sun));
 	if (glint > 0.0) {

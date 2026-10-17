@@ -35,6 +35,10 @@ extends RefCounted
 ##               between the camera and the struck body are drawn at half (the pool's occl)
 
 const KINDS := ["stone", "ice", "water", "fire", "air", "lightning"]
+## Round 2 (from the player's camera 4 m behind a small drawn stone reads small): a stone bolt's body is drawn this many times its
+## radius, a pebble's more (a look: the bolt's own radius, its hit and its speed are untouched).
+const STONE_DRAW := 1.25
+const STONE_DRAW_SMALL := 1.5
 const FIRE := Color(1.0, 0.45, 0.06)
 const FIRE_HOT := Color(1.0, 0.82, 0.25)
 const WATER := Color(0.2, 0.6, 1.0)
@@ -188,7 +192,9 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			# (the effects' own dice: a stone's body never moves the game's rolls)
 			var sd := ToonFx.vis_rng.randi() % 50
 			# (earth in the show's cel style, 2026-10-16: a bold low-poly rock, flat tones, a dark drawn line round it)
-			mi.mesh = ToonFx.boulder_mesh(r, sd % 5) if not long else ToonFx.spike_cel_mesh(r, r * 7.0, sd % 5, 0.0)
+			# (drawn bolder than its body from the player's camera 4 m off, DRAW_K small ones more; its radius is the bolt's own)
+			var rd := r * (STONE_DRAW_SMALL if r < 0.15 else STONE_DRAW)
+			mi.mesh = ToonFx.boulder_mesh(rd, sd % 5) if not long else ToonFx.spike_cel_mesh(rd, r * 7.0, sd % 5, 0.0)
 			if long:
 				mi.rotation.x = -PI / 2.0
 			mi.material_override = ToonFx.mat("rock")
@@ -207,7 +213,7 @@ static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 		# (a torn plate of the deck stood in the flight's plane (YZ), turning like a wheel)
 		var mi := _mesh(parent, ToonFx.slab_mesh(ToonFx.vis_rng.randi() % 4), ToonFx.mat("rock"))
 		mi.rotation.z = PI / 2.0
-		mi.scale = Vector3.ONE * r * 3.4
+		mi.scale = Vector3.ONE * r * 3.4 * STONE_DRAW
 		outline(mi, mi.mesh)
 		_core_rock(mi, r)
 		_shadow(parent, "stone", r, Vector3(0.3, 1.45, 1.45), Vector3.ZERO)       # (round 4: its shadow from a core, not the scaled rock)
@@ -325,7 +331,7 @@ static func _spear_body(parent: Node3D, kind: String, r: float) -> void:
 	if kind == "stone":
 		var mi := MeshInstance3D.new()
 		mi.name = "Body"
-		mi.mesh = ToonFx.spike_cel_mesh(r, r * 9.0, ToonFx.vis_rng.randi() % 5, 0.0)
+		mi.mesh = ToonFx.spike_cel_mesh(r * STONE_DRAW, r * 9.0, ToonFx.vis_rng.randi() % 5, 0.0)
 		mi.rotation.x = -PI / 2.0
 		mi.position = Vector3(0.0, 0.0, r * 4.0)
 		mi.material_override = ToonFx.mat("rock")
@@ -1013,13 +1019,17 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 			pool.shoot("chunk", at, n, d, spread, Vector2(speed * 0.7, speed * 1.5), Vector2(0.12, 0.3) * k, 1.1,
 					Vector3(0, -16.0, 0), 0.3, {"r": 0.15 * k, "ang": 400.0})
 			pool.shoot("puff_dust", at, int(n * 0.45), d, spread, Vector2(speed * 0.2, speed * 0.6), Vector2(0.4, 0.85) * k,
-					1.0, Vector3(0, 0.3, 0), 3.0, {"r": 0.2 * k}.merged(occl))
+					0.55, Vector3(0, 0.3, 0), 4.5, {"r": 0.2 * k}.merged(occl))
 			if not g.is_empty():
 				# (the show's cel earth: flat dust clods thrown out along the deck, no hoop; the scar cracked in the deck)
 				pool.shoot("puff_dust", (g.pos as Vector3) + (g.normal as Vector3) * 0.12, int(n * 0.5), g.normal, 85.0,
 						Vector2(1.2, 3.0) * k, Vector2(0.22, 0.46) * k, 0.7, Vector3.ZERO, 4.0,
 						{"flat": 0.9, "r": 0.25 * k, "radial": 1.4 * k})
 				pool.mark("cracks", g.pos, g.normal, 1.8 * k, 7.0)
+				if body == null and n >= 14:
+					# (the hit's one-frame star where it struck the deck, in the rock's own pale tan: the show's flash; never on a body)
+					pool.play("flash", Transform3D(Basis.IDENTITY, (g.pos as Vector3) + (g.normal as Vector3) * 0.2), 0.09, 0.4 * k,
+							1.5 * k, DUST_LIGHT, Color(1.0, 0.97, 0.88))
 		"lightning":
 			pool.play("flash", up, 0.14, 0.4 * k, 1.3 * k, ELEC, Color(0.85, 0.92, 1.0))
 			pool.shoot("spark_elec", at, int(n * 1.6), d, spread, Vector2(speed * 1.0, speed * 3.0), Vector2(0.025, 0.045),
@@ -1160,11 +1170,12 @@ static func quake(at: Vector3, count: int, reach: float, life := 1.8) -> void:
 		return
 	var floor_at := _ground(pool, at + Vector3.UP * 0.3, Vector3.UP)
 	var base: Vector3 = floor_at.pos if not floor_at.is_empty() else at
+	# (uneven spokes, not a wheel: nothing on the deck may read as a target marker)
 	var a0 := ToonFx.vis_rng.randf() * TAU
 	for i in count:
-		var a := a0 + TAU * float(i) / float(maxi(count, 1)) + ToonFx.vis_rng.randf_range(-0.25, 0.25)
-		var l := reach * ToonFx.vis_rng.randf_range(0.6, 1.0)
-		pool.crack(crack_line(base, base + Vector3(cos(a), 0.0, sin(a)) * l, 0.3, 0.06), 0.5, 0.1, life)
+		var a := a0 + TAU * float(i) / float(maxi(count, 1)) + ToonFx.vis_rng.randf_range(-0.55, 0.55)
+		var l := reach * ToonFx.vis_rng.randf_range(0.4, 1.0)
+		pool.crack(crack_line(base, base + Vector3(cos(a), 0.0, sin(a)) * l, 0.3, 0.08), 0.65, 0.1, life)
 
 
 ## The ground just under (or before) a burst at `at` going `d`: {pos, normal}, or {} in the air.

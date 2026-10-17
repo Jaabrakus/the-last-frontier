@@ -70,13 +70,21 @@ const FLAME_UP := Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP)
 ## close up to SLAB_CLOSE of their size. Slabs and chunks are the cel rock with its dark line (BendLooks.cel_rock).
 const SLAB_AT := [0.0, 0.2, 0.42]
 const SLAB_FAN := [0.0, 1.1, -1.1]
-const SLAB_SIZE := Vector2(0.42, 0.54)
+const SLAB_SIZE := Vector2(0.58, 0.74)
 const CRACK_S := 0.13
 const SNAP_S := 0.2
 const CHUNKS := 5
 const GRIT_S := Vector2(0.28, 0.5)
 const SLAB_CLOSE := 0.7
 const ROCKS := 8
+## Round 2 (the show's timing): the rocks round the hand follow it with a lag of about 0.1 s and overshoot a little (a spring on
+## the hand's place: SPRING_K, SPRING_C: k 160 and c 12.5 is a lag of about 0.1 s and an overshoot of a sixth), and a rock's SHAPE (its
+## size) changes in steps of 1/12 s, "on twos", while its place moves smoothly. A chunk's size (m) and the drawn crack's width.
+const SPRING_K := 160.0
+const SPRING_C := 12.5
+const STEP_S := 1.0 / 12.0
+const CHUNK_SIZE := Vector2(0.28, 0.44)
+const CRACK_W := 0.95
 const PULL_M := 7.0
 const PULL_MAX := 7
 const PULL_S := 0.5
@@ -695,7 +703,7 @@ func _build_earth() -> void:
 	for i in n:
 		var m: Node3D
 		var src := Vector3.INF
-		var size := rng.randf_range(0.2, 0.32)
+		var size := rng.randf_range(CHUNK_SIZE.x, CHUNK_SIZE.y)
 		var j := i - claimed.size()
 		var slab := j >= 0 and j < SLAB_AT.size()
 		var at := 0.0
@@ -756,7 +764,7 @@ func _earth(dt: float) -> void:
 	var ch := _channel()
 	var l := limb()
 	var foot := l.ends_with("foot")
-	var tip := _tip(l)
+	var tip := _tip_spring(_tip(l), dt)
 	var tight := smoothstep(0.7, 1.0, minf(k, 1.0))
 	var w := lerpf(1.1, 2.6, minf(k, 1.0)) + 2.0 * _flash
 	var c := _center()
@@ -877,7 +885,11 @@ func _earth(dt: float) -> void:
 		m.global_position = p
 		m.rotate(rk.axis, dt * float(rk.spin) * turn)
 		var sk := lerpf(1.0, SLAB_CLOSE, ch) if slab else 1.0
-		m.scale = Vector3.ONE * float(rk.size) * clampf(lift * 1.4, 0.0, 1.0) * (1.0 + 0.25 * _flash) * sk * pop
+		# (its shape changes on twos: the size is taken again only every STEP_S, its place moves every frame)
+		if not rk.has("sc") or _t - float(rk.sc_t) >= STEP_S:
+			rk.sc = float(rk.size) * clampf(lift * 1.4, 0.0, 1.0) * (1.0 + 0.25 * _flash) * sk * pop
+			rk.sc_t = _t
+		m.scale = Vector3.ONE * float(rk.sc)
 		m.visible = lift > 0.01
 		if lift > 0.0 and not bool(rk.lifted):
 			rk.lifted = true
@@ -899,6 +911,22 @@ func _earth(dt: float) -> void:
 					* (1.0 - 0.65 * ch if not foot else 1.0)
 
 
+## The hand's place `p` as the rocks follow it: a spring (SPRING_K, SPRING_C) so they lag a little and overshoot.
+var _tip_s := Vector3.INF
+var _tip_v := Vector3.ZERO
+
+
+func _tip_spring(p: Vector3, dt: float) -> Vector3:
+	if _tip_s == Vector3.INF or _tip_s.distance_to(p) > 3.0:
+		_tip_s = p
+		_tip_v = Vector3.ZERO
+		return p
+	var h := minf(dt, 0.05)
+	_tip_v += ((p - _tip_s) * SPRING_K - _tip_v * SPRING_C) * h
+	_tip_s += _tip_v * h
+	return _tip_s
+
+
 ## Slab `rk` begins to be torn out: it comes to the spot on the deck where he faces (fanned by its own SLAB_FAN), the deck
 ## cracks in a line out to it, the pit's scar left under it, a puff of dust; its orbit goes on from that angle.
 func _tear_begin(rk: Dictionary, fwd_a: float, w: float, c: Vector3) -> void:
@@ -912,7 +940,7 @@ func _tear_begin(rk: Dictionary, fwd_a: float, w: float, c: Vector3) -> void:
 	var m := rk.mesh as Node3D
 	m.global_transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * float(rk.size) * 0.88), spot)
 	m.visible = true
-	BendLooks.crack(c + dir * 0.3, spot + dir * 0.5, 0.7, CRACK_S, 2.2)
+	BendLooks.crack(c + dir * 0.3, spot + dir * 0.5, CRACK_W, CRACK_S, 2.2)
 	var pool := ToonFxPool.of(get_tree().current_scene) if is_inside_tree() else null
 	if pool != null:
 		pool.mark("cracks", spot, Vector3.UP, float(rk.size) * 2.4, 2.4)

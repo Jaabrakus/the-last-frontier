@@ -13,6 +13,9 @@ extends SceneTree
 ##   the Fissure       its crack trail and slabs are made while it runs, bounded, and the trail is gone after it
 ##   the wall          the ring's Earth Wall is the cel mesh with its outline, its box and its fade as ever
 ##   the cracks        however many are asked, the pool holds ToonFxPool.CRACKS at most
+##   round 2           the Fissure is ours (config moves_on empty, the line to restore noted), a thrown stone and a stone bolt are
+##                     smeared along their way for a moment and whole again, the rocks round the hand lag it and overshoot, the
+##                     outline never thinner than a few pixels, shape changes step at 12 a second
 ## The last line "EARTH CEL PASSED (<n> checks)" or "EARTH CEL FAILED (<f> of <n>)"; exit 0 only on a pass.
 
 const NAME := "EARTH CEL"
@@ -104,6 +107,7 @@ func _run() -> void:
 	await _fissure()
 	await _wall()
 	_cracks()
+	await _round2()
 	BendLooks.build_headless = false
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(OWN_CFG))
 	GameSettings.path = GameSettings.PATH
@@ -270,3 +274,69 @@ func _cracks() -> void:
 	for i in 80:
 		BendLooks.crack(rm.ring.center(), rm.ring.center() + Vector3(1.0 + float(i % 5) * 0.2, 0, 1.0), 0.5, 0.1, 5.0)
 	_expect(pool._cracks.size() <= ToonFxPool.CRACKS, "80 cracks asked, the pool holds %d (cap %d)" % [pool._cracks.size(), ToonFxPool.CRACKS])
+
+
+## ---------------------------------------------------------------- round 2
+func _round2() -> void:
+	# the Fissure is ours: the Spellbreak wave is off, the way back written down
+	var cfg: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/bending/sb_fx/config.json"))
+	_expect((cfg.get("moves_on", {"x": 1}) as Dictionary).is_empty(), "no single move is switched on in the Spellbreak bridge (the Fissure is ours)")
+	_expect("earth_shove/push" in String(cfg.get("_round2_earth", "")), "the line to restore is written down beside it")
+	# the outline's pixel floor and its colour
+	var ol := ToonFx.mat("rock_outline")
+	var rx := RegEx.create_from_string("uniform float min_px\\s*=\\s*([0-9.]+)")
+	var hit := rx.search(ol.shader.code)
+	var min_px := float(hit.get_string(1)) if hit != null else 0.0
+	_expect(min_px >= 2.0, "the outline is never thinner than 2 px (%s)" % [min_px])
+	var ink: Color = ol.get_shader_parameter(&"c_ink")
+	_expect(ink.get_luminance() > 0.05 and ink.get_luminance() < 0.3 and ink.r > ink.b, "its colour is a dark grey-brown, not black (%s)" % [ink])
+	# the cel stone: smeared along its way and whole again
+	var b := FormStone.ball(current_scene, rm.ring.center() + Vector3(0, 0, 3.0), {"radius_m": 0.26, "mass_kg": 45.0}, 3, "stone")
+	await _ticks(2)
+	var before := b.mesh_instance.basis
+	b.smear(Vector3.FORWARD, FormStone.SMEAR_K)
+	var stretched := (b.mesh_instance.basis * Vector3.FORWARD).length()
+	b.smear(Vector3.FORWARD, 1.0)
+	_expect(stretched > 1.5 and b.mesh_instance.basis.is_equal_approx(before), "a stone's drawn body is stretched along its way and given back whole (%.2f)" % stretched)
+	b.queue_free()
+	# a stone bolt: stretched for a moment after it leaves, then whole; its radius its own
+	var bolt := BendBolt.launch(foe, rm.ring.center() + Vector3.UP * 4.0, Vector3.FORWARD, {"kind": "stone", "mps": 20.0, "radius_m": 0.2,
+			"range_m": 30.0, "gravity": 0.0, "damage": 0.0})
+	await _ticks(2)
+	var z0 := bolt.scale.z
+	await _secs(0.3)
+	_expect(z0 > 1.3 and is_equal_approx(bolt.scale.z, 1.0) and is_equal_approx(bolt.radius, 0.2),
+			"a stone bolt leaves stretched (%.2f) and is whole after, its radius the same" % z0)
+	bolt.end("test")
+	# the rocks round the hand lag it and overshoot
+	var ch := BendCharge.make(p, "earth")
+	await _ticks(2)
+	var at := Vector3.ZERO
+	ch._tip_s = Vector3.INF
+	ch._tip_spring(at, 1.0 / 60.0)
+	var peak := 0.0
+	var lag_t := -1.0
+	var pos := Vector3.ZERO
+	for i in 120:
+		pos = ch._tip_spring(Vector3(1.0, 0.0, 0.0), 1.0 / 60.0)
+		peak = maxf(peak, pos.x)
+		if lag_t < 0.0 and pos.x >= 0.5:
+			lag_t = float(i) / 60.0
+	_expect(lag_t > 0.05 and lag_t < 0.2, "the rocks reach half the hand's move in about a tenth of a second (%.2f s)" % lag_t)
+	_expect(peak > 1.05 and peak < 1.4 and absf(pos.x - 1.0) < 0.05, "they overshoot a little and settle on it (peak %.2f, end %.2f)" % [peak, pos.x])
+	ch.end("break")
+	await _secs(1.2)
+	# shape on twos: a slab's drawn size changes at most 12 times a second
+	var ch2 := BendCharge.make(p, "earth")
+	await _ticks(2)
+	var slab: Dictionary = ch2._rocks.filter(func(r: Dictionary) -> bool: return bool(r.slab))[0]
+	var sizes := {}
+	var t := 0.0
+	while t < 0.5:
+		ch2.fill = clampf(t / 0.5, 0.0, 1.0)
+		await physics_frame
+		t += 1.0 / 60.0
+		sizes[snappedf((slab.mesh as Node3D).scale.x, 0.0001)] = true
+	_expect(sizes.size() <= 8, "its size changes in steps, not every frame (%d sizes in half a second)" % sizes.size())
+	ch2.end("break")
+	await _secs(1.2)

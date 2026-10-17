@@ -283,7 +283,8 @@ func _crack_step(dt: float) -> void:
 			(mi.mesh as ImmediateMesh).clear_surfaces()
 			i += 1
 			continue
-		FxParams.put(mi, &"reveal", clampf(float(e.age) / float(e.race), 0.0, 1.0))
+		# (it grows on twos: its front steps 12 times a second)
+		FxParams.put(mi, &"reveal", clampf(floorf(float(e.age) * 12.0) / 12.0 / float(e.race), 0.0, 1.0))
 		FxParams.put(mi, &"t", clampf(float(e.age) / float(e.life), 0.0, 1.0))
 		i += 1
 
