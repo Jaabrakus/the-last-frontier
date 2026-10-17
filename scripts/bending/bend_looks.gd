@@ -3002,6 +3002,18 @@ static func warm_up(cam: Camera3D, progress := Callable(), elements: Array = [])
 			holder.add_child(bz)
 			bz.set_physics_process(false)          # (a look only: it neither burns, lifts nor ends anyone)
 			bz._look())
+	# (the anime pass's water: every ribbon and surface material drawn once out of sight, so no fight meets its shader cold)
+	groups.append(func() -> void:
+		for mk in ["water_ribbon", "water_ribbon_thin", "water_whip", "mud_ribbon", "ice_ribbon"]:
+			var rb := ToonRibbon.new()
+			rb.main_mat = ToonFx.mat(mk)
+			holder.add_child(rb)
+			rb.lay_path(PackedVector3Array([at, at + Vector3.LEFT * 0.04, at + Vector3.LEFT * 0.08]), 0.04, 0.04)
+		for mk in ["water_bolt", "water_crest", "water_column", "water_column_core", "water_puddle"]:
+			var mi := MeshInstance3D.new()
+			mi.mesh = ToonFx.sphere(6)
+			mi.material_override = ToonFx.mat(mk)
+			holder.add_child(mi))
 	groups.append(func() -> void:
 		for m in ["scorch", "cracks", "frost", "wet"]:
 			pool.mark(m, at, Vector3.UP, 0.01, 0.2)
