@@ -121,7 +121,7 @@ void fragment() {
 	col = mix(col, c_body, aastep(-0.05, d));
 	col = mix(col, c_rim, aastep(rim, fres + (n2 - 0.5) * 0.25));
 	float fm = n * 0.75 + n2 * 0.45;
-	float lip = lip_foam * smoothstep(0.38, 0.5, UV.y) * (1.0 - smoothstep(0.66, 0.8, UV.y));
+	float lip = lip_foam * (smoothstep(0.46, 0.52, UV.y) * (1.0 - smoothstep(0.62, 0.7, UV.y)) + 0.55 * smoothstep(0.86, 0.95, UV.y));
 	fm += lip * 0.9;
 	if (mode == 1) {
 		fm += UV.x * 0.35;                               // the stream breaks to foam toward its tail

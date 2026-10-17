@@ -15,7 +15,6 @@ const BREAK_S := 0.34
 ## The profile, local (x across the wave's thickness, forward +, in units of its thickness; y up, in units of its height):
 ## the back foot, the back climbing, the top, the lip (the curl moves it forward and down), the hollow under it, the front foot.
 ## The y of its first and last are on the deck.
-const PROFILE_N := 9
 
 var foot := Vector3.ZERO
 var dir := Vector3.FORWARD
@@ -45,11 +44,23 @@ func _ready() -> void:
 	_draw(0.0, 0.2)
 
 
-## The profile at `curl` (0 a swell .. 1 a lip fully over, 1.4 falling): [x, y] points.
+## The profile at `curl` (0 a swell .. 1 a lip fully over, 1.4 falling): [x, y] points, a smooth curve (Catmull-Rom through
+## the nine controls, each segment in two: 17 points, the control i at 2i, so UV.y 0.5 is the top and 0.625 the lip's tip).
 static func profile(curl: float) -> Array[Vector2]:
-	return [Vector2(-1.0, 0.0), Vector2(-0.72, 0.16), Vector2(-0.4, 0.46), Vector2(-0.08, 0.84), Vector2(0.28, 1.0),
+	var c: Array[Vector2] = [Vector2(-1.0, 0.0), Vector2(-0.72, 0.16), Vector2(-0.4, 0.46), Vector2(-0.08, 0.84), Vector2(0.28, 1.0),
 			Vector2(0.55 + 0.5 * curl, 0.92 - 0.55 * curl), Vector2(0.3 + 0.3 * curl, 0.58 - 0.2 * curl), Vector2(0.18, 0.28),
 			Vector2(0.08, 0.0)]
+	var out: Array[Vector2] = []
+	for i in c.size() - 1:
+		var p0 := c[maxi(i - 1, 0)]
+		var p1 := c[i]
+		var p2 := c[i + 1]
+		var p3 := c[mini(i + 2, c.size() - 1)]
+		out.append(p1)
+		out.append(0.5 * ((2.0 * p1) + (-p0 + p2) * 0.5 + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * 0.25 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * 0.125))
+	out.append(c[c.size() - 1])
+	out[out.size() - 1].y = 0.0
+	return out
 
 
 func _process(dt: float) -> void:
@@ -110,8 +121,8 @@ func _draw(h: float, curl: float) -> void:
 				var ang := base_ang + (us - 0.5) * span
 				var radial := Vector3(sin(ang), 0.0, cos(ang))
 				# (taller in the middle of its arc, a ragged crest)
-				var mid := 0.62 + 0.38 * cos((us - 0.5) * PI)
-				var rag := 1.0 + 0.1 * sin(us * 31.0 + _seed) * pr[pi_].y
+				var mid := maxf(pow(maxf(cos((us - 0.5) * PI), 0.0), 0.6), 0.06)      # (tapering to nothing at the arc's ends)
+				var rag := 1.0 + 0.06 * sin(us * 19.0 + _seed) * pr[pi_].y
 				var p := foot + radial * (_r + pr[pi_].x * thick) + Vector3.UP * (pr[pi_].y * h * mid * rag)
 				var nm := radial * nrm[pi_].x + Vector3.UP * nrm[pi_].y
 				corners.append([p, nm.normalized(), Vector2(us, float(pi_) / float(n - 1))])

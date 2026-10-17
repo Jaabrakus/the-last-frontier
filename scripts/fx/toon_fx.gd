@@ -192,7 +192,8 @@ static func mat(key: String) -> ShaderMaterial:
 			# (the Wave's body, WaveFx: the cel water with a white foam lip along its crest and a drawn line round it)
 			m.shader = SHADERS.water
 			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "lip_foam": 1.0, "flow": Vector2(0.0, -1.4), "nscale": Vector2(4.0, 1.2),
-					"foam": 0.8, "rim": 0.55}
+					"foam": 0.86, "rim": 0.82, "c_shade": Color(0.05, 0.28, 0.74, 0.96), "c_body": Color(0.1, 0.46, 0.95, 0.94),
+					"c_rim": Color(0.5, 0.82, 1.0, 0.96)}
 		"water_whip":
 			# (the ribbon trailing a water bolt: the water ribbon on a follow strip, its flecks quicker)
 			m.shader = SHADERS.water
