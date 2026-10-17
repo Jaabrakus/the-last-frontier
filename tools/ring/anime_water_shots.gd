@@ -24,12 +24,12 @@ const SHOTS := {
 	"gather_lash": {"key": 0, "mode": "", "fills": [0.2, 0.45, 0.7, 0.92], "full": [12], "after": [3, 8, 16, 30]},
 	"gather_geyser": {"key": 1, "mode": "spout", "fills": [0.25, 0.5, 0.75, 0.95], "full": [12], "after": [4, 12, 26, 45, 70]},
 	"splash": {"key": -1, "mode": "", "fills": [], "full": [], "after": [10, 18, 22, 24, 26, 28, 31, 35, 42]},
-	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "after": [30, 33, 35, 37, 39, 42, 46, 52], "cam": "hit"},
+	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
-	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "after": [26, 29, 31, 33, 35, 38, 42, 50], "cam": "hit"},
+	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 10, 18, 28, 40, 60]},
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
-	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "after": [30, 34, 37, 40, 43, 47, 52, 60], "cam": "hit"},
+	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32]},
@@ -232,6 +232,36 @@ func _strip() -> void:
 	frames.clear()
 
 
+## Hit shots: every tick after the release recorded, the moment the bolts are gone (the hit) found, and the frames at `rel` ticks
+## from it saved (m = before, p = after: m04, p00, p06).
+func _rel_frames(rel: Array) -> void:
+	var buf: Array[Image] = []
+	var hit := -1
+	var had := false
+	for i in 90:
+		await physics_frame
+		_film_tick()
+		var img: Image = view.get_texture().get_image()
+		img.convert(Image.FORMAT_RGB8)
+		buf.append(img)
+		var n_bolts := get_nodes_in_group(&"bend_bolts").size()
+		if n_bolts > 0:
+			had = true
+		elif had and hit < 0:
+			hit = i
+		if hit >= 0 and i >= hit + int(rel[rel.size() - 1]):
+			break
+	if hit < 0:
+		print("ANIME WATER no hit seen in %s" % shot)
+		hit = buf.size() / 2
+	for off: int in rel:
+		var j := clampi(hit + off, 0, buf.size() - 1)
+		var label := "%s%02d" % ["m" if off < 0 else "p", absi(off)]
+		buf[j].save_png(out.path_join("%s_%02d_%s_%s.png" % [shot, n, label, tag]))
+		frames.append(buf[j])
+		n += 1
+
+
 func _shot(name: String, d: Dictionary) -> void:
 	shot = name
 	n = 0
@@ -288,8 +318,10 @@ func _shot(name: String, d: Dictionary) -> void:
 		await _action(&"sprint")
 		await _ticks(2)
 		Input.action_release(&"move_back")
+	if d.has("rel"):
+		await _rel_frames(d.rel)
 	var t2 := 0
-	for k: int in d.after:
+	for k: int in d.get("after", []):
 		await _ticks(k - t2)
 		t2 = k
 		await _grab("after%02d" % k)
