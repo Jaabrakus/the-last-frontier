@@ -9,8 +9,10 @@ extends RefCounted
 ##              droplets; on a hit a splash crown, a ripple ring, droplets and foam, a wet mark
 ##   ice        a faceted crystal with a sweeping glint, a frost streak and sparkles; it shatters into spinning shards,
 ##              frost and sparkles, frost on the ground
-##   air        swirl bands spinning round a ball (a crescent for a slice), two speed lines corkscrewing behind; on a hit
-##              crescents spin out, speed lines, puffs, dust off the ground
+##   air        (the anime air, 2026-10-16: drawn swirl lines, flat white with an ink line; docs/bending_design.md "Air, drawn as
+##              2D animation") a ball of swirl bands round a flat white heart, a banked inked crescent for a slice, a wedge of
+##              crescents for a gust, crisp speed-line strokes behind them; on a hit crescents spin out, speed lines, flat
+##              inked puffs, pale dust off the ground
 ##   stone      the rock in cel facets, dust and grit behind it; chunks, dust puffs, a dust ring and cracks in the ground
 ##   lightning  forks with a white core in a blue sheath that flicker, sparks and a flash where it strikes; with SB_BOLT the
 ##              same forks in Spellbreak's lightning shading (a white-hot core, a lavender sheath, a blue-violet fringe that
