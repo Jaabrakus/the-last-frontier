@@ -100,6 +100,8 @@ const R2_GUARDS := {"catch": "earth", "redirect": "water", "parry": "fire", "air
 const WIND_GUARD_S := 0.8
 ## A Turn's swing round the guard's waist (s) and its radius (m).
 const TURN_FX := preload("res://scripts/bending/turn_fx.gd")
+## A puddle's drawn size as a share of its radius (round 2: smaller and irregular; only how it looks).
+const PUDDLE_LOOK_K := 0.72
 const SWING_S := 0.3
 const SWING_R := 1.0
 ## A Parry's and a Wind Guard's moon (_moon_back): one lap round the guard in this long (s), this far out (m).
@@ -452,8 +454,11 @@ func _look() -> void:
 		"puddle":
 			# (the anime pass: a flat cel disc of water, its rim rounded so the cel light turns it pale at the edge, a drawn line
 			# round it, flecks of foam; and a ripple running out of it now and then: _puddle_ripple)
-			var wet := _part(look, ToonFx.puddle_mesh(), ToonFx.mat("water_puddle"))
-			wet.scale = Vector3(radius, 1.0, radius)
+			# (round 2: drawn smaller than the zone's own radius, PUDDLE_LOOK_K of it, with an irregular outline of its own: one of
+			# four shapes by where it lies; the zone's radius, what it does and how long it stands are unchanged)
+			var wet := _part(look, ToonFx.puddle_mesh(absi(int(global_position.x * 13.0 + global_position.z * 7.0))), ToonFx.mat("water_puddle"))
+			wet.scale = Vector3(radius * PUDDLE_LOOK_K, 1.0, radius * PUDDLE_LOOK_K)
+			wet.rotation.y = float(absi(int(global_position.x * 31.0 + global_position.z * 17.0)) % 628) / 100.0
 			wet.position = Vector3.UP * 0.01
 			FxParams.put(wet, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_grow(look, Vector3(0.2, 1.0, 0.2))
@@ -613,7 +618,7 @@ func _physics_process(dt: float) -> void:
 			_ripple_t = 1.3
 			var pool := ToonFxPool.of(get_tree().current_scene)
 			if pool != null:
-				pool.play("ring", Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.05), 0.9, radius * 0.15, radius * 0.8,
+				pool.play("ripple", Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.05), 0.9, radius * 0.12, radius * 0.6,
 						BendLooks.FOAM, BendLooks.WATER)
 	if t >= life_s:
 		end("life")

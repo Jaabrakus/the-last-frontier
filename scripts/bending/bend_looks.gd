@@ -107,6 +107,27 @@ static func _pool() -> ToonFxPool:
 ## meet in a guard what goes back is made of both; BendZone): "pebbles" a fist of pebbles (air caught by earth), "shards" mini
 ## ice spears (air turned by water), "magma" or "mud" a ball of it (earth and fire, earth and water), "mud_spear" a spear of
 ## mud (a stone turned by water).
+## Round 2 (the anime pass; the owner: "make it look more avatar like"): from the player's camera behind the fighter a bolt reads
+## small, so its DRAWN look is BOLD times bolder (its hitbox, speed and damage are the spec's, unchanged); on its release frames it
+## is stretched along its velocity (SMEAR_K x for SMEAR_S s, then back over SMEAR_BACK_S), as a drawn bolt is smeared as it leaves.
+const BOLD := 1.4
+const SMEAR_K := 2.4
+const SMEAR_S := 0.04
+const SMEAR_BACK_S := 0.08
+
+
+## `mi`'s smear: its local -Z (the bolt's flight) stretched for a couple of frames after it is made, then eased back. Only in a
+## tree (a body held out of one is not smeared).
+static func _smear(mi: MeshInstance3D) -> void:
+	if mi == null or not mi.is_inside_tree():
+		return
+	var rest := mi.scale
+	mi.scale = Vector3(rest.x, rest.y, rest.z * SMEAR_K)
+	var tw := mi.create_tween()
+	tw.tween_interval(SMEAR_S)
+	tw.tween_property(mi, "scale", rest, SMEAR_BACK_S).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
 static func bolt_body(parent: Node3D, kind: String, r: float, long := false, shape := "ball") -> void:
 	if shape == "pebbles":
 		_pebbles_body(parent, r)
@@ -145,16 +166,18 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 			# (the anime pass, 2026-10-16: a drawn teardrop, its round head forward and its tail drawn out to a point behind it
 			# (the Lash's longer), a drawn line round it; the ribbon of its trail runs on from the tail)
 			var mi := _mesh(parent, ToonFx.drop_mesh(3.4 if long else 2.2), ToonFx.mat("water_bolt"))
-			mi.scale = Vector3.ONE * r * 1.15
+			mi.scale = Vector3.ONE * r * BOLD
 			mi.position = Vector3(0.0, 0.0, -r * 0.2)
+			_smear(mi)
 			FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_core(mi)
 			_shadow(parent, "water", r, Vector3(1.0, 1.0, 2.0 if long else 1.4), Vector3(0.0, 0.0, r * 0.35))
 		"ice":
 			var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, ToonFx.vis_rng.randi() % 4), ToonFx.mat("ice"))
 			var l := r * (11.0 if long else 5.5)
-			mi.scale = Vector3(r * 7.0, r * 7.0, l)
+			mi.scale = Vector3(r * 7.0 * 1.3, r * 7.0 * 1.3, l)
 			_core(mi)
+			_smear(mi)
 			_shadow(parent, "ice", r, Vector3(1.0, 1.0, l / maxf(r, 1e-3) * 0.3), Vector3(0.0, 0.0, -l * 0.15))
 			if live():
 				var g := _mesh(parent, ToonFx.quad(), ToonFx.mat("star_still"))
@@ -887,13 +910,11 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 		"water":
 			pool.shoot("drop", at, int(n * 1.3), d, spread, Vector2(speed * 0.6, speed * 1.8), Vector2(0.1, 0.2) * k,
 					0.75, Vector3(0, -14.0, 0), 0.5, {"r": 0.1 * k}.merged(occl))
-			pool.shoot("foam", at, int(n * 0.2), d, spread * 1.2, Vector2(speed * 0.2, speed * 0.6), Vector2(0.3, 0.6) * k,
-					0.5, Vector3.ZERO, 2.0, {"r": 0.15 * k}.merged(occl))
 			if not g.is_empty():
 				# (a crown of spikes rising and falling, a second one inside it a beat behind, a thin ring running out)
 				pool.play("crown", _flat(g), 0.55, 0.6 * k, 1.3 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.5, 1.0))
 				pool.play("crown", _flat(g), 0.42, 0.3 * k, 0.8 * k, FOAM, WATER, ToonFx.band_mesh(1.0, 1.3, 0.7))
-				pool.play("ring", _flat(g), 0.7, 0.3 * k, 1.9 * k, FOAM, Color(0.55, 0.85, 1.0))
+				pool.play("ripple", _flat(g), 0.7, 0.3 * k, 1.9 * k, FOAM, Color(0.55, 0.85, 1.0))
 				pool.mark("wet", g.pos, g.normal, 1.6 * k, 4.0)
 			else:
 				pool.play("flash", up, 0.14, 0.4 * k, 1.0 * k, WATER, FOAM)
@@ -1086,7 +1107,7 @@ static func blast(at: Vector3, dir: Vector3, deg: float, reach: float, kind: Str
 			pool.shoot("drop", at, n * 2, d, half, Vector2(v * 0.6, v * 1.1), Vector2(0.08, 0.16), 0.7, Vector3(0, -10, 0), damp * 0.7, opt)
 			pool.shoot("foam", at, n, d, half, Vector2(v * 0.5, v), Vector2(0.3, 0.6), 0.5, Vector3.ZERO, damp, opt)
 			if ring:
-				pool.play("ring", flat, 0.6, 0.5, reach, FOAM, WATER)
+				pool.play("ripple", flat, 0.6, 0.5, reach, FOAM, WATER)
 		"air":
 			pool.shoot("spark_line", at, n * 2, d, half, Vector2(v * 1.2, v * 1.8), Vector2(0.035, 0.05), 0.35, Vector3.ZERO, damp, opt)
 			pool.shoot("puff_air", at, n, d, half, Vector2(v * 0.5, v), Vector2(0.25, 0.5), 0.45, Vector3.ZERO, damp, opt)
@@ -1165,7 +1186,7 @@ static func wave_front(at: Vector3, dir: Vector3, deg: float, reach: float, mps:
 	w.span = deg_to_rad(clampf(deg, 20.0, 160.0))
 	w.reach = reach
 	w.mps = maxf(mps, 1.0)
-	w.tall = tall
+	w.tall = tall * BOLD                           # (round 2: drawn BOLD times taller from the player's camera; the cone's hits are the spec's)
 	pool.add_child(w)
 	pool.shoot("drop", at, 16, d, deg * 0.4, Vector2(4.0, 8.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -10, 0), 0.0)
 
@@ -1253,10 +1274,16 @@ static func rise(at: Vector3, size: Vector3, way: Vector3, matter := "earth") ->
 	pool.shoot("shard" if ice else "chunk", at + Vector3.UP * 0.2, 22 if ice else 16, Vector3.UP, 45.0, Vector2(2.0, 5.0),
 			Vector2(0.12, 0.3) if ice else Vector2(0.08, 0.2), 1.0, Vector3(0, -14, 0), 0.0,
 			{"box": Vector3(size.x * 0.5, 0.1, size.z * 0.5), "basis": b, "ang": 400.0})
+	if ice:
+		# (round 2: frost crackling white along the wall's whole foot where it meets the deck: one long sheet, a few metres of it
+		# in veins, wider than the wall is thick; its mark is toon_mark's frost, stretched along the wall)
+		var fb := Basis(x * (size.x * 0.58 + 0.3), Vector3.UP, x.cross(Vector3.UP) * (size.z * 0.5 + 0.7))
+		pool.play("mark_frost", Transform3D(fb, at + Vector3.UP * 0.02), 7.0, 1.0, 1.0)
+		return
 	var marks := maxi(1, int(size.x / 1.6))
 	for i in marks:
 		var off := (float(i) + 0.5) / marks - 0.5
-		pool.mark("frost" if ice else "cracks", at + x * off * size.x, Vector3.UP, 1.9, 7.0)
+		pool.mark("cracks", at + x * off * size.x, Vector3.UP, 1.9, 7.0)
 
 
 ## A wall breaking apart at `at` (its foot's middle), `size` (x across, y up, z through), facing `way`: an ice wall into
@@ -1716,9 +1743,8 @@ static func spout(at: Vector3, r: float, rise_s: float, up := Vector3.UP) -> voi
 	var pool := _pool()
 	if pool == null:
 		return
-	pool.shoot("drop", at, 14, Vector3.UP, 20.0, Vector2(1.5, 3.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -9.0, 0), 0.0,
+	pool.shoot("drop", at, 8, Vector3.UP, 20.0, Vector2(1.5, 3.0), Vector2(0.08, 0.16), 0.5, Vector3(0, -9.0, 0), 0.0,
 			{"r": r * 0.6})
-	pool.shoot("foam", at, 8, Vector3.UP, 30.0, Vector2(0.5, 1.2), Vector2(0.3, 0.5), 0.5, Vector3.ZERO, 1.0, {"r": r * 0.5})
 	var tree := pool.get_tree()
 	if tree == null:
 		return
@@ -1727,10 +1753,8 @@ static func spout(at: Vector3, r: float, rise_s: float, up := Vector3.UP) -> voi
 		if p2 == null:
 			return
 		# (up: its column's way, a leaning Geyser's tilt, BendEffects._spout_way)
-		p2.shoot("drop", at, 48, up, 12.0, Vector2(7.0, 13.0), Vector2(0.12, 0.24), 1.1, Vector3(0, -12.0, 0), 0.0,
+		p2.shoot("drop", at, 18, up, 12.0, Vector2(7.0, 13.0), Vector2(0.12, 0.24), 1.1, Vector3(0, -12.0, 0), 0.0,
 				{"r": r * 0.7})
-		p2.shoot("foam", at + up * 0.5, 22, up, 20.0, Vector2(3.0, 7.0), Vector2(0.4, 0.8), 0.8, Vector3(0, -4.0, 0),
-				1.0, {"r": r * 0.6})
 		p2.play("crown", Transform3D(Basis.IDENTITY, at + Vector3.UP * 0.05), 0.6, r * 0.6, r * 1.4, WATER, FOAM,
 				ToonFx.band_mesh(1.0, 1.5, 1.0)))
 
@@ -2196,7 +2220,7 @@ static func float_spear(body: Node3D, sway: Node = null, kind := "spear") -> Flo
 ## The Frontier spear's own model (ThrowableModels "spear", tools/models/spear.py) in ToonFx's ice crystal, its point along -Z,
 ## centred, `length` m from butt to tip and `thick` times its own girth (a real spear's shaft is a line at a fight's distance),
 ## a soft ice light on it (the Ice Spear's lance: the one that floated over the arm, flying). Under `parent`.
-const ICE_SPEAR_THICK := 3.0
+const ICE_SPEAR_THICK := 3.9
 static func ice_spear_model(parent: Node3D, length: float, thick := ICE_SPEAR_THICK) -> Node3D:
 	return ice_weapon_model(parent, "spear", length, thick)
 

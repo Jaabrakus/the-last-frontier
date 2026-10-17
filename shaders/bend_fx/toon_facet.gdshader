@@ -66,6 +66,7 @@ void fragment() {
 		float s = fract(dot(v_wpos, vec3(0.55, 0.9, 0.35)) * 0.7 - TIME * 0.9);
 		col = mix(col, vec3(2.2), glint * (1.0 - aastep(0.05, s)) * aastep(0.0, d + 0.2));
 	}
-	col = mix(col, c_ink, max(ink, outline) * aastep(0.8, fres));
+	float ow = clamp(2.0 * fwidth(fres), 0.2, 0.5);      // (the outline, never under 2 pixels)
+	col = mix(col, c_ink, max(ink, outline) * aastep(1.0 - ow, fres));
 	ALBEDO = (col * glow) * fx_gain;
 }

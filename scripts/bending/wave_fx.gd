@@ -69,7 +69,8 @@ func _process(dt: float) -> void:
 	if moving:
 		_r = minf(R0 + mps * _t, reach)
 		var prog := clampf((_r - R0) / maxf(reach - R0, 0.1), 0.0, 1.0)
-		var h := tall * smoothstep(0.0, GROW_S, _t) * (0.82 + 0.18 * sin(PI * prog))
+		var away := smoothstep(0.0, 1.0, (_r - R0) / 1.3)          # (round 2: tall only once it is away from the caster: it never hides him)
+		var h := tall * smoothstep(0.0, GROW_S, _t) * away * (0.82 + 0.18 * sin(PI * prog))
 		_draw(h, lerpf(0.15, 0.7, prog))
 		_spray_t -= dt
 		if _spray_t <= 0.0:

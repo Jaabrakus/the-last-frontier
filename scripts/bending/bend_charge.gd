@@ -106,6 +106,8 @@ var _drops: GPUParticles3D
 var _head := Vector3.ZERO
 var _ring_t := 0.0
 var _t12 := 0.0
+## Water: this frame's time step (the ribbons' springs).
+var _dt := 0.016
 ## Water: whether it gathers on the deck where it will rise now (the Geyser's), and that place.
 var _deck := false
 var _spot := Vector3.ZERO
@@ -503,7 +505,9 @@ func _build_water() -> void:
 ## Bending.POOLS), else the tank under the deck's lip, else a pool at his feet. The point the ribbon leaves the water at.
 func _water_source() -> Vector3:
 	var c := _center()
+	var fwd := _forward()
 	var best := INF
+	var best_d := INF
 	var at := Vector3.INF
 	for n in get_tree().get_nodes_in_group(Bending.POOLS):
 		var n3 := n as Node3D
@@ -511,12 +515,17 @@ func _water_source() -> Vector3:
 			continue
 		if n3 is BendZone and (n3 as BendZone).owner_node != body:
 			continue                              # (another's puddle is not his water)
-		var d := Vector2(n3.global_position.x - c.x, n3.global_position.z - c.z).length()
-		if d < best:
-			best = d
+		var to := Vector3(n3.global_position.x - c.x, 0.0, n3.global_position.z - c.z)
+		var d := to.length()
+		# (round 2: from the player's camera, behind him, a ribbon drawn from a grate at his back is hidden by his body: one before him
+		# is favoured, by up to ahead_m metres of the way)
+		var score := d - _wf("ahead_m", 3.5) * clampf(to.normalized().dot(fwd), 0.0, 1.0) if d > 0.01 else d
+		if score < best:
+			best = score
+			best_d = d
 			at = n3.global_position
-	if at != Vector3.INF and best <= _wf("source_m", 9.0):
-		return at + Vector3.DOWN * (SOURCE_DROP if not (best < 0.01) else 0.0)
+	if at != Vector3.INF and best_d <= _wf("source_m", 9.0):
+		return at + Vector3.DOWN * (SOURCE_DROP if not (best_d < 0.01) else 0.0)
 	var ra := RingArena.find(get_tree())
 	if ra != null:
 		var lip: Dictionary = ra.nearest_lip(c)
@@ -617,6 +626,25 @@ func _rib_share(i: int, l: String, ch: float) -> float:
 	return 1.0 if l == "both" else (1.0 - ch) * _wf("other_hand", 0.7)
 
 
+## Ribbon `r`'s hand end trailing `target` (the hand) on a spring (round 2, the style doc: the water lags the hand about 0.1 s and
+## overshoots when it stops): returns how far it is from the hand now, at most `lag_max_m`.
+func _lag(r: Dictionary, target: Vector3) -> Vector3:
+	var p: Vector3 = r.get("lag_p", target)
+	var v: Vector3 = r.get("lag_v", Vector3.ZERO)
+	var w := _wf("lag_omega", 14.0)
+	var z := _wf("lag_zeta", 0.6)
+	var steps := maxi(1, ceili(_dt / 0.008))
+	var h := _dt / float(steps)
+	for i in steps:
+		v += ((target - p) * w * w - v * 2.0 * z * w) * h
+		p += v * h
+	r.lag_p = p
+	r.lag_v = v
+	var off := p - target
+	var cap := _wf("lag_max_m", 0.5)
+	return off.limit_length(cap)
+
+
 ## `pts` (tail first) cut to its first `frac` of its length, then reversed: head first (what ToonRibbon.lay_path takes).
 static func _cut_head_first(pts: PackedVector3Array, frac: float) -> PackedVector3Array:
 	var n := pts.size()
@@ -681,7 +709,8 @@ func _hand_pts(r: Dictionary, i: int, k: float, ch: float, l: String) -> PackedV
 	var orb := _w2("orbit_r", Vector2(1.05, 0.6))
 	var ro := lerpf(orb.x, orb.y, k)
 	var p1 := _src + to_c * 0.3 + Vector3.UP * (_wf("arch_m", 1.0) * lerpf(1.0, 0.7, ch) + 0.1 * dist)
-	var p2 := c + Vector3(cos(th) * ro, lerpf(0.55, 1.25, k) + 0.3 * sin(th * 0.7 + float(r.phase)), sin(th) * ro)
+	var oh := _w2("orbit_h", Vector2(0.55, 1.25))
+	var p2 := c + Vector3(cos(th) * ro, lerpf(oh.x, oh.y, k) + 0.3 * sin(th * 0.7 + float(r.phase)), sin(th) * ro)
 	p2 = p2.lerp(h + Vector3.UP * 0.3 + (h - c) * 0.25, ch)
 	var n := clampi(int(dist / 0.45) + 12, 14, 30)
 	var pts := PackedVector3Array()
@@ -696,6 +725,12 @@ func _hand_pts(r: Dictionary, i: int, k: float, ch: float, l: String) -> PackedV
 	for j in range(1, cn + 1):
 		var f := float(j) / float(cn)
 		pts.append(_coil(seg, 1.05 - cover * f, _t * 6.0 + f * turns * TAU + float(r.phase), cr))
+	# (the drag: the water trails the hand, most at the hand end, none at the source)
+	var off := _lag(r, h)
+	var total := pts.size()
+	for j in total:
+		var sj := float(mini(j, n)) / float(n)
+		pts[j] += off * pow(sj, 1.5)
 	return pts
 
 
@@ -742,6 +777,7 @@ func _deck_pts(r: Dictionary, k: float, ch: float) -> PackedVector3Array:
 
 
 func _water(dt: float) -> void:
+	_dt = dt
 	var step_hz := _wf("step_hz", 12.0)
 	_t12 = floorf(_t * step_hz) / step_hz
 	var k := minf(_level(), 1.0)
@@ -786,11 +822,8 @@ func _water(dt: float) -> void:
 		_ring_t = _wf("ring_every_s", 0.34)
 		var pool := ToonFxPool.of(get_tree().current_scene)
 		if pool != null:
-			var cm := _w2("crown_m", Vector2(0.22, 0.4))
 			var at := Vector3(_src.x, _src.y + SOURCE_DROP + 0.03, _src.z)
-			pool.play("crown", Transform3D(Basis.IDENTITY, at), 0.4, lerpf(cm.x, cm.y, k) * 0.7, lerpf(cm.x, cm.y, k) * 1.15,
-					BendLooks.WATER, BendLooks.FOAM, ToonFx.band_mesh(1.0, 1.4, 0.8))
-			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.55, 0.12, lerpf(0.35, 0.6, k), BendLooks.FOAM, BendLooks.WATER)
+			pool.play("ripple", Transform3D(Basis.IDENTITY, at), 0.55, 0.12, lerpf(0.4, 0.75, k), BendLooks.FOAM, BendLooks.WATER)
 	if _deck and ending == "":
 		_fissure_step()
 

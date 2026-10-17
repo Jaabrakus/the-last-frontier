@@ -9,7 +9,12 @@ shader_type spatial;
 //           (`outline`). UV.x metres along it from the head, UV2.y its share head (0) to tail (1); its vertex colour's red tears
 //           it away (ToonRibbon.fade: 1 whole).
 //           The gather drawn from a grate to the hands (BendCharge), the Lash's body, a Turn's swing.
+//   mode 3  a puddle on the deck (round 2): UV.x round it, UV.y 0 at its middle to 1 at its irregular edge: a dark wet sheen,
+//           lighter water in broken patches, a few highlights, a broken white rim; never rings
 // `flow` scrolls the foam (UV per s); `fade` (instance) eats it away from its thin places.
+// Round 2 (the anime pass): every shape change steps `step_hz` (12) times a second, on twos, as a drawn effect does while its
+// position moves smoothly; a strip is never narrower than `min_px` pixels each side of its middle and its outline never thinner
+// than `outline_px` pixels, at any distance (the player's camera sees these small).
 // Round 4 (LOOKS): `range_on` (instance, a bolt's head) grows it with its distance from the camera (fx_common range_scale);
 // thinned near the camera (near_cut).
 render_mode unshaded, blend_mix, depth_draw_always, cull_back, shadows_disabled, fog_disabled, skip_vertex_transform;
@@ -31,6 +36,9 @@ uniform float rim = 0.52;
 uniform float wobble = 0.0;
 uniform float alpha_mul = 1.0;
 uniform float outline = 0.0;
+uniform float outline_px = 2.0;
+uniform float min_px = 3.0;
+uniform float step_hz = 12.0;
 uniform float lip_foam = 0.0;   // (mode 0: a wave's crest, UV.y its lip: white foam along it)
 uniform float gloss = 0.64;
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
@@ -51,6 +59,7 @@ instance uniform float range_on = 0.0;
 
 varying vec3 v_side;
 varying vec3 v_wpos;
+varying float v_wpx;     // (a strip: its whole width in pixels)
 
 void vertex() {
 	vec3 cam = CAMERA_POSITION_WORLD;
@@ -58,7 +67,8 @@ void vertex() {
 	if (mode == 0) {
 		vec3 nv = VERTEX;
 		if (wobble > 0.0) {
-			float s = textureLod(noise, UV * 1.5 + vec2(TIME * 0.21, TIME * 0.13) + seed, 0.0).r;
+			float tv = floor(TIME * step_hz) / step_hz;
+			float s = textureLod(noise, UV * 1.5 + vec2(tv * 0.21, tv * 0.13) + seed, 0.0).r;
 			nv += NORMAL * (s - 0.5) * 2.0 * wobble;
 		}
 		if (range_on > 0.5) {
@@ -70,7 +80,10 @@ void vertex() {
 	} else {
 		vec3 c = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 		vec3 along = (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz;
-		w = strip_point(c, along, UV2.x, UV.y, cam);
+		float px_w = max(length(cam - c) * 2.0 / (PROJECTION_MATRIX[1][1] * VIEWPORT_SIZE.y), 1e-5);   // (a pixel's width here, m)
+		float hw = max(UV2.x, min_px * px_w);
+		v_wpx = 2.0 * hw / px_w;
+		w = strip_point(c, along, hw, UV.y, cam);
 		v_side = normalize((VIEW_MATRIX * vec4(w - c + vec3(1e-6), 0.0)).xyz);
 		NORMAL = vec3(0.0, 0.0, 1.0);
 	}
@@ -80,23 +93,39 @@ void vertex() {
 }
 
 void fragment() {
-	if (mode == 2) {
+	float tw = floor(TIME * step_hz) / step_hz;
+	if (mode == 3) {
+		float rr = UV.y;
+		vec2 pp = vec2(cos(UV.x * 6.28318), sin(UV.x * 6.28318)) * rr;
+		float n = texture(noise, pp * 0.9 + vec2(seed)).r;
+		float n2 = texture(noise, pp * 2.1 + vec2(seed * 1.3, 0.4)).r;
+		vec4 col = c_shade;                                                // the dark wet sheen
+		col = mix(col, c_body, aastep(0.56, n));                            // lighter water in broken patches
+		col = mix(col, c_rim, aastep(0.74, n2) * aastep(0.18, rr) * (1.0 - aastep(0.78, rr)));   // a few highlights
+		float band = aastep(0.8 + (n2 - 0.5) * 0.14, rr);                  // the rim, broken
+		col = mix(col, c_foam, band * aastep(0.4, n2 + (n - 0.5) * 0.5));
+		col.rgb = mix(col.rgb, c_ink, outline * aastep(0.955, rr));         // a thin dark edge
+		ALBEDO = col.rgb * fx_gain;
+		ALPHA = col.a * alpha_mul * near_fade(length(VERTEX)) * own_fade;
+	} else if (mode == 2) {
 		float across = UV.y;
 		float e = 1.0 - abs(across * 2.0 - 1.0);              // 0 at either edge, 1 along the middle
 		float share = UV2.y;
 		float along = UV.x;
 		float n = texture(noise, vec2(along * nscale.x * 0.35 + seed, across * nscale.y * 0.5 + seed * 0.7)).r;
-		float n2 = texture(noise, vec2(along * 0.9 + flow.x * TIME * 0.35 + seed * 1.7, across * 1.7 + seed)).r;   // (flecks run toward the head)
+		float n2 = texture(noise, vec2(along * 0.9 + flow.x * tw * 0.35 + seed * 1.7, across * 1.7 + seed)).r;   // (flecks run toward the head)
 		// the shade along one edge, the body, the gloss streak
 		vec4 col = c_shade;
 		col = mix(col, c_body, aastep(0.3, across + (n - 0.5) * 0.16));
-		col = mix(col, c_rim, 1.0 - aastep(0.08, abs(across - gloss + (n - 0.5) * 0.1)));
+		col = mix(col, c_rim, aastep(gloss - 0.14, across + (n - 0.5) * 0.1) * (1.0 - aastep(gloss + 0.1, across)));   // a lighter band along the top
 		// white flecks running down the lit half
 		float fleck = aastep(0.66, n2) * aastep(0.42, across) * (1.0 - aastep(0.88, across));
 		col = mix(col, c_foam, fleck);
 		// the torn foam at both edges, and the drawn line outside it
 		col = mix(col, c_foam, 1.0 - aastep(0.12 + (n - 0.5) * 0.1, e));
-		col.rgb = mix(col.rgb, c_ink, outline * (1.0 - aastep(0.045, e)));
+		col = mix(col, c_foam, 1.0 - aastep(0.05 + n * 0.04, share));      // white at the leading edge
+		float ow = clamp(outline_px / max(v_wpx * 0.5, 1.0), 0.045, 0.45);   // (the outline, never under outline_px pixels)
+		col.rgb = mix(col.rgb, c_ink, outline * (1.0 - aastep(ow, e)));
 		// torn away as it is let go (fade), and ragged at its tail
 		float keep = e * 0.5 + 0.5 - (1.0 - COLOR.r) * (1.0 + n * 0.8) - smoothstep(0.92, 1.0, share) * (0.4 + n * 0.5);
 		float ar = aastep(0.0, keep);
@@ -111,9 +140,9 @@ void fragment() {
 		float a = UV.y * 2.0 - 1.0;
 		N = normalize(v_side * a + vec3(0.0, 0.0, 1.0) * sqrt(max(1.0 - a * a, 0.0)));
 	}
-	vec2 fuv = UV * nscale + flow * TIME + vec2(seed);
+	vec2 fuv = UV * nscale + flow * tw + vec2(seed);
 	float n = texture(noise, fuv).r;
-	float n2 = texture(noise, fuv * 2.3 + vec2(0.5, 0.1) - flow * TIME * 0.4).r;
+	float n2 = texture(noise, fuv * 2.3 + vec2(0.5, 0.1) - flow * tw * 0.4).r;
 	float fres = 1.0 - clamp(dot(N, VIEW), 0.0, 1.0);
 	vec3 L = cel_light(VIEW_MATRIX);
 	float d = dot(N, L) + (n - 0.5) * 0.3;
@@ -129,7 +158,8 @@ void fragment() {
 	col = mix(col, c_foam, aastep(foam, fm));
 	vec3 H = normalize(L + VIEW);
 	col = mix(col, vec4(1.0), aastep(0.93, dot(N, H)));
-	col.rgb = mix(col.rgb, c_ink, max(ink, outline) * aastep(0.8, fres));
+	float ow = clamp(outline_px * fwidth(fres), 0.2, 0.5);              // (the outline, never under outline_px pixels)
+	col.rgb = mix(col.rgb, c_ink, max(ink, outline) * aastep(1.0 - ow, fres));
 	float keep = fm + 0.35 - (1.0 - fade) * 1.4;
 	if (mode == 1) {
 		keep -= smoothstep(0.55, 1.0, UV.x) * 0.9;

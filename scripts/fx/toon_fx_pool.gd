@@ -167,7 +167,7 @@ func _shape(key: String, mesh: Mesh) -> MeshInstance3D:
 			return mi
 	if list.size() < cap:
 		var mi := MeshInstance3D.new()
-		mi.mesh = mesh if mesh != null else (ToonFx.plane() if key == "ring" or key.begins_with("mark") else ToonFx.quad())
+		mi.mesh = mesh if mesh != null else (ToonFx.plane() if key == "ring" or key == "ripple" or key.begins_with("mark") else ToonFx.quad())
 		mi.material_override = ToonFx.mat(key)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.extra_cull_margin = 2.0

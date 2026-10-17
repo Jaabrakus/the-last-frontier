@@ -1392,10 +1392,10 @@ static func ice_wall(c: Variant, flat: Vector3, spec := {}) -> FormRaised:
 static func _ice_look(r: FormRaised) -> void:
 	if r == null or r.mesh_instance == null or r.kind != "wall":
 		return
-	r.mesh_instance.mesh = FormModels.wall_mesh(r.size.x, r.size.y, r.size.z, absi(hash(r.base.origin)) % 97, FormModels.BURY_M, "ice")
-	# (the Ice Spear's crystal: flat facets in three blues and a light rim, still ice on its shaded side, where the matter's
-	# look went slate)
-	r.mesh_instance.material_override = ToonFx.mat("ice")
+	# (round 2, the anime pass: a slab of crystal columns you can see through, pale blue facets with white edges, a deep blue
+	# outline and white frost crackling over its foot (ToonFx.ice_slab_mesh, the "ice_wall" material); its collider is the box)
+	r.mesh_instance.mesh = ToonFx.ice_slab_mesh(r.size.x, r.size.y, r.size.z, absi(hash(r.base.origin)) % 97, FormModels.BURY_M)
+	r.mesh_instance.material_override = ToonFx.mat("ice_wall")
 
 
 static func freeze_water(c: Variant, at: Vector3, flat: Vector3) -> void:

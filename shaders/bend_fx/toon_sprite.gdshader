@@ -4,6 +4,8 @@ shader_type spatial;
 //   mode 1  ring: a flat ring on its local XZ plane that runs out and thins (a shock ring, a ripple, a dust ring)
 //   mode 2  crown: a band (ToonFx.band_mesh) whose torn top rises and drops (a splash crown)
 //   mode 3  swirl: two crescents facing the camera that spin out (air)
+//   mode 5  ripple: three short arcs of a ring that run out and thin (a ripple on water or a wet deck: never a whole circle, so
+//           it reads as a ripple and not as a marker; round 2 of the anime pass)
 //   mode 4  orb: a lasting ball of fire facing the camera, banded from a white heart, its edge boiling (a fireball's core)
 // Round 4 (LOOKS): `range_on` (instance, a bolt's core orb) grows it with its distance from the camera (fx_common
 // range_scale); thinned near the camera (near_cut).
@@ -87,6 +89,14 @@ void fragment() {
 		float top = (0.35 + 0.65 * n2) * rise;
 		v = (top - UV.y) / max(top, 1e-3) - t * 0.25;
 		col = mix(tint.rgb, tint2.rgb, aastep(0.0, 0.32 - v));
+	} else if (mode == 5) {
+		float e = 1.0 - pow(1.0 - t, 2.2);
+		float centre = mix(0.15, 0.92, e);
+		float hw = mix(0.13, 0.02, t) * (0.7 + 0.6 * n);
+		float arc = sin(ang * 3.0 + seed * 6.0) + (n - 0.5) * 0.5;
+		v = (hw - abs(r - centre)) / max(hw, 1e-3);
+		v = arc < 0.4 ? -1.0 : v;
+		col = mix(tint.rgb, tint2.rgb, aastep(0.0, r - centre));
 	} else if (mode == 4) {
 		float b = texture(noise, vec2(ang / 6.28318 * 2.0 + seed, TIME * 0.9)).r;
 		float b2 = texture(noise, UV * 1.3 + vec2(seed, -TIME * 1.7)).r;

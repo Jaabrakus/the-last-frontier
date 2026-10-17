@@ -11,7 +11,7 @@ extends Node3D
 const SHOOT_S := 0.1
 const HOLD_S := 0.45
 const SINK_S := 0.4
-const SPIKE_N := 7
+const SPIKE_N := 5
 
 var foot := Vector3.ZERO
 var dir := Vector3.UP
@@ -41,14 +41,15 @@ func _ready() -> void:
 	# ribbons spiralling up it, a torn crown of foam at its top)
 	_col = _column(radius, "water_column")
 	_core = _column(radius * 0.62, "water_column_core")
+	# (round 2: ONE clear white crown at the top, torn spikes standing round the column's head)
 	_crown = MeshInstance3D.new()
-	_crown.mesh = ToonFx.band_mesh(1.0, 1.55, 0.9)
+	_crown.mesh = ToonFx.band_mesh(1.0, 1.7, 1.1)
 	_crown.material_override = ToonFx.mat("crown")
 	_crown.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_crown)
 	FxParams.put(_crown, &"t", 0.3)
-	FxParams.put(_crown, &"tint", BendLooks.WATER)
-	FxParams.put(_crown, &"tint2", BendLooks.FOAM)
+	FxParams.put(_crown, &"tint", Color(0.82, 0.94, 1.0))
+	FxParams.put(_crown, &"tint2", Color(1.0, 1.0, 1.0))
 	FxParams.put(_crown, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	for i in 2:
 		var rb := ToonRibbon.new()
@@ -71,7 +72,7 @@ func _ready() -> void:
 			_spikes.append(mi)
 			_lean.append(out)
 		BendLooks.mark_at("cracks", global_position, Vector3.UP, radius * 3.2 + 0.6, rise_s + HOLD_S + 1.6)
-		var dust := BendLooks.emitter(self, "dust", Vector3(radius + 0.4, 0.1, radius + 0.4), 24, 0.7, 0.9, 0.45)
+		var dust := BendLooks.emitter(self, "dust", Vector3(radius + 0.4, 0.1, radius + 0.4), 8, 0.7, 0.9, 0.4)
 		if dust != null:
 			dust.global_basis = Basis.IDENTITY
 	_shape(0.0, 1.0)
@@ -94,7 +95,7 @@ func _shape(h: float, w: float) -> void:
 		m.scale = Vector3(w, hh, w)
 		m.visible = h > 0.01
 	_crown.position = Vector3(0.0, length * h, 0.0)
-	_crown.scale = Vector3.ONE * radius * clampf(w, 0.3, 1.6) * 1.2
+	_crown.scale = Vector3.ONE * radius * clampf(w, 0.3, 1.6) * 1.55
 	_crown.visible = h > 0.04
 	_spiral(h, w)
 
@@ -114,7 +115,7 @@ func _spiral(h: float, w: float) -> void:
 			var rr := radius * w * 1.1
 			pts.append(global_transform * Vector3(cos(a) * rr, y, sin(a) * rr))
 		_ribs[i].fade = 1.0
-		_ribs[i].lay_path(pts, 0.085, 0.085, 0.06)
+		_ribs[i].lay_path(pts, 0.13, 0.13, 0.06)
 
 
 func _process(dt: float) -> void:
@@ -158,8 +159,7 @@ func _process(dt: float) -> void:
 func _burst_fx() -> void:
 	var scn := get_tree().current_scene if is_inside_tree() else null
 	if scn != null and crack:
-		GatherFx.stone_chips(scn, global_position + Vector3.UP * 0.1, Vector3.UP, 14)
-		BendLooks.burst(global_position + Vector3.UP * 0.15, "stone", 12, Vector3.UP, 60.0, 4.0, 0.3)
-	BendLooks.burst(global_position + global_basis.y * 0.3, "water", 18, global_basis.y, 45.0, 6.0, 0.35)
-	BendLooks.burst(global_position + global_basis.y * length, "water", 22, global_basis.y, 60.0, 4.5, 0.4)
+		GatherFx.stone_chips(scn, global_position + Vector3.UP * 0.1, Vector3.UP, 6)
+		BendLooks.burst(global_position + Vector3.UP * 0.15, "stone", 4, Vector3.UP, 60.0, 4.0, 0.3)
+	BendLooks.burst(global_position + global_basis.y * 0.3, "water", 10, global_basis.y, 45.0, 6.0, 0.35)
 	BendLooks.sound("water", "cast", global_position, 0.0)

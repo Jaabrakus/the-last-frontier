@@ -21,6 +21,7 @@ const SHADERS := {
 	"water": preload("res://shaders/bend_fx/toon_water.gdshader"),
 	"wind": preload("res://shaders/bend_fx/toon_wind.gdshader"),
 	"facet": preload("res://shaders/bend_fx/toon_facet.gdshader"),
+	"ice_slab": preload("res://shaders/bend_fx/toon_ice_slab.gdshader"),
 	"bolt": preload("res://shaders/bend_fx/toon_bolt.gdshader"),
 	"sprite": preload("res://shaders/bend_fx/toon_sprite.gdshader"),
 	"mark": preload("res://shaders/bend_fx/toon_mark.gdshader"),
@@ -191,9 +192,11 @@ static func mat(key: String) -> ShaderMaterial:
 		"water_column":
 			# (the Geyser's column, GeyserFx: the cel water, a drawn line round it, foam flecks running up it)
 			m.shader = SHADERS.water
-			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "flow": Vector2(0.0, -2.8), "nscale": Vector2(0.8, 0.55), "foam": 0.74,
-					"rim": 0.8, "c_shade": Color(0.06, 0.32, 0.8, 0.96), "c_body": Color(0.14, 0.52, 0.97, 0.94),
-					"c_rim": Color(0.6, 0.88, 1.0, 0.96)}
+			# (round 2: a clean silhouette, long white streaks running up it, a flat blue body: nscale stretched up the column,
+			# few flecks)
+			p = {"mode": 0, "wobble": 0.0, "outline": 1.0, "flow": Vector2(0.0, -2.4), "nscale": Vector2(1.5, 0.16), "foam": 0.88,
+					"rim": 0.8, "c_shade": Color(0.06, 0.32, 0.8, 0.97), "c_body": Color(0.14, 0.52, 0.97, 0.96),
+					"c_rim": Color(0.6, 0.88, 1.0, 0.97)}
 		"water_column_core":
 			# (the paler heart of it)
 			m.shader = SHADERS.water
@@ -201,11 +204,11 @@ static func mat(key: String) -> ShaderMaterial:
 					"rim": 0.9, "c_shade": Color(0.45, 0.78, 1.0, 0.9), "c_body": Color(0.7, 0.92, 1.0, 0.9),
 					"c_rim": Color(0.92, 0.99, 1.0, 0.92)}
 		"water_puddle":
-			# (a puddle left on the deck, the anime pass: a flat cel disc, a drawn line round its rim, a few flecks of foam)
+			# (round 2: a puddle on the deck as a drawn one: a dark wet sheen, lighter water in broken patches, a broken white rim, an
+			# irregular outline (ToonFx.puddle_mesh); never rings)
 			m.shader = SHADERS.water
-			p = {"mode": 0, "wobble": 0.0, "outline": 0.0, "lip_foam": 1.0, "flow": Vector2(0.1, 0.06), "nscale": Vector2(1.3, 1.3),
-					"foam": 0.8, "rim": 0.97, "alpha_mul": 0.95, "c_shade": Color(0.12, 0.46, 0.92, 0.94), "c_body": Color(0.28, 0.66, 1.0, 0.92),
-					"c_rim": Color(0.7, 0.92, 1.0, 0.95)}
+			p = {"mode": 3, "outline": 1.0, "alpha_mul": 1.0, "c_shade": Color(0.04, 0.2, 0.52, 0.8), "c_body": Color(0.14, 0.46, 0.88, 0.74),
+					"c_rim": Color(0.62, 0.88, 1.0, 0.86), "c_foam": Color(0.96, 1.0, 1.0, 0.95), "c_ink": Color(0.03, 0.14, 0.36)}
 		"water_crest":
 			# (the Wave's body, WaveFx: the cel water with a white foam lip along its crest and a drawn line round it)
 			m.shader = SHADERS.water
@@ -323,6 +326,14 @@ static func mat(key: String) -> ShaderMaterial:
 		"crown":
 			m.shader = SHADERS.sprite
 			p = {"mode": 2}
+		"ripple":
+			# (round 2: a ripple as three short arcs of a ring, never a whole circle: ToonFxPool.play "ripple")
+			m.shader = SHADERS.sprite
+			p = {"mode": 5}
+		"ice_wall":
+			# (the Ice Wall's slab, round 2: pale blue facets you can see through, white edges, a deep blue outline, frost at its foot)
+			m.shader = SHADERS.ice_slab
+			p = {}
 		"swirl":
 			m.shader = SHADERS.sprite
 			p = {"mode": 3}
@@ -347,7 +358,7 @@ static func mat(key: String) -> ShaderMaterial:
 	m.set_shader_parameter(&"range_max", float(rg.get("max", 2.2)))
 	for k in p:
 		m.set_shader_parameter(k, p[k])
-	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke, SHADERS.facet]:
+	if m.shader in [SHADERS.flame, SHADERS.puff, SHADERS.water, SHADERS.wind, SHADERS.sprite, SHADERS.mark, SHADERS.smoke, SHADERS.facet, SHADERS.ice_slab]:
 		m.set_shader_parameter(&"noise", noise())
 	m.set_shader_parameter(&"ink", 1.0 if s == "ink" else 0.0)
 	m.set_shader_parameter(&"fx_gain", gain)
@@ -452,37 +463,111 @@ static func sphere(segs := 18) -> Mesh:
 		return s)
 
 
-## A flat puddle of radius 1 lying on the deck (the anime pass): a level top, its rim sloping down to the deck. UV.y is 0 at its
-## middle, 0.44 where the rim begins and 0.58 at its edge (the water shader's lip foam draws the white rim there).
-static func puddle_mesh(sides := 28) -> Mesh:
-	return _cached("puddle_%d" % sides, func() -> Mesh:
+## A flat puddle lying on the deck (round 2): an irregular outline (its radius swells and shrinks round it, never a circle), `variant`
+## 0..3 each its own shape; radius about 1. UV.x round it (0..1), UV.y 0 at its middle to 1 at its edge (ToonFx "water_puddle").
+static func puddle_mesh(variant := 0) -> Mesh:
+	var vi := posmod(variant, 4)
+	return _cached("puddle_%d" % vi, func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7001 + vi * 977
+		var sides := 40
+		var rings := 4
+		var ph := [rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU]
+		var amp := [rng.randf_range(0.16, 0.24), rng.randf_range(0.09, 0.15), rng.randf_range(0.04, 0.08)]
+		var squash := rng.randf_range(0.78, 0.92)             # (longer one way than the other)
+		var edge := func(a: float) -> float:
+			return 1.0 + amp[0] * sin(a * 2.0 + ph[0]) + amp[1] * sin(a * 3.0 + ph[1]) + amp[2] * sin(a * 7.0 + ph[2])
+		var pt := func(j: int, k: int) -> Vector3:
+			var a := TAU * float(j) / float(sides)
+			var r: float = float(edge.call(a)) * float(k) / float(rings)
+			return Vector3(cos(a) * r, 0.016, sin(a) * r * squash)
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var a_r := 0.93
 		for j in sides:
-			var a0 := TAU * float(j) / float(sides)
-			var a1 := TAU * float(j + 1) / float(sides)
-			var d0 := Vector3(cos(a0), 0.0, sin(a0))
-			var d1 := Vector3(cos(a1), 0.0, sin(a1))
-			var u0 := float(j) / sides * 4.0
-			var u1 := float(j + 1) / sides * 4.0
-			var tris := [
-				[Vector3(0.0, 0.016, 0.0), Vector3.UP, Vector2(u0, 0.0), d0 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u0, 0.44),
-						d1 * a_r + Vector3.UP * 0.016, Vector3.UP, Vector2(u1, 0.44)],
-				[d0 * a_r + Vector3.UP * 0.016, (d0 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u0, 0.44), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
-						Vector2(u0, 0.58), d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.44)],
-				[d1 * a_r + Vector3.UP * 0.016, (d1 * 0.5 + Vector3.UP * 0.85).normalized(), Vector2(u1, 0.44), d0, (d0 * 0.7 + Vector3.UP * 0.7).normalized(),
-						Vector2(u0, 0.58), d1, (d1 * 0.7 + Vector3.UP * 0.7).normalized(), Vector2(u1, 0.58)]]
-			for t: Array in tris:
-				var v: Array[Vector3] = [t[0], t[3], t[6]]
-				var order := [0, 1, 2]
-				# (front faces wind clockwise seen from outside, above here: the cross points down)
-				if (v[1] - v[0]).cross(v[2] - v[0]).y > 0.0:
-					order = [0, 2, 1]
+			for k in rings:
+				var q := [pt.call(j, k), pt.call(j + 1, k), pt.call(j, k + 1), pt.call(j + 1, k + 1)]
+				var uv := [Vector2(float(j) / sides, float(k) / rings), Vector2(float(j + 1) / sides, float(k) / rings),
+						Vector2(float(j) / sides, float(k + 1) / rings), Vector2(float(j + 1) / sides, float(k + 1) / rings)]
+				for tri: Array in [[0, 2, 1], [1, 2, 3]]:
+					var a: Vector3 = q[tri[0]]
+					var b: Vector3 = q[tri[1]]
+					var c: Vector3 = q[tri[2]]
+					if (b - a).cross(c - a).length_squared() < 1e-12:
+						continue
+					var order: Array = tri
+					# (front faces wind clockwise seen from outside, above here: the cross points down)
+					if (b - a).cross(c - a).y > 0.0:
+						order = [tri[0], tri[2], tri[1]]
+					for kk in order:
+						st.set_normal(Vector3.UP)
+						st.set_uv(uv[kk])
+						st.add_vertex(q[kk])
+		return st.commit())
+
+
+## The Ice Wall's slab (round 2): crystal columns side by side along its width, each its own height, a chiselled point on top, a
+## little wider at the foot, sunk `bury` m into the deck; every face flat. UV a face's coordinates (a quad's u, v; a triangle's
+## two barycentric ones), UV2.x 0 for a quad, 1 for a triangle (ToonFx "ice_wall"). Within the box w x h x t of the wall's collider.
+static func ice_slab_mesh(w: float, h: float, t: float, seed := 1, bury := 0.45) -> Mesh:
+	return _cached("ice_slab_%.2f_%.2f_%.2f_%d" % [w, h, t, seed], func() -> Mesh:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed * 5821 + 17
+		var n := maxi(3, int(round(w / 0.62)))
+		var cw := w / float(n)
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var quad := func(a: Vector3, b: Vector3, c: Vector3, d: Vector3, outward: Vector3) -> void:
+			# (a, b along the bottom, c, d along the top; the face's front toward `outward`: Godot's front faces wind clockwise seen
+			# from outside, so the cross of its first two edges points the other way)
+			var corners := [[a, Vector2(0, 0)], [b, Vector2(1, 0)], [c, Vector2(1, 1)], [d, Vector2(0, 1)]]
+			for tri: Array in [[0, 1, 2], [0, 2, 3]]:
+				var v0: Vector3 = corners[tri[0]][0]
+				var v1: Vector3 = corners[tri[1]][0]
+				var v2: Vector3 = corners[tri[2]][0]
+				var order: Array = tri
+				if (v1 - v0).cross(v2 - v0).dot(outward) > 0.0:
+					order = [tri[0], tri[2], tri[1]]
 				for k in order:
-					st.set_normal(t[k * 3 + 1])
-					st.set_uv(t[k * 3 + 2])
-					st.add_vertex(t[k * 3])
+					st.set_uv(corners[k][1])
+					st.set_uv2(Vector2(0.0, 0.0))
+					st.add_vertex(corners[k][0])
+		var tri3 := func(a: Vector3, b: Vector3, c: Vector3, outward: Vector3) -> void:
+			var order := [0, 1, 2]
+			if (b - a).cross(c - a).dot(outward) > 0.0:
+				order = [0, 2, 1]
+			var pts := [a, b, c]
+			var uvs := [Vector2(0, 0), Vector2(1, 0), Vector2(0, 1)]
+			for k in order:
+				st.set_uv(uvs[k])
+				st.set_uv2(Vector2(1.0, 0.0))
+				st.add_vertex(pts[k])
+		for i in n:
+			var x0 := -w * 0.5 + cw * float(i)
+			var x1 := x0 + cw * 0.97
+			var hh := h * rng.randf_range(0.7, 1.0)
+			var zt := t * 0.5 * rng.randf_range(0.7, 1.0)
+			var shoulder := hh * 0.82
+			var foot := -bury
+			var fx := cw * 0.04                       # (the foot's widening)
+			# the box up to the shoulder
+			var b00 := Vector3(x0 - fx, foot, -zt)
+			var b10 := Vector3(x1 + fx, foot, -zt)
+			var b01 := Vector3(x0 - fx, foot, zt)
+			var b11 := Vector3(x1 + fx, foot, zt)
+			var s00 := Vector3(x0, shoulder, -zt)
+			var s10 := Vector3(x1, shoulder, -zt)
+			var s01 := Vector3(x0, shoulder, zt)
+			var s11 := Vector3(x1, shoulder, zt)
+			quad.call(b10, b00, s00, s10, Vector3(0, 0, -1))   # (the -z face)
+			quad.call(b01, b11, s11, s01, Vector3(0, 0, 1))    # (the +z face)
+			quad.call(b00, b01, s01, s00, Vector3(-1, 0, 0))   # (the -x end)
+			quad.call(b11, b10, s10, s11, Vector3(1, 0, 0))    # (the +x end)
+			# the chiselled top: a point off to one side
+			var apex := Vector3(lerpf(x0, x1, rng.randf_range(0.25, 0.75)), hh, rng.randf_range(-0.4, 0.4) * zt)
+			tri3.call(s00, s10, apex, Vector3(0, 0.4, -1))
+			tri3.call(s11, s01, apex, Vector3(0, 0.4, 1))
+			tri3.call(s01, s00, apex, Vector3(-1, 0.4, 0))
+			tri3.call(s10, s11, apex, Vector3(1, 0.4, 0))
 		return st.commit())
 
 
