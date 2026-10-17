@@ -53,6 +53,8 @@ var right := Vector3.RIGHT
 var frames: Array[Image] = []
 var shot := ""
 var n := 0
+var aiming := false
+var pitch_sign := 1.0
 var film := ""
 var _film_n := 0
 var _film_phys := 0
@@ -155,12 +157,25 @@ func _run(only: Array) -> void:
 	view.camera.fov = 48.0
 	_place()
 	await _ticks(30)
+	p.pitch = 0.3
+	await _ticks(3)
+	pitch_sign = 1.0 if (-p.camera.global_basis.z).y > 0.0 else -1.0
+	physics_frame.connect(_aim)
 	for s: String in ORDER:
 		if not s in only or not SHOTS.has(s):
 			continue
 		await _shot(s, SHOTS[s])
 	print("ANIME WATER SHOTS DONE %s (%d film frames)" % [tag, _film_n])
 	quit()
+
+
+## A hit shot: the crosshair held on the dummy's chest (the tests' way: yaw and pitch from the camera to him).
+func _aim() -> void:
+	if not aiming or rm == null or rm.foe == null or not is_instance_valid(rm.foe) or p.camera == null:
+		return
+	var d := (NpcSenses.chest_of(rm.foe) - p.camera.global_position).normalized()
+	p.yaw = atan2(-d.x, -d.z)
+	p.pitch = asin(clampf(d.y, -1.0, 1.0)) * pitch_sign
 
 
 func _place() -> void:
@@ -223,6 +238,7 @@ func _shot(name: String, d: Dictionary) -> void:
 		cam_mode = "side"
 	_place()
 	c.held_override = null
+	aiming = name.ends_with("_hit")
 	if name.ends_with("_hit") and rm.foe != null and is_instance_valid(rm.foe):
 		# (the dummy on the line of fire, 6.5 m down the deck, facing him: the hit is seen)
 		rm.foe.global_position = Vector3(home.origin.x, home.origin.y, home.origin.z) + fwd * 6.5
