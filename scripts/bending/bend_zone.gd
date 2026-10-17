@@ -99,6 +99,7 @@ const R2_GUARDS := {"catch": "earth", "redirect": "water", "parry": "fire", "air
 ## The Wind Guard's window when its spec gives none (s; spec §2.5).
 const WIND_GUARD_S := 0.8
 ## A Turn's swing round the guard's waist (s) and its radius (m).
+const TURN_FX := preload("res://scripts/bending/turn_fx.gd")
 const SWING_S := 0.3
 const SWING_R := 1.0
 ## A Parry's and a Wind Guard's moon (_moon_back): one lap round the guard in this long (s), this far out (m).
@@ -417,14 +418,9 @@ func _look() -> void:
 		"redirect":
 			# (the Turn: a ring of water spinning up round the guard's waist, drops flung off it; on the guarder only)
 			if r2:
-				var ring := _part(look, ToonFx.band_mesh(1.0, 0.86, 0.22), ToonFx.mat("water_strip"))
-				ring.scale = Vector3(SWING_R, 1.0, SWING_R)
-				ring.position = Vector3.UP * 1.0
-				FxParams.put(ring, &"seed", ToonFx.vis_rng.randf() * 5.0)
-				var tw := ring.create_tween().set_loops()
-				tw.tween_property(ring, "rotation:y", -TAU, 0.45).from(0.0)
+				# (the anime pass, 2026-10-16: two ribbons of water winding round his waist, TurnFx; the drops flung off them)
+				TURN_FX.make(look, self)
 				_fx.append(BendLooks.emitter(self, "water", Vector3(SWING_R, 0.1, SWING_R), 12, 0.5, 1.2, 0.1))
-				_grow(look, Vector3(0.2, 1.0, 0.2))
 		"parry":
 			# (the Parry: a hot ring snapping out before the guard's hands, embers off it)
 			if r2:
@@ -1295,6 +1291,8 @@ func _muddy() -> void:
 	for c in look.get_children():
 		if c is MeshInstance3D:
 			(c as MeshInstance3D).material_override = ToonFx.mat("mud_strip")
+		elif c.has_method(&"muddy"):
+			c.call(&"muddy")                       # (the Turn's ribbons: TurnFx)
 	for e in _fx:
 		if is_instance_valid(e) and e is GPUParticles3D:
 			(e as GPUParticles3D).emitting = false

@@ -212,6 +212,12 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"mode": 2, "outline": 1.0, "flow": Vector2(5.0, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.84, "gloss": 0.6,
 					"c_shade": Color(0.1, 0.4, 0.86, 0.95), "c_body": Color(0.22, 0.62, 1.0, 0.93), "c_rim": Color(0.72, 0.93, 1.0, 0.95),
 					"c_foam": Color(0.97, 1.0, 1.0, 1.0), "c_ink": Color(0.03, 0.14, 0.36)}
+		"mud_ribbon":
+			# (the Turn's ribbons when a stone is swung round in them: the water ribbon as mud)
+			m.shader = SHADERS.water
+			p = {"mode": 2, "outline": 1.0, "flow": Vector2(1.8, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.86, "gloss": 0.62,
+					"c_shade": Color(0.2, 0.12, 0.06, 0.96), "c_body": Color(0.4, 0.27, 0.15, 0.95), "c_rim": Color(0.56, 0.42, 0.27, 0.96),
+					"c_foam": Color(0.66, 0.53, 0.38, 1.0), "c_ink": Color(0.06, 0.03, 0.02)}
 		"water_ribbon_thin":
 			# (the thin strand coiling round the ribbon: paler, no line, a few flecks)
 			m.shader = SHADERS.water

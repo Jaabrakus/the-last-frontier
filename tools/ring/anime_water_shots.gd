@@ -33,7 +33,7 @@ const SHOTS := {
 	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
-	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32]},
+	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32, 40], "cam": "front"},
 }
 ## The camera each shot is filmed from in film mode (the stills' own: cam=).
 const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
