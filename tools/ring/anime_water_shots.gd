@@ -198,7 +198,7 @@ func _cam() -> void:
 		"hit":
 			# (the dummy 6.5 m down the line of fire, from before him and to one side)
 			var tgt := at + fwd * 6.5
-			eye = tgt - fwd * 2.4 + right * 2.8 + Vector3.UP * 1.5
+			eye = tgt - fwd * 3.4 + right * 3.8 + Vector3.UP * 1.6
 			look = tgt + Vector3.UP * 1.0
 		_:
 			eye = at + right * 3.6 + fwd * 1.5 + Vector3.UP * 1.55

@@ -903,6 +903,10 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 				pool.mark("wet", g.pos, g.normal, 1.6 * k, 4.0)
 			else:
 				pool.play("flash", up, 0.14, 0.4 * k, 1.0 * k, WATER, FOAM)
+				# (where it struck, on a body or in the air: a small crown of spikes opening back toward where it came from, as a
+				# milk-crown stands off the water, a drawn shape and not puffs, so it never hides who was struck)
+				var cb := Basis(Quaternion(Vector3.UP, d)) if d.dot(Vector3.UP) > -0.999 else Basis(Vector3.RIGHT, PI)
+				pool.play("crown", Transform3D(cb, at), 0.34, 0.28 * k, 0.7 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.7, 0.8))
 		"mud":
 			# (a splat of mud: heavy drops flung out and falling, a few fat globs slower after them, and a dark wet stain on the
 			# deck; no crown (a band of mud read as a jagged ring floating over the deck) and no dust (its tan cloud read as dirt,
