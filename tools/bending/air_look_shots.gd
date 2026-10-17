@@ -7,7 +7,8 @@ extends SceneTree
 ## fixed fps so every frame is the same moment. Windowed (it draws), through the lock:
 ##   zsh tools/loop/godot_run.sh --path . --fixed-fps 60 -s tools/bending/air_look_shots.gd -- out=<dir> [tag=<name>]
 ##       [only=gather,palm,slice,ball,gust,lance,pull,leap,slip,guard,wall,carried] [light=noon|night]
-##       [film=gather|kit]
+##       [film=gather|kit] [pov=1]
+## pov=1: the PLAYER casts and every "behind" view is the player's own camera (what the owner plays), the bot is the target.
 ## Writes <dir>/air_<shot>_<frame>_<tag>.png and <dir>/air_sheet_<tag>.png (four a row). Ends with "AIR SHOTS DONE".
 ## film=gather|kit instead records frames (30 a second, JPEG) of the caster's own casts (the bot's brain begins each lock, so
 ## the real clip, the real gather and the real release play) to <dir>/film_<tag>/f_00000.jpg ...; encode them with
@@ -26,13 +27,14 @@ var out := "user://air_shots"
 var tag := "now"
 var lvl: RingLevel
 var rm: RingMode
-var caster: NpcFighter
-var target: FrontierPlayer
+var caster                      # (a bot, or the player in pov mode)
+var target
 var axis := Vector3.FORWARD
 var right := Vector3.RIGHT
 var imgs: Array = []
 var names: Array = []
 var film := ""
+var pov := false
 var _macro_at := Vector3.INF
 var _fpos := Vector3.INF
 var rec := false
@@ -55,6 +57,8 @@ func _initialize() -> void:
 			light = a.substr(6)
 		elif a.begins_with("film="):
 			film = a.substr(5)
+		elif a == "pov=1":
+			pov = true
 	DirAccess.make_dir_recursive_absolute(out)
 	InputSetup.ensure()
 	MatchSetup.incoming = true
@@ -76,9 +80,9 @@ func _initialize() -> void:
 		print("AIR SHOTS FAILED: no ring mode or no foe")
 		quit(1)
 		return
-	caster = rm.foe
-	target = lvl.player
-	caster.held = true
+	caster = lvl.player if pov else rm.foe
+	target = rm.foe if pov else lvl.player
+	rm.foe.held = true
 	rm.rules.stale_off = true
 	var ring := rm.ring
 	axis = ring.axis()
@@ -86,7 +90,8 @@ func _initialize() -> void:
 	var c := ring.center()
 	RingLevel.place(caster, Transform3D(Basis.looking_at(axis, Vector3.UP), c + axis * C_S + Vector3.UP * 0.05))
 	RingLevel.place(target, Transform3D(Basis.looking_at(-axis, Vector3.UP), c + axis * T_S + Vector3.UP * 0.05))
-	target.ignore_mouse_capture = true
+	lvl.player.ignore_mouse_capture = true
+	_face_player()
 	view = OffscreenView.new()
 	root.add_child(view)
 	view.setup(root, Vector2i(W, H))
@@ -142,6 +147,10 @@ func _hand() -> Vector3:
 ## The camera: "close" three-quarters before the caster (the gather), "cast" across the deck framing the caster and the flight
 ## (the film), "side" across the deck framing the flight (the stills), "wide" three-quarters a little back (the guard, the wall).
 func _cam(kind: String) -> void:
+	view.source = lvl.player.camera if (pov and kind == "behind") else null
+	if pov and kind == "behind":
+		_face_player()
+		return
 	var eye := Vector3.ZERO
 	var look := Vector3.ZERO
 	var fov := 50.0
@@ -179,6 +188,20 @@ func _cam(kind: String) -> void:
 	view.camera.global_transform = Transform3D(Basis.looking_at(look - eye, Vector3.UP), eye)
 
 
+## A bot caster held in place (the player has no hold: he stands where he is put).
+func _hold(on: bool) -> void:
+	if caster is NpcFighter:
+		(caster as NpcFighter).held = on
+
+
+## The player looking down the deck (his camera's yaw and pitch, as a mouse sets them) whichever side he is on.
+func _face_player() -> void:
+	var p := lvl.player
+	var dir: Vector3 = axis if pov else -axis
+	p.yaw = atan2(-dir.x, -dir.z)
+	p.pitch = 0.0
+
+
 func _snap(name: String) -> void:
 	await process_frame
 	var img: Image = view.get_texture().get_image()
@@ -201,6 +224,7 @@ func _clear(wait := 90) -> void:
 		(ch as Node).queue_free()
 	caster.velocity = Vector3.ZERO
 	RingLevel.place(caster, Transform3D(Basis.looking_at(axis, Vector3.UP), rm.ring.center() + axis * C_S + Vector3.UP * 0.05))
+	_face_player()
 	await _frames(wait)
 
 
@@ -340,14 +364,14 @@ func _dash_shots(name: String, spec: Dictionary, f1: int, f2: int) -> void:
 	for vw: String in ["wide", "behind"]:
 		_cam(vw)
 		var bc := BendCaster.wrap(caster)
-		caster.held = false
+		_hold(false)
 		BendEffects.dash(bc, axis, spec)
 		await _frames(f1)
 		await _snap("%s_%s_f%02d" % [name, vw, f1])
 		await _frames(f2 - f1)
 		await _snap("%s_%s_f%02d" % [name, vw, f2])
 		await _frames(50)
-		caster.held = true
+		_hold(true)
 		await _clear(40)
 
 
@@ -374,22 +398,22 @@ func _guard() -> void:
 	await _frames(5)
 	await _snap("guard_end")
 	await _clear(30)
-	if target.camera != null:
-		view.source = target.camera
-		var zo := BendZone.make(target, "air_shield", target.global_position, {"radius_m": 2.2, "window_s": 0.8}, -axis)
-		await _frames(14)
-		await _snap("guard_own_f14")
-		await _frames(24)
-		await _snap("guard_own_f38")
-		if is_instance_valid(zo):
-			zo.end("shots")
-		view.source = null
-		await _clear(30)
+	var own := lvl.player
+	view.source = own.camera
+	var zo := BendZone.make(own, "air_shield", own.global_position, {"radius_m": 2.2, "window_s": 0.8}, axis if pov else -axis)
+	await _frames(14)
+	await _snap("guard_own_f14")
+	await _frames(24)
+	await _snap("guard_own_f38")
+	if is_instance_valid(zo):
+		zo.end("shots")
+	view.source = null
+	await _clear(30)
 
 
 func _wall() -> void:
 	_cam("wide")
-	var at := caster.global_position + axis * 3.0
+	var at: Vector3 = caster.global_position + axis * 3.0
 	BendZone.make(caster, "wind_wall", at, {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 4.0}, axis)
 	await _frames(12)
 	await _snap("wall_f12")
@@ -442,10 +466,12 @@ func _cast(kind: String, tail := 50, slow := 1.0) -> void:
 	var mv: Array = MOVES[kind]
 	var lock: float = LOCKS[kind]
 	Engine.time_scale = slow
-	caster.action = "cast"
-	caster.body.play_cast(String(mv[0]), String(mv[1]), lock, "air", false)
+	var posed := caster is NpcFighter
+	if posed:
+		caster.action = "cast"
+		caster.body.play_cast(String(mv[0]), String(mv[1]), lock, "air", false)
 	var ch := BendCharge.make(caster, "air")
-	ch.limb_fn = func() -> String: return caster.body.strike_limb()
+	ch.limb_fn = func() -> String: return caster.body.strike_limb() if posed else "r_palm"
 	var n := maxi(int(round(lock * 60.0 / slow)), 2)
 	for i in n:
 		ch.fill = float(i) / float(n)
@@ -455,7 +481,7 @@ func _cast(kind: String, tail := 50, slow := 1.0) -> void:
 	ch.flash()
 	await _frames(1)
 	var hand: Vector3 = ch._tip(ch.limb())
-	var dir := (target.global_position + Vector3.UP * 1.1 - hand).normalized()
+	var dir: Vector3 = (target.global_position + Vector3.UP * 1.1 - hand).normalized()
 	ch.end("cast")
 	if kind == "palm":
 		BendLooks.blast(hand, Vector3(dir.x, 0.0, dir.z).normalized(), 40.0, 3.5, "air")
@@ -468,7 +494,8 @@ func _cast(kind: String, tail := 50, slow := 1.0) -> void:
 		BendBolt.launch(caster, hand, dir, s)
 	await _frames(tail)
 	Engine.time_scale = 1.0
-	caster.action = ""
+	if posed:
+		caster.action = ""
 	for b in get_nodes_in_group(BendBolt.GROUP):
 		(b as BendBolt).end("film")
 
@@ -518,10 +545,10 @@ func _film_kit() -> void:
 		await _frames(8)
 		var sp := _spec(String(e[0]), String(e[1]))
 		sp.erase("dir")
-		caster.held = false
+		_hold(false)
 		BendEffects.dash(BendCaster.wrap(caster), axis, sp)
 		await _frames(70)
-		caster.held = true
+		_hold(true)
 		await _clear(10)
 	_cam("wide")
 	BendLooks.carried(caster)
