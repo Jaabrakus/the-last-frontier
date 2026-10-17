@@ -3,6 +3,12 @@ shader_type spatial;
 // band), white foam where a flowing noise crests, a hard highlight, see-through enough to show what it holds.
 //   mode 0  a mesh (a bolt's head, a bubble, a wall, a splash crown); `wobble` m of vertex swell
 //   mode 1  a strip along a line (ToonRibbon) shaded as a round tube (the stream behind a water bolt)
+//   mode 2  the water's ribbon (the anime pass, 2026-10-16: the show's water, drawn as a 2D animator draws it): a flat cel
+//           band facing the camera, no tube: a dark edge, the body, a glossy pale streak along it (`gloss`: where across),
+//           white flecks running down it (`flow.x` m/s), torn white foam at both edges and a drawn line round it
+//           (`outline`). UV.x metres along it from the head, UV2.y its share head (0) to tail (1); its vertex colour's red tears
+//           it away (ToonRibbon.fade: 1 whole).
+//           The gather drawn from a grate to the hands (BendCharge), the Lash's body, a Turn's swing.
 // `flow` scrolls the foam (UV per s); `fade` (instance) eats it away from its thin places.
 // Round 4 (LOOKS): `range_on` (instance, a bolt's head) grows it with its distance from the camera (fx_common range_scale);
 // thinned near the camera (near_cut).
@@ -24,6 +30,8 @@ uniform float foam = 0.66;
 uniform float rim = 0.52;
 uniform float wobble = 0.0;
 uniform float alpha_mul = 1.0;
+uniform float outline = 0.0;
+uniform float gloss = 0.64;
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 uniform float fade = 1.0;  // (the web build: a plain uniform, each object its own material; FxParams)
 #else
@@ -71,6 +79,32 @@ void vertex() {
 }
 
 void fragment() {
+	if (mode == 2) {
+		float across = UV.y;
+		float e = 1.0 - abs(across * 2.0 - 1.0);              // 0 at either edge, 1 along the middle
+		float share = UV2.y;
+		float along = UV.x;
+		float n = texture(noise, vec2(along * nscale.x * 0.35 + seed, across * nscale.y * 0.5 + seed * 0.7)).r;
+		float n2 = texture(noise, vec2(along * 0.9 + flow.x * TIME * 0.35 + seed * 1.7, across * 1.7 + seed)).r;   // (flecks run toward the head)
+		// the shade along one edge, the body, the gloss streak
+		vec4 col = c_shade;
+		col = mix(col, c_body, aastep(0.3, across + (n - 0.5) * 0.16));
+		col = mix(col, c_rim, 1.0 - aastep(0.08, abs(across - gloss + (n - 0.5) * 0.1)));
+		// white flecks running down the lit half
+		float fleck = aastep(0.66, n2) * aastep(0.42, across) * (1.0 - aastep(0.88, across));
+		col = mix(col, c_foam, fleck);
+		// the torn foam at both edges, and the drawn line outside it
+		col = mix(col, c_foam, 1.0 - aastep(0.12 + (n - 0.5) * 0.1, e));
+		col.rgb = mix(col.rgb, c_ink, outline * (1.0 - aastep(0.045, e)));
+		// torn away as it is let go (fade), and ragged at its tail
+		float keep = e * 0.5 + 0.5 - (1.0 - COLOR.r) * (1.0 + n * 0.8) - smoothstep(0.92, 1.0, share) * (0.4 + n * 0.5);
+		float ar = aastep(0.0, keep);
+		if (ar <= 0.01) {
+			discard;
+		}
+		ALBEDO = col.rgb * fx_gain;
+		ALPHA = col.a * alpha_mul * ar * near_fade(length(VERTEX)) * own_fade;
+	} else {
 	vec3 N = NORMAL;
 	if (mode == 1) {
 		float a = UV.y * 2.0 - 1.0;
@@ -103,4 +137,5 @@ void fragment() {
 	}
 	ALBEDO = (col.rgb) * fx_gain;
 	ALPHA = col.a * alpha_mul * a * near_fade(length(VERTEX)) * own_fade;      // (blended: the near fade is its alpha)
+	}
 }

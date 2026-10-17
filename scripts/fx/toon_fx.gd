@@ -175,6 +175,20 @@ static func mat(key: String) -> ShaderMaterial:
 		"water_strip":
 			m.shader = SHADERS.water
 			p = {"mode": 1, "flow": Vector2(-2.0, 0.0), "nscale": Vector2(3.0, 1.0), "foam": 0.8, "rim": 0.55}
+		"water_ribbon":
+			# (the anime pass, 2026-10-16, the owner: water "as close to Anime Style Avatar: The Last Airbender as possible":
+			# the ribbon drawn from a grate to the hands (BendCharge), the Lash's body, a Turn's swing: a flat cel band, a dark
+			# edge, a glossy streak, white flecks running down it, torn foam at its edges and a drawn line round it)
+			m.shader = SHADERS.water
+			p = {"mode": 2, "outline": 1.0, "flow": Vector2(2.4, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.84, "gloss": 0.64,
+					"c_shade": Color(0.1, 0.4, 0.86, 0.97), "c_body": Color(0.22, 0.62, 1.0, 0.95), "c_rim": Color(0.72, 0.93, 1.0, 0.97),
+					"c_foam": Color(0.97, 1.0, 1.0, 1.0), "c_ink": Color(0.03, 0.14, 0.36)}
+		"water_ribbon_thin":
+			# (the thin strand coiling round the ribbon: paler, no line, a few flecks)
+			m.shader = SHADERS.water
+			p = {"mode": 2, "outline": 0.0, "flow": Vector2(3.0, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.9, "gloss": 0.5,
+					"c_shade": Color(0.42, 0.76, 1.0, 0.9), "c_body": Color(0.62, 0.87, 1.0, 0.9), "c_rim": Color(0.9, 0.98, 1.0, 0.92),
+					"c_foam": Color(1.0, 1.0, 1.0, 1.0)}
 		"wind_band":
 			m.shader = SHADERS.wind
 			p = {"mode": 0, "spin": 5.0, "nscale": Vector2(2.0, 0.7), "streak": 0.62}
