@@ -716,7 +716,7 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 		"water":
 			_pm(pm, Vector2(0.3, 1.4), Vector2(r * 0.3, r * 0.6), Vector3(0, -12.0, 0), 0.5)
 			_pm(sub.process_material, Vector2(0.1, 0.6), Vector2(maxf(r * 0.8, 0.09), maxf(r * 1.3, 0.15)), Vector3.ZERO, 1.5)
-			_ribbon(rb, maxf(r * 0.55, 0.05), 0.08, 0.22)
+			_ribbon(rb, maxf(r * 0.55, 0.05), 0.08, 0.09)       # (a streak 2-3 m long at a bolt's speed, not a laser)
 		"mud", "surf":
 			# (mud and water's movement keep water's old trail: drops and a coiled strip, no mist and no wisps)
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)

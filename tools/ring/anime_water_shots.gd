@@ -223,6 +223,11 @@ func _shot(name: String, d: Dictionary) -> void:
 		cam_mode = "side"
 	_place()
 	c.held_override = null
+	if name.ends_with("_hit") and rm.foe != null and is_instance_valid(rm.foe):
+		# (the dummy on the line of fire, 6.5 m down the deck, facing him: the hit is seen)
+		rm.foe.global_position = Vector3(home.origin.x, home.origin.y, home.origin.z) + fwd * 6.5
+		rm.foe.velocity = Vector3.ZERO
+		rm.foe.face_point(p.global_position)
 	await _ticks(20)
 	var key := int(d.key)
 	if key >= 0:
