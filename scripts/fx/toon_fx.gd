@@ -258,7 +258,13 @@ static func mat(key: String) -> ShaderMaterial:
 					"ink": 0.6}
 		"ice":
 			m.shader = SHADERS.facet
-			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95)}
+			p = {"c_light": Color(0.96, 1.0, 1.0), "c_mid": Color(0.66, 0.9, 1.0), "c_dark": Color(0.3, 0.62, 0.95), "outline": 0.85}
+		"ice_ribbon":
+			# (the Spear's trail, the anime pass: the water ribbon in ice's pale facets, a deep blue line round it)
+			m.shader = SHADERS.water
+			p = {"mode": 2, "outline": 1.0, "flow": Vector2(5.0, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.8, "gloss": 0.62,
+					"c_shade": Color(0.42, 0.7, 0.96, 0.94), "c_body": Color(0.74, 0.92, 1.0, 0.94), "c_rim": Color(1.0, 1.0, 1.0, 0.97),
+					"c_foam": Color(1.0, 1.0, 1.0, 1.0), "c_ink": Color(0.08, 0.26, 0.55)}
 		"rock":
 			m.shader = SHADERS.facet
 			p = {"c_light": Color(0.78, 0.69, 0.56), "c_mid": Color(0.55, 0.47, 0.37), "c_dark": Color(0.32, 0.26, 0.21),

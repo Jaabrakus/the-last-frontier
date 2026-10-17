@@ -672,9 +672,9 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 			rb.coil_mat = ToonFx.mat("mud_strip")
 			rb.coils = 2
 		"ice":
-			g = _stream("puff_frost", 16, 0.3)
+			g = _stream("puff_frost", 8, 0.3)
 			g.add_child(_stream("star", 10, 0.45))
-			rb.main_mat = ToonFx.mat("ice_strip")
+			rb.main_mat = ToonFx.mat("ice_ribbon")      # (the anime pass: a ribbon of pale facets with a drawn line, not a soft streak)
 		"stone":
 			g = _stream("puff_dust", 10, 0.4)
 			g.add_child(_stream("chunk", 6, 0.8))
@@ -727,7 +727,7 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 		"ice":
 			_pm(pm, Vector2(0.2, 0.8), Vector2(maxf(r * 1.6, 0.16), maxf(r * 2.6, 0.26)), Vector3.ZERO, 1.5)
 			_pm(sub.process_material, Vector2(0.2, 1.0), Vector2(0.07, 0.13), Vector3(0, -1.0, 0), 1.0)
-			_ribbon(rb, maxf(r * 0.9, 0.08), 0.1, 0.1)
+			_ribbon(rb, maxf(r * 0.7, 0.06), 0.08, 0.08)
 		"stone":
 			_pm(pm, Vector2(0.1, 0.6), Vector2(maxf(r * 0.9, 0.14), maxf(r * 1.6, 0.24)), Vector3(0, 0.3, 0), 1.0)
 			_pm(sub.process_material, Vector2(0.5, 1.5), Vector2(r * 0.18, r * 0.4), Vector3(0, -12.0, 0), 0.0)

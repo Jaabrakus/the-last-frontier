@@ -14,6 +14,7 @@ uniform vec3 c_dark : source_color = vec3(0.18, 0.45, 0.78);
 uniform vec3 c_rim : source_color = vec3(1.0, 1.0, 1.0);
 uniform vec3 c_ink : source_color = vec3(0.04, 0.12, 0.25);
 uniform float ink = 0.0;
+uniform float outline = 0.0;   // (the anime pass: a drawn line round the silhouette, with or without the ink style)
 uniform float rim = 0.62;
 uniform float rim_on = 1.0;
 uniform float glint = 1.0;
@@ -57,6 +58,6 @@ void fragment() {
 		float s = fract(dot(v_wpos, vec3(0.55, 0.9, 0.35)) * 0.7 - TIME * 0.9);
 		col = mix(col, vec3(2.2), glint * (1.0 - aastep(0.05, s)) * aastep(0.0, d + 0.2));
 	}
-	col = mix(col, c_ink, ink * aastep(0.8, fres));
+	col = mix(col, c_ink, max(ink, outline) * aastep(0.8, fres));
 	ALBEDO = (col * glow) * fx_gain;
 }
