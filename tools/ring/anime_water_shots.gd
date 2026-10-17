@@ -27,7 +27,7 @@ const SHOTS := {
 	"splash_hit": {"key": 0, "move": "water_jet", "mode": "splash", "fills": [], "full": [4], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
 	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
-	"geyser": {"key": 1, "mode": "spout", "fills": [], "full": [12], "after": [8, 14, 20, 26, 32, 40, 50, 62, 78], "cam": "front34"},
+	"geyser": {"key": 1, "mode": "spout", "fills": [], "full": [12], "after": [20, 28, 34, 38, 42, 48, 56, 66, 80], "cam": "spot"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 8, 12, 16, 20, 24, 30, 40], "cam": "front34"},
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
 	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
@@ -37,7 +37,7 @@ const SHOTS := {
 }
 ## The camera each shot is filmed from in film mode (the stills' own: cam=).
 const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
-		"lash_hit": "wide", "geyser": "front34", "wave": "front34", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
+		"lash_hit": "wide", "geyser": "spot", "wave": "front34", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
 const ORDER := ["gather_lash", "gather_geyser", "geyser", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
 
 var view
@@ -54,6 +54,7 @@ var right := Vector3.RIGHT
 var frames: Array[Image] = []
 var shot := ""
 var n := 0
+var _spot_pt := Vector3.INF
 var aiming := false
 var pitch_sign := 1.0
 var film := ""
@@ -95,7 +96,15 @@ func _ticks(k: int) -> void:
 
 ## Film mode: every second physics frame saved (30 a second).
 func _film_tick() -> void:
-	if film == "" or view == null:
+	if view == null:
+		return
+	if cam_mode == "spot":
+		# (the camera on where the cast landed: the Geyser rises where the aim meets the deck)
+		var rec := BendEffects.last_of(p)
+		if rec.has("spout_at"):
+			_spot_pt = rec.spout_at
+		_cam()
+	if film == "":
 		return
 	_film_phys += 1
 	if _film_phys % 2 != 0:
@@ -196,6 +205,10 @@ func _cam() -> void:
 		"wide":
 			eye = at + right * 7.5 + fwd * 4.0 + Vector3.UP * 2.6
 			look = at + fwd * 4.5 + Vector3.UP * 0.8
+		"spot":
+			var sp: Vector3 = _spot_pt if _spot_pt != Vector3.INF else at + fwd * 10.0
+			eye = sp - fwd * 5.5 + right * 4.2 + Vector3.UP * 2.2
+			look = sp + Vector3.UP * 1.3
 		"front34":
 			# (from before the caster and to one side, low: the wave's face and its curling lip, coming at the lens)
 			eye = at + fwd * 6.5 + right * 3.6 + Vector3.UP * 1.25
@@ -274,6 +287,7 @@ func _rel_frames(rel: Array) -> void:
 func _shot(name: String, d: Dictionary) -> void:
 	shot = name
 	n = 0
+	_spot_pt = Vector3.INF
 	if film != "":
 		cam_mode = String(TAKE_CAMS.get(name, cam_mode))
 	elif d.has("cam"):
