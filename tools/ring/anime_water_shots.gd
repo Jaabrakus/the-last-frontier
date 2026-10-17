@@ -32,7 +32,7 @@ const SHOTS := {
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
 	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"tomahawk_hit": {"key": 2, "mode": "", "fills": [], "full": [10], "rel": [-6, -2, 1, 4, 9, 16], "after": [40, 100], "cam": "hit"},
-	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
+	"ice_wall": {"key": -4, "direct": ["water_shield", "ice_wall"], "mode": "", "fills": [], "full": [], "after": [3, 8, 14, 22, 34, 60, 90], "cam": "wide"},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 26, 36, 50, 90], "cam": "wide"},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32, 40], "cam": "front"},
 }
@@ -331,6 +331,11 @@ func _shot(name: String, d: Dictionary) -> void:
 			t = k
 			await _grab("full%02d" % k)
 		c.held_override = false
+	elif d.has("direct"):
+		# (cast through the effect's own call at the aim, no lock: the look of what rises)
+		var mv: Array = d.direct
+		var spec: Dictionary = ((SwayMoves.move(String(mv[0])).get("bend", {}) as Dictionary).get(String(mv[1]), {}) as Dictionary).duplicate(true)
+		BendEffects.apply(c, String(mv[0]), String(mv[1]), spec)
 	elif key == -1:
 		await _action(&"fire")
 	elif key == -2:
