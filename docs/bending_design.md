@@ -193,6 +193,29 @@ For the integrator: `BendLooks.warm_up(camera)` once the ring stands (it compile
 first fire wall or tornado can freeze a frame for seconds on a Mac); `BendLooks.rise(foot, size, way, matter)` when an earth
 or ice wall comes up and `BendLooks.shatter(foot, size, way, matter)` when one breaks (FormRaised raise / crumble).
 Stills: tools/bending/vfx_lineup.gd; load: tools/bending/vfx_stress.gd.
+
+**Water, the anime pass (2026-10-16; the owner: each element's effects "as close to Anime Style Avatar: The Last Airbender as
+possible": how it is gathered and how it is cast, not the fighting styles' clips).** Looks only: no lock time, hitbox, speed,
+damage, radius or bot number changed; every effect is our own shader, mesh and particles (nothing of the show is copied: the
+references in docs/reference/ are descriptions and links). The numbers: data/bending/fx_looks.json `water_gather`.
+- **The gather** (BendCharge, water section): water is drawn from a source in a ribbon (`_water_source`: the nearest grate, the
+  caster's own puddle, else the tank under the lip, else his feet), arching over the deck to his hands as the lock fills, swaying
+  round his body in 12 drawn steps a second, winding on the forearm (or the kicking shin) as it is channelled; the other hand lets
+  go. A foam crown and ripple where it leaves the water, a few flat drops off it. The Geyser's runs low along the deck to its place
+  and coils there. Released it snaps taut and is flung off along his aim (the Geyser's streams up with the column), tearing
+  away; a lock that breaks lets it fall back. ToonRibbon.lay_path draws it; ToonFx `water_ribbon` (toon_water mode 2) is its
+  material: a flat cel band, dark edge, glossy streak, flecks running to the head, torn foam edges, a drawn line round it.
+- **The casts**: the water bolt a drawn teardrop (ToonFx.drop_mesh, `water_bolt`) on a 2-3 m ribbon (`water_whip`); the hit a crown
+  of spikes (and a small one opening back toward the shooter where it strikes); the Wave one wave with a curling crest and a foam
+  lip that travels out at the cone's own speed and breaks into a crown (scripts/bending/wave_fx.gd, `water_crest`); the Geyser's
+  column in cel water with two ribbons spiralling up it and a torn foam crown (geyser_fx.gd, `water_column`); ice facets with a
+  drawn outline and blue veins (`ice`, `frost`), the Spear's trail a ribbon of pale facets (`ice_ribbon`), the ice burst faceted
+  shards over a small frost cloud, an ice wall rising through shards and a thin frost.
+- **The Turn**: two ribbons of water winding round the guard's waist (scripts/bending/turn_fx.gd), mud ribbons when a stone is
+  swung in them; the caught shot swings round him on its own ribbon trail.
+- **The Skate and puddles**: the wake a ribbon of water (`water_whip`, mud's `mud_ribbon`); a puddle a flat cel disc with a foam rim
+  (ToonFx.puddle_mesh, `water_puddle`) and a ripple running out of it now and then.
+- Stills and films: tools/ring/anime_water_shots.gd (before/after from the same frozen frames; `film=<dir>` for a film).
 Wired (wave 3, 2026-10-05): RingLevel runs warm_up behind the loading screen (the level's meta loading_hold; LoadingScreen
 waits on it, RingMode holds its countdown while the painting covers the window): about 0.3 s with Godot's shader cache warm,
 35 s in one frame with it cold (behind the painting); after it no effect cast in a fight froze a frame over 60 ms (the round
