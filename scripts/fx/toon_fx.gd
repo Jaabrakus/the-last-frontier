@@ -139,8 +139,8 @@ static func mat(key: String) -> ShaderMaterial:
 		"puff_dust_air":
 			# (the anime air's dust: pale flat shapes, a soft brown ink line, never a dark clod)
 			m.shader = SHADERS.puff
-			p = {"mode": 1, "c_a": Color(0.98, 0.94, 0.84), "c_b": Color(0.9, 0.84, 0.72), "c_c": Color(0.76, 0.69, 0.58),
-					"c_ink": Color(0.66, 0.58, 0.48), "wobble": 0.3, "ink": 0.55}
+			p = {"mode": 1, "c_a": Color(0.99, 0.96, 0.9), "c_b": Color(0.95, 0.91, 0.83), "c_c": Color(0.88, 0.83, 0.74),
+					"c_ink": Color(0.74, 0.67, 0.57), "wobble": 0.3, "ink": 0.4}
 		"leaf":
 			# (the anime air: a leaf caught in the swirl as it gathers; a long cel puff in leaf greens with an ink edge, tumbling)
 			m.shader = SHADERS.puff
@@ -554,18 +554,44 @@ static func stroke_mesh(turns: float, r0: float, r1: float, rise: float, w: floa
 ## A straight drawn line, 1 m long along local Y (-0.5..0.5), `w` half wide in metres: the stroke's strip (see stroke_mesh)
 ## for a straight run, UV.x 0 at the +Y end (the head) to 1 at the -Y end (the tail). Scale its node along Y for the length:
 ## an air beam's core and wash.
-static func line_mesh(w: float, segs := 8) -> Mesh:
-	return _cached("line_%.3f" % w, func() -> Mesh:
+static func line_mesh(w: float, wave := 0.0, segs := 12) -> Mesh:
+	return _cached("line_%.3f_%.3f" % [w, wave], func() -> Mesh:
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 		for i in segs + 1:
 			var u := float(i) / segs
 			var prof := pow(sin(PI * clampf(pow(u, 0.7), 0.0, 1.0)), 0.35)
+			var at := Vector3(sin(u * TAU) * wave, 0.5 - u, 0.0)
+			var along := Vector3(cos(u * TAU) * wave * TAU, -1.0, 0.0).normalized()
 			for k in 2:
-				st.set_normal(Vector3(0.0, -1.0, 0.0))
+				st.set_normal(along)
 				st.set_uv(Vector2(1.0 - u, float(k)))
 				st.set_uv2(Vector2(w * prof + 0.002, 1.0))
-				st.add_vertex(Vector3(0.0, 0.5 - u, 0.0))
+				st.add_vertex(at)
+		return st.commit())
+
+
+## A swirl line drawn round a sphere of radius `r` (the anime air's Wind Guard): from near its south pole to near its north,
+## `turns` turns of it, brush-shaped as stroke_mesh. A strip as ToonRibbon's (see stroke_mesh).
+static func shell_stroke_mesh(turns: float, r: float, w: float, segs := 36) -> Mesh:
+	return _cached("shell_%.2f_%.2f_%.3f" % [turns, r, w], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+		var pts: Array[Vector3] = []
+		for i in segs + 1:
+			var u := float(i) / segs
+			var lat := lerpf(-1.25, 1.25, u)
+			var a := TAU * turns * u
+			pts.append(Vector3(cos(a) * cos(lat), sin(lat), sin(a) * cos(lat)) * r)
+		for i in segs + 1:
+			var u := float(i) / segs
+			var along := (pts[mini(i + 1, segs)] - pts[maxi(i - 1, 0)]).normalized()
+			var prof := pow(sin(PI * clampf(pow(u, 0.85), 0.0, 1.0)), 0.5)
+			for k in 2:
+				st.set_normal(along)
+				st.set_uv(Vector2(1.0 - u, float(k)))
+				st.set_uv2(Vector2(w * prof + 0.002, 1.0))
+				st.add_vertex(pts[i])
 		return st.commit())
 
 

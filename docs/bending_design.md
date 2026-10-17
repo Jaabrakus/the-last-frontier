@@ -185,7 +185,7 @@ tools/anim_author/blender/bend_clips.py on the rig's rest pose, rows in animatio
 2D animated effects stood up in 3D: hard colour bands, bold shapes, no soft dots (BendLooks, BendZone._look; the materials,
 meshes and particle recipes in ToonFx, scripts/fx/toon_fx.gd; the shaders in shaders/bend_fx/; all our own, made in code).
 Fire is a boiling orb with banded flame tongues and a flame ribbon; water a wobbling head with a stream and two coiling
-strands; ice a faceted crystal with a glint; air swirl bands and corkscrew speed lines; stone cel-faceted rock with a dust
+strands; ice a faceted crystal with a glint; air drawn swirl lines (below); stone cel-faceted rock with a dust
 streak; lightning forks with a white core in a blue sheath. Hits flash, fling cel puffs, sparks, shards or chunks and leave a
 mark on the deck (scorch, wet, frost, cracks). `ToonFx.style` "cel" (default) or "ink" (a dark outline round every shape).
 Cheap by construction: ToonFxPool (one per scene) reuses every emitter, shape, mark, light and trail with a cap per kind.
@@ -200,6 +200,27 @@ restarts' bot spawn still costs about 1 s at a countdown). FormRaised plays rise
 shatter when one is shot down. The effects roll their own dice (ToonFx.vis_rng: drawing them never shifts the game's rolls)
 and take a brightness per light (ToonFx.set_gain, the shaders' fx_gain; RingLook: night 0.5). Walls are capped in the ring
 (rules.json max_walls 2 per caster, earth and ice walls alike: a third crumbles the oldest; FormRaised.count_wall).
+
+### Air, drawn as 2D animation (the anime air, 2026-10-16; the owner: "as close to Anime Style Avatar: The Last Airbender as possible")
+Our own meshes, shaders and particles; nothing of the show is used, copied or traced. Air is flat cel white with a pale blue-grey
+shade, a thin ink line, bold curved strokes and flat puffs, never glass or smoke. The one drawing primitive is the stroke: a
+brush-shaped strip, thin at both ends (ToonFx.stroke_mesh a helix arc, shell_stroke_mesh a line round a sphere, line_mesh a
+straight or wavy run; the wind shader's mode 3 "wind_stroke": a soft white body, a blue-grey edge, an ink line), turned to the
+camera by the shader. Looks only: no number moved (the Gust is still drawn 2 m wide, its hitbox unchanged).
+- The gather (BendCharge, the air section): as the lock fills seven strokes turn round the body as a tall double spiral and close
+  in; channelled, they thin away while six tighter strokes wind round the sweeping arm (the clip's strike limb) and a swirl ball
+  grows before the palm (ToonFx "air_heart": a flat white disc with a swirl drawn in it, inked swirl bands spinning round it),
+  leaves and pale flecks orbiting, pale flat dust lifted at the feet. The click flashes it, the release snaps it out (blown up
+  and eaten away in 0.2 s), a break shrinks it to nothing.
+- The casts (BendLooks): Palm a fan of swept strokes and crescents spinning out; Slice a banked inked crescent with two thinning
+  echoes (the smear) and crisp speed lines; Wind Ball the swirl ball flying, a thin line and two strokes winding behind it; Gust
+  a wedge of three swept crescents torn into streaks, its speed lines behind; Pull the teal hook; Air Lance a faceted spear or
+  the beam (a wash and a bold white line, rings blown off it); Leap a column of strokes rising round him, Slip streaks laid back
+  along the way he went (BendLooks.air_dash, pooled), Carried wind a short spiral round him (the same pool).
+- The Wind Guard (BendZone._look): a sphere of six swirl strokes pole to pole turning about him, three brush-stroke orbit lines at
+  its reach; your own sees the strokes thinner, everyone else's whole (the round 4 rule). The Wind Wall: seven wavy strokes
+  streaming across its face at every height, two swirl bands, pale dust along its foot.
+- Stills and films: tools/bending/air_look_shots.gd (fixed frames, the player's behind camera, a film of real casts).
 
 ## The match's screens, practice and the teams groundwork (wave 4, SCREENS)
 

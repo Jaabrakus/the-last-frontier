@@ -362,6 +362,7 @@ func _slip() -> void:
 
 
 func _guard() -> void:
+	# (as everyone else reads his guard, then your own guard through your own camera)
 	_cam("wide")
 	var z := BendZone.make(caster, "air_shield", caster.global_position, {"radius_m": 2.2, "window_s": 0.8}, axis)
 	await _frames(8)
@@ -372,6 +373,18 @@ func _guard() -> void:
 		z.end("shots")
 	await _frames(5)
 	await _snap("guard_end")
+	await _clear(30)
+	if target.camera != null:
+		view.source = target.camera
+		var zo := BendZone.make(target, "air_shield", target.global_position, {"radius_m": 2.2, "window_s": 0.8}, -axis)
+		await _frames(14)
+		await _snap("guard_own_f14")
+		await _frames(24)
+		await _snap("guard_own_f38")
+		if is_instance_valid(zo):
+			zo.end("shots")
+		view.source = null
+		await _clear(30)
 
 
 func _wall() -> void:
@@ -382,6 +395,11 @@ func _wall() -> void:
 	await _snap("wall_f12")
 	await _frames(40)
 	await _snap("wall_f52")
+	await _clear(30)
+	_cam("behind")
+	BendZone.make(caster, "wind_wall", at, {"width_m": 3.0, "height_m": 2.0, "thick_m": 0.6, "life_s": 4.0}, axis)
+	await _frames(40)
+	await _snap("wall_behind_f40")
 
 
 func _carried() -> void:

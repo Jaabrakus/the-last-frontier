@@ -120,6 +120,15 @@ const MAGMA_WAVE := {"do": "floor_wave", "kind": "stone", "shape": "magma", "mps
 		"height_m": 0.8, "miss_above_m": 0.6, "damage": 16.0, "knock_mps": 7.0, "up_mps": 1.2, "heat": true}
 ## A body walking into a wind wall is pushed back at this (m/s), once each PUSH_EVERY_S.
 const WIND_WALL_KNOCK := 4.0
+## The anime air's looks (2026-10-16; looks only): the Wind Guard's sphere of swirl lines (strokes, their turns, the sphere's
+## share of the guard's radius, half width m, one turn's time s) and the Wind Wall's streaming lines.
+const AIR_SHELL_N := 6
+const AIR_SHELL_TURNS := 0.8
+const AIR_SHELL_R := 0.62
+const AIR_SHELL_W := 0.065
+const AIR_RING_W := 0.06
+const AIR_SHELL_S := 1.6
+const AIR_WALL_LINES := 7
 const PUSH_EVERY_S := 0.5
 ## Round zones the skill tree's sets add (inside: within radius): gas (the Sulphur set's cloud), mud (the Mud set's pool).
 const ROUND_NEW := ["gas", "mud"]
@@ -305,16 +314,34 @@ func _look() -> void:
 			_fx.append(BendLooks.emitter(self, "water", Vector3(radius * 0.7, 0.05, radius * 0.7), 14, 0.6, 1.6, 0.12))
 			_grow(look, Vector3.ONE * 0.05)
 		"air_shield":
-			# (bands thinner than they were, 0.26 of its round high: the dome of wind hid the guard almost whole, the move review
-			# 2026-10-12)
+			# (the anime air, 2026-10-16: a sphere of swirl lines round the body, six strokes drawn pole to pole turning about
+			# him, and three thin inked rings at the guard's reach orbiting at their tilts; bands thinner than they were, 0.2 of
+			# its round high: the dome of wind hid the guard almost whole, the move review 2026-10-12. Your own sees the strokes
+			# thinner and the rings drawn 0.6 as wide (round 4), everyone else's read of his guard whole)
 			for i in 3:
-				var b := _part(look, ToonFx.band_mesh(1.0, 0.95, 0.26), ToonFx.mat(["wind_band", "wind_band_slow", "wind_band_fast"][i]))
-				b.scale = Vector3.ONE * radius * (1.0 - i * 0.07)
+				# (each ring one brush stroke round him, thick at its middle, thin at its ends)
+				var b := _part(look, ToonFx.stroke_mesh(1.15, 1.0, 1.0, 0.02, AIR_RING_W + 0.012 * float(i)), ToonFx.mat("wind_stroke"))
+				b.scale = Vector3(radius * (1.0 - i * 0.07), 1.0, radius * (1.0 - i * 0.07))
 				b.position = Vector3.UP * (0.3 + i * 0.62)
+				b.extra_cull_margin = radius
 				b.rotation = Vector3(0.24 * (1.0 if i % 2 == 0 else -1.0), i * 1.1, 0.12 * i)
 				FxParams.put(b, &"seed", i * 0.37)
 				FxParams.put(b, &"band_w", own_band_w())
-			_fx.append(BendLooks.emitter(self, "dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
+			var own := ToonFx.is_own(owner_node)
+			var shell := Node3D.new()
+			shell.name = "Swirl"
+			look.add_child(shell)
+			shell.position = Vector3.UP * 1.0
+			for i in AIR_SHELL_N:
+				var sm := _part(shell, ToonFx.shell_stroke_mesh(AIR_SHELL_TURNS, radius * AIR_SHELL_R, AIR_SHELL_W * (0.6 if own else 1.0)),
+						ToonFx.mat("wind_stroke"))
+				sm.rotation.y = TAU * float(i) / float(AIR_SHELL_N)
+				sm.extra_cull_margin = radius
+				FxParams.put(sm, &"seed", float(i) * 0.31)
+				FxParams.put(sm, &"fade", 0.6 if own else 1.0)
+			var spin := shell.create_tween().set_loops()
+			spin.tween_property(shell, "rotation:y", TAU, AIR_SHELL_S).from(0.0)
+			_fx.append(BendLooks.emitter(self, "air_dust", Vector3(radius * 0.9, 0.05, radius * 0.9), 14, 0.7, 0.6, 0.35))
 			_grow(look, Vector3.ONE * 0.2)
 		"water_wall":
 			var bm := BoxMesh.new()
@@ -437,17 +464,26 @@ func _look() -> void:
 				_fx.append(BendLooks.emitter(self, "embers", Vector3(0.4, 0.4, 0.2), 10, 0.5, 1.0, 0.05))
 				_grow(look, Vector3.ONE * 0.3)
 		"wind_wall":
-			# (a standing wall of moving wind: bands streaming across its face, dust whipped up along its foot; each band a flat
-			# ellipse its full width across and a hand deep, so it reads as a sheet from any side: deep as the wall, from aside it
-			# was a twisted column, a tornado, the move review 2026-10-12)
-			for i in 5:
-				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.5), ToonFx.mat(["wind_band", "wind_band_fast", "wind_band_slow", "wind_band", "wind_band_fast"][i]))
-				b.scale = Vector3(size.x * 0.5, size.y * 0.21, 0.14)
-				b.position = Vector3(0.0, size.y * (0.1 + 0.19 * i), 0.0)
+			# (a standing wall of moving wind, the anime air's: swirl strokes streaming across its face at every height, each a
+			# wavy drawn line its own length, speed and ink, two bands of swirl low and high, dust whipped up along its foot. It
+			# reads as a sheet from any side: each stroke runs the wall's width and sits in its plane)
+			for i in AIR_WALL_LINES:
+				var f := float(i) / float(AIR_WALL_LINES - 1)
+				var ln := _part(look, ToonFx.line_mesh(0.045 + 0.02 * float(i % 3), 0.05 + 0.03 * float(i % 2)), ToonFx.mat("wind_stroke"))
+				ln.rotation = Vector3(0.0, 0.0, PI * 0.5 * (1.0 if i % 2 == 0 else -1.0))
+				ln.scale = Vector3(1.0, size.x * (0.8 + 0.2 * float((i * 7) % 3) / 2.0), 1.0)
+				ln.position = Vector3(size.x * 0.05 * float((i * 5) % 3 - 1), size.y * (0.08 + 0.84 * f), 0.0)
+				ln.extra_cull_margin = size.x
+				FxParams.put(ln, &"seed", i * 0.41)
+				FxParams.put(ln, &"fade", 1.0)
+			for i in 2:
+				var b := _part(look, ToonFx.band_mesh(1.0, 0.9, 0.5), ToonFx.mat("wind_band_ink" if i == 0 else "wind_band_ink_slow"))
+				b.scale = Vector3(size.x * 0.5, size.y * 0.16, 0.12)
+				b.position = Vector3(0.0, size.y * (0.22 + 0.5 * i), 0.0)
 				b.rotation = Vector3(0.0, 0.0, 0.08 * (1.0 if i % 2 == 0 else -1.0))
 				FxParams.put(b, &"seed", i * 0.41)
-			var foot := BendLooks.emitter(self, "dust", Vector3(size.x * 0.5, 0.1, size.z * 0.6), 22, 0.7, 1.4, 0.4)
-			var air := BendLooks.emitter(self, "air", Vector3(size.x * 0.5, size.y * 0.45, size.z * 0.4), 20, 0.5, 2.0, 0.35)
+			var foot := BendLooks.emitter(self, "air_dust", Vector3(size.x * 0.5, 0.1, size.z * 0.6), 22, 0.7, 1.4, 0.4)
+			var air := BendLooks.emitter(self, "air", Vector3(size.x * 0.5, size.y * 0.45, size.z * 0.4), 8, 0.5, 2.0, 0.2)
 			if air != null:
 				air.position = Vector3.UP * size.y * 0.5
 			_fx.append_array([foot, air])

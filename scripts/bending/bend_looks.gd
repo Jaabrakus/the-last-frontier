@@ -1411,7 +1411,7 @@ static func beam(a: Vector3, b: Vector3, kind := "air") -> void:
 	# (a pale wash and a bold white line with its ink edge, both the length of the beam, thinning away as it fades)
 	var lines: Array = []
 	for layer: Array in [[0.2, "wind_stroke_wide"], [0.08, "wind_stroke"]]:
-		var mi := _mesh(root, ToonFx.line_mesh(float(layer[0])), ToonFx.mat(String(layer[1])))
+		var mi := _mesh(root, ToonFx.line_mesh(float(layer[0]), 0.0), ToonFx.mat(String(layer[1])))
 		mi.scale = Vector3(1.0, length, 1.0)
 		mi.extra_cull_margin = length
 		FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
@@ -1650,7 +1650,7 @@ static func guard_result(body: Node3D, el: String, result: String) -> void:
 	match result:
 		"perfect":
 			pool.play("flash", xf, 0.22, 0.6, 2.4, tint[0], tint[1])
-			pool.play("ring", Transform3D(Basis.IDENTITY, at), 0.3, 0.4, 2.6, tint[1], tint[0])     # (flat round his chest)
+			pool.play("ring_ink" if el == "air" else "ring", Transform3D(Basis.IDENTITY, at), 0.3, 0.4, 2.6, tint[1], tint[0])     # (flat round his chest)
 			pool.shoot("star", at, 14, Vector3.UP, 180.0, Vector2(2.0, 5.0), Vector2(0.2, 0.36), 0.5, Vector3.ZERO, 4.0)
 			burst(at, el if el in KINDS else "air", 14, Vector3.UP, 180.0, 4.0, 0.3, false)
 			pool.light(at, tint[0], 3.5, 0.2, 5.0)
@@ -2374,19 +2374,24 @@ static func sputter(sway: Node, el: String) -> void:
 static func air_dash(body: Node3D, dir: Vector3, up_mps: float) -> void:
 	if not live() or body == null or not is_instance_valid(body):
 		return
-	var col := _air_column()
+	var col := _air_column(absi(body.get_instance_id()) % COLUMN_SLOTS)
 	if col != null:
 		col.play(body.global_position, Vector3(dir.x, 0.0, dir.z), up_mps >= 6.0)
 
 
-static func _air_column() -> AirColumn:
+## Pooled columns: a slot a body (its id's remainder), carried wind's after the dashes'.
+const COLUMN_SLOTS := 3
+
+
+static func _air_column(slot := 0) -> AirColumn:
 	var pool := _pool()
 	if pool == null:
 		return null
-	var c := pool.get_node_or_null("AirColumn") as AirColumn
+	var nm := "AirColumn%d" % slot
+	var c := pool.get_node_or_null(nm) as AirColumn
 	if c == null:
 		c = AirColumn.new()
-		c.name = "AirColumn"
+		c.name = nm
 		pool.add_child(c)
 	return c
 
@@ -2405,7 +2410,13 @@ static func carried(body: Node3D) -> void:
 	if pool == null:
 		return
 	var at := body.global_position + Vector3.UP * 0.9
-	pool.play("swirl", Transform3D(Basis.IDENTITY, at), 0.5, 0.5, 1.4, AIR, Color(0.55, 0.78, 1.0))
+	# (the anime air, 2026-10-16: his charged wind drawn as a short spiral of strokes round him and two swirls off him, lines
+	# thrown up; the column is one of a pool, never made per cast)
+	pool.play("swirl_ink", Transform3D(Basis.IDENTITY, at), 0.5, 0.5, 1.4, Color.WHITE, Color(0.74, 0.86, 0.97))
+	pool.play("swirl_ink", Transform3D(Basis.IDENTITY, at + Vector3.UP * 0.2), 0.36, 0.3, 0.9, Color.WHITE, Color(0.74, 0.86, 0.97))
+	var col := _air_column(COLUMN_SLOTS + absi(body.get_instance_id()) % COLUMN_SLOTS)
+	if col != null:
+		col.play(body.global_position, Vector3.ZERO, true)
 	pool.shoot("spark_line", body.global_position + Vector3.UP * 0.2, 16, Vector3.UP, 25.0, Vector2(3.0, 6.0),
 			Vector2(0.035, 0.05), 0.35, Vector3.ZERO, 3.0, {"r": 0.5, "radial": 1.5})
 
@@ -2454,7 +2465,7 @@ class AirColumn:
 		visible = false
 		for i in N:
 			var mi := MeshInstance3D.new()
-			mi.mesh = ToonFx.stroke_mesh(0.85 + 0.15 * float(i % 2), 0.6, 0.46, 1.0, 0.055)
+			mi.mesh = ToonFx.stroke_mesh(0.85 + 0.15 * float(i % 2), 0.6, 0.46, 1.0, 0.08)
 			mi.material_override = ToonFx.mat("wind_stroke")
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mi.extra_cull_margin = 3.0
@@ -3218,13 +3229,17 @@ static func warm_air(pool: ToonFxPool, holder: Node3D, at: Vector3) -> void:
 	for mk: String in ["wind_arc_ink", "wind_arc_slice", "wind_arc_pull", "wind_stroke_wide"]:
 		var a := _mesh(holder, ToonFx.arc_mesh(1.0, 0.3, 2.5), ToonFx.mat(mk))
 		a.scale = Vector3.ONE * 0.01
-	var col := _air_column()
-	if col != null:
-		col.play(at, Vector3.FORWARD, true)
-		col.scale = Vector3.ONE * 0.01
+	var sm := _mesh(holder, ToonFx.shell_stroke_mesh(0.8, 1.0, 0.04), ToonFx.mat("wind_stroke"))
+	sm.scale = Vector3.ONE * 0.01
+	var wm := _mesh(holder, ToonFx.line_mesh(0.04, 0.1), ToonFx.mat("wind_stroke"))
+	wm.scale = Vector3.ONE * 0.01
+	for sl in COLUMN_SLOTS * 2:
+		var col := _air_column(sl)
+		if col != null:
+			col.play(at, Vector3.FORWARD, true)
 	var hm := _mesh(holder, ToonFx.quad(), ToonFx.mat("air_heart"))
 	hm.scale = Vector3.ONE * 0.01
-	var lm := _mesh(holder, ToonFx.line_mesh(0.05), ToonFx.mat("wind_stroke_wide"))
+	var lm := _mesh(holder, ToonFx.line_mesh(0.05, 0.0), ToonFx.mat("wind_stroke_wide"))
 	lm.scale = Vector3.ONE * 0.01
 	var fm := _mesh(holder, ToonFx.shard_mesh(1.0, 0.2, 0, 5), ToonFx.mat("air_facet"))
 	fm.scale = Vector3.ONE * 0.01
