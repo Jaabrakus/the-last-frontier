@@ -11,6 +11,8 @@ extends Node
 var body: CharacterBody3D
 ## The dash running: 0 none, 1 low (ends with its carry), 2 up (ends on landing, once it has left the ground).
 var _dash := 0
+## A fire dash running (the cel look: its end burns out in a puff and a scorch).
+var _dash_fire := false
 var _dash_left := false
 var _glide_held: Callable
 ## The way a run goes (a flat Vector3): the player's camera's; else the body's facing.
@@ -67,7 +69,8 @@ func run(mps: float, s: float, kind: String) -> void:
 
 
 ## A dash began (BendEffects.dash) with `up_mps` up: its end watched (see the header).
-func dash_began(up_mps: float) -> void:
+func dash_began(up_mps: float, fire := false) -> void:
+	_dash_fire = fire
 	_dash = 2 if up_mps >= 2.0 else 1
 	_dash_left = false
 
@@ -83,6 +86,12 @@ func glide(mps: float, s: float, held: Callable) -> void:
 ## The dash's end now (see the header): its time kept, Carried wind charged for an air fighter.
 func _dash_end() -> void:
 	_dash = 0
+	if _dash_fire:
+		# (a fire dash ends: the flame burns out in a puff and a scorch where he lands, the cel look 2026-10-16)
+		_dash_fire = false
+		var foot := body.global_position
+		BendLooks.fire_out(foot + Vector3.UP * 0.1, 0.8, 2)
+		BendLooks.mark_at("scorch", foot + Vector3.UP * 0.02, Vector3.UP, 0.9, 2.0)
 	body.set_meta(&"bend_dash_end", BendStatus.now())
 	SbFx.dash_ended(body)                     # (its Spellbreak trails stopped, its end played: visual only)
 	BendZone.carry_wind(body)
@@ -124,12 +133,12 @@ func carrying() -> bool:
 	return _carry_t > 0.0
 
 
-func _trail(kind: String) -> void:
+func _trail(kind: String, jet := true) -> void:
 	if kind == "":
 		return                                 # (a Spellbreak ride drawn instead: BendEffects.buff, SbFx)
 	if _fx == null or not is_instance_valid(_fx):
 		# (water's movement draws water's first trail, "surf": the Lash's is the charge's wisps, BendLooks._make_trail)
-		_fx = BendLooks.trail(body, "surf" if kind == "water" else kind, 0.35, kind == "fire")
+		_fx = BendLooks.trail(body, "surf" if kind == "water" else kind, 0.35, kind == "fire" and jet)
 		if _fx != null:
 			_fx.position = Vector3.UP * 0.3
 

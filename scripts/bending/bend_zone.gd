@@ -335,10 +335,16 @@ func _look() -> void:
 		"fire_wall", "burn", "seam":
 			_flames(look)
 			var h := size.y if kind == "fire_wall" else 0.5
-			var em := BendLooks.emitter(self, "embers", Vector3(size.x * 0.5, 0.1, size.z * 0.5), int(10 * maxf(size.x, size.z)),
+			var em := BendLooks.emitter(self, "embers", Vector3(size.x * 0.5, 0.1, size.z * 0.5), int(4 * maxf(size.x, size.z)),
 					1.0, h * 1.6, 0.05)
 			em.position = Vector3.UP * h * 0.4
 			_fx.append(em)
+			if kind == "fire_wall":
+				# (a few puffs of smoke rising off its top, the cel look: a fire in the drawings smokes, a few puffs, never a cloud)
+				var soot := BendLooks.emitter(self, "soot", Vector3(size.x * 0.5, 0.1, size.z * 0.5), 5, 1.6, 0.9, 0.4)
+				if soot != null:
+					soot.position = Vector3.UP * h * 0.95
+					_fx.append(soot)
 			var sc := _part(look, ToonFx.plane(), ToonFx.mat("mark_scorch"))
 			sc.scale = Vector3(size.x * 0.62, 1.0, size.z * 0.5 + 0.5)
 			sc.position = Vector3.UP * 0.02
@@ -353,6 +359,7 @@ func _look() -> void:
 			add_child(l)
 			if kind == "fire_wall":
 				_own_fade(look)
+				look.tree_exiting.connect(_burn_out)
 		"ice_patch":
 			var fr := _part(look, ToonFx.plane(), ToonFx.mat("mark_frost"))
 			fr.scale = Vector3(radius, 1.0, radius)
@@ -426,15 +433,12 @@ func _look() -> void:
 				_fx.append(BendLooks.emitter(self, "water", Vector3(SWING_R, 0.1, SWING_R), 12, 0.5, 1.2, 0.1))
 				_grow(look, Vector3(0.2, 1.0, 0.2))
 		"parry":
-			# (the Parry: a hot ring snapping out before the guard's hands, embers off it)
+			# (the Parry, the cel look 2026-10-16: a shield of flame, an arc stood up before the guard's hands facing the shot, its
+			# tongues rising off its edge; it snaps out, a few embers, and burns out in smoke when the guard ends. The first
+			# take was a thin ring: edge-on from the side, nothing like a block)
 			if r2:
-				var ring := _part(look, ToonFx.band_mesh(1.0, 0.8, 0.12), ToonFx.mat("flame_strip"))
-				ring.scale = Vector3(0.55, 1.0, 0.55)
-				ring.position = Vector3(0.0, 1.2, 0.0) + way * 0.6
-				ring.rotation = Vector3(PI / 2.0, 0.0, 0.0)
-				ring.look_at_from_position(global_position + Vector3.UP * 1.2 + way * 0.6, global_position + Vector3.UP * 1.2 + way * 2.0, Vector3.UP)
-				ring.rotate_object_local(Vector3.RIGHT, PI / 2.0)
-				_fx.append(BendLooks.emitter(self, "embers", Vector3(0.4, 0.4, 0.2), 10, 0.5, 1.0, 0.05))
+				_parry_look(look)
+				_fx.append(BendLooks.emitter(self, "embers", Vector3(0.4, 0.4, 0.2), 6, 0.5, 1.0, 0.05))
 				_grow(look, Vector3.ONE * 0.3)
 		"wind_wall":
 			# (a standing wall of moving wind: bands streaming across its face, dust whipped up along its foot; each band a flat
@@ -521,6 +525,62 @@ func _grow(look: Node3D, from: Vector3) -> void:
 	look.scale = from
 	var tw := look.create_tween()
 	tw.tween_property(look, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## The Parry's shield (the cel look): the arc stood up before the guard's hands (PARRY_AT: height, ahead), facing the shot (`way`), a
+## smile turned over so it domes the hands, a bold outlined flame arc (ToonFx flame_slash) and PARRY_TONGUES tongues rising off its
+## outer edge, the middle ones tallest. Burns out in a puff of smoke when it goes.
+const PARRY_R := 0.85
+const PARRY_TONGUES := 7
+const PARRY_AT := Vector2(1.3, 0.7)
+func _parry_look(look: Node3D) -> void:
+	# (in the zone's own frame: its local +Z is `way`, make() turned it so)
+	var right := Vector3.LEFT
+	var rot := Basis(right, Vector3.FORWARD, Vector3.DOWN)   # (the arc's X across, its front (-Z) up: a dome over the hands)
+	var pivot := Node3D.new()
+	pivot.name = "Shield"
+	pivot.position = Vector3(0.0, PARRY_AT.x, PARRY_AT.y)
+	look.add_child(pivot)
+	var arc := _part(pivot, ToonFx.arc_mesh(1.0, 0.7, 2.9), ToonFx.mat("flame_slash"))
+	arc.scale = Vector3.ONE * PARRY_R
+	arc.basis = rot * arc.basis
+	FxParams.put(arc, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = ToonFx.quad_base()
+	mm.instance_count = PARRY_TONGUES
+	for i in PARRY_TONGUES:
+		var u := 0.1 + 0.8 * float(i) / float(PARRY_TONGUES - 1)
+		var a := -PI * 0.5 + (u - 0.5) * 2.9
+		var dir := Vector3(cos(a), 0.0, sin(a))
+		var edge := sin(u * PI)
+		var at := rot * (Vector3(0.0, 0.0, PARRY_R * 0.8) + dir * PARRY_R * (1.0 + 0.1 * edge))
+		var axis := ((rot * dir) * 0.5 + Vector3.UP * 0.9).normalized()
+		var l := PARRY_R * (0.45 + 0.75 * edge) * ToonFx.vis_rng.randf_range(0.85, 1.15)
+		mm.set_instance_transform(i, Transform3D(Basis(right * PARRY_R * 0.4, axis * l, right.cross(axis).normalized()), at))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Tongues"
+	mmi.multimesh = mm
+	mmi.material_override = ToonFx.mat("flame")
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.extra_cull_margin = PARRY_R * 3.0
+	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	pivot.add_child(mmi)
+	var glow := _part(pivot, ToonFx.quad(), ToonFx.mat("flame_glow"))
+	glow.scale = Vector3(PARRY_R * 3.0, PARRY_R * 2.2, 1.0)
+	look.tree_exiting.connect(func() -> void:
+		if BendLooks.live() and is_instance_valid(pivot) and pivot.is_inside_tree():
+			BendLooks.fire_out(pivot.global_position, 0.9, 2))
+
+
+## A fire wall going out (the cel look): a puff of smoke off each stretch of it and a few sparks, never a cloud.
+func _burn_out() -> void:
+	if not BendLooks.live() or not is_inside_tree():
+		return
+	var n := maxi(int(size.x / 1.3), 2)
+	for i in n:
+		var x := (float(i) + 0.5) / float(n) - 0.5
+		BendLooks.fire_out(global_position + global_basis.x * x * size.x + Vector3.UP * 0.4, 1.3, 2)
 
 
 ## The flames of a fire wall (tall sheets in two staggered rows along it) or burning ground (low, scattered over its strip):

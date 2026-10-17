@@ -780,7 +780,7 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float, jet := false
 				_pm(pm, Vector2(2.0, 4.0), Vector2(maxf(r * 0.9, 0.22), maxf(r * 1.4, 0.34)), Vector3.ZERO, 0.8)
 			else:
 				pm.spread = 40.0                        # (the tongues lick up off the path: not every way)
-				_pm(pm, Vector2(0.5, 1.6), Vector2(maxf(r * 0.8, 0.14), maxf(r * 1.3, 0.24)), Vector3(0, 2.5, 0), 1.5)
+				_pm(pm, Vector2(0.5, 1.6), Vector2(clampf(r * 1.1, 0.18, 0.5), clampf(r * 1.7, 0.3, 0.7)), Vector3(0, 2.5, 0), 1.5)
 			_pm(sub.process_material, Vector2(1.0, 3.0), Vector2(0.025, 0.045), Vector3(0, -2.0, 0), 1.0)
 			_ribbon(rb, maxf(r * 1.5, 0.12), 0.2, 0.14)
 		"water":
@@ -861,6 +861,9 @@ static func emitter(parent: Node3D, kind: String, extents: Vector3, amount := 60
 		"embers":
 			key = "spark_fire"
 			gravity = Vector3(0, 1.5, 0)
+		"soot":
+			key = "puff_soot"                          # (the cel look: a few puffs of smoke rising off a flame)
+			gravity = Vector3(0, 0.6, 0)
 		"sparkle":
 			key = "star"
 		"debris":
@@ -3044,7 +3047,7 @@ class FloatSpear:
 const WARM_FRAMES := 6
 ## The emitters warmed in one frame.
 const WARM_EMITTERS := 4
-const WARM_EMITTER_KINDS := ["fire", "water", "smoke", "dust", "steam", "ice", "embers", "sparkle", "debris", "foam", "lightning",
+const WARM_EMITTER_KINDS := ["fire", "water", "smoke", "dust", "steam", "ice", "embers", "soot", "sparkle", "debris", "foam", "lightning",
 		"air"]
 const WARM_ZONES := ["bubble", "air_shield", "water_wall", "fire_wall", "burn", "ice_patch", "smoke", "tornado", "vacuum",
 		"wind_wall", "puddle", "redirect", "parry"]

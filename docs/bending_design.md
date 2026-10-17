@@ -201,6 +201,29 @@ shatter when one is shot down. The effects roll their own dice (ToonFx.vis_rng: 
 and take a brightness per light (ToonFx.set_gain, the shaders' fx_gain; RingLook: night 0.5). Walls are capped in the ring
 (rules.json max_walls 2 per caster, earth and ice walls alike: a third crumbles the oldest; FormRaised.count_wall).
 
+### Fire as it is drawn (2026-10-16, the owner: the elements "as close to anime style Avatar: The Last Airbender as possible")
+
+Looks only: no lock time, hitbox, speed, damage, zone radius, movement or bot number moved; the fighting styles' clips and the
+lightning bolt are as they were. Our own shaders, meshes and particles (nothing of the show is in the repo: AGENTS.md,
+docs/reference/avatar_bending_style.md and avatar_fire.md describe it in words); player text never uses the show's words.
+- **The flame** (shaders/bend_fx/toon_flame.gdshader, flame_field.gdshaderinc: `cel` on): flat hard bands (an outline never under
+  two pixels, an orange rim, a yellow band, a small pale core), a clean teardrop field with a split tip (`cel_v`) in place of fine
+  noise, redrawn on twos (`cel_fps` 12). Numbers: data/bending/fx_looks.json "flame".
+- **The gather** (BendCharge, fire): no coils. A breath of flame at the mouth as the lock begins, then four tongues licking up the
+  striking forearm (the shin for a kick) and a bigger flame in the fist or on the foot; both forearms burn low until the move's
+  limb is known, then the striker's grows and the others go out; at the click the flame flares; at the cast the tongues pull
+  back on the limb (the wind-up, until the pose's strike or HOLD_S), snap out stretched along the strike (SNAP_S, the smear) and
+  go in a puff of smoke (BendLooks.fire_out).
+- **The casts**: flame tongues (ToonFx `tongue_fire`: the cel flame on a velocity-aligned quad that flares then shrinks away) in
+  place of round puffs in a bolt's trail, a hit's burst and the Breath's cone; only a few flat sparks; the fireball's and the
+  crescent's tongues leave stretched (SMEAR_K, SMEAR_S); the High Kick's crescent is an outlined arc stood up like a moon with
+  tongues streaming back; the Kick wave burns out in puffs where it ends; the Jets' flame is thrown down off the feet.
+- **The guards**: the Parry's look is a shield of flame over the hands (BendZone._parry_look); the Fire Wall has few embers and a few
+  puffs of smoke and puffs out when it ends. **The Step** leaves a trail of flame, a scorch where it set off and a puff and scorch
+  where it lands (BendEffects.dash, BendMotion._dash_end).
+- Stills and films: tools/bending/fire_review.gd (the whole kit through the real keys, from three cameras; before and after at
+  the same frozen frames), fire_film.sh (films), fire_bodies.gd (each fire body from four sides). Test: tests/bending/test_fire_cel.gd.
+
 ## The match's screens, practice and the teams groundwork (wave 4, SCREENS)
 
 - **Round screen** (RoundScreen, over the ring in the pause after a round): who took it and why (into the water, winded in

@@ -5,7 +5,7 @@ extends SceneTree
 ## Fireball held on until it grows; key 3's Step by Shift and a direction, the Jets by the direction twice; the Parry's E
 ## held as the dummy's punch comes), the same frozen moments every run, so a "before" and an "after" line up:
 ##   lock 25%, lock full, let go +4 frames (the snap), +12 (the cast leaving), +30 (its flight, its hit at 8 m), +60 (what
-##   it leaves: smoke, scorch, the wall standing)
+##   it leaves: smoke, scorch, the wall standing), +90 (the Breath's cone: its strike comes late)
 ## from three cameras: close beside the player (the gather on the limb, the strike), wide across the deck (the flight and
 ## the hit, both in the picture), and the player's own camera. A strip of the Punch's and the Kick's gathers frame by frame
 ## (every 4 frames from the lock's start past the strike). Windowed (it draws; never on top: CaptureKit), 60 ticks a second:
@@ -34,12 +34,14 @@ const LABELS := {"embers": "Embers (LMB)", "punch": "Punch (1)", "fireball": "Fi
 		"high_kick": "High Kick (2 x2)", "breath": "Breath (4 x2)", "wall": "Fire Wall (4)", "step": "Step (Shift+W)",
 		"jets": "Jets (Shift+W x2)", "parry": "Parry (E)"}
 ## The moments: [name, when] (when: "lock25" the lock a quarter full, "full" the lock full, else frames after the release).
-const MOMENTS := [["lock25", "lock25"], ["full", "full"], ["go4", 4], ["go12", 12], ["go30", 30], ["go60", 60]]
-const MOMENT_LABELS := ["lock 25%", "lock full", "let go +4 f", "+12 f", "+30 f", "+60 f"]
+const MOMENTS := [["lock25", "lock25"], ["full", "full"], ["go4", 4], ["go12", 12], ["go30", 30], ["go60", 60], ["go90", 90]]
+const MOMENT_LABELS := ["lock 25%", "lock full", "let go +4 f", "+12 f", "+30 f", "+60 f", "+90 f"]
 ## The gather strip's takes and its frame step.
 const STRIP_TAKES := ["punch", "kick"]
 const STRIP_EVERY := 4
 const STRIP_N := 14
+## A film's take runs this many frames past the release.
+const FILM_TAIL := 100
 const CELL := Vector2i(400, 225)
 const STRIP_CELL := Vector2i(300, 169)
 ## The close camera: beside the player, this far across, this high over his feet, a little ahead of him.
@@ -212,8 +214,11 @@ func _take(t: Array) -> void:
 	var f0 := st.frame
 	match how:
 		"cast":
+			# (a move with no key of its own (Embers, the jab) is readied over key 1, the hotbar put back there first: a later
+			# camera's pass came after the Fire Wall's key, and the aim held cast the wall)
+			var act := &"aim"
 			await _ready_move(sc, m, md)
-			_ctl.set_held(&"aim", true)
+			_ctl.set_held(act, true)
 			f0 = st.frame
 			var seen25 := false
 			var n := 0
@@ -235,7 +240,7 @@ func _take(t: Array) -> void:
 					await _f(1)
 					g += 1
 				await _f(9)
-			_ctl.set_held(&"aim", false)
+			_ctl.set_held(act, false)
 		"key3":
 			# (Step and Jets cast as the game lands a dash: BendCast.cast with the direction held; the keys' chord (Shift + W) is
 			# the player's way, tools/ring/move_reel.gd, and its timing did not reach the dash here)
@@ -264,6 +269,8 @@ func _take(t: Array) -> void:
 	for mm: Array in MOMENTS:
 		if mm[1] is int:
 			last = maxi(last, int(mm[1]))
+	if film_dir != "":
+		last = maxi(last, FILM_TAIL)               # (a film runs on to the Breath's cone, its strike comes late)
 	while k <= last:
 		await _f(1)
 		k = st.frame - f1
@@ -293,6 +300,8 @@ func _take(t: Array) -> void:
 func _ready_move(sc: SwayCaster, id: String, md: String) -> void:
 	var el := "fire"
 	var k := Bending.key_of(el, id)
+	if k < 0 and not id in Bending.key3(el):
+		await _key(&"weapon_1")
 	if id in Bending.key3(el):
 		await _key(&"weapon_3")
 	elif k >= 0:

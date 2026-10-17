@@ -658,9 +658,14 @@ static func dash(c: Variant, flat: Vector3, spec: Dictionary) -> void:
 	_cur["how"] = how
 	var bm := BendMotion.of(p)
 	bm.carry(dir * fwd, 0.25)
-	bm.dash_began(up)
+	bm.dash_began(up, kind == "fire")
 	if bool(spec.get("by_pitch", false)) and kind == "fire":
 		bm._trail("fire")                         # (Jets: flame under his feet while it carries him, the move review 2026-10-12)
+	elif kind == "fire":
+		# (the Step and the other fire dashes, the cel look 2026-10-16: a trail of flame along the way he went, a scorch where
+		# he set off; where he lands, BendMotion._dash_end puffs and scorches)
+		bm._trail("fire", false)
+		BendLooks.mark_at("scorch", p.global_position + Vector3.UP * 0.02, Vector3.UP, 0.9, 2.0)
 	elif float(spec.get("under_s", 0.0)) > 0.0:
 		bm._trail("stone")                        # (Burrow: a wake of broken earth along the line he went under)
 	AirTalents.on_dash(p, spec)                     # (Peak Wind's Beat Leap: Carried wind at its top; Classic none)
