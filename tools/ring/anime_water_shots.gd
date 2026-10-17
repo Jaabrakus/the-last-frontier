@@ -28,8 +28,8 @@ const SHOTS := {
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
 	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "after": [16, 20, 24, 28, 34, 42, 56], "cam": "wide"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 10, 18, 28, 40, 60]},
-	"spear": {"key": 0, "move": "ice", "mode": "spear", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
-	"spear_hit": {"key": 0, "move": "ice", "mode": "spear", "fills": [], "full": [8], "after": [14, 18, 22, 26, 32, 40, 56], "cam": "wide"},
+	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
+	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "after": [14, 18, 22, 26, 32, 40, 56], "cam": "wide"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32]},
@@ -217,19 +217,21 @@ func _shot(name: String, d: Dictionary) -> void:
 	n = 0
 	if film != "":
 		cam_mode = String(TAKE_CAMS.get(name, cam_mode))
+	elif d.has("cam"):
+		cam_mode = String(d.cam)
+	else:
+		cam_mode = "side"
 	_place()
 	c.held_override = null
 	await _ticks(20)
 	var key := int(d.key)
-	if d.has("cam") and film == "":
-		cam_mode = String(d.cam)
-	elif film == "" and not d.has("cam"):
-		cam_mode = "side"
 	if key >= 0:
 		if d.has("move"):
 			p.hotbar.ready_move(key, String(d.move), String(d.mode))
 		else:
-			p.hotbar.select(key)
+			for t in int(d.get("taps", 1)):
+				p.hotbar.select(key)
+				await _ticks(2)
 		await _ticks(2)
 		if String(d.mode) != "" and not d.has("move"):
 			c.set_mode(p.hotbar.spell, String(d.mode))
