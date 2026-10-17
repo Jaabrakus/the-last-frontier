@@ -6,7 +6,8 @@ extends SceneTree
 ## (--fixed-fps 60), so a "before" (the base) and an "after" line up frame for frame. Windowed (it draws), off-window
 ## (OffscreenView). Nothing of the game is changed: a tool run only.
 ##   Godot --path . --fixed-fps 60 -s tools/ring/anime_water_shots.gd -- out=<dir> tag=<before|after> [only=gather_lash,...]
-##        [cam=side|front|wide] [film=<dir>]
+##        [cam=side|front|wide] [force_cam=player|wide|...] [film=<dir>]
+## force_cam=player: every shot from the player's own camera (behind the fighter, the view the owner plays), whatever the shot says.
 ## film=<dir>: the shots (only=) played back to back, each from its own camera (TAKE_CAMS) and every second physics frame
 ## (30 a second) saved to <dir>/frame_NNNNN.png, for tools/showcase/video_encode.swift (encode <dir> 30 <out.mp4>).
 ## Writes <dir>/<shot>_<nn>_<tag>.png per frame and <dir>/<shot>_strip_<tag>.png (its frames in a row, half size).
@@ -59,6 +60,7 @@ var _spot_pt := Vector3.INF
 var aiming := false
 var pitch_sign := 1.0
 var _pitch0 := 0.0
+var force_cam := ""
 var film := ""
 var _film_n := 0
 var _film_phys := 0
@@ -77,6 +79,8 @@ func _initialize() -> void:
 			cam_mode = a.substr(4)
 		elif a.begins_with("film="):
 			film = a.substr(5)
+		elif a.begins_with("force_cam="):
+			force_cam = a.substr(10)
 	DirAccess.make_dir_recursive_absolute(out)
 	if film != "":
 		DirAccess.make_dir_recursive_absolute(film)
@@ -198,6 +202,8 @@ func _place() -> void:
 
 
 func _cam() -> void:
+	if cam_mode == "player":
+		return
 	var at := home.origin
 	var eye: Vector3
 	var look: Vector3
@@ -297,6 +303,10 @@ func _shot(name: String, d: Dictionary) -> void:
 		cam_mode = String(d.cam)
 	else:
 		cam_mode = "side"
+	if force_cam != "":
+		cam_mode = force_cam
+	# (the player's own camera: the offscreen view follows it; every other mode places its camera itself)
+	view.source = p.camera if cam_mode == "player" and p.camera != null else null
 	_place()
 	c.held_override = null
 	aiming = name.ends_with("_hit")
