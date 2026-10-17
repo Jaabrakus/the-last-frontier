@@ -167,8 +167,8 @@ void fragment() {
 		// thinner than about two pixels, so it still reads from across the deck)
 		float iw = max(ink_w, bw * 2.2);
 		col = c_mid;
-		col = mix(col, c_hot, smoothstep(o + iw + 0.2 - bw, o + iw + 0.2 + bw, v));
-		col = mix(col, c_core * glow, smoothstep(o + iw + 0.66 - bw, o + iw + 0.66 + bw, v));
+		col = mix(col, c_hot, smoothstep(o + iw + 0.22 - bw, o + iw + 0.22 + bw, v));
+		col = mix(col, c_core * glow, smoothstep(o + iw + 0.82 - bw, o + iw + 0.82 + bw, v));
 		col = mix(col, c_ink, ink * (1.0 - smoothstep(o + iw - bw, o + iw + bw, v)));
 	} else {
 		col = mix(col, c_mid, smoothstep(o + 0.14 - bw, o + 0.14 + bw, v));

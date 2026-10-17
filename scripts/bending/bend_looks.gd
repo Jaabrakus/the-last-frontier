@@ -1174,7 +1174,7 @@ static func blast(at: Vector3, dir: Vector3, deg: float, reach: float, kind: Str
 	match kind:
 		"fire":
 			# (the cel look: a cone of flame tongues streaming out along it, a few flat sparks; no round puffs)
-			pool.shoot("tongue_fire", at, n, d, half, Vector2(v * 0.55, v * 1.05), Vector2(0.4, 0.8), 0.55, Vector3(0, 1.0, 0), damp * 0.8, opt)
+			pool.shoot("tongue_fire", at, mini(n * 3, 64), d, half, Vector2(v * 0.45, v * 1.05), Vector2(0.55, 1.1), 0.55, Vector3(0, 1.0, 0), damp * 0.8, opt)
 			pool.shoot("spark_fire", at, maxi(4, n / 3), d, half, Vector2(v * 0.8, v * 1.4), Vector2(0.03, 0.06), 0.5, Vector3(0, -3, 0), damp * 0.6, opt)
 			pool.light(at, Color(1.0, 0.6, 0.25), 3.0, 0.25, reach + 2.0)
 			if ring:

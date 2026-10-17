@@ -597,7 +597,7 @@ static func recipe(key: String) -> Dictionary:
 			pm.angle_max = 0.0
 			pm.color_ramp = null
 			pm.scale_curve = curve([Vector2(0, 0.35), Vector2(0.18, 1.0), Vector2(0.7, 0.8), Vector2(1, 0.0)])
-			r.amount = 48
+			r.amount = 64
 			r.slots = 8
 		"puff_steam", "puff_smoke", "puff_dust", "puff_frost", "puff_air", "foam":
 			r.mat = mat(key)
