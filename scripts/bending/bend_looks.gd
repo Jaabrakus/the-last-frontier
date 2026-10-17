@@ -1247,10 +1247,12 @@ static func rise(at: Vector3, size: Vector3, way: Vector3, matter := "earth") ->
 		x = Vector3.RIGHT
 	var b := Basis(x, Vector3.UP, x.cross(Vector3.UP))
 	var ice := matter in ["ice", "snow"]
-	pool.shoot("puff_frost" if ice else "puff_dust", at + Vector3.UP * 0.2, 24, Vector3.UP, 70.0, Vector2(0.8, 2.4),
-			Vector2(0.4, 0.9), 0.9, Vector3.ZERO, 2.5, {"box": Vector3(size.x * 0.5, 0.1, size.z * 0.6 + 0.2), "basis": b})
-	pool.shoot("shard" if ice else "chunk", at + Vector3.UP * 0.2, 16, Vector3.UP, 45.0, Vector2(2.0, 5.0),
-			Vector2(0.08, 0.2), 1.0, Vector3(0, -14, 0), 0.0, {"box": Vector3(size.x * 0.5, 0.1, size.z * 0.5), "basis": b, "ang": 400.0})
+	# (the anime pass: an ice wall comes up through a few shards of ice and a thin frost, not a cloud)
+	pool.shoot("puff_frost" if ice else "puff_dust", at + Vector3.UP * 0.2, 9 if ice else 24, Vector3.UP, 70.0, Vector2(0.8, 2.4),
+			Vector2(0.3, 0.6) if ice else Vector2(0.4, 0.9), 0.9, Vector3.ZERO, 2.5, {"box": Vector3(size.x * 0.5, 0.1, size.z * 0.6 + 0.2), "basis": b})
+	pool.shoot("shard" if ice else "chunk", at + Vector3.UP * 0.2, 22 if ice else 16, Vector3.UP, 45.0, Vector2(2.0, 5.0),
+			Vector2(0.12, 0.3) if ice else Vector2(0.08, 0.2), 1.0, Vector3(0, -14, 0), 0.0,
+			{"box": Vector3(size.x * 0.5, 0.1, size.z * 0.5), "basis": b, "ang": 400.0})
 	var marks := maxi(1, int(size.x / 1.6))
 	for i in marks:
 		var off := (float(i) + 0.5) / marks - 0.5
