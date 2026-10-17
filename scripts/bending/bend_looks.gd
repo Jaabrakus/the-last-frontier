@@ -142,13 +142,14 @@ static func bolt_body(parent: Node3D, kind: String, r: float, long := false, sha
 		"fire":
 			_fire_body(parent, r, long)
 		"water":
-			# (a smaller core than before: the wisps and the mist of its trail carry the look, as the water's charge)
-			var mi := _mesh(parent, ToonFx.sphere(16), ToonFx.mat("water"))
-			mi.scale = Vector3(r * 1.0, r * 1.0, r * (2.0 if long else 1.4))
-			mi.position = Vector3(0.0, 0.0, r * 0.35)
+			# (the anime pass, 2026-10-16: a drawn teardrop, its round head forward and its tail drawn out to a point behind it
+			# (the Lash's longer), a drawn line round it; the ribbon of its trail runs on from the tail)
+			var mi := _mesh(parent, ToonFx.drop_mesh(3.4 if long else 2.2), ToonFx.mat("water_bolt"))
+			mi.scale = Vector3.ONE * r * 1.15
+			mi.position = Vector3(0.0, 0.0, -r * 0.2)
 			FxParams.put(mi, &"seed", ToonFx.vis_rng.randf() * 5.0)
 			_core(mi)
-			_shadow(parent, "water", r, Vector3(1.0, 1.0, 2.0 if long else 1.4), mi.position)
+			_shadow(parent, "water", r, Vector3(1.0, 1.0, 2.0 if long else 1.4), Vector3(0.0, 0.0, r * 0.35))
 		"ice":
 			var mi := _mesh(parent, ToonFx.shard_mesh(1.0, 0.2, ToonFx.vis_rng.randi() % 4), ToonFx.mat("ice"))
 			var l := r * (11.0 if long else 5.5)
@@ -653,12 +654,10 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 		"water":
 			# (air's trail in water, as the water's charge (the owner, 2026-10-12: "the water charging looks perfect", "reeffect
 			# our water moves now with the new water charge"): a blue mist, a few drops, thin coiling wisps)
-			g = _stream("puff_frost", 14, 0.35)
-			g.add_child(_stream("drop", 12, 0.5))
-			var wm := water_wisp_mat()
-			rb.main_mat = wm
-			rb.coil_mat = wm
-			rb.coils = 2
+			# (the anime pass: flat drops falling off a ribbon of water, a few foam puffs; no mist, no coiling wisps)
+			g = _stream("drop", 14, 0.55)
+			g.add_child(_stream("foam", 5, 0.4))
+			rb.main_mat = ToonFx.mat("water_whip")
 		"surf":
 			# (water's movement (Skate, Surf: BendMotion) keeps water's first trail, the owner, 2026-10-12: "the orignal surf
 			# or wave skill was better"; the Lash's is the charge's wisps and mist)
@@ -715,12 +714,9 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 			_pm(sub.process_material, Vector2(1.0, 3.0), Vector2(0.025, 0.045), Vector3(0, -2.0, 0), 1.0)
 			_ribbon(rb, maxf(r * 1.5, 0.12), 0.2, 0.14)
 		"water":
-			_pm(pm, Vector2(0.2, 0.8), Vector2(maxf(r * 0.9, 0.1), maxf(r * 1.7, 0.18)), Vector3(0, 0.3, 0), 1.5)
-			_pm(sub.process_material, Vector2(0.4, 1.8), Vector2(r * 0.2, r * 0.45), Vector3(0, -12.0, 0), 0.5)
-			_ribbon(rb, maxf(r * 0.6, 0.06), 0.15, 0.16)
-			rb.coil_r = r * 1.6
-			rb.coil_w = 0.04 + r * 0.16
-			rb.coil_spin = 18.0
+			_pm(pm, Vector2(0.3, 1.4), Vector2(r * 0.3, r * 0.6), Vector3(0, -12.0, 0), 0.5)
+			_pm(sub.process_material, Vector2(0.1, 0.6), Vector2(maxf(r * 0.8, 0.09), maxf(r * 1.3, 0.15)), Vector3.ZERO, 1.5)
+			_ribbon(rb, maxf(r * 0.55, 0.05), 0.08, 0.22)
 		"mud", "surf":
 			# (mud and water's movement keep water's old trail: drops and a coiled strip, no mist and no wisps)
 			_pm(pm, Vector2(0.4, 1.8), Vector2(r * 0.25, r * 0.55), Vector3(0, -12.0, 0), 0.5)
@@ -897,10 +893,12 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 		"water":
 			pool.shoot("drop", at, int(n * 1.3), d, spread, Vector2(speed * 0.6, speed * 1.8), Vector2(0.1, 0.2) * k,
 					0.75, Vector3(0, -14.0, 0), 0.5, {"r": 0.1 * k}.merged(occl))
-			pool.shoot("foam", at, int(n * 0.45), d, spread * 1.2, Vector2(speed * 0.2, speed * 0.6), Vector2(0.35, 0.7) * k,
+			pool.shoot("foam", at, int(n * 0.2), d, spread * 1.2, Vector2(speed * 0.2, speed * 0.6), Vector2(0.3, 0.6) * k,
 					0.5, Vector3.ZERO, 2.0, {"r": 0.15 * k}.merged(occl))
 			if not g.is_empty():
+				# (a crown of spikes rising and falling, a second one inside it a beat behind, a thin ring running out)
 				pool.play("crown", _flat(g), 0.55, 0.6 * k, 1.3 * k, WATER, FOAM, ToonFx.band_mesh(1.0, 1.5, 1.0))
+				pool.play("crown", _flat(g), 0.42, 0.3 * k, 0.8 * k, FOAM, WATER, ToonFx.band_mesh(1.0, 1.3, 0.7))
 				pool.play("ring", _flat(g), 0.7, 0.3 * k, 1.9 * k, FOAM, Color(0.55, 0.85, 1.0))
 				pool.mark("wet", g.pos, g.normal, 1.6 * k, 4.0)
 			else:

@@ -126,7 +126,7 @@ void fragment() {
 	col = mix(col, c_foam, aastep(foam, fm));
 	vec3 H = normalize(L + VIEW);
 	col = mix(col, vec4(1.0), aastep(0.93, dot(N, H)));
-	col.rgb = mix(col.rgb, c_ink, ink * aastep(0.86, fres));
+	col.rgb = mix(col.rgb, c_ink, max(ink, outline) * aastep(0.8, fres));
 	float keep = fm + 0.35 - (1.0 - fade) * 1.4;
 	if (mode == 1) {
 		keep -= smoothstep(0.55, 1.0, UV.x) * 0.9;

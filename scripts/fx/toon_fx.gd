@@ -183,6 +183,17 @@ static func mat(key: String) -> ShaderMaterial:
 			p = {"mode": 2, "outline": 1.0, "flow": Vector2(2.4, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.84, "gloss": 0.64,
 					"c_shade": Color(0.1, 0.4, 0.86, 0.97), "c_body": Color(0.22, 0.62, 1.0, 0.95), "c_rim": Color(0.72, 0.93, 1.0, 0.97),
 					"c_foam": Color(0.97, 1.0, 1.0, 1.0), "c_ink": Color(0.03, 0.14, 0.36)}
+		"water_bolt":
+			# (the anime pass: a Splash's or a Lash's head, a drawn teardrop: a drawn line round it, foam streaks running down it)
+			m.shader = SHADERS.water
+			p = {"mode": 0, "wobble": 0.02, "outline": 1.0, "flow": Vector2(0.0, -2.4), "nscale": Vector2(2.2, 1.0),
+					"foam": 0.78, "rim": 0.5}
+		"water_whip":
+			# (the ribbon trailing a water bolt: the water ribbon on a follow strip, its flecks quicker)
+			m.shader = SHADERS.water
+			p = {"mode": 2, "outline": 1.0, "flow": Vector2(5.0, 0.0), "nscale": Vector2(1.6, 1.0), "foam": 0.84, "gloss": 0.6,
+					"c_shade": Color(0.1, 0.4, 0.86, 0.95), "c_body": Color(0.22, 0.62, 1.0, 0.93), "c_rim": Color(0.72, 0.93, 1.0, 0.95),
+					"c_foam": Color(0.97, 1.0, 1.0, 1.0), "c_ink": Color(0.03, 0.14, 0.36)}
 		"water_ribbon_thin":
 			# (the thin strand coiling round the ribbon: paler, no line, a few flecks)
 			m.shader = SHADERS.water
@@ -403,6 +414,40 @@ static func sphere(segs := 18) -> Mesh:
 		s.radial_segments = segs
 		s.rings = segs / 2
 		return s)
+
+
+## A water teardrop along -Z (the anime pass): a round head at z -1 and a tail drawn out to a point at z `tail`, radius 1 at the
+## head (UV.x round, UV.y along).
+static func drop_mesh(tail := 2.2, sides := 14, rings := 18) -> Mesh:
+	return _cached("drop_%.2f_%d_%d" % [tail, sides, rings], func() -> Mesh:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var prof: Array[Vector2] = []
+		for i in rings + 1:
+			var z := lerpf(-1.0, tail, float(i) / float(rings))
+			prof.append(Vector2(z, sqrt(maxf(1.0 - z * z, 0.0)) if z < 0.0 else pow(maxf(1.0 - z / tail, 0.0), 1.6)))
+		for i in rings:
+			for j in sides:
+				var a0 := TAU * float(j) / float(sides)
+				var a1 := TAU * float(j + 1) / float(sides)
+				var q := [Vector3(cos(a0) * prof[i].y, sin(a0) * prof[i].y, prof[i].x), Vector3(cos(a1) * prof[i].y, sin(a1) * prof[i].y, prof[i].x),
+						Vector3(cos(a0) * prof[i + 1].y, sin(a0) * prof[i + 1].y, prof[i + 1].x),
+						Vector3(cos(a1) * prof[i + 1].y, sin(a1) * prof[i + 1].y, prof[i + 1].x)]
+				var uv := [Vector2(float(j) / sides, float(i) / rings), Vector2(float(j + 1) / sides, float(i) / rings),
+						Vector2(float(j) / sides, float(i + 1) / rings), Vector2(float(j + 1) / sides, float(i + 1) / rings)]
+				for tri: Array in [[0, 2, 1], [1, 2, 3]]:
+					var a: Vector3 = q[tri[0]]
+					var b: Vector3 = q[tri[1]]
+					var c: Vector3 = q[tri[2]]
+					var order: Array = tri
+					# (front faces wind clockwise seen from outside: the cross points inward)
+					if (b - a).cross(c - a).dot(Vector3(a.x + b.x + c.x, a.y + b.y + c.y, 0.0)) > 0.0:
+						order = [tri[0], tri[2], tri[1]]
+					for k in order:
+						st.set_uv(uv[k])
+						st.add_vertex(q[k])
+		st.generate_normals()
+		return st.commit())
 
 
 ## An open band round local Y: radius `r0` at the bottom, `r1` at the top, `h` high (UV.x round, UV.y up).

@@ -6,7 +6,9 @@ extends SceneTree
 ## (--fixed-fps 60), so a "before" (the base) and an "after" line up frame for frame. Windowed (it draws), off-window
 ## (OffscreenView). Nothing of the game is changed: a tool run only.
 ##   Godot --path . --fixed-fps 60 -s tools/ring/anime_water_shots.gd -- out=<dir> tag=<before|after> [only=gather_lash,...]
-##        [cam=side|front|wide]
+##        [cam=side|front|wide] [film=<dir>]
+## film=<dir>: the shots (only=) played back to back, each from its own camera (TAKE_CAMS) and every second physics frame
+## (30 a second) saved to <dir>/frame_NNNNN.png, for tools/showcase/video_encode.swift (encode <dir> 30 <out.mp4>).
 ## Writes <dir>/<shot>_<nn>_<tag>.png per frame and <dir>/<shot>_strip_<tag>.png (its frames in a row, half size).
 ## Shots (SHOTS): gather_lash (key 1 held: the water drawn to the hands, the click, the Lash let go), gather_geyser (key 2's
 ## Geyser: the water run along the deck to its place, the column), splash (the jab), lash (the Lash in flight and its hit),
@@ -21,15 +23,21 @@ const H := 720
 const SHOTS := {
 	"gather_lash": {"key": 0, "mode": "", "fills": [0.2, 0.45, 0.7, 0.92], "full": [12], "after": [3, 8, 16, 30]},
 	"gather_geyser": {"key": 1, "mode": "spout", "fills": [0.25, 0.5, 0.75, 0.95], "full": [12], "after": [4, 12, 26, 45, 70]},
-	"splash": {"key": -1, "mode": "", "fills": [0.5], "full": [4], "after": [4, 9, 14, 20, 30]},
-	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [4, 8, 12, 17, 24, 36]},
+	"splash": {"key": -1, "mode": "", "fills": [], "full": [], "after": [10, 18, 22, 24, 26, 28, 31, 35, 42]},
+	"splash_hit": {"key": -1, "mode": "", "fills": [], "full": [], "after": [24, 28, 32, 36, 42, 50, 62], "cam": "wide"},
+	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
+	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "after": [16, 20, 24, 28, 34, 42, 56], "cam": "wide"},
 	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 10, 18, 28, 40, 60]},
-	"spear": {"key": 0, "mode": "ice", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
-	"ice_wall": {"key": 3, "mode": "", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
+	"spear": {"key": 0, "move": "ice", "mode": "spear", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
+	"spear_hit": {"key": 0, "move": "ice", "mode": "spear", "fills": [], "full": [8], "after": [14, 18, 22, 26, 32, 40, 56], "cam": "wide"},
+	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
 	"skate": {"key": -3, "mode": "", "fills": [], "full": [], "after": [4, 10, 18, 30, 50, 90]},
 	"turn": {"key": -2, "mode": "", "fills": [], "full": [], "after": [2, 6, 10, 14, 18, 24, 32]},
 }
-const ORDER := ["gather_lash", "gather_geyser", "splash", "lash", "wave", "spear", "ice_wall", "skate", "turn"]
+## The camera each shot is filmed from in film mode (the stills' own: cam=).
+const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
+		"lash_hit": "wide", "wave": "wide", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
+const ORDER := ["gather_lash", "gather_geyser", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
 
 var view
 var out := "user://anime_water"
@@ -45,6 +53,9 @@ var right := Vector3.RIGHT
 var frames: Array[Image] = []
 var shot := ""
 var n := 0
+var film := ""
+var _film_n := 0
+var _film_phys := 0
 
 
 func _initialize() -> void:
@@ -58,7 +69,11 @@ func _initialize() -> void:
 			only = Array(a.substr(5).split(","))
 		elif a.begins_with("cam="):
 			cam_mode = a.substr(4)
+		elif a.begins_with("film="):
+			film = a.substr(5)
 	DirAccess.make_dir_recursive_absolute(out)
+	if film != "":
+		DirAccess.make_dir_recursive_absolute(film)
 	InputSetup.ensure()
 	MatchSetup.incoming = true
 	MatchSetup.element = "water"
@@ -72,6 +87,20 @@ func _initialize() -> void:
 func _ticks(k: int) -> void:
 	for i in k:
 		await physics_frame
+		_film_tick()
+
+
+## Film mode: every second physics frame saved (30 a second).
+func _film_tick() -> void:
+	if film == "" or view == null:
+		return
+	_film_phys += 1
+	if _film_phys % 2 != 0:
+		return
+	var img: Image = view.get_texture().get_image()
+	img.convert(Image.FORMAT_RGB8)
+	img.save_png(film.path_join("frame_%05d.png" % _film_n))
+	_film_n += 1
 
 
 func _until(cond: Callable, s: float) -> bool:
@@ -80,6 +109,7 @@ func _until(cond: Callable, s: float) -> bool:
 		if cond.call():
 			return true
 		await physics_frame
+		_film_tick()
 		left -= 1
 	return bool(cond.call())
 
@@ -129,7 +159,7 @@ func _run(only: Array) -> void:
 		if not s in only or not SHOTS.has(s):
 			continue
 		await _shot(s, SHOTS[s])
-	print("ANIME WATER SHOTS DONE %s" % tag)
+	print("ANIME WATER SHOTS DONE %s (%d film frames)" % [tag, _film_n])
 	quit()
 
 
@@ -157,6 +187,8 @@ func _cam() -> void:
 
 
 func _grab(what: String) -> void:
+	if film != "":
+		return
 	await process_frame
 	await process_frame
 	var img: Image = view.get_texture().get_image()
@@ -183,14 +215,23 @@ func _strip() -> void:
 func _shot(name: String, d: Dictionary) -> void:
 	shot = name
 	n = 0
+	if film != "":
+		cam_mode = String(TAKE_CAMS.get(name, cam_mode))
 	_place()
 	c.held_override = null
 	await _ticks(20)
 	var key := int(d.key)
+	if d.has("cam") and film == "":
+		cam_mode = String(d.cam)
+	elif film == "" and not d.has("cam"):
+		cam_mode = "side"
 	if key >= 0:
-		p.hotbar.select(key)
+		if d.has("move"):
+			p.hotbar.ready_move(key, String(d.move), String(d.mode))
+		else:
+			p.hotbar.select(key)
 		await _ticks(2)
-		if String(d.mode) != "":
+		if String(d.mode) != "" and not d.has("move"):
 			c.set_mode(p.hotbar.spell, String(d.mode))
 		await _ticks(4)
 		c.held_override = true
@@ -225,6 +266,6 @@ func _shot(name: String, d: Dictionary) -> void:
 		t2 = k
 		await _grab("after%02d" % k)
 	c.held_override = null
-	await _ticks(90)
+	await _ticks(40 if film != "" else 90)
 	_strip()
 	print("ANIME WATER SHOT %s %d frames" % [name, n])
