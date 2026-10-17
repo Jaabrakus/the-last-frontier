@@ -50,6 +50,8 @@ uniform float ink_w = 0.08;
 uniform float lobes = 2.5;
 uniform float notch = 0.32;
 uniform float cel_noise = 0.7;
+// 1 (mode 1): a flat arc of flame, high along its middle (the High Kick's crescent) instead of a tongue's teardrop.
+uniform float slash = 0.0;
 // 1: an instance's colour red is its heat (the Kick's rows, a MultiMesh with colours); 0: every tongue whole heat.
 uniform float heat_on = 0.0;
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
@@ -144,7 +146,9 @@ void fragment() {
 	}
 	float n2 = 0.5;
 	float v;
-	if (cel > 0.5 && mode != 2) {
+	if (cel > 0.5 && mode == 1 && slash > 0.5) {
+		v = cel_slash(noise, across, along, t, sd);
+	} else if (cel > 0.5 && mode != 2) {
 		v = cel_v(noise, across, along, t, sd, lobes, notch);
 	} else {
 		v = flame_v(noise, across, along, t, sd, nscale, turb, mode == 2 ? 1.0 : taper, warp, n2);

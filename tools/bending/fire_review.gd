@@ -47,9 +47,9 @@ const CLOSE_SIDE := 4.3
 const CLOSE_UP := 1.25
 const CLOSE_AHEAD := 1.0
 ## The wide camera: across the deck from the middle between the two, framing both.
-const WIDE_SIDE := 8.0
-const WIDE_UP := 1.7
-const WIDE_FOV := 38.0
+const WIDE_SIDE := 6.0
+const WIDE_UP := 1.5
+const WIDE_FOV := 50.0
 
 var out := "user://fire_review"
 var tag := "now"
@@ -237,21 +237,15 @@ func _take(t: Array) -> void:
 				await _f(9)
 			_ctl.set_held(&"aim", false)
 		"key3":
-			# (Shift + W as a key's chord, the move reel's way: a fresh press at a physics frame's start; twice for the other)
+			# (Step and Jets cast as the game lands a dash: BendCast.cast with the direction held; the keys' chord (Shift + W) is
+			# the player's way, tools/ring/move_reel.gd, and its timing did not reach the dash here)
 			got["lock25"] = _grab()
-			_ctl.set_held(&"sprint", true)
-			await _f(3)
 			_ctl.set_held(&"move_forward", true)
-			if md == "jets":
-				await _f(2)
-				_ctl.set_held(&"move_forward", false)
-				await _f(2)
-				_ctl.set_held(&"move_forward", true)
-			await _f(2)
+			await _f(3)
 			got["full"] = _grab()
+			BendCast.cast(st.bc, m, md)
 			await _f(20)
 			_ctl.set_held(&"move_forward", false)
-			_ctl.set_held(&"sprint", false)
 		"guard":
 			got["lock25"] = _grab()
 			_ctl.set_held(InputSetup.GUARD_ACTION, true)

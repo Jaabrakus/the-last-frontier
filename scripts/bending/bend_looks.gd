@@ -245,28 +245,73 @@ static func _disc_body(parent: Node3D, kind: String, r: float) -> void:
 		parent.add_child(l2)
 
 
-## The High Kick's crescent (round 2; BendThrow, shape "crescent", point first: -Z along its flight): a bold arc of flame
-## standing across its line, its horns swept back, a hot core at its middle and a warm light.
+## The High Kick's crescent (round 2; BendThrow, shape "crescent", point first: -Z along its flight): fire's (the cel look,
+## 2026-10-16) a flat bold arc of flame, outlined, a pale core down its middle, its horns swept back, flame tongues licking back
+## off its outer edge (CRESCENT_TONGUES, longest at the middle), a hot core at its middle and a warm light; air's a pale arc.
+const CRESCENT_TONGUES := 7
 static func _crescent_body(parent: Node3D, kind: String, r: float) -> void:
 	var w := maxf(r, 0.4)
-	var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.36, 2.5), ToonFx.mat("flame_strip" if kind == "fire" else "wind_arc"))
-	arc.scale = Vector3.ONE * w * 1.25
 	if kind == "fire":
-		_shadow(parent, "fire", w, Vector3(1.6, 0.35, 0.6), Vector3.ZERO)
-		_glow(parent, Vector3(w * 3.2, w * 2.0, 1.0), Vector3.ZERO)
-	else:
-		_air_dust(parent)
-	# (flat across its flight, tipped up a little: the kick's sweep; fire's High Kick stood up into a rising sweep, the move
-	# review 2026-10-12: the flame went out flat, not like an uppercut)
-	arc.rotation = Vector3(1.05 if kind == "fire" else 0.35, 0.0, 0.0)
+		_fire_crescent(parent, w)
+		return
+	var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.36, 2.5), ToonFx.mat("wind_arc"))
+	arc.scale = Vector3.ONE * w * 1.25
+	_air_dust(parent)
+	arc.rotation = Vector3(0.35, 0.0, 0.0)
 	FxParams.put(arc, &"seed", ToonFx.vis_rng.randf() * 10.0)
-	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb" if kind == "fire" else "orb"))
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("orb"))
 	o.scale = Vector3.ONE * w * 0.9
 	_core(o)
-	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04) if kind == "fire" else AIR)
-	FxParams.put(o, &"tint2", Color(1.0, 0.7, 0.12) if kind == "fire" else Color(0.6, 0.8, 1.0))
+	FxParams.put(o, &"tint", AIR)
+	FxParams.put(o, &"tint2", Color(0.6, 0.8, 1.0))
 	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
-	if live() and kind == "fire":
+
+
+## Fire's crescent of half-width `w`: the arc stood up like a moon (CRESCENT_ROT about X: a smile leaning back a little, its horns
+## up and back), so the caster, who sends it, and the one it comes at both see a crescent; the tongues stream back (+Z) off its
+## outer edge, so from the side it is a blade with flame behind it. (The first take laid the arc flat, tilted: edge-on from
+## behind and the side, a bouquet of tongues.)
+const CRESCENT_ROT := -1.2
+static func _fire_crescent(parent: Node3D, w: float) -> void:
+	var rot := Basis(Vector3.RIGHT, CRESCENT_ROT)
+	var rad := w * 1.5
+	var arc := _mesh(parent, ToonFx.arc_mesh(1.0, 0.9, 2.6), ToonFx.mat("flame_slash"))
+	arc.scale = Vector3.ONE * rad
+	arc.basis = rot * arc.basis
+	FxParams.put(arc, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	_shadow(parent, "fire", w, Vector3(1.6, 0.35, 0.6), Vector3.ZERO)
+	_glow(parent, Vector3(w * 3.6, w * 2.4, 1.0), Vector3.ZERO)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = ToonFx.quad_base()
+	mm.instance_count = CRESCENT_TONGUES
+	for i in CRESCENT_TONGUES:
+		var u := 0.1 + 0.8 * float(i) / float(CRESCENT_TONGUES - 1)
+		var a := -PI * 0.5 + (u - 0.5) * 2.6
+		var dir := Vector3(cos(a), 0.0, sin(a))
+		var edge := sin(u * PI)
+		var at := rot * (Vector3(0.0, 0.0, rad * 0.8) + dir * rad * (1.0 + 0.12 * edge))
+		var axis := (rot * dir * 0.35 + Vector3.BACK * 0.95).normalized()
+		var side := axis.cross(Vector3.UP).normalized()
+		var l := rad * (0.45 + 0.8 * edge) * ToonFx.vis_rng.randf_range(0.85, 1.15)
+		mm.set_instance_transform(i, Transform3D(Basis(side * rad * 0.5, axis * l, side.cross(axis).normalized()), at))
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "Tongues"
+	mmi.multimesh = mm
+	mmi.material_override = ToonFx.mat("flame")
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	mmi.extra_cull_margin = rad * 3.0
+	parent.add_child(mmi)
+	_smear(mmi)
+	var o := _mesh(parent, ToonFx.quad(), ToonFx.mat("flame_orb"))
+	o.scale = Vector3.ONE * w * 0.6
+	o.position = rot * Vector3(0.0, 0.0, -rad * 0.2)
+	_core(o)
+	FxParams.put(o, &"tint", Color(0.95, 0.22, 0.04))
+	FxParams.put(o, &"tint2", Color(1.0, 0.7, 0.12))
+	FxParams.put(o, &"seed", ToonFx.vis_rng.randf() * 10.0)
+	if live():
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.58, 0.22)
 		l.light_energy = 1.3
@@ -580,6 +625,7 @@ static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 	FxParams.put(mmi, &"seed", ToonFx.vis_rng.randf() * 10.0)
 	mmi.extra_cull_margin = r * 7.0
 	parent.add_child(mmi)
+	_smear(mmi)
 	if live() and r >= 0.15:
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.58, 0.22)
@@ -589,9 +635,25 @@ static func _fire_body(parent: Node3D, r: float, long: bool) -> void:
 		parent.add_child(l)
 
 
+## The smear on the release (the cel look, 2026-10-16: a fast thing is drawn stretched for a drawing or two as it leaves): the
+## tongues `mmi` (a flame MultiMesh, mode 0) drawn SMEAR_K times as long as they are, drawn back to their length in SMEAR_S.
+const SMEAR_K := 2.4
+const SMEAR_S := 0.14
+static func _smear(mmi: MultiMeshInstance3D) -> void:
+	if not live():
+		return
+	FxParams.put(mmi, &"grow", SMEAR_K)
+	var go := func() -> void:
+		var tw := mmi.create_tween()
+		tw.tween_method(func(v: float) -> void: FxParams.put(mmi, &"grow", v), SMEAR_K, 1.0, SMEAR_S) \
+				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	mmi.ready.connect(go, CONNECT_ONE_SHOT)
+
+
 ## A trail that follows `parent` (emitting till let go; left behind to fade when the bolt ends: stop_trail). Taken from the
 ## pool (null when every one of its kind is busy).
-static func trail(parent: Node3D, kind: String, r: float) -> GPUParticles3D:
+## `jet` (fire's movement: the Jets, a hover): the tongues thrown down and back off the feet like exhaust, not licking up.
+static func trail(parent: Node3D, kind: String, r: float, jet := false) -> GPUParticles3D:
 	if not live():
 		return null
 	var pool := _pool()
@@ -601,7 +663,7 @@ static func trail(parent: Node3D, kind: String, r: float) -> GPUParticles3D:
 	var g := pool.trail_take(k, func() -> GPUParticles3D: return _make_trail(k))
 	if g == null:
 		return null
-	_setup_trail(g, k, r)
+	_setup_trail(g, k, r, jet and k == "fire")
 	if g.get_parent() != null:
 		g.get_parent().remove_child(g)
 	parent.add_child(g)
@@ -647,8 +709,9 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 	var rb := ToonRibbon.new()
 	match kind:
 		"fire":
-			g = _stream("puff_fire", 18, 0.3)
-			g.add_child(_stream("spark_fire", 12, 0.55))
+			# (the cel look: a tail of detached flame tongues that shrink away behind it, a ribbon, a few flat sparks)
+			g = _stream("tongue_fire", 12, 0.34)
+			g.add_child(_stream("spark_fire", 5, 0.55))
 			rb.main_mat = ToonFx.mat("flame_strip")
 		"water":
 			# (air's trail in water, as the water's charge (the owner, 2026-10-12: "the water charging looks perfect", "reeffect
@@ -696,7 +759,7 @@ static func _make_trail(kind: String) -> GPUParticles3D:
 
 
 ## A pooled trail set for a bolt of radius `r`.
-static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
+static func _setup_trail(g: GPUParticles3D, kind: String, r: float, jet := false) -> void:
 	var pm := g.process_material as ParticleProcessMaterial
 	var sub: GPUParticles3D = null
 	var rb: ToonRibbon = null
@@ -711,7 +774,13 @@ static func _setup_trail(g: GPUParticles3D, kind: String, r: float) -> void:
 	pm.spread = 180.0
 	match kind:
 		"fire":
-			_pm(pm, Vector2(0.3, 1.2), Vector2(maxf(r * 0.7, 0.12), maxf(r * 1.25, 0.2)), Vector3(0, 2.5, 0), 1.5)
+			if jet:
+				pm.direction = Vector3.DOWN              # (exhaust: thrown down off the feet, then left behind as he goes)
+				pm.spread = 22.0
+				_pm(pm, Vector2(2.0, 4.0), Vector2(maxf(r * 0.9, 0.22), maxf(r * 1.4, 0.34)), Vector3.ZERO, 0.8)
+			else:
+				pm.spread = 40.0                        # (the tongues lick up off the path: not every way)
+				_pm(pm, Vector2(0.5, 1.6), Vector2(maxf(r * 0.8, 0.14), maxf(r * 1.3, 0.24)), Vector3(0, 2.5, 0), 1.5)
 			_pm(sub.process_material, Vector2(1.0, 3.0), Vector2(0.025, 0.045), Vector3(0, -2.0, 0), 1.0)
 			_ribbon(rb, maxf(r * 1.5, 0.12), 0.2, 0.14)
 		"water":
@@ -885,10 +954,16 @@ static func burst(at: Vector3, kind: String, n := 18, dir := Vector3.UP, spread 
 	var up := Transform3D(Basis.IDENTITY, at)
 	match kind:
 		"fire":
+			# (the cel look, 2026-10-16: a spiked flash, a few cartoon puffs of flame, flame tongues thrown out, then a few puffs of
+			# smoke rising where it burned; only a few flat sparks)
 			pool.play("flash", up, 0.18, 0.7 * k, 2.2 * k, FIRE, FIRE_HOT)
-			pool.shoot("puff_fire", at, int(n * 0.9), d, spread, Vector2(speed * 0.3, speed * 0.9), Vector2(0.45, 1.0) * k,
+			pool.shoot("puff_fire", at, maxi(3, int(n * 0.4)), d, spread, Vector2(speed * 0.3, speed * 0.9), Vector2(0.45, 1.0) * k,
 					0.5, Vector3(0, 3.0, 0), 3.0, {"r": 0.15 * k}.merged(occl))
-			pool.shoot("spark_fire", at, n, d, spread, Vector2(speed * 0.8, speed * 2.2), Vector2(0.03, 0.06), 0.65,
+			pool.shoot("tongue_fire", at, maxi(4, int(n * 0.45)), d, spread, Vector2(speed * 0.35, speed * 0.9), Vector2(0.4, 0.8) * k,
+					0.42, Vector3(0, 2.0, 0), 2.5, {"r": 0.1 * k})
+			pool.shoot("puff_soot", at + Vector3.UP * 0.1 * k, maxi(2, int(n * 0.14)), Vector3.UP, 60.0,
+					Vector2(speed * 0.15, speed * 0.4), Vector2(0.3, 0.55) * k, 0.9, Vector3(0, 0.9, 0), 2.0, {"r": 0.12 * k}.merged(occl))
+			pool.shoot("spark_fire", at, maxi(3, int(n * 0.35)), d, spread, Vector2(speed * 0.8, speed * 2.2), Vector2(0.03, 0.06), 0.55,
 					Vector3(0, -5.0, 0), 1.5)
 			pool.light(at, Color(1.0, 0.6, 0.25), 3.0, 0.2, 4.0)
 			if not g.is_empty():
@@ -1007,7 +1082,7 @@ static func body_h(b: Node) -> float:
 ## how tall it stands (m): twice its puffs' reach plus their size. The table: [speed share, size (x its size's k), life,
 ## damping] of each of the kind's occluding shots, as burst plays them.
 const BURST_CLOUD := {
-	"fire": [[0.9, 1.0, 0.5, 3.0], [0.0, 2.2, 0.0, 0.0]],
+	"fire": [[0.9, 1.0, 0.5, 3.0], [0.9, 1.1, 0.42, 2.5], [0.4, 0.55, 0.9, 2.0], [0.0, 2.2, 0.0, 0.0]],
 	"water": [[0.6, 0.7, 0.5, 2.0], [0.0, 1.0, 0.0, 0.0]],
 	"steam": [[1.0, 0.9, 1.1, 2.0]],
 	"ice": [[0.6, 0.6, 0.55, 2.0], [0.0, 1.2, 0.0, 0.0]],
@@ -1095,8 +1170,9 @@ static func blast(at: Vector3, dir: Vector3, deg: float, reach: float, kind: Str
 	var flat := Transform3D(Basis.IDENTITY, foot + Vector3.UP * 0.05)
 	match kind:
 		"fire":
-			pool.shoot("puff_fire", at, n, d, half, Vector2(v * 0.6, v), Vector2(0.4, 0.85), 0.55, Vector3(0, 2.0, 0), damp, opt)
-			pool.shoot("spark_fire", at, n, d, half, Vector2(v * 0.8, v * 1.4), Vector2(0.03, 0.06), 0.6, Vector3(0, -3, 0), damp * 0.6, opt)
+			# (the cel look: a cone of flame tongues streaming out along it, a few flat sparks; no round puffs)
+			pool.shoot("tongue_fire", at, n, d, half, Vector2(v * 0.55, v * 1.05), Vector2(0.4, 0.8), 0.55, Vector3(0, 1.0, 0), damp * 0.8, opt)
+			pool.shoot("spark_fire", at, maxi(4, n / 3), d, half, Vector2(v * 0.8, v * 1.4), Vector2(0.03, 0.06), 0.5, Vector3(0, -3, 0), damp * 0.6, opt)
 			pool.light(at, Color(1.0, 0.6, 0.25), 3.0, 0.25, reach + 2.0)
 			if ring:
 				pool.play("ring", flat, 0.4, 0.5, reach, FIRE, FIRE_HOT)
@@ -2421,6 +2497,13 @@ class WaveFx:
 	var _last := Vector3.INF
 	var _acc := 0.0
 	var _spill := 0.0
+
+	## The wave ends (its range, a wall, a hit, a guard): its flames burn out in puffs of smoke along its front (the cel look).
+	func _exit_tree() -> void:
+		if BendLooks.live() and is_inside_tree():
+			var w := base_w * absf((get_parent() as Node3D).scale.x) if get_parent() is Node3D else base_w
+			BendLooks.fire_out(global_position + Vector3.UP * 0.15 + global_basis.x * w * 0.25, 0.9, 2)
+			BendLooks.fire_out(global_position + Vector3.UP * 0.15 - global_basis.x * w * 0.25, 0.9, 2)
 
 	func _process(dt: float) -> void:
 		var pool := BendLooks._pool()

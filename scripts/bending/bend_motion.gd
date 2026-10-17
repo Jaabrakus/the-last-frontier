@@ -129,7 +129,7 @@ func _trail(kind: String) -> void:
 		return                                 # (a Spellbreak ride drawn instead: BendEffects.buff, SbFx)
 	if _fx == null or not is_instance_valid(_fx):
 		# (water's movement draws water's first trail, "surf": the Lash's is the charge's wisps, BendLooks._make_trail)
-		_fx = BendLooks.trail(body, "surf" if kind == "water" else kind, 0.35)
+		_fx = BendLooks.trail(body, "surf" if kind == "water" else kind, 0.35, kind == "fire")
 		if _fx != null:
 			_fx.position = Vector3.UP * 0.3
 

@@ -101,6 +101,15 @@ static func mat(key: String) -> ShaderMaterial:
 			m.shader = SHADERS.flame
 			p = {"mode": 3, "glow": 2.4}
 			m.render_priority = 1
+		"flame_bit":
+			# (a flame tongue flying off as a particle, the cel look (2026-10-16): the flame shader's quad turned round its own
+			# axis, along the particle's velocity; it shrinks out with its scale curve, never a round puff)
+			m.shader = SHADERS.flame
+			p = {"deck_fade_m": 0.12, "speed": 2.6}
+		"flame_slash":
+			# (the High Kick's crescent: a flat arc of flame, outlined, a small pale core down its middle)
+			m.shader = SHADERS.flame
+			p = {"mode": 1, "slash": 1.0, "speed": 2.8, "embers": 0.0}
 		"flame_glow":
 			m.shader = SHADERS.glow
 			p = {"strength": float(looks("flame").get("glow", 0.55))}
@@ -375,6 +384,16 @@ static func quad_base() -> Mesh:
 		return q)
 
 
+## A flame tongue's quad standing on its base (0.5 m wide, 1.3 m tall, local Y 0..1.3): the flame particles (tongue_fire), their
+## scale their size. The cel flame shader turns it round its own axis to face the camera.
+static func tongue_base() -> Mesh:
+	return _cached("tongue_base", func() -> Mesh:
+		var q := QuadMesh.new()
+		q.size = Vector2(0.5, 1.3)
+		q.center_offset = Vector3(0.0, 0.65, 0.0)
+		return q)
+
+
 ## A 1 m quad about its middle: particles, flashes.
 static func quad() -> Mesh:
 	return _cached("quad", func() -> Mesh:
@@ -569,6 +588,17 @@ static func recipe(key: String) -> Dictionary:
 			pm.color_ramp = ramp([[0.0, Color(1, 1, 1, 1)], [0.3, Color(1, 0.95, 0.9, 0.9)], [1.0, Color(1.0, 0.7, 0.6, 0.0)]])
 			pm.scale_curve = curve([Vector2(0, 0.55), Vector2(0.2, 1.0), Vector2(1, 0.7)])
 			r.amount = 40
+		"tongue_fire":
+			# (a flame tongue: along its flight, flaring then shrinking away; the cel look's flame in place of a round puff)
+			r.mesh = tongue_base()
+			r.mat = mat("flame_bit")
+			pm.particle_flag_align_y = true
+			pm.angle_min = 0.0
+			pm.angle_max = 0.0
+			pm.color_ramp = null
+			pm.scale_curve = curve([Vector2(0, 0.35), Vector2(0.18, 1.0), Vector2(0.7, 0.8), Vector2(1, 0.0)])
+			r.amount = 48
+			r.slots = 8
 		"puff_steam", "puff_smoke", "puff_dust", "puff_frost", "puff_air", "foam":
 			r.mat = mat(key)
 			pm.color_ramp = fade

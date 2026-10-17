@@ -43,3 +43,11 @@ float cel_v(sampler2D tex, float across, float along, float t, float sd, float l
 	w *= 1.0 - notch_k * (1.0 - tips) * smoothstep(0.25, 0.8, along);
 	return (w - abs(x)) * 1.25;
 }
+
+// The cel slash (the High Kick's crescent: a flat arc of flame, its pointed ends from the mesh's own taper): high along the
+// middle of the strip, 0 at both edges, the edge wavering a little; bands are steps in it.
+float cel_slash(sampler2D tex, float across, float along, float t, float sd) {
+	float x = abs(across * 2.0 - 1.0);
+	float n = texture(tex, vec2(along * 1.5 + sd * 0.3, t * 0.6)).r - 0.5;
+	return ((1.0 + n * 0.35) - x) * 1.45;
+}
