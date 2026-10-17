@@ -27,7 +27,7 @@ const SHOTS := {
 	"splash_hit": {"key": 0, "move": "water_jet", "mode": "splash", "fills": [], "full": [4], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"lash": {"key": 0, "mode": "", "fills": [0.9], "full": [6], "after": [6, 9, 11, 13, 15, 18, 22, 28, 40]},
 	"lash_hit": {"key": 0, "mode": "", "fills": [], "full": [6], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
-	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 8, 12, 16, 22, 28, 36, 48], "cam": "wide"},
+	"wave": {"key": 1, "mode": "", "fills": [0.9], "full": [6], "after": [4, 8, 12, 16, 22, 28, 36, 48], "cam": "behind"},
 	"spear": {"key": 0, "taps": 2, "mode": "", "fills": [0.3, 0.7, 0.95], "full": [8], "after": [3, 8, 14, 24]},
 	"spear_hit": {"key": 0, "taps": 2, "mode": "", "fills": [], "full": [8], "rel": [-8, -4, -1, 1, 3, 6, 10, 16], "cam": "hit"},
 	"ice_wall": {"key": 3, "move": "water_shield", "mode": "ice_wall", "fills": [0.5], "full": [4], "after": [4, 10, 20, 40, 80]},
@@ -36,7 +36,7 @@ const SHOTS := {
 }
 ## The camera each shot is filmed from in film mode (the stills' own: cam=).
 const TAKE_CAMS := {"gather_lash": "side", "gather_geyser": "wide", "splash": "side", "splash_hit": "wide", "lash": "side",
-		"lash_hit": "wide", "wave": "wide", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
+		"lash_hit": "wide", "wave": "behind", "spear": "side", "spear_hit": "wide", "ice_wall": "wide", "skate": "wide", "turn": "front"}
 const ORDER := ["gather_lash", "gather_geyser", "splash", "splash_hit", "lash", "lash_hit", "wave", "spear", "spear_hit", "ice_wall", "skate", "turn"]
 
 var view
@@ -195,6 +195,10 @@ func _cam() -> void:
 		"wide":
 			eye = at + right * 7.5 + fwd * 4.0 + Vector3.UP * 2.6
 			look = at + fwd * 4.5 + Vector3.UP * 0.8
+		"behind":
+			# (from behind and above the caster, down the line of fire: a wave's width is seen, not its edge)
+			eye = at - fwd * 3.4 + right * 1.2 + Vector3.UP * 3.0
+			look = at + fwd * 5.0 + Vector3.UP * 0.3
 		"hit":
 			# (the dummy 6.5 m down the line of fire, from before him and to one side)
 			var tgt := at + fwd * 6.5
