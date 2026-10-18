@@ -1,8 +1,0 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
-
-[ext_resource type="Shader" path="res://assets/horse/materials/horse_hoof.gdshader" id="1_shader"]
-
-[resource]
-resource_name = "horse_hoof"
-render_priority = 0
-shader = ExtResource("1_shader")
