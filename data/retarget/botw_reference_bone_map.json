@@ -1,0 +1,709 @@
+{
+  "schema_version": 1,
+  "status": "semantic candidates only; not a tested retargeter",
+  "runtime_enabled": false,
+  "direction": "BOTW Link source to existing Frontier Actor_B target",
+  "source": {
+    "game": "The Legend of Zelda: Breath of the Wild (Wii U)",
+    "creator": "Nintendo; extracted source reference, not newly authored Tidebreak content",
+    "model": "Link",
+    "format": "BFRES",
+    "path": "/Users/kiwimango/Downloads/Frontier/artifacts/world_reference/character_source/Model/Link.bfres",
+    "sha256": "133573d93ce3325c1b19d219daae559dfaeaf87a80d38786fd7c477857897576",
+    "rig_record": "artifacts/world_reference/character_source/link_rig.json",
+    "archive_members_manifest": "artifacts/world_reference/character_source/resource_manifest.json",
+    "bone_count": 121,
+    "shape_count": 11,
+    "material_count": 11,
+    "rotation_mode": "EulerXYZ",
+    "scaling_mode": "Maya"
+  },
+  "target": {
+    "rig_scene": "characters/Actor_B.tscn",
+    "canonical_bind_record": "tools/character/rig/actor_b_skeleton.json",
+    "mesh": "assets/character/body/body.glb",
+    "bone_count": 291,
+    "bind_clip": "actor_b/null-add",
+    "forward_axis": "+Z",
+    "up_axis": "+Y"
+  },
+  "mapping_count": 54,
+  "mappings": [
+    {
+      "source": "Skl_Root",
+      "target": "root",
+      "role": "hip/root anchor",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Waist",
+      "target": "pelvis",
+      "role": "pelvis",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Spine_1",
+      "target": "spinea",
+      "role": "lower spine",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Spine_2",
+      "target": "spined",
+      "role": "upper chest",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Neck",
+      "target": "neck",
+      "role": "neck",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Head",
+      "target": "headb",
+      "role": "head",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Clavicle_L",
+      "target": "l_clavicle",
+      "role": "clavicle",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Arm_1_L",
+      "target": "l_shoulder",
+      "role": "upper arm",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Arm_2_L",
+      "target": "l_elbow",
+      "role": "forearm chain joint",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Wrist_L",
+      "target": "l_wrist",
+      "role": "wrist",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Weapon_L",
+      "target": "l_hand_prop_attachment",
+      "role": "held item socket",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Leg_1_L",
+      "target": "l_upper_leg",
+      "role": "thigh",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Leg_2_L",
+      "target": "l_knee",
+      "role": "shin chain joint",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Ankle_L",
+      "target": "l_ankle",
+      "role": "foot",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Toe_L",
+      "target": "l_ball",
+      "role": "toe candidate",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Finger_A_1_L",
+      "target": "l_thumba",
+      "role": "finger thumb segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_A_2_L",
+      "target": "l_thumbb",
+      "role": "finger thumb segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_A_3_L",
+      "target": "l_thumbc",
+      "role": "finger thumb segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_1_L",
+      "target": "l_indexa",
+      "role": "finger index segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_2_L",
+      "target": "l_indexb",
+      "role": "finger index segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_3_L",
+      "target": "l_indexc",
+      "role": "finger index segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_1_L",
+      "target": "l_middlea",
+      "role": "finger middle segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_2_L",
+      "target": "l_middleb",
+      "role": "finger middle segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_3_L",
+      "target": "l_middlec",
+      "role": "finger middle segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_1_L",
+      "target": "l_ringa",
+      "role": "finger ring segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_2_L",
+      "target": "l_ringb",
+      "role": "finger ring segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_3_L",
+      "target": "l_ringc",
+      "role": "finger ring segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_E_1_L",
+      "target": "l_pinkyb",
+      "role": "finger pinky segment 1",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    },
+    {
+      "source": "Finger_E_2_L",
+      "target": "l_pinkyc",
+      "role": "finger pinky segment 2",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    },
+    {
+      "source": "Finger_E_3_L",
+      "target": "l_pinkyd",
+      "role": "finger pinky segment 3",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    },
+    {
+      "source": "Clavicle_R",
+      "target": "r_clavicle",
+      "role": "clavicle",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Arm_1_R",
+      "target": "r_shoulder",
+      "role": "upper arm",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Arm_2_R",
+      "target": "r_elbow",
+      "role": "forearm chain joint",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Wrist_R",
+      "target": "r_wrist",
+      "role": "wrist",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Weapon_R",
+      "target": "r_hand_prop_attachment",
+      "role": "held item socket",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Leg_1_R",
+      "target": "r_upper_leg",
+      "role": "thigh",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Leg_2_R",
+      "target": "r_knee",
+      "role": "shin chain joint",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Ankle_R",
+      "target": "r_ankle",
+      "role": "foot",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Toe_R",
+      "target": "r_ball",
+      "role": "toe candidate",
+      "basis": "hierarchy-informed candidate"
+    },
+    {
+      "source": "Finger_A_1_R",
+      "target": "r_thumba",
+      "role": "finger thumb segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_A_2_R",
+      "target": "r_thumbb",
+      "role": "finger thumb segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_A_3_R",
+      "target": "r_thumbc",
+      "role": "finger thumb segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_1_R",
+      "target": "r_indexa",
+      "role": "finger index segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_2_R",
+      "target": "r_indexb",
+      "role": "finger index segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_B_3_R",
+      "target": "r_indexc",
+      "role": "finger index segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_1_R",
+      "target": "r_middlea",
+      "role": "finger middle segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_2_R",
+      "target": "r_middleb",
+      "role": "finger middle segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_C_3_R",
+      "target": "r_middlec",
+      "role": "finger middle segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_1_R",
+      "target": "r_ringa",
+      "role": "finger ring segment 1",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_2_R",
+      "target": "r_ringb",
+      "role": "finger ring segment 2",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_D_3_R",
+      "target": "r_ringc",
+      "role": "finger ring segment 3",
+      "basis": "anatomical inference from rest positions; verify visually"
+    },
+    {
+      "source": "Finger_E_1_R",
+      "target": "r_pinkyb",
+      "role": "finger pinky segment 1",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    },
+    {
+      "source": "Finger_E_2_R",
+      "target": "r_pinkyc",
+      "role": "finger pinky segment 2",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    },
+    {
+      "source": "Finger_E_3_R",
+      "target": "r_pinkyd",
+      "role": "finger pinky segment 3",
+      "basis": "Measured target pinkya is a metacarpal near the wrist; target pinkyb/c/d are the three finger joints. Source finger identity remains anatomical inference."
+    }
+  ],
+  "unmapped_source": {
+    "organization": [
+      "Root",
+      "Weapon_Root"
+    ],
+    "face": [
+      "Ear_L",
+      "Ear_R",
+      "Face_Root",
+      "Cheek_D_L",
+      "Cheek_D_R",
+      "Cheek_U_L",
+      "Cheek_U_R",
+      "Chin",
+      "Chin_Point",
+      "Lip_D",
+      "Lip_D_L_1",
+      "Lip_D_R_1",
+      "Teeth_D",
+      "Eye_In_L",
+      "Eye_In_R",
+      "Eye_Out_L",
+      "Eye_Out_R",
+      "Eyeball_L",
+      "Eyeball_R",
+      "Eyebrow_In_L",
+      "Eyebrow_In_R",
+      "Eyebrow_Mid_L",
+      "Eyebrow_Mid_R",
+      "Eyebrow_Out_L",
+      "Eyebrow_Out_R",
+      "Eyelid_D_L",
+      "Eyelid_D_R",
+      "Eyelid_U_L",
+      "Eyelid_U_R",
+      "Lip_U",
+      "Lip_U_L_1",
+      "Lip_U_L_2",
+      "Lip_U_R_1",
+      "Lip_U_R_2",
+      "Nose",
+      "Teeth_U"
+    ],
+    "hair": [
+      "Hair_Root",
+      "Ponytail_A_1"
+    ],
+    "deformation_helpers": [
+      "Arm_1_Assist_L",
+      "Elbow_L",
+      "Wrist_Assist_L",
+      "Clavicle_Assist_L",
+      "Arm_1_Assist_R",
+      "Elbow_R",
+      "Wrist_Assist_R",
+      "Clavicle_Assist_R",
+      "Knee_L",
+      "Ankle_Assist_L",
+      "Knee_R",
+      "Ankle_Assist_R"
+    ],
+    "clothing_and_gear": [
+      "Pod_A",
+      "Belt_A_1",
+      "Belt_A_2",
+      "Belt_A_3",
+      "Belt_C_1",
+      "Belt_C_2",
+      "Belt_C_3",
+      "Belt_C_4",
+      "Belt_C_5",
+      "Belt_C_6",
+      "Belt_C_7",
+      "Pod_B",
+      "Belt_C_8",
+      "Poach_A",
+      "Pod_C"
+    ],
+    "other": []
+  },
+  "unmapped_target": {
+    "face": [
+      "brow_mid",
+      "jaw",
+      "l_chin",
+      "l_frown_line",
+      "l_jawline_lower",
+      "l_jawline_mid",
+      "l_lip_lower_a",
+      "l_lip_lower_b",
+      "l_upper_frown_line",
+      "lip_lower_center",
+      "lip_under_lower_center",
+      "lower_mid_chin",
+      "r_chin",
+      "r_frown_line",
+      "r_jawline_lower",
+      "r_jawline_mid",
+      "r_lip_lower_a",
+      "r_lip_lower_b",
+      "r_upper_frown_line",
+      "tongue_a",
+      "tongue_b",
+      "tongue_c",
+      "l_above_lid",
+      "l_brow_inner",
+      "l_brow_mid",
+      "l_brow_outer",
+      "l_brow_outer_lower",
+      "l_brow_upper_inner",
+      "l_brow_upper_mid",
+      "l_cheek",
+      "l_cheek_line",
+      "l_eyeball",
+      "l_eyeball_pupil",
+      "l_inner_above_lips",
+      "l_inner_squint",
+      "l_jawline_upper",
+      "l_lip_corner",
+      "l_lip_upper_a",
+      "l_lip_upper_c",
+      "l_lower_cheek",
+      "l_lower_inner_cheek",
+      "l_lower_laugh",
+      "l_lower_lid_inner",
+      "l_lower_lid_mid",
+      "l_lower_lid_upper",
+      "l_mid_laugh",
+      "l_mid_squint",
+      "l_nose_upper",
+      "l_nostril",
+      "l_outer_above_lips",
+      "l_outer_squint",
+      "l_sneer",
+      "l_upper_cheek",
+      "l_upper_laugh",
+      "l_upper_lid_inner",
+      "l_upper_lid_mid",
+      "l_upper_lid_outer",
+      "lip_upper_center",
+      "nose_tip",
+      "r_above_lid",
+      "r_brow_inner",
+      "r_brow_mid",
+      "r_brow_outer",
+      "r_brow_outer_upper",
+      "r_brow_upper_inner",
+      "r_brow_upper_mid",
+      "r_cheek",
+      "r_cheek_line",
+      "r_eyeball",
+      "r_eyeball_pupil",
+      "r_inner_above_lips",
+      "r_inner_squint",
+      "r_jawline_upper",
+      "r_lip_corner",
+      "r_lip_upper_a",
+      "r_lip_upper_c",
+      "r_lower_cheek",
+      "r_lower_inner_cheek",
+      "r_lower_laugh",
+      "r_lower_lid_inner",
+      "r_lower_lid_mid",
+      "r_lower_lid_upper",
+      "r_mid_laugh",
+      "r_mid_squint",
+      "r_nose_upper",
+      "r_nostril",
+      "r_outer_above_lips",
+      "r_outer_squint",
+      "r_sneer",
+      "r_upper_cheek",
+      "r_upper_laugh",
+      "r_upper_lid_inner",
+      "r_upper_lid_mid",
+      "r_upper_lid_outer",
+      "upper_nose_bridge"
+    ],
+    "hair": [
+      "wrinklemaps"
+    ],
+    "deformation_helpers": [
+      "l_elbow_helper_grp",
+      "l_elbow_helper",
+      "l_forarm_twist_a_base_helper",
+      "l_forarm_twist_a",
+      "l_forarm_twist_c_base_helper",
+      "l_forarm_twist_c",
+      "l_wrist_lower_helper",
+      "l_wrist_upper_a_helper",
+      "l_forarm_twist_b_base_helper",
+      "l_forarm_twist_b",
+      "l_elbow_inner_helper",
+      "l_elbow_outer_lower_helper",
+      "r_elbow_helper_grp",
+      "r_elbow_helper",
+      "r_forarm_twist_a_base_helper",
+      "r_forarm_twist_a",
+      "r_forarm_twist_c_base_helper",
+      "r_forarm_twist_c",
+      "r_wrist_lower_helper",
+      "r_wrist_upper_a_helper",
+      "r_forarm_twist_b_base_helper",
+      "r_forarm_twist_b",
+      "r_elbow_inner_helper",
+      "r_elbow_outer_lower_helper",
+      "l_shoulder_grp",
+      "l_shoulder_twist_a_base_helper",
+      "l_shoulder_twist_a",
+      "l_shoulder_twist_c_base_helper",
+      "l_shoulder_twist_c",
+      "l_shoulder_twist_b_base_helper",
+      "l_shoulder_twist_b",
+      "l_shoulder_twist_d_base_helper",
+      "l_shoulder_twist_d",
+      "r_shoulder_grp",
+      "r_shoulder_twist_a_base_helper",
+      "r_shoulder_twist_a",
+      "r_shoulder_twist_c_base_helper",
+      "r_shoulder_twist_c",
+      "r_shoulder_twist_b_base_helper",
+      "r_shoulder_twist_b",
+      "r_shoulder_twist_d_base_helper",
+      "r_shoulder_twist_d",
+      "l_knee_helper_grp",
+      "l_knee_calf_helper",
+      "l_knee_front_lower_helper",
+      "l_knee_helper",
+      "l_shoulder_helper_grp",
+      "l_bicep_helper",
+      "l_elbow_outer_upper_helper",
+      "l_tricep_helper",
+      "l_upper_leg_grp",
+      "l_upper_leg_twist_a",
+      "l_upper_leg_front_helper",
+      "l_upper_leg_rear_helper",
+      "l_upper_leg_twist_b",
+      "l_upper_leg_helper_grp",
+      "l_knee_front_upper_helper",
+      "l_knee_rear_helper",
+      "l_upper_leg_thigh_helper",
+      "l_upper_leg_twist_a_helper_grp",
+      "l_wrist_grp",
+      "l_wrist_upper_b_helper",
+      "pelvis_helper_grp",
+      "l_upper_leg_shirt_helper",
+      "r_upper_leg_shirt_helper",
+      "r_knee_helper_grp",
+      "r_knee_calf_helper",
+      "r_knee_front_lower_helper",
+      "r_knee_helper",
+      "r_shoulder_helper_grp",
+      "r_bicep_helper",
+      "r_elbow_outer_upper_helper",
+      "r_tricep_helper",
+      "r_upper_leg_grp",
+      "r_upper_leg_twist_a",
+      "r_upper_leg_front_helper",
+      "r_upper_leg_rear_helper",
+      "r_upper_leg_twist_b",
+      "r_upper_leg_helper_grp",
+      "r_knee_front_upper_helper",
+      "r_knee_rear_helper",
+      "r_upper_leg_thigh_helper",
+      "r_upper_leg_twist_a_helper_grp",
+      "r_wrist_grp",
+      "r_wrist_upper_b_helper"
+    ],
+    "structural_drivers_and_other": [
+      "lower_base",
+      "l_heel",
+      "r_heel",
+      "upper_base",
+      "spineb",
+      "spinec",
+      "l_palm",
+      "l_pinkya",
+      "l_index_metacarpal",
+      "l_ring_metacarpal",
+      "l_middle_metacarpal",
+      "l_deltoid",
+      "l_scapula",
+      "l_trap",
+      "r_palm",
+      "r_pinkya",
+      "r_index_metacarpal",
+      "r_ring_metacarpal",
+      "r_middle_metacarpal",
+      "r_deltoid",
+      "r_scapula",
+      "r_trap",
+      "heada",
+      "throat",
+      "l_breast",
+      "l_breast_end",
+      "r_breast",
+      "r_breast_end",
+      "l_chest",
+      "r_chest",
+      "holster_long",
+      "jacket_collider",
+      "spineb_muscle",
+      "spinea_muscle",
+      "shirt_lift_a",
+      "shirt_lift_b",
+      "shirt_lift_c",
+      "shirt_lift_d",
+      "shirt_lift_e",
+      "spinea_back_muscle",
+      "holster_melee",
+      "holster_pistol",
+      "l_forarm_a_offset",
+      "l_forarm_b_offset",
+      "l_forarm_c_offset",
+      "l_shoulder_a_offset",
+      "l_shoulder_b_offset",
+      "l_shoulder_c_offset",
+      "l_shoulder_d_offset",
+      "r_forarm_a_offset",
+      "r_forarm_b_offset",
+      "r_forarm_c_offset",
+      "r_shoulder_a_offset",
+      "r_shoulder_b_offset",
+      "r_shoulder_c_offset",
+      "r_shoulder_d_offset"
+    ]
+  },
+  "requirements_before_retarget": [
+    "Read source rotation[0:3] as EulerXYZ radians, not a quaternion; its fourth field is unused in this mode.",
+    "Resolve root-anchor differences; source Root is the organizational origin, Skl_Root is the elevated hip anchor.",
+    "Redistribute two source spine joints across four target spine joints; names alone do not solve this.",
+    "Add target lower_base, upper_base and heada drivers without copying arbitrary source transforms.",
+    "Adapt wrist-to-finger hierarchy: target palm/metacarpals and pinky metacarpal joint have no selected one-to-one source mapping.",
+    "Solve target heel contact separately; target heel adds a joint between ankle and ball.",
+    "Convert bind-relative rotations and limb/root translations for different local axes, limb lengths and rest pose.",
+    "Keep source Elbow/Knee deform helpers separate from Arm_2/Leg_2 chain joints.",
+    "Calibrate Weapon sockets and grip offsets; semantic socket names do not imply matching orientations.",
+    "Face, hair, deformation helpers and clothing/gear require separate mapping or new authoring.",
+    "Validate ground contacts, fingertips, casts, jump-casts, landing, knockout, get-up and clothing across multiple views."
+  ],
+  "non_claims": [
+    "Name existence and uniqueness checks do not validate motion transfer, visual parity, garment fit or animation ownership.",
+    "This file neither retargets animations nor changes the active player model, AnimationTree or combat."
+  ],
+  "corrections": [
+    {
+      "date": "2026-10-09",
+      "change": "Finger_E_1/2/3 target candidates changed from pinkya/b/c to pinkyb/c/d on both sides.",
+      "reason": "Canonical bind positions and four-joint target hierarchy place pinkya near the wrist as a metacarpal; pinkyb is the finger base. The source has three pinky joints.",
+      "evidence": "tools/character/rig/actor_b_skeleton.json; e.g. l_pinkya at Y=0.867942475 m, l_pinkyb at Y=0.824662569 m, versus other finger bases near Y=0.820 m."
+    }
+  ]
+}
